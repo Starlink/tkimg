@@ -9,6 +9,7 @@ Makefile
 
 config.log
 config.status
+configure.lineno
 pkgIndex.tcl
 *Config.sh
 
