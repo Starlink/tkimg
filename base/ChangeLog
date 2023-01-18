@@ -1,3 +1,29 @@
+2010-04-09  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Make all of Tk's stub table entries available to tkImg,
+	  no matter what Tk version we are compiling against.
+
+2008-11-14  Andreas Kupries  <andreask@activestate.com>
+
+	* tkImgUtils.c: Fixed syntax error reported by MSVC.
+
+2006-01-27  Andreas Kupries <andreask@activestate.com>
+
+	* configure.in: TEA 3.5 upgrade, do not use TK_LIBS (anymore).
+	* configure:    Regenerated.
+
+2004-12-01  Jeff Hobbs  <jeffh@ActiveState.com>
+
+	* tkimg.h: use TK_PHOTO_COMPOSITE_SET instead of
+	TK_PHOTO_COMPOSITE_OVERLAY to ensure initial alpha is taken
+	directly from source image (without compositing). [Bug 987107]
+
+2004-08-18  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
+
+	*
+	* Released and tagged Tkimg 1.3 ========================
+	*
+
 2002-11-26  Andreas Kupries <andreas_kupries@users.sourceforge.net>
 
 	* pkgIndex.tcl.in: Added index script to load all format handlers
@@ -5,7 +31,7 @@
 
 2002-11-21  Andreas Kupries <andreas_kupries@users.sourceforge.net>
 
-	* tkimgUtils.c (tkimg_FixObjMatchProc): 
+	* tkimgUtils.c (tkimg_FixObjMatchProc):
 	* tkimgUtils.c (tkimg_FixChanMatchProc): Changed bit-negation to
 	  logical negation. This fixes a bug intriduced by the rewrite to
 	  use version info to distinguish between calls from 8.3.2 and

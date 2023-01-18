@@ -14,11 +14,10 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: tkimgIO.c,v 1.2 2002/11/29 05:46:07 andreas_kupries Exp $
+ * $Id: tkimgIO.c 274 2010-06-28 13:23:34Z nijtmans $
  *
  */
 
-#include "tk.h"
 #include "tkimg.h"
 
 /*
@@ -27,14 +26,10 @@
 
 /* Variables needed for optional read buffer. See tkimg_ReadBuffer. */
 #define BUFLEN 4096
-static int
-	useReadBuf = 0,
-        bufStart   = -1,
-        bufEnd     = -1;
-static char 
-        readBuf[BUFLEN];
-
-static int char64 _ANSI_ARGS_((int c));
+static int useReadBuf = 0;
+static int bufStart = -1;
+static int bufEnd = -1;
+static char readBuf[BUFLEN];
 
 
 /*
@@ -53,10 +48,9 @@ static int char64 _ANSI_ARGS_((int c));
  *--------------------------------------------------------------------------
  */
 
-static int
-char64(c)
-    int c;
-{
+static int char64(
+    int c
+) {
     switch(c) {
 	case 'A': return 0;	case 'B': return 1;	case 'C': return 2;
 	case 'D': return 3;	case 'E': return 4;	case 'F': return 5;
@@ -91,7 +85,7 @@ char64(c)
 /*
  *--------------------------------------------------------------
  *
- * tkimg_ReadBuffer -- 
+ * tkimg_ReadBuffer --
  *	Initialize optional read buffer.
  *
  *	The optional read buffer may be used for compressed image file
@@ -113,17 +107,17 @@ char64(c)
  *--------------------------------------------------------------
  */
 
-void tkimg_ReadBuffer (onOff) 
-int onOff;
-{
+void tkimg_ReadBuffer(
+	int onOff
+) {
     useReadBuf = onOff;
     if (onOff) {
-	memset (readBuf, 0, BUFLEN);
+	memset(readBuf, 0, BUFLEN);
 	bufStart = -1;
 	bufEnd   = -1;
     }
 }
-
+
 /*
  *--------------------------------------------------------------------------
  * tkimg_Read --
@@ -139,12 +133,11 @@ int onOff;
  *--------------------------------------------------------------------------
  */
 
-int
-tkimg_Read(handle, dst, count)
-    tkimg_MFile *handle;	/* mmdecode "file" handle */
-    char *dst;		/* where to put the result */
-    int count;		/* number of bytes */
-{
+int tkimg_Read(
+	tkimg_MFile *handle /* mmdecode "file" handle */,
+	char *dst /* where to put the result */,
+	int count /* number of bytes */
+) {
     register int i, c;
     int bytesRead, bytesToRead;
     char *dstPtr;
@@ -168,36 +161,36 @@ tkimg_Read(handle, dst, count)
 	bytesToRead = count;
 	bytesRead = 0;
 	while (bytesToRead > 0) {
-	    #ifdef DEBUG_LOCAL
+#ifdef DEBUG_LOCAL
 		printf ("bytesToRead=%d bytesRead=%d (bufStart=%d bufEnd=%d)\n",
 			 bytesToRead, bytesRead, bufStart, bufEnd);
-	    #endif
+#endif
 	    if (bufStart < 0) {
 		bufEnd = Tcl_Read((Tcl_Channel)handle->data, readBuf, BUFLEN)-1;
-		#ifdef DEBUG_LOCAL
+#ifdef DEBUG_LOCAL
 		    printf ("Reading new %d bytes into buffer "
-                            "(bufStart=%d bufEnd=%d)\n", 
+                            "(bufStart=%d bufEnd=%d)\n",
                             BUFLEN, bufStart, bufEnd);
-		#endif
+#endif
 		bufStart = 0;
-	   	if (bufEnd < 0) 
+	   	if (bufEnd < 0)
 		    return bufEnd;
 	    }
 	    if (bufStart + bytesToRead <= bufEnd +1) {
-		#ifdef DEBUG_LOCAL
-		    printf ("All in buffer: memcpy %d bytes\n", bytesToRead);
-		#endif
+#ifdef DEBUG_LOCAL
+		    printf("All in buffer: memcpy %d bytes\n", bytesToRead);
+#endif
 		/* All bytes already in the buffer. Just copy them to dst. */
-		memcpy (dstPtr, readBuf + bufStart, bytesToRead);
+		memcpy(dstPtr, readBuf + bufStart, bytesToRead);
 		bufStart += bytesToRead;
 		if (bufStart > BUFLEN)
 		    bufStart = -1;
 		return bytesRead + bytesToRead;
 	    } else {
-		#ifdef DEBUG_LOCAL
-		    printf ("Copy rest of buffer: memcpy %d bytes\n",
+#ifdef DEBUG_LOCAL
+		    printf("Copy rest of buffer: memcpy %d bytes\n",
                             bufEnd+1-bufStart);
-		#endif
+#endif
 		memcpy (dstPtr, readBuf + bufStart, bufEnd+1 - bufStart);
 		bytesRead += (bufEnd +1 - bufStart);
 		bytesToRead -= (bufEnd+1 - bufStart);
@@ -207,7 +200,7 @@ tkimg_Read(handle, dst, count)
 	}
     }
 
-    for(i=0; i<count && (c=tkimg_Getc(handle)) != IMG_DONE; i++) {
+    for(i = 0; i < count && (c = tkimg_Getc(handle)) != IMG_DONE; i++) {
 	*dst++ = c;
     }
     return i;
@@ -230,10 +223,9 @@ tkimg_Read(handle, dst, count)
  *--------------------------------------------------------------------------
  */
 
-int
-tkimg_Getc(handle)
-   tkimg_MFile *handle;			/* Input stream handle */
-{
+int tkimg_Getc(
+	tkimg_MFile *handle /* Input stream handle */
+) {
     int c;
     int result = 0;			/* Initialization needed only to prevent
 					 * gcc compiler warning */
@@ -299,12 +291,11 @@ tkimg_Getc(handle)
  *-----------------------------------------------------------------------
  */
 
-int
-tkimg_Write(handle, src, count)
-    tkimg_MFile *handle;	/* mmencode "file" handle */
-    CONST char *src;	/* where to get the data */
-    int count;		/* number of bytes */
-{
+int tkimg_Write(
+    tkimg_MFile *handle /* mmencode "file" handle */,
+    const char *src /* where to get the data */,
+    int count /* number of bytes */
+) {
     register int i;
     int curcount, bufcount;
 
@@ -343,7 +334,7 @@ tkimg_Write(handle, src, count)
  *-----------------------------------------------------------------------
  */
 
-static char base64_table[64] = {
+static char const base64_table[64] = {
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
     'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
     'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
@@ -354,11 +345,10 @@ static char base64_table[64] = {
     '4', '5', '6', '7', '8', '9', '+', '/'
 };
 
-int
-tkimg_Putc(c, handle)
-    register int c;		/* character to be written */
-    register tkimg_MFile *handle;	/* handle containing decoder data and state */
-{
+int tkimg_Putc(
+    register int c /* character to be written */,
+    register tkimg_MFile *handle /* handle containing decoder data and state */
+) {
     /* In fact, here should be checked first if the dynamic
      * string contains enough space for the next character.
      * This would be very expensive to do for each character.
@@ -430,11 +420,10 @@ tkimg_Putc(c, handle)
  *-------------------------------------------------------------------------
  */
 
-void
-tkimg_WriteInit(buffer, handle)
-    Tcl_DString *buffer;
-    tkimg_MFile *handle;		/* mmencode "file" handle */
-{
+void tkimg_WriteInit(
+	Tcl_DString *buffer,
+	tkimg_MFile *handle /* mmencode "file" handle */
+) {
     Tcl_DStringSetLength(buffer, buffer->spaceAvl);
     handle->buffer = buffer;
     handle->data = Tcl_DStringValue(buffer);
@@ -456,20 +445,19 @@ tkimg_WriteInit(buffer, handle)
  *-------------------------------------------------------------------------
  */
 
-int
-tkimg_ReadInit(data, c, handle)
-    Tcl_Obj *data;		/* string containing initial mmencoded data */
-    int c;
-    tkimg_MFile *handle;		/* mmdecode "file" handle */
-{
-    handle->data = tkimg_GetByteArrayFromObj(data, &handle->length);
+int tkimg_ReadInit(
+	Tcl_Obj *data /* string containing initial mmencoded data */,
+	int c,
+	tkimg_MFile *handle /* mmdecode "file" handle */
+) {
+    handle->data = (char *) tkimg_GetByteArrayFromObj(data, &handle->length);
     if (*handle->data == c) {
 	handle->state = IMG_STRING;
 	return 1;
     }
     c = base64_table[(c>>2)&63];
 
-    while((handle->length) && (char64(*handle->data) == IMG_SPACE)) {
+    while ((handle->length) && (char64(*handle->data) == IMG_SPACE)) {
 	handle->data++;
 	handle->length--;
     }
@@ -500,24 +488,23 @@ tkimg_ReadInit(data, c, handle)
  *----------------------------------------------------------------------
  */
 
-Tcl_Channel
-tkimg_OpenFileChannel(interp, fileName, permissions)
-    Tcl_Interp *interp;
-    CONST char *fileName;
-    int permissions;
-{
-    Tcl_Channel chan = Tcl_OpenFileChannel(interp, (char *) fileName,
+Tcl_Channel tkimg_OpenFileChannel(
+	Tcl_Interp *interp,
+	const char *fileName,
+	int permissions
+) {
+    Tcl_Channel chan = Tcl_OpenFileChannel(interp, (CONST84 char *) fileName,
 	    permissions?"w":"r", permissions);
     if (!chan) {
-	return (Tcl_Channel) NULL;
+	return NULL;
     }
-    if (Tcl_SetChannelOption(interp, chan, "-buffersize", "131072") != TCL_OK) {        Tcl_Close(interp, chan);
-        return (Tcl_Channel) NULL;
+    if (Tcl_SetChannelOption(interp, chan, "-buffersize", "131072") != TCL_OK) {
+        Tcl_Close(interp, chan);
+        return NULL;
     }
     if (Tcl_SetChannelOption(interp, chan, "-translation", "binary") != TCL_OK) {
 	Tcl_Close(interp, chan);
-	return (Tcl_Channel) NULL;
+	return NULL;
     }
     return chan;
 }
-

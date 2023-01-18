@@ -1,3 +1,437 @@
+2010-09-17  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	*
+	* Released and tagged Tkimg 1.4 ========================
+	*
+
+2010-08-30  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* license.terms: Fix DFARs note for number-adjusted rights clause
+
+2010-07-06  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* genStubs.tcl: "generic" argument is no longer necessary when
+	there are no suppressors.
+	* [tkimg-Bugs-3011001] Only support accessing tkImg
+	procs through stub table implemented for libpng
+
+2010-06-30  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to libtiff 3.9.4
+
+2010-06-28  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to libpng 1.4.3
+	* backport various ttkGenStubs.tcl improvements
+	  to genStubs.tcl
+
+2010-06-17  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to libjpeg version 8b
+
+2010-06-04  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* [tkimg-Bugs-3011001] Only support accessing tkImg
+	procs through stub table implemented for base and zlib
+
+2010-05-11  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to libpng 1.4.2
+
+2010-05-04  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Make type "boolean" available everywhere, so individual
+	  handlers don't need to define Boln any more.
+	* Formatting.
+	* Make --enable-symbols build on MSVC a little bit
+	  closer to reality and explain disabled warnings.
+
+2010-05-03  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Use PNGTCLAPI in stead of EXTERN in tkImg png package
+	* xbm fix unused variable
+
+2010-04-30  Andreas Kupries <andreask@activestate.com>
+
+	* Fix building tkimg --disable-shared
+
+2010-04-28  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* More MODULE_SCOPE functions in base
+	* Use TKIMGAPI in stead of EXTERN in tkImg base package
+	* Fix various gcc and MSVC warnings
+	* upgrade to libpng 1.4.1
+
+2010-04-23  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to zlib 1.2.5
+
+2010-04-14  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Regenerate all configure scripts with latest TEA tcl.m4
+
+2010-04-09  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Only build pkgIndex.tcl when something changed.
+
+2010-04-07  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* TkimgInitUtilities() always succeeds, and does not
+	  return TCL_ERROR/TCL_OK.
+	* Eliminate forced dependancy for aqua on
+	  ::tk::unsupported::MacWindowStyle
+	* Eliminate msgcat compatibility layer
+
+2010-04-01  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* [Bug 2975449] Kill the Tk 8.2/8.3 ifdeffery - at
+	  least the runtime swizzle (I don't consider
+	  this a bug at all, because it worked fine
+	  as long as it was needed!)
+	* [Bug 2907616] configure ignores --mandir switch
+
+2010-03-31  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Sync with latest TEA (tcl.m4), regenerated all
+	  configure scripts with autoconf-2.65.
+	* Sync genStubs.tcl with latest one from Tcl 8.6,
+	  regenerated all *Decls.h files. All stubs
+	  pointers are const now.
+    
+2009-07-26  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Sync with latest TEA (tcl.m4), regenerated all
+	  configure scripts.
+    
+2009-04-28  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Fix [Bug #82910] teacup requires libX11 to run
+    
+2009-03-12  Stuart Cassoff <stwo@users.sourceforge.net>
+
+	* various fixes to tcl.m4 [Bug #2669308] (Stuart Cassoff)
+	  (To be checked in in sampleextension as well.)
+	* fix [Bug #2669482] Can't 'make test'
+
+2009-03-12  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* fix "make checkstubs"
+	* a few CONST84 eliminations
+
+2009-03-09  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Revert to using "ld -b" in stead of "${CC} -b" for
+	  HP-UX-11; it doesn't work in 64-bit mode.
+
+2009-03-03  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* fix "make genstubs" for libpng, libtiff, libz, libjpeg
+	* PNG build fix
+
+2009-02-24  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* gif handler cleanup
+	* Allow -index N option for TIFF images too [Feature Request #706277]
+
+2009-02-23  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Attempt to fix HP-UX Itanium 64-bit build
+	* revert r177 change to pkgIndex.tcl: it broke TEApot package
+	  handling.
+
+2009-02-17  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Move ./libz to ./compat/zlib and ./libz/tcl to ./zlib
+	* Move ./libjpeg to ./compat/libjpeg and ./libjpeg/tcl to ./libjpeg
+	* Move ./libpng to ./compat/libpng and ./libpng/tcl to ./libpng
+	* Move ./libtiff to ./compat/libtiff and ./libtiff/tcl to ./libtiff
+	* Require Tcl/Tk 8.3 for libz, libpng, libtiff and libjpeg
+
+2009-01-12  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to libpng 1.2.34
+
+2009-01-12	Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* No longer Panic when an out-of-memory error occurs,
+	  when compiled with Tcl/Tk 8.5 or later and running with
+	  Tcl/Tk 8.5 and later (Tk bug #2477446)
+
+2009-01-05  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Two more stub functions for improved Tcl 8.5 support.
+	* Make sure that in C preprocessor directives the "#"
+	  character is the first character on the line.
+
+2008-11-13  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* For gcc, from now on use as standard CFLAGS:
+	    CFLAGS_OPTIMIZE="-O2 -fomit-frame-pointer"
+	    CFLAGS_WARNING="-Wall -Wwrite-strings"
+	* Upgrade to GNU Autoconf 2.63
+
+2008-11-13  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Create 1.3.x branch. Now trunk is available for
+	  tkImg 1.4 development.
+
+2008-11-13  Andreas Kupries <andreask@activestate.com>
+
+	* Fix win32 compile issue with zlib, mask gzprintf
+    
+2008-11-04	Paul Obermeier <obermeier@users.sourceforge.net>
+
+	* Added new (visual) test suite for checking the different
+	  ways of reading and writing images in the various formats.
+
+2008-11-04	Paul Obermeier <obermeier@users.sourceforge.net>
+
+	* Updated demo program to include all available image
+	  formats. Also added additional tests for all image formats.
+
+2008-11-04	Paul Obermeier <obermeier@users.sourceforge.net>
+
+	* Added two new format handlers: DTED for displaying
+	  terrain elevation data files as an image.
+	  RAW for displaying files filled with raw matrix data in 8-bit
+	  integer, 16-bit integer or 32-bit float binary data.
+	  Note: These very special format handlers are not loaded with
+	  a "package require Img", but must be loaded explicitly with
+	  "package require img::dted" and "package require img::raw".
+
+2008-11-04	Paul Obermeier <obermeier@users.sourceforge.net>
+
+	* Fixed issue #1963052:
+	    Added correct base64 encoded image for format ICO.
+	    Added correct base64 encoded image for format SGI.
+	    Also added code to fill unused bytes of file header with
+	    zeros to get identical test results.
+	    Removed test for format pixmap.
+
+2008-10-27  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Fixed issue #762108: configure can now finds the
+	  tclConfig.sh and tkConfig.sh files from a parallel
+	  Tcl and Tk build. With this change, tkimg now builds
+	  out-of-the-box on mingw32.
+
+2008-10-22  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Eliminate "CONST" everywhere, replacing it with "const"
+
+2008-10-22  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* CONST -> const in *.decls, genenerate all header files
+	* white spacing fixes.
+	* eliminate genStubs.tcl in other places than the main "tools"
+
+2008-10-22  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Introduce the use of CONST86 for compiling against Tcl 8.6
+
+2008-11-04	Paul Obermeier <obermeier@users.sourceforge.net>
+
+	* Make SGI parser 64-bit aware: Convert long's to int's.
+
+2008-02-06  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Updated genStubs.tcl to match with the version in Tcl8.5.1
+	* re-generated all related files (*Decls.h and *StubInit.c)
+
+2008-02-05  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Fixed issue #1081827: tkImgGIF.c is now thread-safe.
+
+2008-02-04  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Fixed a buffer overflow (CVE-2006-4484)
+
+2007-12-19  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to libpng 1.2.24
+
+2006-08-04  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to libpng 1.2.12
+
+2006-06-09  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to libtiff 3.8.2
+
+2006-06-09  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to libpng 1.2.10
+
+2006-06-06  Paul Obermeier <obermeier@users.sourceforge.net>
+
+	* bmp/bmp.c: 1. Added read parser for 16 and 32 bit formats. Needed
+	                when reading images from the Windows clipboard.
+			(See http://wiki.tcl.tk/15647 for example)
+	             2. Corrected previous rleBuf fix.
+
+2006-06-01  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* fix a few compiler warnings when using the Intel C-compiler. Suggested by David Binderman.
+
+2006-05-02  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* various cleanups and elimination of compiler warnings. No change in functionality.
+
+2006-05-02  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* implement real LZW compression in GIF encoder
+
+2006-03-22  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* windows-specific bug-fixes for TEA
+
+2006-03-22  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* add eclipse project files (experimental)
+
+2006-01-25  Andreas Kupries <andreask@activestate.com>
+
+	* base/Makefile.in: TEA 3.5 update. Added missing Tk
+	* bmp/Makefile.in:  definitions and variables in. Before
+	* gif/Makefile.in:  $prefix was used to locate headers, now
+	* ico/Makefile.in:  we have to refer to the Tk locations
+	* jpeg/Makefile.in: explicitly.
+	* pcx/Makefile.in:
+	* pixmap/Makefile.in:
+	* png/Makefile.in:
+	* ppm/Makefile.in:
+	* ps/Makefile.in:
+	* sgi/Makefile.in:
+	* sun/Makefile.in:
+	* tga/Makefile.in:
+	* tiff/Makefile.in:
+	* window/Makefile.in:
+	* xbm/Makefile.in:
+	* xpm/Makefile.in:
+
+2006-01-24  Andreas Kupries <andreask@activestate.com>
+
+	* tclconfig/tcl.m4: Updated to TEA 3.5
+	* configure.in:     Ditto.
+	* configure:        Regenerated.
+	* base/configure.in:
+	* base/configure:
+	* bmp/configure.in:
+	* bmp/configure:
+	* gif/configure.in:
+	* gif/configure:
+	* ico/configure.in:
+	* ico/configure:
+	* jpeg/configure.in:
+	* jpeg/configure:
+	* libjpeg/tcl/configure.in:
+	* libjpeg/tcl/configure:
+	* libpng/tcl/configure.in:
+	* libpng/tcl/configure:
+	* libtiff/tcl/configure.in:
+	* libtiff/tcl/configure:
+	* libz/tcl/configure.in:
+	* libz/tcl/configure:
+	* pcx/configure.in:
+	* pcx/configure:
+	* pixmap/configure.in:
+	* pixmap/configure:
+	* png/configure.in:
+	* png/configure:
+	* ppm/configure.in:
+	* ppm/configure:
+	* ps/configure.in:
+	* ps/configure:
+	* sgi/configure.in:
+	* sgi/configure:
+
+2005-08-17  Andreas Kupries  <andreask@activestate.com>
+
+	* libz:     Updated to version 1.2.3 of libz.
+	* libz/tcl: Changed version of wrapper to 1.2.3, synchronized to
+	  version of libz.
+
+2005-06-13  Andreas Kupries <andreask@activestate.com>
+
+	* Makefile.in: Updated everything to TEA 3.2. tclconfig and contained files is now central.
+	* aclocal.m4:  Customization of 'init.c' template file now in the configure script. Albeit
+	* configure:   still not fully standard. Removed lots of old cruft.
+	* configure.in:
+	* init.c:
+	* base/Makefile.in:
+	* base/aclocal.m4:
+	* base/configure:
+	* base/configure.in:
+	* base/pkgIndex.tcl.in:
+	* base/tkimg.c:
+	* base/tkimgConfig.sh.in:
+	* base/tkimgStubLib.c:
+	* bmp/Makefile.in:
+	* bmp/configure:
+	* bmp/configure.in:
+	* gif/Makefile.in:
+	* gif/configure:
+	* gif/configure.in:
+	* ico/Makefile.in:
+	* ico/configure:
+	* ico/configure.in:
+	* jpeg/Makefile.in:
+	* jpeg/configure:
+	* jpeg/configure.in:
+	* libjpeg/config.guess:
+	* libjpeg/config.sub:
+	* libjpeg/tcl/Makefile.in:
+	* libjpeg/tcl/aclocal.m4:
+	* libjpeg/tcl/configure:
+	* libjpeg/tcl/configure.in:
+	* libjpeg/tcl/jpegtcl.c:
+	* libjpeg/tcl/jpegtclConfig.sh.in:
+	* libpng/tcl/Makefile.in:
+	* libpng/tcl/aclocal.m4:
+	* libpng/tcl/configure:
+	* libpng/tcl/configure.in:
+	* libpng/tcl/pngtcl.c:
+	* libpng/tcl/pngtclConfig.sh.in:
+	* libtiff/libtiff/tiff.h:
+	* libtiff/tcl/Makefile.in:
+	* libtiff/tcl/aclocal.m4:
+	* libtiff/tcl/configure:
+	* libtiff/tcl/configure.in:
+	* libtiff/tcl/tifftcl.c:
+	* libtiff/tcl/tifftclConfig.sh.in:
+	* libz/tcl/Makefile.in:
+	* libz/tcl/aclocal.m4:
+	* libz/tcl/configure:
+	* libz/tcl/configure.in:
+	* libz/tcl/zlibtcl.c:
+	* libz/tcl/zlibtcl.h:
+	* libz/tcl/zlibtclConfig.sh.in:
+	* pcx/Makefile.in:
+	* pcx/configure:
+	* pcx/configure.in:
+	* pixmap/Makefile.in:
+	* pixmap/configure:
+	* pixmap/configure.in:
+	* pixmap/pixmap.c:
+	* png/Makefile.in:
+	* png/configure:
+	* png/configure.in:
+	* ppm/Makefile.in:
+	* ppm/configure:
+	* ppm/configure.in:
+	* ps/Makefile.in:
+	* ps/configure:
+	* ps/configure.in:
+	* sgi/Makefile.in:
+	* sgi/configure:
+	* sgi/configure.in:
+
+2004-08-18  Andreas Kupries  <andreas_kupries@users.sourceforge.net>
+
+	*
+	* Released and tagged Tkimg 1.3 ========================
+	*
+
 2004-08-16  Andreas Kupries  <andreask@activestate.com>
 
 	* Updated some hardwired version information in png, zlib, and
@@ -104,7 +538,7 @@
 
 2003-03-09  Paul Obermeier  <obermeier@poSoft.de>
 
-	* pcx/pcx.c: Fixed incorrect usage of Tcl_AppendResult, 
+	* pcx/pcx.c: Fixed incorrect usage of Tcl_AppendResult,
 	* sun/sun.c: which could cause core dumps.
 	* tga/tga.c:
 
@@ -124,7 +558,7 @@
 
 	* doc/format-footer.inc: Better see-also and keywording.
 	* doc/img-ps.man:
-	* doc/img.man: 
+	* doc/img.man:
 
 	* doc/img-png.man: Small fix in manpage, command was broken over
 	  two lines, which is illegal.
@@ -163,7 +597,7 @@
 	* doc/img.man:     Started to work on new user documentation.
 	* doc/img-bmp.man: Using the doctools format for easy writing
 	* doc/img-gif.man: and easy conversion to other formats.
-	* doc/img-ico.man: 
+	* doc/img-ico.man:
 	* doc/img-jpeg.man:   Given the uniformity of most of the
 	* doc/img-pcx.man:    handlers a template system is used
 	* doc/img-pixmap.man: (doctools extended to handle [include]
@@ -428,12 +862,12 @@
 
 2002-06-17  Andreas Kupries <andreas_kupries@users.sourceforge.net>
 
-	* imgBMP.c (CommonReadBMP): 
-	* imgGIF.c (CommonReadGIF): 
-	* imgJPEG.c (CommonReadJPEG): 
-	* imgPS.c (ChanReadPDF): 
-	* imgWindow.c (ObjReadWin): 
-	* imgXPM.c (CommonReadXPM): 
+	* imgBMP.c (CommonReadBMP):
+	* imgGIF.c (CommonReadGIF):
+	* imgJPEG.c (CommonReadJPEG):
+	* imgPS.c (ChanReadPDF):
+	* imgWindow.c (ObjReadWin):
+	* imgXPM.c (CommonReadXPM):
 	* imgUtil.c (ImgPhotoPutBlock): Updated to handle changes
 	  introduced into Tk by TIP #98.
 

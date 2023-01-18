@@ -1,69 +1,23 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Id: configure.in,v 1.4 2003/02/07 07:08:36 andreas_kupries Exp $)
+AC_REVISION($Id: configure.in 287 2010-07-07 11:54:54Z nijtmans $)
 
 #--------------------------------------------------------------------
 # Configure script for package 'tkimgpng', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-#--------------------------------------------------------------------
-# This very first macro is used to verify that the configure script can 
-# find the sources.  The argument to AC_INIT is a unique filename for
-# this package.
-#--------------------------------------------------------------------
+AC_INIT([tkimgpng],[1.4])
 
-AC_INIT(./png.c)
+TEA_INIT([3.7])
 
 AC_CONFIG_AUX_DIR(../tclconfig)
-CONFIGDIR=${srcdir}/../tclconfig
-AC_SUBST(CONFIGDIR)
 
-#--------------------------------------------------------------------
-# Setting our package name and version numbers.  The NODOT_VERSION is
-# required for constructing the library name on systems that don't like
-# dots in library names (Windows).  The VERSION variable is used on the
-# other systems.
-#--------------------------------------------------------------------
-
-PACKAGE=tkimgpng
-DPACKAGE="img::png"
 PHIMGTYPE="png"
-
-MAJOR_VERSION=1
-MINOR_VERSION=3
-PATCHLEVEL=
-
-VERSION=${MAJOR_VERSION}.${MINOR_VERSION}${PATCHLEVEL}
-NODOT_VERSION=${MAJOR_VERSION}${MINOR_VERSION}
-TKIMGPNG_VERSION=${VERSION}
-
-AC_SUBST(PACKAGE)
-AC_SUBST(DPACKAGE)
-AC_SUBST(PHIMGTYPE)
-AC_SUBST(VERSION)
-AC_SUBST(TKIMGPNG_VERSION)
-
-# This package name must be replaced statically for AC_SUBST to work
-# Substitute stub_LIB_FILE if your package creates a stub library too.
-AC_SUBST(tkimgpng_LIB_FILE)
-#AC_SUBST(tkimgpngstub_LIB_FILE)
-
-#--------------------------------------------------------------------
-# This was placed here so that we can compile with -DVERSION="1.2" to
-# encode the package version directly into the source files.
-#--------------------------------------------------------------------
-
-eval AC_DEFINE_UNQUOTED(VERSION, "${VERSION}")
-eval AC_DEFINE_UNQUOTED(TKIMGPNG_VERSION, "${TKIMGPNG_VERSION}")
-
-#--------------------------------------------------------------------
-# Call TEA_INIT as the first TEA_ macro to set up initial vars.
-# This will define a ${TEA_PLATFORM} variable == "unix" or "windows".
-#--------------------------------------------------------------------
-
-TEA_INIT
+CPACKAGE="Tkimgpng"
+PACKAGE_TCLNAME="img::png"
+AC_SUBST(PACKAGE_TCLNAME)
 
 #--------------------------------------------------------------------
 # Load the tclConfig.sh file
@@ -107,6 +61,41 @@ IMG_SRCPATH(tkimg)
 IMG_SRCPATH(pngtcl)
 IMG_SRCPATH(zlibtcl)
 
+#-----------------------------------------------------------------------
+# Specify the C source files to compile in TEA_ADD_SOURCES,
+# public headers that need to be installed in TEA_ADD_HEADERS,
+# stub library C source files to compile in TEA_ADD_STUB_SOURCES,
+# and runtime Tcl library files in TEA_ADD_TCL_SOURCES.
+# This defines PKG(_STUB)_SOURCES, PKG(_STUB)_OBJECTS, PKG_HEADERS
+# and PKG_TCL_SOURCES.
+#-----------------------------------------------------------------------
+
+TEA_ADD_SOURCES([png.c])
+TEA_ADD_HEADERS([])
+TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${tkimg_SRC_PATH}`\"])
+TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${pngtcl_SRC_PATH}`\"])
+TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${pngtcl_BUILD_PATH}`\"])
+TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${zlibtcl_SRC_PATH}`\"])
+TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${zlibtcl_BUILD_PATH}`\"])
+TEA_ADD_INCLUDES([-I.])
+TEA_ADD_LIBS([])
+TEA_ADD_CFLAGS([-DTKIMG_VERSION=\\\"\${tkimg_VERSION}\\\"])
+TEA_ADD_CFLAGS([-DPNGTCL_VERSION=\\\"\${pngtcl_VERSION}\\\"])
+TEA_ADD_CFLAGS([-DZLIBTCL_VERSION=\\\"\${zlibtcl_VERSION}\\\"])
+TEA_ADD_STUB_SOURCES([])
+TEA_ADD_TCL_SOURCES([])
+
+PUP="`echo ${PACKAGE_NAME}| tr 'a-z' 'A-Z'`"
+
+sed < "`${CYGPATH} ${srcdir}/../init.c`" > "init.c"	\
+	-e	"s/@CPACKAGE@/${CPACKAGE}/"		\
+	-e	"s/%PACKAGE%/${PACKAGE_NAME}/"		\
+	-e	"s/%PACKAGE_UP%/${PUP}/"		\
+	-e	"s/%PHIMGTYPE%/${PHIMGTYPE}/"
+
+# init.c is an included source file, not a source by itself
+# FUTURE: Do this through AC_OUTPUT!!
+
 #--------------------------------------------------------------------
 # __CHANGE__
 # Choose which headers you need.  Extension authors should try very
@@ -118,13 +107,9 @@ IMG_SRCPATH(zlibtcl)
 
 TEA_PUBLIC_TCL_HEADERS
 TEA_PUBLIC_TK_HEADERS
-#TEA_PRIVATE_TCL_HEADERS
 
 #--------------------------------------------------------------------
 # A few miscellaneous platform-specific items:
-#
-# We have to define a special symbol for Windows (BUILD_tkimgpng in this
-# case) so that we create the export library with the dll.
 #
 # Windows creates a few extra files that need to be cleaned up.
 # We can add more files to clean if our extension creates any extra
@@ -136,15 +121,11 @@ TEA_PUBLIC_TK_HEADERS
 #--------------------------------------------------------------------
 
 if test "${TEA_PLATFORM}" = "windows" ; then
-    AC_DEFINE(BUILD_tkimgpng)
     CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch init.c"
-    EXTRA_SOURCES='$(WIN_SOURCES)'
 else
     CLEANFILES="init.c"
-    EXTRA_SOURCES='$(UNIX_SOURCES)'
 fi
 AC_SUBST(CLEANFILES)
-AC_SUBST(EXTRA_SOURCES)
 
 #--------------------------------------------------------------------
 # Check whether --enable-threads or --disable-threads was given.
@@ -190,9 +171,6 @@ TEA_PATH_X
 
 AC_DEFINE(USE_TCL_STUBS)
 AC_DEFINE(USE_TK_STUBS)
-AC_DEFINE(USE_TKIMG_STUBS)
-AC_DEFINE(USE_PNGTCL_STUBS)
-AC_DEFINE(USE_ZLIBTCL_STUBS)
 
 #--------------------------------------------------------------------
 # This macro generates a line to use when building a library.  It
@@ -208,14 +186,12 @@ TEA_MAKE_LIB
 #--------------------------------------------------------------------
 
 if test "${TEA_PLATFORM}" = "windows" -a "$GCC" != "yes" ; then
-    SHLIB_LD_LIBS="${SHLIB_LD_LIBS} \"`${CYGPATH} ${tkimg_STUB_LIB_PATH}`\""
-    SHLIB_LD_LIBS="${SHLIB_LD_LIBS} \"`${CYGPATH} ${pngtcl_STUB_LIB_PATH}`\""
+    TEA_ADD_LIBS([\"`${CYGPATH} ${tkimg_STUB_LIB_PATH}`\"])
+    TEA_ADD_LIBS([\"`${CYGPATH} ${pngtcl_STUB_LIB_PATH}`\"])
 else
-    SHLIB_LD_LIBS="${SHLIB_LD_LIBS} ${tkimg_STUB_LIB_SPEC}"
-    SHLIB_LD_LIBS="${SHLIB_LD_LIBS} ${pngtcl_STUB_LIB_SPEC}"
+    TEA_ADD_LIBS([${tkimg_STUB_LIB_SPEC}])
+    TEA_ADD_LIBS([${pngtcl_STUB_LIB_SPEC}])
 fi
-
-SHLIB_LD_LIBS="${SHLIB_LD_LIBS} \${TK_LIBS}"
 
 #--------------------------------------------------------------------
 # Find tclsh so that we can run pkg_mkIndex to generate the pkgIndex.tcl
@@ -235,6 +211,6 @@ TEA_PROG_WISH
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-AC_OUTPUT([Makefile pkgIndex.tcl])
+AC_OUTPUT([Makefile])
 
 #--------------------------------------------------------------------

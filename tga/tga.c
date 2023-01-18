@@ -34,15 +34,15 @@
  * Read  TGA image: "tga -matte <bool> -verbose <bool>"
  * Write TGA image: "tga -matte <bool> -verbose <bool> -compression <type>"
  *
- * -matte <bool>:       If set to false, a matte (alpha) channel is ignored 
+ * -matte <bool>:       If set to false, a matte (alpha) channel is ignored
  *                      during reading or writing. Default is true.
  * -verbose <bool>:     If set to true, additional information about the file
  *                      format is printed to stdout. Default is false.
  * -compression <type>: Set the compression mode to either "none" or "rle".
  * 			Default is "rle".
  *
- * Notes: 
- * 
+ * Notes:
+ *
  * - As Targa files do not have a "magic number" somewhere in the file header,
  *   it is difficult to automatically recognize this format.
  *   Therefore it should be specified as one of the first entries in the list of
@@ -50,7 +50,7 @@
  *
  * ENDHEADER
  *
- * $Id: tga.c,v 1.5 2004/08/12 19:19:35 andreas_kupries Exp $
+ * $Id: tga.c 233 2010-04-01 09:28:00Z nijtmans $
  *
  */
 
@@ -118,41 +118,41 @@ typedef struct {
 	  *blueScan,	/* Buffer for one scanline: Blue  channel */
 	  *matteScan;	/* Buffer for one scanline: Matte channel */
     UByte *pixbuf;
-    #if defined (DEBUG_LOCAL)
+#ifdef DEBUG_LOCAL
 	Int total;
-    #endif      
+#endif
 } TGAFILE;
 
-/* OPA TODO: Change from ANSI-C arguments to _ANSI_ARGS_ macro. */
-
-static void tgaClose (TGAFILE *tf)
+static void tgaClose(TGAFILE *tf)
 {
-    if (tf->redScan)   ckfree ((char *)tf->redScan);
-    if (tf->greenScan) ckfree ((char *)tf->greenScan);
-    if (tf->blueScan)  ckfree ((char *)tf->blueScan);
-    if (tf->matteScan) ckfree ((char *)tf->matteScan);
-    if (tf->pixbuf)    ckfree ((char *)tf->pixbuf);
+    if (tf->redScan)   ckfree((char *)tf->redScan);
+    if (tf->greenScan) ckfree((char *)tf->greenScan);
+    if (tf->blueScan)  ckfree((char *)tf->blueScan);
+    if (tf->matteScan) ckfree((char *)tf->matteScan);
+    if (tf->pixbuf)    ckfree((char *)tf->pixbuf);
     return;
 }
 
-static Boln readError (Tcl_Interp *interp)
+static Boln readError(Tcl_Interp *interp)
 {
-    Tcl_AppendResult(interp, "Unexpected end of file", (char *) NULL); 
+    Tcl_AppendResult(interp, "Unexpected end of file", (char *) NULL);
     return FALSE;
 }
 
-static Boln writeError (Tcl_Interp *interp)
+/* This function is commented out because it is not used anywhere
+static Boln writeError(Tcl_Interp *interp)
 {
-    Tcl_AppendResult(interp, "Error writing to file", (char *) NULL); 
+    Tcl_AppendResult(interp, "Error writing to file", (char *) NULL);
     return FALSE;
 }
+*/
 
 /* Read 1 byte, representing an unsigned integer number. */
 
 static Boln readUByte (tkimg_MFile *handle, UByte *b)
 {
     char buf[1];
-    if (1 != tkimg_Read (handle, buf, 1))
+    if (1 != tkimg_Read(handle, buf, 1))
         return FALSE;
     *b = buf[0];
     return TRUE;
@@ -164,7 +164,7 @@ static Boln readUByte (tkimg_MFile *handle, UByte *b)
 static Boln readShort (tkimg_MFile *handle, Short *s)
 {
     char buf[2];
-    if (2 != tkimg_Read (handle, buf, 2))
+    if (2 != tkimg_Read(handle, buf, 2))
         return FALSE;
     *s = (buf[0] & 0xFF) | (buf[1] << 8);
     return TRUE;
@@ -176,18 +176,18 @@ static Boln writeUByte (tkimg_MFile *handle, UByte b)
 {
     UByte buf[1];
     buf[0] = b;
-    if (1 != tkimg_Write (handle, (CONST char *)buf, 1))
+    if (1 != tkimg_Write(handle, (const char *)buf, 1))
         return FALSE;
     return TRUE;
 }
 
 /* Write a byte, representing a signed integer to a file. */
 
-static Boln writeByte (tkimg_MFile *handle, Byte b)
+static Boln writeByte(tkimg_MFile *handle, Byte b)
 {
     Byte buf[1];
     buf[0] = b;
-    if (1 != tkimg_Write (handle, buf, 1))
+    if (1 != tkimg_Write(handle, buf, 1))
         return FALSE;
     return TRUE;
 }
@@ -200,13 +200,13 @@ static Boln writeShort (tkimg_MFile *handle, Short s)
     Byte buf[2];
     buf[0] = s;
     buf[1] = s >> 8;
-    if (2 != tkimg_Write (handle, buf, 2))
+    if (2 != tkimg_Write(handle, buf, 2))
         return FALSE;
     return TRUE;
 }
 
 #define OUT Tcl_WriteChars (outChan, str, -1)
-static void printImgInfo (TGAHEADER *th, CONST char *filename, CONST char *msg)
+static void printImgInfo (TGAHEADER *th, const char *filename, const char *msg)
 {
     Tcl_Channel outChan;
     char str[256];
@@ -216,16 +216,16 @@ static void printImgInfo (TGAHEADER *th, CONST char *filename, CONST char *msg)
         return;
     }
 
-    sprintf (str, "%s %s\n", msg, filename);                                   OUT;
-    sprintf (str, "\tSize in pixel      : %d x %d\n", th->xsize, th->ysize);   OUT;
-    sprintf (str, "\tNo. of channels    : %d\n", NCHAN(th->pixsize));          OUT;
-    sprintf (str, "\tCompression        : %s\n", 
+    sprintf(str, "%s %s\n", msg, filename);                                   OUT;
+    sprintf(str, "\tSize in pixel      : %d x %d\n", th->xsize, th->ysize);   OUT;
+    sprintf(str, "\tNo. of channels    : %d\n", NCHAN(th->pixsize));          OUT;
+    sprintf(str, "\tCompression        : %s\n",
 		IS_COMPRESSED(th->imgtyp)? "RLE": "None");                     OUT;
-    sprintf (str, "\tVertical encoding  : %s\n",
+    sprintf(str, "\tVertical encoding  : %s\n",
 		ENC_TOP_BOTTOM(th->imgdes)? "Top -> Bottom": "Bottom -> Top"); OUT;
-    sprintf (str, "\tHorizontal encoding: %s\n",
+    sprintf(str, "\tHorizontal encoding: %s\n",
 		ENC_LEFT_RIGHT(th->imgdes)? "Left -> Right": "Right -> Left"); OUT;
-    Tcl_Flush (outChan);
+    Tcl_Flush(outChan);
 }
 #undef OUT
 static Boln readHeader (tkimg_MFile *handle, TGAHEADER *th)
@@ -287,7 +287,7 @@ static Boln readHeader (tkimg_MFile *handle, TGAHEADER *th)
     return TRUE;
 }
 
-static Boln writeHeader (tkimg_MFile *handle, TGAHEADER *th)
+static Boln writeHeader(tkimg_MFile *handle, TGAHEADER *th)
 {
     if (!writeUByte (handle, th->numid) ||
 	!writeUByte (handle, th->maptyp) ||
@@ -305,10 +305,10 @@ static Boln writeHeader (tkimg_MFile *handle, TGAHEADER *th)
     return TRUE;
 }
 
-/* A pixel is represented by 3 or 4 bytes in the order Blue/Green/Red/Alpha. 
-   We are converting the order into standard RGBA order. 
+/* A pixel is represented by 3 or 4 bytes in the order Blue/Green/Red/Alpha.
+   We are converting the order into standard RGBA order.
    Note that TARGA allows pixel values to be compressed across scanline
-   boundaries. 
+   boundaries.
 */
 
 /* Read the value of a pixel from "handle" and assume it must be repeated "n"
@@ -322,14 +322,14 @@ static Boln readRlePixel (Tcl_Interp *interp, tkimg_MFile *handle, UByte **pixBu
     UByte localBuf[4];
 
     nchan = NCHAN(tf->th.pixsize);
-    if (nchan != tkimg_Read (handle, (char *)localBuf, nchan))
+    if (nchan != tkimg_Read(handle, (char *)localBuf, nchan))
 	return readError (interp);
     count = *countPtr;
     for (i=0; i<n; i++)
     {
-	#if defined (DEBUG_LOCAL)
+#ifdef DEBUG_LOCAL
 	    tf->total++;
-	#endif
+#endif
 	(*pixBufPtr)[0] = localBuf[2];
 	(*pixBufPtr)[1] = localBuf[1];
 	(*pixBufPtr)[2] = localBuf[0];
@@ -365,9 +365,9 @@ static Boln tgaReadScan (Tcl_Interp *interp, tkimg_MFile *handle,
     nchan = NCHAN(tf->th.pixsize);
     pixBufPtr = tf->pixbuf;
 
-    #if defined (DEBUG_LOCAL)
+#ifdef DEBUG_LOCAL
 	tf->total = 0;
-    #endif
+#endif
 
     if (IS_COMPRESSED (tf->th.imgtyp)) {
 	Byte cbuf[1];
@@ -377,13 +377,13 @@ static Boln tgaReadScan (Tcl_Interp *interp, tkimg_MFile *handle,
 	   still stored in "pixbuf" (TGA_MODE_SAME) or read in the
 	   appropriate number of pixel values (TGA_MODE_DIFF). */
 	while (tf->scanrest) {
-	    if (tf->scanmode == TGA_MODE_DIFF) {   
-		if (nchan != tkimg_Read (handle, (char *)localBuf, nchan))
+	    if (tf->scanmode == TGA_MODE_DIFF) {
+		if (nchan != tkimg_Read(handle, (char *)localBuf, nchan))
 		    return readError (interp);
 	    }
-	    #if defined (DEBUG_LOCAL)
+#ifdef DEBUG_LOCAL
 		tf->total++;
-	    #endif
+#endif
 	    *pixBufPtr++ = localBuf[2];
 	    *pixBufPtr++ = localBuf[1];
 	    *pixBufPtr++ = localBuf[0];
@@ -401,7 +401,7 @@ static Boln tgaReadScan (Tcl_Interp *interp, tkimg_MFile *handle,
 	/* Read the byte telling us the compression mode and the compression
 	   count. Then read the pixel values till a scanline is filled. */
 	do {
-	    if (1 != tkimg_Read (handle, cbuf, 1))
+	    if (1 != tkimg_Read(handle, cbuf, 1))
 		return readError (interp);
 	    numpix = (cbuf[0] & 0x7F) + 1;
 
@@ -418,23 +418,23 @@ static Boln tgaReadScan (Tcl_Interp *interp, tkimg_MFile *handle,
 		}
 	    } else {
 		tf->scanmode = TGA_MODE_SAME;
-		if (!readRlePixel (interp, handle, &pixBufPtr, 
+		if (!readRlePixel (interp, handle, &pixBufPtr,
 				   &count, stop, numpix, tf))
 		    return FALSE;
 	    }
 	} while (count < stop);
 
-	#if defined (DEBUG_LOCAL)
-	    printf ("\tScanline %d: Pixels: %d Rest: %d\n", 
+#ifdef DEBUG_LOCAL
+	    printf("\tScanline %d: Pixels: %d Rest: %d\n",
 		    y, tf->total, tf->scanrest);
-	#endif
+#endif
     } else {
 	/* Read uncompressed pixel data. */
 	Int   i, bytesPerLine;
 	UByte curPix;
-	
+
 	bytesPerLine = nchan * tf->th.xsize;
-	if (bytesPerLine != tkimg_Read (handle, (char *)tf->pixbuf, bytesPerLine))
+	if (bytesPerLine != tkimg_Read(handle, (char *)tf->pixbuf, bytesPerLine))
 	    return readError (interp);
 
 	for (i=0; i<stop; i++) {
@@ -447,7 +447,7 @@ static Boln tgaReadScan (Tcl_Interp *interp, tkimg_MFile *handle,
     return TRUE;
 }
 
-static Boln writePixel (tkimg_MFile *handle, UByte b, UByte g,
+static Boln writePixel(tkimg_MFile *handle, UByte b, UByte g,
 			UByte r, UByte m, Int nchan)
 {
     UByte buf[4];
@@ -455,12 +455,12 @@ static Boln writePixel (tkimg_MFile *handle, UByte b, UByte g,
     buf[1] = g;
     buf[2] = r;
     buf[3] = m;
-    if (nchan != tkimg_Write (handle, (CONST char *)buf, nchan))
+    if (nchan != tkimg_Write(handle, (const char *)buf, nchan))
 	return FALSE;
     return TRUE;
 }
 
-static Boln tgaWriteScan (Tcl_Interp *interp, tkimg_MFile *handle,
+static Boln tgaWriteScan(Tcl_Interp *interp, tkimg_MFile *handle,
 			  TGAFILE *tf, Int y)
 {
     UByte *stop, *red_end, *green_end, *blue_end, *matte_end;
@@ -471,13 +471,13 @@ static Boln tgaWriteScan (Tcl_Interp *interp, tkimg_MFile *handle,
     tf->blue = tf->blueScan;
     tf->matte = tf->matteScan;
     stop = tf->red + tf->th.xsize;
-    nchan = NCHAN (tf->th.pixsize);
+    nchan = NCHAN(tf->th.pixsize);
 
     /* Write the scanline data to the file. */
-    if (! IS_COMPRESSED (tf->th.imgtyp)) {
+    if (! IS_COMPRESSED(tf->th.imgtyp)) {
 	while (tf->red < stop)
 	{
-	    if (!writePixel (handle, *tf->blue, *tf->green, *tf->red, *tf->matte, nchan))
+	    if (!writePixel(handle, *tf->blue, *tf->green, *tf->red, *tf->matte, nchan))
 		return FALSE;
 	    tf->blue++;
 	    tf->green++;
@@ -511,8 +511,8 @@ static Boln tgaWriteScan (Tcl_Interp *interp, tkimg_MFile *handle,
 	    }
 	    if (red_end - tf->red >= MINRUN)
 	    {	/* Found a run of compressable data */
-		if (!writeByte (handle, (Byte)(((red_end - tf->red)-1)|0x80)) ||
-		    !writePixel (handle, *tf->blue, *tf->green, *tf->red, *tf->matte, nchan))
+		if (!writeByte(handle, (Byte)(((red_end - tf->red)-1)|0x80)) ||
+		    !writePixel(handle, *tf->blue, *tf->green, *tf->red, *tf->matte, nchan))
 		    return FALSE;
 		tf->red = red_end;
 		tf->green = green_end;
@@ -549,11 +549,11 @@ static Boln tgaWriteScan (Tcl_Interp *interp, tkimg_MFile *handle,
 		    blue_end++;
 		    matte_end++;
 		}
-		if (!writeByte (handle, (Byte)((red_end - tf->red) - 1)))
+		if (!writeByte(handle, (Byte)((red_end - tf->red) - 1)))
 		    return FALSE;
 		while (tf->red < red_end)
 		{
-		    if (!writePixel (handle, *tf->blue, *tf->green, *tf->red, *tf->matte, nchan))
+		    if (!writePixel(handle, *tf->blue, *tf->green, *tf->red, *tf->matte, nchan))
 			return FALSE;
 		    tf->red++;
 		    tf->green++;
@@ -570,7 +570,7 @@ static Boln tgaWriteScan (Tcl_Interp *interp, tkimg_MFile *handle,
     return TRUE;
 }
 
-/* 
+/*
  * Here is the start of the standard functions needed for every image format.
  */
 
@@ -578,46 +578,46 @@ static Boln tgaWriteScan (Tcl_Interp *interp, tkimg_MFile *handle,
  * Prototypes for local procedures defined in this file:
  */
 
-static int ParseFormatOpts _ANSI_ARGS_((Tcl_Interp *interp, Tcl_Obj *format,
-               int *comp, int *verb, int *matte));
-static int CommonMatch _ANSI_ARGS_((tkimg_MFile *handle, int *widthPtr,
-	       int *heightPtr, TGAHEADER *tgaHeaderPtr));
-static int CommonRead _ANSI_ARGS_((Tcl_Interp *interp, tkimg_MFile *handle,
-	       CONST char *filename, Tcl_Obj *format,
-	       Tk_PhotoHandle imageHandle, int destX, int destY,
-	       int width, int height, int srcX, int srcY));
-static int CommonWrite _ANSI_ARGS_((Tcl_Interp *interp,
-	       CONST char *filename, Tcl_Obj *format,   
-	       tkimg_MFile *handle, Tk_PhotoImageBlock *blockPtr));
+static int ParseFormatOpts(Tcl_Interp *interp, Tcl_Obj *format,
+	int *comp, int *verb, int *matte);
+static int CommonMatch(tkimg_MFile *handle, int *widthPtr,
+	int *heightPtr, TGAHEADER *tgaHeaderPtr);
+static int CommonRead(Tcl_Interp *interp, tkimg_MFile *handle,
+	const char *filename, Tcl_Obj *format,
+	Tk_PhotoHandle imageHandle, int destX, int destY,
+	int width, int height, int srcX, int srcY);
+static int CommonWrite(Tcl_Interp *interp,
+	const char *filename, Tcl_Obj *format,
+	tkimg_MFile *handle, Tk_PhotoImageBlock *blockPtr);
 
-static int ParseFormatOpts (interp, format, comp, verb, matte)
+static int ParseFormatOpts(interp, format, comp, verb, matte)
     Tcl_Interp *interp;
     Tcl_Obj *format;
     int *comp;
     int *verb;
     int *matte;
 {
-    static char *tgaOptions[] = {"-compression", "-verbose", "-matte"};
+    static const char *const tgaOptions[] = {"-compression", "-verbose", "-matte"};
     int objc, length, c, i, index;
     Tcl_Obj **objv;
-    char *compression, *verbose, *transp;
+    const char *compression, *verbose, *transp;
 
     *comp = TGA_RGB_COMP;
     *verb = 0;
     *matte = 1;
-    if (tkimg_ListObjGetElements (interp, format, &objc, &objv) != TCL_OK)
+    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK)
 	return TCL_ERROR;
     if (objc) {
 	compression = "rle";
 	verbose     = "0";
 	transp      = "1";
 	for (i=1; i<objc; i++) {
-	    if (Tcl_GetIndexFromObj (interp, objv[i], tgaOptions,
+	    if (Tcl_GetIndexFromObj(interp, objv[i], (CONST84 char *CONST86 *)tgaOptions,
 		    "format option", 0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    if (++i >= objc) {
-		Tcl_AppendResult (interp, "No value for option \"",
+		Tcl_AppendResult(interp, "No value for option \"",
 			Tcl_GetStringFromObj (objv[--i], (int *) NULL),
 			"\"", (char *) NULL);
 		return TCL_ERROR;
@@ -627,10 +627,10 @@ static int ParseFormatOpts (interp, format, comp, verb, matte)
 		    compression = Tcl_GetStringFromObj(objv[i], (int *) NULL);
 		    break;
 		case 1:
-		    verbose = Tcl_GetStringFromObj(objv[i], (int *) NULL); 
+		    verbose = Tcl_GetStringFromObj(objv[i], (int *) NULL);
 		    break;
 		case 2:
-		    transp = Tcl_GetStringFromObj(objv[i], (int *) NULL); 
+		    transp = Tcl_GetStringFromObj(objv[i], (int *) NULL);
 		    break;
 	    }
 	}
@@ -641,7 +641,7 @@ static int ParseFormatOpts (interp, format, comp, verb, matte)
 	} else if ((c == 'r') && (!strncmp (compression, "rle",length))) {
 	    *comp = TGA_RGB_COMP;
 	} else {
-	    Tcl_AppendResult (interp, "invalid compression mode \"",
+	    Tcl_AppendResult(interp, "invalid compression mode \"",
 		    compression, "\": should be rle or none", (char *) NULL);
 	    return TCL_ERROR;
 	}
@@ -656,7 +656,7 @@ static int ParseFormatOpts (interp, format, comp, verb, matte)
 	    !strncmp (verbose, "off", length)) {
 	    *verb = 0;
 	} else {
-	    Tcl_AppendResult (interp, "invalid verbose mode \"", verbose, 
+	    Tcl_AppendResult(interp, "invalid verbose mode \"", verbose,
                               "\": should be 1 or 0, on or off, true or false",
 			      (char *) NULL);
 	    return TCL_ERROR;
@@ -672,50 +672,47 @@ static int ParseFormatOpts (interp, format, comp, verb, matte)
             !strncmp (transp, "off", length)) {
             *matte = 0;
         } else {
-            Tcl_AppendResult (interp, "invalid alpha (matte) mode \"", verbose,
+            Tcl_AppendResult(interp, "invalid alpha (matte) mode \"", verbose,
                               "\": should be 1 or 0, on or off, true or false",
                               (char *) NULL);
             return TCL_ERROR;
-        }   
+        }
     }
     return TCL_OK;
 }
 
-static int ChnMatch (interp, chan, filename, format, widthPtr, heightPtr)
-    Tcl_Interp *interp;
-    Tcl_Channel chan;
-    CONST char *filename;
-    Tcl_Obj *format;
-    int *widthPtr, *heightPtr;
-{
+static int ChnMatch(
+    Tcl_Channel chan,
+    const char *filename,
+    Tcl_Obj *format,
+    int *widthPtr,
+    int *heightPtr,
+    Tcl_Interp *interp
+) {
     tkimg_MFile handle;
-
-    tkimg_FixChanMatchProc (&interp, &chan, &filename, &format,
-                            &widthPtr, &heightPtr);
 
     handle.data = (char *) chan;
     handle.state = IMG_CHAN;
 
-    return CommonMatch (&handle, widthPtr, heightPtr, NULL);
+    return CommonMatch(&handle, widthPtr, heightPtr, NULL);
 }
 
-static int ObjMatch (interp, data, format, widthPtr, heightPtr)
-    Tcl_Interp *interp;
-    Tcl_Obj *data;
-    Tcl_Obj *format;
-    int *widthPtr, *heightPtr;
-{
+static int ObjMatch(
+    Tcl_Obj *data,
+    Tcl_Obj *format,
+    int *widthPtr,
+    int *heightPtr,
+    Tcl_Interp *interp
+) {
     tkimg_MFile handle;
-
-    tkimg_FixObjMatchProc (&interp, &data, &format, &widthPtr, &heightPtr);
 
     if (!tkimg_ReadInit (data, 0, &handle)) {
         tkimg_ReadInit (data, '*', &handle);
     }
-    return CommonMatch (&handle, widthPtr, heightPtr, NULL);
+    return CommonMatch(&handle, widthPtr, heightPtr, NULL);
 }
 
-static int CommonMatch (handle, widthPtr, heightPtr, tgaHeaderPtr)
+static int CommonMatch(handle, widthPtr, heightPtr, tgaHeaderPtr)
     tkimg_MFile *handle;
     int *widthPtr;
     int *heightPtr;
@@ -733,11 +730,11 @@ static int CommonMatch (handle, widthPtr, heightPtr, tgaHeaderPtr)
     return 1;
 }
 
-static int ChnRead (interp, chan, filename, format, imageHandle,
+static int ChnRead(interp, chan, filename, format, imageHandle,
                     destX, destY, width, height, srcX, srcY)
     Tcl_Interp *interp;         /* Interpreter to use for reporting errors. */
     Tcl_Channel chan;           /* The image channel, open for reading. */
-    CONST char *filename;       /* The name of the image file. */
+    const char *filename;       /* The name of the image file. */
     Tcl_Obj *format;            /* User-specified format object, or NULL. */
     Tk_PhotoHandle imageHandle; /* The photo image to write into. */
     int destX, destY;           /* Coordinates of top-left pixel in
@@ -752,11 +749,11 @@ static int ChnRead (interp, chan, filename, format, imageHandle,
     handle.data = (char *) chan;
     handle.state = IMG_CHAN;
 
-    return CommonRead (interp, &handle, filename, format, imageHandle,
+    return CommonRead(interp, &handle, filename, format, imageHandle,
                        destX, destY, width, height, srcX, srcY);
 }
 
-static int ObjRead (interp, data, format, imageHandle,
+static int ObjRead(interp, data, format, imageHandle,
 	            destX, destY, width, height, srcX, srcY)
     Tcl_Interp *interp;
     Tcl_Obj *data;
@@ -768,26 +765,18 @@ static int ObjRead (interp, data, format, imageHandle,
 {
     tkimg_MFile handle;
 
-    if (!tkimg_ReadInit (data, 0, &handle)) {
-        tkimg_ReadInit (data, '*', &handle);
+    if (!tkimg_ReadInit(data, 0, &handle)) {
+        tkimg_ReadInit(data, '*', &handle);
     }
-    return CommonRead (interp, &handle, "InlineData", format, imageHandle,
+    return CommonRead(interp, &handle, "InlineData", format, imageHandle,
                        destX, destY, width, height, srcX, srcY);
 }
 
-typedef struct myblock {
-    Tk_PhotoImageBlock ck;
-    int dummy; /* extra space for offset[3], in case it is not
-		  included already in Tk_PhotoImageBlock */
-} myblock;
-
-#define block bl.ck
-
-static int CommonRead (interp, handle, filename, format, imageHandle,
+static int CommonRead(interp, handle, filename, format, imageHandle,
                        destX, destY, width, height, srcX, srcY)
     Tcl_Interp *interp;         /* Interpreter to use for reporting errors. */
     tkimg_MFile *handle;        /* The image file, open for reading. */
-    CONST char *filename;       /* The name of the image file. */
+    const char *filename;       /* The name of the image file. */
     Tcl_Obj *format;            /* User-specified format object, or NULL. */
     Tk_PhotoHandle imageHandle; /* The photo image to write into. */
     int destX, destY;           /* Coordinates of top-left pixel in
@@ -797,20 +786,22 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
     int srcX, srcY;             /* Coordinates of top-left pixel to be used
 			         * in image being read. */
 {
-    myblock bl;
+	Tk_PhotoImageBlock block;
     Int y, nchan;
     int fileWidth, fileHeight;
     int stopY, outY, outWidth, outHeight;
     TGAFILE tf;
     int compr, verbose, matte;
     char errMsg[200];
-     
+    int result = TCL_OK;
+
     memset (&tf, 0, sizeof (TGAFILE));
     if (ParseFormatOpts (interp, format, &compr, &verbose, &matte) != TCL_OK) {
 	return TCL_ERROR;
-    } 
+    }
 
-    CommonMatch (handle, &fileWidth, &fileHeight, &tf.th);
+    if (!CommonMatch(handle, &fileWidth, &fileHeight, &tf.th))
+	return TCL_ERROR;
     if (verbose)
 	printImgInfo (&tf.th, filename, "Reading image:");
 
@@ -829,19 +820,21 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
 	return TCL_OK;
     }
 
-    if (IS_COMPRESSED (tf.th.imgtyp)) {
-	tkimg_ReadBuffer (1);
+    if (tkimg_PhotoExpand(interp, imageHandle, destX + outWidth, destY + outHeight) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+
+    if (IS_COMPRESSED(tf.th.imgtyp)) {
+	tkimg_ReadBuffer(1);
     }
 
     tf.scanmode = TGA_MODE_DIFF;
-    tkimg_PhotoExpand(imageHandle, interp, destX + outWidth, destY + outHeight);
-
-    nchan = NCHAN (tf.th.pixsize);
+    nchan = NCHAN(tf.th.pixsize);
 
     tf.pixbuf = (UByte *) ckalloc (fileWidth * nchan);
     if (!tf.pixbuf) {
-	sprintf (errMsg, "Can't allocate memory of size %d", fileWidth * nchan);
-	Tcl_AppendResult (interp, errMsg, (char *)NULL);
+	sprintf(errMsg, "Can't allocate memory of size %d", fileWidth * nchan);
+	Tcl_AppendResult(interp, errMsg, (char *)NULL);
 	tkimg_ReadBuffer (0);
 	return TCL_ERROR;
     }
@@ -853,7 +846,10 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
     block.offset[0] = 0;
     block.offset[1] = 1;
     block.offset[2] = 2;
-    block.offset[3] = (nchan == 4 && matte? 3: 0);
+    if (nchan < 4) {
+	matte = 0;
+    }
+    block.offset[3] = matte? 3: 0;
     block.pixelPtr = tf.pixbuf + srcX * nchan;
 
     stopY = srcY + outHeight;
@@ -861,30 +857,36 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
     if (ENC_TOP_BOTTOM (tf.th.imgdes)) {
 	outY = destY;
 	for (y=0; y<stopY; y++) {
-	    tgaReadScan (interp, handle, &tf, y);
+	    tgaReadScan(interp, handle, &tf, y);
 	    if (y >= srcY) {
-		tkimg_PhotoPutBlockTk(interp, imageHandle, &block, destX, outY, width, 1);
+		if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1, matte? TK_PHOTO_COMPOSITE_OVERLAY: TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
+		    result = TCL_ERROR;
+		    break;
+		}
 		outY++;
 	    }
 	}
     } else {
 	outY = destY + outHeight - 1;
 	for (y=fileHeight-1; y>=0; y--) {
-	    tgaReadScan (interp, handle, &tf, y);
+	    tgaReadScan(interp, handle, &tf, y);
 	    if (y >= srcY && y < stopY) {
-		tkimg_PhotoPutBlockTk(interp, imageHandle, &block, destX, outY, width, 1);
+		if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
+		    result = TCL_ERROR;
+		    break;
+		}
 		outY--;
 	    }
 	}
     }
-    tgaClose (&tf);
-    tkimg_ReadBuffer (0);
-    return TCL_OK ;
+    tgaClose(&tf);
+    tkimg_ReadBuffer(0);
+    return result;
 }
 
-static int ChnWrite (interp, filename, format, blockPtr)
+static int ChnWrite(interp, filename, format, blockPtr)
     Tcl_Interp *interp;
-    CONST char *filename;
+    const char *filename;
     Tcl_Obj *format;
     Tk_PhotoImageBlock *blockPtr;
 {
@@ -892,7 +894,7 @@ static int ChnWrite (interp, filename, format, blockPtr)
     tkimg_MFile handle;
     int result;
 
-    chan = tkimg_OpenFileChannel (interp, filename, 0644);
+    chan = tkimg_OpenFileChannel(interp, filename, 0644);
     if (!chan) {
 	return TCL_ERROR;
     }
@@ -900,50 +902,50 @@ static int ChnWrite (interp, filename, format, blockPtr)
     handle.data = (char *) chan;
     handle.state = IMG_CHAN;
 
-    result = CommonWrite (interp, filename, format, &handle, blockPtr);
+    result = CommonWrite(interp, filename, format, &handle, blockPtr);
     if (Tcl_Close(interp, chan) == TCL_ERROR) {
 	return TCL_ERROR;
     }
     return result;
 }
 
-static int StringWrite (interp, dataPtr, format, blockPtr)
-    Tcl_Interp *interp;
-    Tcl_DString *dataPtr;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
-{
+static int StringWrite(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
     tkimg_MFile handle;
     int result;
     Tcl_DString data;
 
-    tkimg_FixStringWriteProc (&data, &interp, &dataPtr, &format, &blockPtr);
-
-    tkimg_WriteInit (dataPtr, &handle);
-    result = CommonWrite (interp, "InlineData", format, &handle, blockPtr);
+    Tcl_DStringInit(&data);
+    tkimg_WriteInit(&data, &handle);
+    result = CommonWrite(interp, "InlineData", format, &handle, blockPtr);
     tkimg_Putc(IMG_DONE, &handle);
 
-    if ((result == TCL_OK) && (dataPtr == &data)) {
-	Tcl_DStringResult (interp, dataPtr);
+    if (result == TCL_OK) {
+	Tcl_DStringResult(interp, &data);
+    } else {
+	Tcl_DStringFree(&data);
     }
     return result;
 }
 
 static int CommonWrite (interp, filename, format, handle, blockPtr)
     Tcl_Interp *interp;
-    CONST char *filename;
+    const char *filename;
     Tcl_Obj *format;
     tkimg_MFile *handle;
     Tk_PhotoImageBlock *blockPtr;
 {
     Int     x, y, nchan;
-    Int     redOffset, greenOffset, blueOffset, alphaOffset; 
+    Int     redOffset, greenOffset, blueOffset, alphaOffset;
     UByte   *pixelPtr, *rowPixPtr;
     TGAFILE tf;
     int compr, verbose, matte; /* Format options */
     char errMsg[200];
 
-    memset (&tf, 0, sizeof (TGAFILE));
+    memset(&tf, 0, sizeof(TGAFILE));
     if (ParseFormatOpts(interp, format, &compr, &verbose, &matte) != TCL_OK) {
 	return TCL_ERROR;
     }
@@ -959,18 +961,18 @@ static int CommonWrite (interp, filename, format, handle, blockPtr)
     if (++alphaOffset < blockPtr->pixelSize) {
         alphaOffset -= blockPtr->offset[0];
     } else {
-        alphaOffset = 0;   
+        alphaOffset = 0;
     }
 
     nchan = ((matte && alphaOffset)? 4: 3);
 
-    tf.redScan   = (UByte *) ckalloc (blockPtr->width);
-    tf.greenScan = (UByte *) ckalloc (blockPtr->width);
-    tf.blueScan  = (UByte *) ckalloc (blockPtr->width);
-    tf.matteScan = (UByte *) ckalloc (blockPtr->width);
+    tf.redScan   = (UByte *) ckalloc(blockPtr->width);
+    tf.greenScan = (UByte *) ckalloc(blockPtr->width);
+    tf.blueScan  = (UByte *) ckalloc(blockPtr->width);
+    tf.matteScan = (UByte *) ckalloc(blockPtr->width);
     if (!tf.redScan || !tf.greenScan || !tf.blueScan || !tf.matteScan) {
-	sprintf (errMsg, "Can't allocate memory of size %d", blockPtr->width);
-	Tcl_AppendResult (interp, errMsg, (char *)NULL);
+	sprintf(errMsg, "Can't allocate memory of size %d", blockPtr->width);
+	Tcl_AppendResult(interp, errMsg, (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -981,7 +983,7 @@ static int CommonWrite (interp, filename, format, handle, blockPtr)
     tf.th.imgdes = (1 << 5);    	/* Top->Bottom, Left->Right encoding */
     tf.th.imgtyp = compr;		/* Uncompressed or RLE-compressed */
 
-    if (!writeHeader (handle, &tf.th)) {
+    if (!writeHeader(handle, &tf.th)) {
 	return TCL_ERROR;
     }
 
@@ -1002,14 +1004,14 @@ static int CommonWrite (interp, filename, format, handle, blockPtr)
 	    }
 	    pixelPtr += blockPtr->pixelSize;
 	}
-	if (!tgaWriteScan (interp, handle, &tf, y)) {
+	if (!tgaWriteScan(interp, handle, &tf, y)) {
 	    tgaClose (&tf);
 	    return TCL_ERROR;
 	}
 	rowPixPtr += blockPtr->pitch;
     }
     if (verbose)
-        printImgInfo (&tf.th, filename, "Saving image:");
+        printImgInfo(&tf.th, filename, "Saving image:");
     tgaClose (&tf);
     return TCL_OK;
 }

@@ -14,59 +14,24 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: tkimg.c,v 1.2 2002/12/05 07:08:41 andreas_kupries Exp $
+ * $Id: tkimg.c 274 2010-06-28 13:23:34Z nijtmans $
  *
  */
 
-#include "tk.h"
 #include "tkimg.h"
 
-#define TCL_DOES_STUBS \
-    (TCL_MAJOR_VERSION > 8 || TCL_MAJOR_VERSION == 8 && (TCL_MINOR_VERSION > 1 || \
-    (TCL_MINOR_VERSION == 1 && TCL_RELEASE_LEVEL == TCL_FINAL_RELEASE)))
+MODULE_SCOPE const TkimgStubs tkimgStubs;
 
 /*
  * Declarations for externally visible functions.
  */
 
-#undef TCL_STORAGE_CLASS
-#ifdef BUILD_tkimg
-# define TCL_STORAGE_CLASS DLLEXPORT
-#else
-# ifdef USE_TKIMG_STUBS
-#  define TCL_STORAGE_CLASS
-# else
-#  define TCL_STORAGE_CLASS DLLIMPORT
-# endif
-#endif
-
-EXTERN int Tkimg_Init     _ANSI_ARGS_((Tcl_Interp *interp));
-EXTERN int Tkimg_SafeInit _ANSI_ARGS_((Tcl_Interp *interp));
-
-#undef  TCL_STORAGE_CLASS
-#define TCL_STORAGE_CLASS DLLIMPORT
-
 #ifdef ALLOW_B64
-static int tob64 _ANSI_ARGS_((ClientData clientData, Tcl_Interp *interp,
-		int argc, Tcl_Obj *CONST objv[]));
-static int fromb64 _ANSI_ARGS_((ClientData clientData, Tcl_Interp *interp,
-		int argc, Tcl_Obj *CONST objv[]));
+static int tob64(void *clientData, Tcl_Interp *interp,
+	int argc, Tcl_Obj *const objv[]);
+static int fromb64(void *clientData, Tcl_Interp *interp,
+	int argc, Tcl_Obj *const objv[]);
 #endif
-
-/*
- * The variable "initialized" contains flags indicating which
- * version of Tcl or Perl we are running:
- *
- *	IMG_TCL		Tcl
- *	IMG_OBJS	using Tcl_Obj's in stead of char* (Tk 8.3 or higher)
- *      IMG_PERL	perl
- *
- * These flags will be determined at runtime (except the IMG_PERL
- * flag, for now), so we can use the same dynamic library for all
- * Tcl/Tk versions (and for Perl/Tk in the future).
- */
-
-static int initialized = 0;
 
 /*
  *----------------------------------------------------------------------------
@@ -85,48 +50,29 @@ static int initialized = 0;
  *----------------------------------------------------------------------------
  */
 
-int
-Tkimg_Init (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
-{
-    EXTERN int TkimgInitUtilities _ANSI_ARGS_ ((Tcl_Interp* interp));
+int Tkimg_Init(
+	Tcl_Interp *interp /* Interpreter to initialise. */
+) {
 
-#if TCL_DOES_STUBS
-    extern TkimgStubs tkimgStubs;
-#endif
-
-#ifdef USE_TCL_STUBS
-    if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
-        return TCL_ERROR;
-    }
-#endif
-#ifdef USE_TK_STUBS
-    if (Tk_InitStubs(interp, "8.1", 0) == NULL) {
-        return TCL_ERROR;
-    }
-#endif
-    if (!initialized) {
-	if (!(initialized = TkimgInitUtilities (interp))) {
-	    return TCL_ERROR;
+	if (!Tcl_InitStubs(interp, "8.3", 0)) {
+		return TCL_ERROR;
 	}
-    }
+	if (!Tk_InitStubs(interp, "8.3", 0)) {
+		return TCL_ERROR;
+	}
+	TkimgInitUtilities(interp);
 #ifdef ALLOW_B64 /* Undocumented feature */
-    Tcl_CreateObjCommand(interp,"img_to_base64",   tob64,   (ClientData) NULL, NULL);
-    Tcl_CreateObjCommand(interp,"img_from_base64", fromb64, (ClientData) NULL, NULL);
+	Tcl_CreateObjCommand(interp, "img_to_base64", tob64, NULL, NULL);
+	Tcl_CreateObjCommand(interp, "img_from_base64", fromb64, NULL, NULL);
 #endif
 
-#if TCL_DOES_STUBS
-    if (Tcl_PkgProvideEx(interp, PACKAGE_NAME, TKIMG_VERSION,
-			 (ClientData) &tkimgStubs) != TCL_OK) {
-        return TCL_ERROR;
-    }
-#else
-    if (Tcl_PkgProvide(interp, PACKAGE_NAME, TKIMG_VERSION) != TCL_OK) {
-        return TCL_ERROR;
-    }
-#endif
+	if (Tcl_PkgProvideEx(interp, PACKAGE_TCLNAME, PACKAGE_VERSION,
+			(void *)&tkimgStubs) != TCL_OK
+	) {
+		return TCL_ERROR;
+	}
 
-  return TCL_OK;
+	return TCL_OK;
 }
 
 /*
@@ -146,11 +92,10 @@ Tkimg_Init (interp)
  *----------------------------------------------------------------------------
  */
 
-int
-Tkimg_SafeInit (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
-{
-    return Tkimg_Init(interp);
+int Tkimg_SafeInit(
+	Tcl_Interp *interp /* Interpreter to initialise. */
+) {
+	return Tkimg_Init(interp);
 }
 
 /*
@@ -169,47 +114,47 @@ Tkimg_SafeInit (interp)
  */
 
 #ifdef ALLOW_B64
-int tob64(clientData, interp, argc, objv)
-    ClientData clientData;
-    Tcl_Interp *interp;
-    int argc;
-    Tcl_Obj *CONST objv[];
-{
-    Tcl_DString dstring;
-    tkimg_MFile handle;
-    Tcl_Channel chan;
-    char buffer[1024];
-    int len;
+int tob64(
+	void *clientData,
+	Tcl_Interp *interp,
+	int argc,
+	Tcl_Obj *const objv[]
+) {
+	Tcl_DString dstring;
+	tkimg_MFile handle;
+	Tcl_Channel chan;
+	char buffer[1024];
+	int len;
 
-    if (argc != 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "filename");
-	return TCL_ERROR;
-    }
+	if (argc != 2) {
+		Tcl_WrongNumArgs(interp, 1, objv, "filename");
+		return TCL_ERROR;
+	}
 
-    chan = tkimg_OpenFileChannel(interp, Tcl_GetStringFromObj(objv[1], &len), 0);
-    if (!chan) {
-	return TCL_ERROR;
-    }
+	chan = tkimg_OpenFileChannel(interp, Tcl_GetStringFromObj(objv[1], &len), 0);
+	if (!chan) {
+		return TCL_ERROR;
+	}
 
-    Tcl_DStringInit(&dstring);
-    tkimg_WriteInit(&dstring, &handle);
+	Tcl_DStringInit(&dstring);
+	tkimg_WriteInit(&dstring, &handle);
 
-    while ((len = Tcl_Read(chan, buffer, 1024)) == 1024) {
-	tkimg_Write(&handle, buffer, 1024);
-    }
-    if (len > 0) {
-	tkimg_Write(&handle, buffer, len);
-    }
-    if ((Tcl_Close(interp, chan) == TCL_ERROR) || (len < 0)) {
-	Tcl_DStringFree(&dstring);
-	Tcl_AppendResult(interp, Tcl_GetStringFromObj(objv[1], &len),
-		": ", Tcl_PosixError(interp), (char *)NULL);
-	return TCL_ERROR;
-    }
-    tkimg_Putc(IMG_DONE, &handle);
+	while ((len = Tcl_Read(chan, buffer, 1024)) == 1024) {
+		tkimg_Write(&handle, buffer, 1024);
+	}
+	if (len > 0) {
+		tkimg_Write(&handle, buffer, len);
+	}
+	if ((Tcl_Close(interp, chan) == TCL_ERROR) || (len < 0)) {
+		Tcl_DStringFree(&dstring);
+		Tcl_AppendResult(interp, Tcl_GetStringFromObj(objv[1], &len),
+			": ", Tcl_PosixError(interp), NULL);
+		return TCL_ERROR;
+	}
+	tkimg_Putc(IMG_DONE, &handle);
 
-    Tcl_DStringResult(interp, &dstring);
-    return TCL_OK;
+	Tcl_DStringResult(interp, &dstring);
+	return TCL_OK;
 }
 
 /*
@@ -227,48 +172,48 @@ int tob64(clientData, interp, argc, objv)
  *-------------------------------------------------------------------------
  */
 
-int fromb64(clientData, interp, argc, objv)
-    ClientData clientData;
-    Tcl_Interp *interp;
-    int argc;
-    Tcl_Obj *CONST objv[];
-{
-    tkimg_MFile handle;
-    Tcl_Channel chan;
-    char buffer[1024];
-    int len;
+int fromb64(
+	void *clientData,
+	Tcl_Interp *interp,
+	int argc,
+	Tcl_Obj *const objv[]
+) {
+	tkimg_MFile handle;
+	Tcl_Channel chan;
+	char buffer[1024];
+	int len;
 
-    if (argc != 3) {
-	Tcl_WrongNumArgs(interp, 1, objv, "filename data");
-	return TCL_ERROR;
-    }
-
-    chan = tkimg_OpenFileChannel(interp, Tcl_GetStringFromObj(objv[1], &len), 0644);
-    if (!chan) {
-	return TCL_ERROR;
-    }
-
-    handle.data = Tcl_GetStringFromObj(objv[2], &handle.length);
-    handle.state = 0;
-
-    while ((len = tkimg_Read(&handle, buffer, 1024)) == 1024) {
-	if (Tcl_Write(chan, buffer, 1024) != 1024) {
-	    goto writeerror;
+	if (argc != 3) {
+		Tcl_WrongNumArgs(interp, 1, objv, "filename data");
+		return TCL_ERROR;
 	}
-    }
-    if (len > 0) {
-	if (Tcl_Write(chan, buffer, len) != len) {
-	    goto writeerror;
-	}
-    }
-    if (Tcl_Close(interp, chan) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-    return TCL_OK;
 
- writeerror:
-    Tcl_AppendResult(interp, Tcl_GetStringFromObj(objv[1], &len), ": ",
-	    Tcl_PosixError(interp), (char *)NULL);
-    return TCL_ERROR;
+	chan = tkimg_OpenFileChannel(interp, Tcl_GetStringFromObj(objv[1], &len), 0644);
+	if (!chan) {
+		return TCL_ERROR;
+	}
+
+	handle.data = Tcl_GetStringFromObj(objv[2], &handle.length);
+	handle.state = 0;
+
+	while ((len = tkimg_Read(&handle, buffer, 1024)) == 1024) {
+		if (Tcl_Write(chan, buffer, 1024) != 1024) {
+			goto writeerror;
+		}
+	}
+	if (len > 0) {
+		if (Tcl_Write(chan, buffer, len) != len) {
+			goto writeerror;
+		}
+	}
+	if (Tcl_Close(interp, chan) == TCL_ERROR) {
+		return TCL_ERROR;
+	}
+	return TCL_OK;
+
+writeerror:
+	Tcl_AppendResult(interp, Tcl_GetStringFromObj(objv[1], &len), ": ",
+		Tcl_PosixError(interp), NULL);
+	return TCL_ERROR;
 }
 #endif

@@ -13,40 +13,31 @@
  * Date   : 2/13/97        *
  * Original implementation : Joel Crisp     *
  *
- * $Id: png.c,v 1.4 2004/08/16 19:23:39 andreas_kupries Exp $
+ * $Id: png.c 271 2010-06-17 13:40:24Z nijtmans $
  */
 
 /*
  * Generic initialization code, parameterized via CPACKAGE and PACKAGE.
  */
 
-#include <tcl.h>
-#include <pngtcl.h>
+#include "pngtcl.h"
 #include <string.h>
 #include <stdlib.h>
 
-static int SetupPngLibrary _ANSI_ARGS_ ((Tcl_Interp *interp));
+static int SetupPngLibrary(Tcl_Interp *interp);
 
 #define MORE_INITIALIZATION \
     if (SetupPngLibrary (interp) != TCL_OK) { return TCL_ERROR; }
 
 #include "init.c"
 
-
+
 
 #define COMPRESS_THRESHOLD 1024
 
 typedef struct png_text_struct_compat
 {
-   int  compression;       /* compression value:
-                             -1: tEXt, none
-                              0: zTXt, deflate
-                              1: iTXt, none
-                              2: iTXt, deflate  */
-   png_charp key;          /* keyword, 1-79 character description of "text" */
-   png_charp text;         /* comment, may be an empty string (ie "")
-                              or a NULL pointer */
-   png_size_t text_length; /* length of the text string */
+   png_text compat;
    png_size_t itxt_length; /* length of the itxt string */
    png_charp lang;         /* language code, 0-79 characters
                               or a NULL pointer */
@@ -59,46 +50,37 @@ typedef struct cleanup_info {
     jmp_buf jmpbuf;
 } cleanup_info;
 
-typedef struct myblock {
-    Tk_PhotoImageBlock ck;
-    int dummy; /* extra space for offset[3], in case it is not
-		  included already in Tk_PhotoImageBlock */
-} myblock;
-
-
 /*
  * Prototypes for local procedures defined in this file:
  */
 
-static int CommonMatchPNG _ANSI_ARGS_((tkimg_MFile *handle, int *widthPtr,
-	int *heightPtr));
+static int CommonMatchPNG(tkimg_MFile *handle, int *widthPtr,
+	int *heightPtr);
 
-static int CommonReadPNG _ANSI_ARGS_((png_structp png_ptr,
+static int CommonReadPNG(png_structp png_ptr,
         Tcl_Interp* interp, Tcl_Obj *format,
 	Tk_PhotoHandle imageHandle, int destX, int destY, int width,
-	int height, int srcX, int srcY));
+	int height, int srcX, int srcY);
 
-static int CommonWritePNG _ANSI_ARGS_((Tcl_Interp *interp, png_structp png_ptr,
+static int CommonWritePNG(Tcl_Interp *interp, png_structp png_ptr,
 	png_infop info_ptr, Tcl_Obj *format,
-	Tk_PhotoImageBlock *blockPtr));
+	Tk_PhotoImageBlock *blockPtr);
 
-static void tk_png_error _ANSI_ARGS_((png_structp, png_const_charp));
+static void tk_png_error(png_structp, png_const_charp);
 
-static void tk_png_warning _ANSI_ARGS_((png_structp, png_const_charp));
-
-static int load_png_library _ANSI_ARGS_((Tcl_Interp *interp));
+static void tk_png_warning(png_structp, png_const_charp);
 
 /*
  * These functions are used for all Input/Output.
  */
 
-static void	tk_png_read _ANSI_ARGS_((png_structp, png_bytep,
-		    png_size_t));
+static void	tk_png_read(png_structp, png_bytep,
+	png_size_t);
 
-static void	tk_png_write _ANSI_ARGS_((png_structp, png_bytep,
-		    png_size_t));
+static void	tk_png_write(png_structp, png_bytep,
+	png_size_t);
 
-static void	tk_png_flush _ANSI_ARGS_((png_structp));
+static void	tk_png_flush(png_structp);
 
 /*
  *
@@ -162,17 +144,15 @@ tk_png_flush(png_ptr)
 {
 }
 
-static int
-ChnMatch (interp, chan, fileName, format, widthPtr, heightPtr)
-    Tcl_Interp *interp;
-    Tcl_Channel chan;
-    CONST char *fileName;
-    Tcl_Obj *format;
-    int *widthPtr, *heightPtr;
-{
+static int ChnMatch(
+    Tcl_Channel chan,
+    const char *fileName,
+    Tcl_Obj *format,
+    int *widthPtr,
+    int *heightPtr,
+    Tcl_Interp *interp
+) {
     tkimg_MFile handle;
-
-    tkimg_FixChanMatchProc(&interp, &chan, &fileName, &format, &widthPtr, &heightPtr);
 
     handle.data = (char *) chan;
     handle.state = IMG_CHAN;
@@ -181,17 +161,16 @@ ChnMatch (interp, chan, fileName, format, widthPtr, heightPtr)
 }
 
 static int
-ObjMatch (interp, data, format, widthPtr, heightPtr)
-    Tcl_Interp *interp;
-    Tcl_Obj *data;
-    Tcl_Obj *format;
-    int *widthPtr, *heightPtr;
-{
+ObjMatch(
+    Tcl_Obj *data,
+    Tcl_Obj *format,
+    int *widthPtr,
+    int *heightPtr,
+    Tcl_Interp *interp
+) {
     tkimg_MFile handle;
 
-    tkimg_FixObjMatchProc(&interp, &data, &format, &widthPtr, &heightPtr);
-
-    if (!tkimg_ReadInit(data,'\211',&handle)) {
+    if (!tkimg_ReadInit(data, '\211', &handle)) {
 	return 0;
     }
     return CommonMatchPNG(&handle, widthPtr, heightPtr);
@@ -217,11 +196,11 @@ CommonMatchPNG(handle, widthPtr, heightPtr)
 }
 
 static int
-ChnRead (interp, chan, fileName, format, imageHandle,
+ChnRead(interp, chan, fileName, format, imageHandle,
 	destX, destY, width, height, srcX, srcY)
     Tcl_Interp *interp;
     Tcl_Channel chan;
-    CONST char *fileName;
+    const char *fileName;
     Tcl_Obj *format;
     Tk_PhotoHandle imageHandle;
     int destX, destY;
@@ -239,7 +218,7 @@ ChnRead (interp, chan, fileName, format, imageHandle,
 
     png_ptr=png_create_read_struct(PNG_LIBPNG_VER_STRING,
 	    (png_voidp) &cleanup,tk_png_error,tk_png_warning);
-    if (!png_ptr) return(0); 
+    if (!png_ptr) return(0);
 
     png_set_read_fn(png_ptr, (png_voidp) &handle, tk_png_read);
 
@@ -266,7 +245,7 @@ ObjRead (interp, dataObj, format, imageHandle,
 
     png_ptr=png_create_read_struct(PNG_LIBPNG_VER_STRING,
 	    (png_voidp) &cleanup,tk_png_error,tk_png_warning);
-    if (!png_ptr) return TCL_ERROR; 
+    if (!png_ptr) return TCL_ERROR;
 
     tkimg_ReadInit(dataObj,'\211',&handle);
 
@@ -287,15 +266,15 @@ CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
     int width, height;
     int srcX, srcY;
 {
-#define block bl.ck
     png_infop info_ptr;
     png_infop end_info;
     char **png_data = NULL;
-    myblock bl;
+    Tk_PhotoImageBlock block;
     unsigned int I;
     png_uint_32 info_width, info_height;
     int bit_depth, color_type, interlace_type;
     int intent;
+    int result = TCL_OK;
 
     info_ptr=png_create_info_struct(png_ptr);
     if (!info_ptr) {
@@ -331,10 +310,14 @@ CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
     if ((width <= 0) || (height <= 0)
 	|| (srcX >= (int) info_width)
 	|| (srcY >= (int) info_height)) {
+	png_destroy_read_struct(&png_ptr,&info_ptr,&end_info);
 	return TCL_OK;
     }
 
-    tkimg_PhotoExpand(imageHandle, interp, destX + width, destY + height);
+    if (tkimg_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
+	png_destroy_read_struct(&png_ptr,&info_ptr,&end_info);
+	return TCL_ERROR;
+    }
 
     Tk_PhotoGetImage(imageHandle, &block);
 
@@ -391,18 +374,21 @@ CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
 
     png_read_image(png_ptr,(png_bytepp) png_data);
 
-    tkimg_PhotoPutBlock(imageHandle,&block,destX,destY,width,height);
+    if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, destY, width, height,
+	    block.offset[3]? TK_PHOTO_COMPOSITE_OVERLAY: TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
+	result = TCL_ERROR;
+    }
 
     ckfree((char *) png_data);
     png_destroy_read_struct(&png_ptr,&info_ptr,&end_info);
 
-    return(TCL_OK);
+    return result;
 }
 
 static int
 ChnWrite (interp, filename, format, blockPtr)
     Tcl_Interp *interp;
-    CONST char *filename;
+    const char *filename;
     Tcl_Obj *format;
     Tk_PhotoImageBlock *blockPtr;
 {
@@ -444,13 +430,11 @@ ChnWrite (interp, filename, format, blockPtr)
     return result;
 }
 
-static int
-StringWrite (interp, dataPtr, format, blockPtr)
-    Tcl_Interp *interp;
-    Tcl_DString *dataPtr;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
-{
+static int StringWrite(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
     png_structp png_ptr;
     png_infop info_ptr;
     tkimg_MFile handle;
@@ -458,8 +442,7 @@ StringWrite (interp, dataPtr, format, blockPtr)
     cleanup_info cleanup;
     Tcl_DString data;
 
-    tkimg_FixStringWriteProc(&data, &interp, &dataPtr, &format, &blockPtr);
-
+    Tcl_DStringInit(&data);
     cleanup.interp = interp;
 
     png_ptr=png_create_write_struct(PNG_LIBPNG_VER_STRING,
@@ -476,12 +459,14 @@ StringWrite (interp, dataPtr, format, blockPtr)
 
     png_set_write_fn(png_ptr, (png_voidp) &handle, tk_png_write, tk_png_flush);
 
-    tkimg_WriteInit(dataPtr, &handle);
+    tkimg_WriteInit(&data, &handle);
 
     result = CommonWritePNG(interp, png_ptr, info_ptr, format, blockPtr);
     tkimg_Putc(IMG_DONE, &handle);
-    if ((result == TCL_OK) && (dataPtr == &data)) {
-	Tcl_DStringResult(interp, dataPtr);
+    if (result == TCL_OK) {
+	Tcl_DStringResult(interp, &data);
+    } else {
+	Tcl_DStringFree(&data);
     }
     return result;
 }
@@ -497,14 +482,14 @@ CommonWritePNG(interp, png_ptr, info_ptr, format, blockPtr)
     int greenOffset, blueOffset, alphaOffset;
     int tagcount = 0;
     Tcl_Obj **tags = (Tcl_Obj **) NULL;
-    int I, pass, number_passes, color_type;  
+    int I, pass, number_passes, color_type;
     int newPixelSize;
     png_bytep row_pointers = (png_bytep) NULL;
 
     if (tkimg_ListObjGetElements(interp, format, &tagcount, &tags) != TCL_OK) {
 	return TCL_ERROR;
     }
-    tagcount = (tagcount > 1) ? (tagcount/2 - 1) : 0;
+    tagcount = (tagcount > 1) ? (tagcount - 1) / 2: 0;
 
     if (setjmp((((cleanup_info *) png_get_error_ptr(png_ptr))->jmpbuf))) {
 	if (row_pointers) {
@@ -562,16 +547,16 @@ CommonWritePNG(interp, png_ptr, info_ptr, format, blockPtr)
 	png_text_compat text;
 	for(I=0;I<tagcount;I++) {
 	    int length;
-	    text.key = Tcl_GetStringFromObj(tags[2*I+1], (int *) NULL);
-	    text.text = Tcl_GetStringFromObj(tags[2*I+2], &length);
-	    text.text_length = length;
-	    if (text.text_length>COMPRESS_THRESHOLD) { 
-		text.compression = PNG_TEXT_COMPRESSION_zTXt;
+	    memset(&text, 0, sizeof(png_text_compat));
+	    text.compat.key = Tcl_GetStringFromObj(tags[2*I+1], (int *) NULL);
+	    text.compat.text = Tcl_GetStringFromObj(tags[2*I+2], &length);
+	    text.compat.text_length = length;
+	    if (text.compat.text_length>COMPRESS_THRESHOLD) {
+		text.compat.compression = PNG_TEXT_COMPRESSION_zTXt;
 	    } else {
-		text.compression = PNG_TEXT_COMPRESSION_NONE;
+		text.compat.compression = PNG_TEXT_COMPRESSION_NONE;
 	    }
-	    text.lang = NULL;
-	    png_set_text(png_ptr, info_ptr, (png_text *) &text, 1);
+	    png_set_text(png_ptr, info_ptr, &text.compat, 1);
         }
     }
     png_write_info(png_ptr,info_ptr);

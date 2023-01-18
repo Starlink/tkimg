@@ -1,5 +1,5 @@
 # tkimgConfig.sh --
-# 
+#
 # This shell script (for sh) is generated automatically by tkimg's
 # configure script.  It will create shell variables for most of
 # the configuration options discovered by the configure script.
@@ -12,13 +12,13 @@
 # The information in this file is specific to a single platform.
 
 # tkimg's version number.
-tkimg_VERSION='@VERSION@'
+tkimg_VERSION='@PACKAGE_VERSION@'
 tkimg_MAJOR_VERSION='@MAJOR_VERSION@'
 tkimg_MINOR_VERSION='@MINOR_VERSION@'
 tkimg_RELEASE_LEVEL='@PATCHLEVEL@'
 
 # The name of the tkimg library (may be either a .a file or a shared library):
-tkimg_LIB_FILE=@tkimg_LIB_FILE@
+tkimg_LIB_FILE=@PKG_LIB_FILE@
 
 # String to pass to linker to pick up the tkimg library from its
 # build directory.
@@ -29,7 +29,7 @@ tkimg_BUILD_LIB_SPEC='@tkimg_BUILD_LIB_SPEC@'
 tkimg_LIB_SPEC='@tkimg_LIB_SPEC@'
 
 # The name of the tkimg stub library (a .a file):
-tkimg_STUB_LIB_FILE=@tkimgstub_LIB_FILE@
+tkimg_STUB_LIB_FILE=@PKG_STUB_LIB_FILE@
 
 # String to pass to linker to pick up the tkimg stub library from its
 # build directory.

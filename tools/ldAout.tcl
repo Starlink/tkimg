@@ -156,7 +156,7 @@ proc tclLdAout {{cc {}} {shlib_suffix {}} {shlib_cflags none}} {
     set modName [string range $modName 0 [expr [string length $modName]-[string length $match]-1]]
   }
   set modName "[string toupper [string index $modName 0]][string range $modName 1 end]"
-  
+
   # Catalog initialization entry points found in the module
 
   set f [open $nmCommand r]
