@@ -52,3 +52,40 @@ test bmp-2.0 {Binary I/O with BMP images} {
     close $f
     lappend return $msg
 } {0 {}}
+
+test bmp-2.1 {Save with given aspect ratio} {
+    i blank
+    i put $bmpdata -format bmp
+    i write folder_out.bmp -format {bmp -resolution {300 100}}
+    set f [open folder_out.bmp r]
+    fconfigure $f -translation binary
+    binary scan [read $f] x38i2 xyres
+    set return [read $f]
+    close $f
+    set xyres
+} {2925 975}
+
+test bmp-2.2 {Save with constant resolution of 300 dpi} {
+    i blank
+    i put $bmpdata -format bmp
+    i write folder_out.bmp -format {bmp -resolution {300 i}}
+    set f [open folder_out.bmp r]
+    fconfigure $f -translation binary
+    binary scan [read $f] x38i2 xyres
+    set return [read $f]
+    close $f
+    set xyres
+} {11811 11811}
+
+test bmp-2.3 {Save with given resolution of x 100dpi and y 50dpi} {
+    i blank
+    i put $bmpdata -format bmp
+    i write folder_out.bmp -format {bmp -resolution {100 50 i}}
+    set f [open folder_out.bmp r]
+    fconfigure $f -translation binary
+    binary scan [read $f] x38i2 xyres
+    set return [read $f]
+    close $f
+    set xyres
+} {3937 1969}
+catch {file delete folder_out.bmp}

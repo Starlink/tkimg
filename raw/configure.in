@@ -1,16 +1,16 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Id: configure.in 267 2010-06-04 09:58:55Z nijtmans $)
+AC_REVISION($Id: configure.in 352 2013-09-16 10:47:40Z nijtmans $)
 
 #--------------------------------------------------------------------
 # Configure script for package 'tkimgraw', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimgraw],[1.4])
+AC_INIT([tkimgraw],[1.4.2])
 
-TEA_INIT([3.7])
+TEA_INIT([3.9])
 
 AC_CONFIG_AUX_DIR(../tclconfig)
 

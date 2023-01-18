@@ -34,6 +34,7 @@
 #define PNG_NO_READ_cHRM
 #define PNG_NO_READ_hIST
 #define PNG_NO_READ_iCCP
+#define PNG_NO_READ_oFFs
 #define PNG_NO_READ_pCAL
 #define PNG_NO_READ_pHYs
 #define PNG_NO_READ_sBIT
@@ -46,7 +47,6 @@
 #define PNG_NO_READ_EMPTY_PLTE
 #define PNG_NO_READ_OPT_PLTE
 #define PNG_NO_READ_STRIP_ALPHA
-#define PNG_NO_READ_oFFs
 
 #define PNG_NO_WRITE_SUPPORTED
 
@@ -63,6 +63,6 @@
 #define PNG_NO_EASY_ACCESS
 #define PNG_NO_USER_LIMITS
 #define PNG_NO_SET_USER_LIMITS
-#define PNG_NO_TIME_RFC1143
+#define PNG_NO_TIME_RFC1123
 
 #endif /* MINPRDPNGCONF_H */

@@ -14,6 +14,9 @@
  * Generic initialization code, parameterized via CPACKAGE and PACKAGE.
  */
 
+#ifdef _WIN32
+#   define HAVE_BOOLEAN
+#endif
 #include "tkimg.h"
 #include "tifftcl.h"
 #include "zlibtcl.h"
@@ -29,8 +32,6 @@ static int SetupTiffLibrary(Tcl_Interp *interp);
 #define MORE_INITIALIZATION \
     if (SetupTiffLibrary (interp) != TCL_OK) { return TCL_ERROR; }
 
-#undef PACKAGE_VERSION
-#define PACKAGE_VERSION "1.4"
 #include "init.c"
 
 #include "tiffInt.h"

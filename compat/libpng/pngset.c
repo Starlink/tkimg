@@ -1,8 +1,8 @@
 
 /* pngset.c - storage of image information into info struct
  *
- * Last changed in libpng 1.4.1 [February 25, 2010]
- * Copyright (c) 1998-2010 Glenn Randers-Pehrson
+ * Last changed in libpng 1.4.11 [March 29, 2012]
+ * Copyright (c) 1998-2012 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -649,22 +649,26 @@ png_set_text_2(png_structp png_ptr, png_infop info_ptr, png_textp text_ptr,
     */
    if (info_ptr->num_text + num_text > info_ptr->max_text)
    {
+      int old_max_text = info_ptr->max_text;
+      int old_num_text = info_ptr->num_text;
+
       if (info_ptr->text != NULL)
       {
          png_textp old_text;
-         int old_max;
 
-         old_max = info_ptr->max_text;
          info_ptr->max_text = info_ptr->num_text + num_text + 8;
          old_text = info_ptr->text;
+
          info_ptr->text = (png_textp)png_malloc_warn(png_ptr,
             (png_size_t)(info_ptr->max_text * png_sizeof(png_text)));
          if (info_ptr->text == NULL)
          {
-            png_free(png_ptr, old_text);
+            /* Restore to previous condition */
+            info_ptr->max_text = old_max_text;
+            info_ptr->text = old_text;
             return(1);
          }
-         png_memcpy(info_ptr->text, old_text, (png_size_t)(old_max *
+         png_memcpy(info_ptr->text, old_text, (png_size_t)(old_max_text *
             png_sizeof(png_text)));
          png_free(png_ptr, old_text);
       }
@@ -675,7 +679,12 @@ png_set_text_2(png_structp png_ptr, png_infop info_ptr, png_textp text_ptr,
          info_ptr->text = (png_textp)png_malloc_warn(png_ptr,
             (png_size_t)(info_ptr->max_text * png_sizeof(png_text)));
          if (info_ptr->text == NULL)
+         {
+            /* Restore to previous condition */
+            info_ptr->num_text = old_num_text;
+            info_ptr->max_text = old_max_text;
             return(1);
+         }
          info_ptr->free_me |= PNG_FREE_TEXT;
       }
       png_debug1(3, "allocated %d entries for info_ptr->text",
@@ -689,6 +698,13 @@ png_set_text_2(png_structp png_ptr, png_infop info_ptr, png_textp text_ptr,
 
       if (text_ptr[i].key == NULL)
           continue;
+
+      if (text_ptr[i].compression < PNG_TEXT_COMPRESSION_NONE ||
+          text_ptr[i].compression >= PNG_TEXT_COMPRESSION_LAST)
+      {
+         png_warning(png_ptr, "text compression mode is out of range");
+         continue;
+      }
 
       key_len = png_strlen(text_ptr[i].key);
 
@@ -1004,7 +1020,7 @@ png_set_unknown_chunk_location(png_structp png_ptr, png_infop info_ptr,
 
 #ifdef PNG_MNG_FEATURES_SUPPORTED
 png_uint_32 PNGAPI
-png_permit_mng_features (png_structp png_ptr, png_uint_32 mng_features)
+png_permit_mng_features(png_structp png_ptr, png_uint_32 mng_features)
 {
    png_debug(1, "in png_permit_mng_features");
 
@@ -1118,7 +1134,7 @@ png_set_invalid(png_structp png_ptr, png_infop info_ptr, int mask)
 #ifdef PNG_SET_USER_LIMITS_SUPPORTED
 /* This function was added to libpng 1.2.6 */
 void PNGAPI
-png_set_user_limits (png_structp png_ptr, png_uint_32 user_width_max,
+png_set_user_limits(png_structp png_ptr, png_uint_32 user_width_max,
     png_uint_32 user_height_max)
 {
    /* Images with dimensions larger than these limits will be
@@ -1133,7 +1149,7 @@ png_set_user_limits (png_structp png_ptr, png_uint_32 user_width_max,
 
 /* This function was added to libpng 1.4.0 */
 void PNGAPI
-png_set_chunk_cache_max (png_structp png_ptr,
+png_set_chunk_cache_max(png_structp png_ptr,
    png_uint_32 user_chunk_cache_max)
 {
     if (png_ptr)
@@ -1142,7 +1158,7 @@ png_set_chunk_cache_max (png_structp png_ptr,
 
 /* This function was added to libpng 1.4.1 */
 void PNGAPI
-png_set_chunk_malloc_max (png_structp png_ptr,
+png_set_chunk_malloc_max(png_structp png_ptr,
    png_alloc_size_t user_chunk_malloc_max)
 {
     if (png_ptr)

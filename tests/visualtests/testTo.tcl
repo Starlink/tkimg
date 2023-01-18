@@ -4,8 +4,8 @@ proc initPackages { args } {
     global gPkg
 
     foreach pkg $args {
-	set retVal [catch {package require $pkg} gPkg(ext,$pkg,version)]
-	set gPkg(ext,$pkg,avail) [expr !$retVal]
+        set retVal [catch {package require $pkg} gPkg(ext,$pkg,version)]
+        set gPkg(ext,$pkg,avail) [expr !$retVal]
     }
 }
 
@@ -61,6 +61,7 @@ if { $ui_enable_tk } {
     set sep "\n\t"
 }
 set count 1
+set phCanvas [getCanvasPhoto .t.c]
 foreach elem $fmtList {
     set ext [lindex $elem 0]
     set fmt [lindex $elem 1]
@@ -71,40 +72,37 @@ foreach elem $fmtList {
     P $msg
 
     PN "\t"
-    set ph [getCanvasPhoto .t.c]
-    writePhotoFile $ph $fname "$fmt $opt" 1
+    writePhotoFile $phCanvas $fname "$fmt $opt" 0
     if { $testMode & $modeFile } {
-	set ph [readPhotoFile2 $fname "fmt $opt" 200 100 \
+        set ph [readPhotoFile2 $fname "fmt $opt" 200 100 \
                                -from 140 50 200 110 -to 10 30]
-	if { $ph eq "" } {
-	    set ph [createErrImg]
-	}
-	set msg "Image $count.1: $fname Format: $fmt $sep (Read from file 2)"
-	ui_addphoto $ph $msg
+        if { $ph eq "" } {
+            set ph [createErrImg]
+        }
+        set msg "Image $count.1: $fname Format: $fmt $sep (Read from file 2)"
+        ui_addphoto $ph $msg
     }
     if { $testMode & $modeBin } {
-	set ph  [getCanvasPhoto .t.c]
-	set str [writePhotoFile $ph $fname "$fmt $opt" 1 -from 140 50 200 110]
-	set ph  [readPhotoBinary2 $fname "$fmt $opt" 200 100 -to 10 30]
-	if { $ph eq "" } {
-	    set ph [createErrImg]
-	}
-	set msg "Image $count.2: $fname Format: $fmt $sep (Read as binary 2)"
-	ui_addphoto $ph $msg
+        set str [writePhotoFile $phCanvas $fname "$fmt $opt" 0 -from 140 50 200 110]
+        set ph  [readPhotoBinary2 $fname "$fmt $opt" 200 100 -to 10 30]
+        if { $ph eq "" } {
+            set ph [createErrImg]
+        }
+        set msg "Image $count.2: $fname Format: $fmt $sep (Read as binary 2)"
+        ui_addphoto $ph $msg
     }
     if { $testMode & $modeUU } {
-	set ph [getCanvasPhoto .t.c]
-	set str [writePhotoString $ph "$fmt $opt" 1 -from 140 50 200 110]
-	if { $str eq "" } {
-	    set ph [createErrImg]
-	} else {
+        set str [writePhotoString $phCanvas "$fmt $opt" 0 -from 140 50 200 110]
+        if { $str eq "" } {
+            set ph [createErrImg]
+        } else {
             set ph [readPhotoString $str "$fmt $opt" 200 100 -to 10 30]
-	    if { $ph eq "" } {
-		set ph [createErrImg]
-	    }
-	}
-	set msg "Image $count.3: $fname Format: $fmt $sep (Read as uuencoded string)"
-	ui_addphoto $ph $msg
+            if { $ph eq "" } {
+                set ph [createErrImg]
+            }
+        }
+        set msg "Image $count.3: $fname Format: $fmt $sep (Read as uuencoded string)"
+        ui_addphoto $ph $msg
     }
 
     P ""

@@ -34,7 +34,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * $Id: gif.c 233 2010-04-01 09:28:00Z nijtmans $
+ * $Id: gif.c 360 2013-10-01 14:47:01Z nijtmans $
  *
  */
 
@@ -247,9 +247,6 @@ CommonRead(interp, gifConfPtr, fileName, format, imageHandle, destX, destY,
     char *trashBuffer = NULL;
     unsigned char *pixBuf = NULL;
     int bitPixel;
-    unsigned int colorResolution;
-    unsigned int background;
-    unsigned int aspectRatio;
     unsigned char colorMap[MAXCOLORMAPSIZE][4];
     int transparent = -1;
 
@@ -285,9 +282,6 @@ CommonRead(interp, gifConfPtr, fileName, format, imageHandle, destX, destY,
     }
 
     bitPixel = 2<<(buf[0]&0x07);
-    colorResolution = ((((unsigned int) buf[0]&0x70)>>3)+1);
-    background = buf[1];
-    aspectRatio = buf[2];
 
     if (BitSet(buf[0], LOCALCOLORMAP)) {    /* Global Colormap */
 	if (!ReadColorMap(gifConfPtr, bitPixel, colorMap)) {

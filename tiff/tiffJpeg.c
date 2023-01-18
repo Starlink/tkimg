@@ -24,6 +24,9 @@
  * OF THIS SOFTWARE.
  */
 
+#ifdef _WIN32
+#   define HAVE_BOOLEAN
+#endif
 #include "tkimg.h"
 #include "tiffInt.h"
 #include "jpegtcl.h"

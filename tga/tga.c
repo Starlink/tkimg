@@ -50,7 +50,7 @@
  *
  * ENDHEADER
  *
- * $Id: tga.c 233 2010-04-01 09:28:00Z nijtmans $
+ * $Id: tga.c 345 2013-09-09 20:29:59Z obermeier $
  *
  */
 
@@ -597,7 +597,7 @@ static int ParseFormatOpts(interp, format, comp, verb, matte)
     int *verb;
     int *matte;
 {
-    static const char *const tgaOptions[] = {"-compression", "-verbose", "-matte"};
+    static const char *const tgaOptions[] = {"-compression", "-verbose", "-matte", NULL};
     int objc, length, c, i, index;
     Tcl_Obj **objv;
     const char *compression, *verbose, *transp;

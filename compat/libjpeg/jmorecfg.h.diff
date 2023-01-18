@@ -27,18 +27,5 @@
   
   
   /* This macro is used to declare a "method", that is, a function pointer.
-***************
-*** 209,218 ****
---- 226,237 ----
-   * explicit coding is needed; see uses of the NEED_FAR_POINTERS symbol.
-   */
-  
-+ #ifndef FAR
-  #ifdef NEED_FAR_POINTERS
-  #define FAR  far
-  #else
-  #define FAR
-+ #endif
-  #endif
   
   

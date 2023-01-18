@@ -59,7 +59,7 @@
  *
  * ENDHEADER
  *
- * $Id: sgi.c 251 2010-04-28 13:28:28Z nijtmans $
+ * $Id: sgi.c 345 2013-09-09 20:29:59Z obermeier $
  *
  */
 
@@ -1301,7 +1301,7 @@ static int ParseFormatOpts (interp, format, comp, verb, matte)
     int *verb;
     int *matte;
 {
-    static const char *const sgiOptions[] = {"-compression", "-verbose", "-matte"};
+    static const char *const sgiOptions[] = {"-compression", "-verbose", "-matte", NULL};
     int objc, length, c, i, index;
     Tcl_Obj **objv;
     const char *compression, *verbose, *transp;
@@ -1377,7 +1377,7 @@ static int ParseFormatOpts (interp, format, comp, verb, matte)
 	    !strncmp (transp, "off", length)) {
 	    *matte = 0;
 	} else {
-	    Tcl_AppendResult(interp, "invalid alpha (matte) mode \"", verbose,
+	    Tcl_AppendResult(interp, "invalid alpha (matte) mode \"", transp,
                               "\": should be 1 or 0, on or off, true or false",
 			      (char *) NULL);
 	    return TCL_ERROR;

@@ -30,6 +30,8 @@ EXTERN int Zlibtcl_SafeInit(Tcl_Interp *interp);
 
 #include "../compat/zlib/zlib.h"
 
+#undef gzgetc /* Became a macro in zlib 1.2.7 */
+
 /* !BEGIN!: Do not edit below this line. */
 
 /*

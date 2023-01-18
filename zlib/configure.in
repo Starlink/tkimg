@@ -1,16 +1,16 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Id: configure.in 268 2010-06-04 12:29:52Z nijtmans $)
+AC_REVISION($Id: configure.in 344 2013-05-13 18:54:38Z nijtmans $)
 
 #--------------------------------------------------------------------
 # Configure script for package 'zlibtcl', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([zlibtcl],[1.2.5])
+AC_INIT([zlibtcl],[1.2.8])
 
-TEA_INIT([3.7])
+TEA_INIT([3.9])
 
 AC_CONFIG_AUX_DIR(../tclconfig)
 

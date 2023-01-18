@@ -6,8 +6,20 @@
  * Copyright (c) 1997-2003 Jan Nijtmans    <nijtmans@users.sourceforge.net>
  * Copyright (c) 2002      Andreas Kupries <andreas_kupries@users.sourceforge.net>
  *
- * $Id: bmp.c 233 2010-04-01 09:28:00Z nijtmans $
+ * $Id: bmp.c 331 2011-11-27 18:29:13Z oehhar $
  *
+ * The following format options are available:
+ *
+ * Write BMP image: "ico -resolution <list>"
+ *
+ * -resolution <list>: Set the resolution property of the output file.
+ *                     The default is 74 dpi (no option)
+ *                     Possible forms for list:
+ *                     {xRes unit} : set x and y resolution to same value
+ *                     {xRes yRes} : set x to 74dpi and y to 74*YRes/XRes
+ *                     {xRes yRes unit} : set x and y resolution to given values
+ *                     xRes, yRes are floats >= 0. 0 is the "no value" value.
+ *                     unit is one of "c" cm, "m" mm, "i" inch or "p" inch/72.
  */
 
 /*
@@ -15,6 +27,7 @@
  */
 
 #include <string.h>
+#include <math.h>
 #include "init.c"
 
 /* Compression types */
@@ -45,7 +58,8 @@ static int CommonRead(Tcl_Interp *interp, tkimg_MFile *handle,
         Tk_PhotoHandle imageHandle, int destX, int destY, int width,
         int height, int srcX, int srcY);
 
-static int CommonWrite(Tcl_Interp *interp, tkimg_MFile *handle,
+static int CommonWrite(Tcl_Interp *interp, Tcl_Obj *format,
+        tkimg_MFile *handle,
         Tk_PhotoImageBlock *blockPtr);
 
 static void putint(tkimg_MFile *handle, int i);
@@ -147,7 +161,7 @@ ChnWrite(interp, filename, format, blockPtr)
     handle.data = (char *) chan;
     handle.state = IMG_CHAN;
 
-    result = CommonWrite(interp, &handle, blockPtr);
+    result = CommonWrite(interp, format, &handle, blockPtr);
     if (Tcl_Close(interp, chan) == TCL_ERROR) {
         return TCL_ERROR;
     }
@@ -165,13 +179,13 @@ static int StringWrite(
 
     Tcl_DStringInit(&data);
     tkimg_WriteInit(&data, &handle);
-    result = CommonWrite(interp, &handle, blockPtr);
+    result = CommonWrite(interp, format, &handle, blockPtr);
     tkimg_Putc(IMG_DONE, &handle);
 
     if (result == TCL_OK) {
-	Tcl_DStringResult(interp, &data);
+        Tcl_DStringResult(interp, &data);
     } else {
-	Tcl_DStringFree(&data);
+        Tcl_DStringFree(&data);
     }
     return result;
 }
@@ -630,8 +644,9 @@ error:
 }
 
 static int
-CommonWrite(interp, handle, blockPtr)
+CommonWrite(interp, format, handle, blockPtr)
     Tcl_Interp *interp;
+    Tcl_Obj *format;
     tkimg_MFile *handle;
     Tk_PhotoImageBlock *blockPtr;
 {
@@ -639,9 +654,105 @@ CommonWrite(interp, handle, blockPtr)
     unsigned char *imagePtr, *pixelPtr;
     unsigned char buf[4];
     int colors[256];
+    int resX=75*39, resY=75*39;
+    int objc = 0;
+    Tcl_Obj **objv = NULL;
+ 
+    /* Decode resolution parameter -resolution List */
+    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    /* List parameter given ? */
+    if (objc > 1) {
+        Tcl_Obj *objList;
+        int nBytes;
+        double fResX = -1, fResY = -1, fFactor = 0;
+        char unit = '\0';
+        char *c = Tcl_GetStringFromObj(objv[1], &nBytes);
+        if ((objc > 3) || ((objc == 3) && ((c[0] != '-') ||
+                (c[1] != 'r') || strncmp(c, "-resolution", strlen(c))))) {
+            Tcl_AppendResult(interp, "invalid format: \"",
+                    tkimg_GetStringFromObj(format, NULL), "\"", (char *) NULL);
+            return TCL_ERROR;
+        }
+        objList = objv[objc-1];
+        if (tkimg_ListObjGetElements(interp, objList, &objc, &objv) != TCL_OK) {
+            return TCL_ERROR;
+        }
+        if (!objc || objc > 3) {
+            Tcl_AppendResult(interp, "Wrong resolution parameters: \"",
+                    tkimg_GetStringFromObj(objList, NULL), "\"", (char *) NULL);
+            return TCL_ERROR;
+        }
+        if (Tcl_GetDoubleFromObj(interp, objv[0], &fResX) != TCL_OK) {
+            return TCL_ERROR;
+        }
+        if ( fResX < 0 || fResX > 1e20 ) {
+            Tcl_AppendResult(interp, "Wrong resolution: \"",
+                tkimg_GetStringFromObj(objv[0], NULL), "\"", (char *) NULL);
+            return TCL_ERROR;
+        }
+        /* more than xRes value given ? */
+        if (objc > 1) {
+            /* check last for unit */
+            c = Tcl_GetStringFromObj(objv[objc-1], &nBytes);
+            if ( nBytes == 1 && ( c[0] == 'c' || c[0] == 'i' || c[0] == 'm' || c[0] == 'p') ) {
+                unit = c[0];
+                objc--;
+            }
+            if (objc > 2) {
+                Tcl_AppendResult(interp, "Wrong unit: \"",
+                    tkimg_GetStringFromObj(objv[objc-1], NULL), "\"", (char *) NULL);
+                return TCL_ERROR;
+            }
+            if (objc > 1) {
+                if (Tcl_GetDoubleFromObj(interp, objv[1], &fResY) != TCL_OK) {
+                    return TCL_ERROR;
+                }
+                if ( fResY < 0 || fResY > 1e20 ) {
+                    Tcl_AppendResult(interp, "Wrong resolution: \"",
+                        tkimg_GetStringFromObj(objv[0], NULL), "\"", (char *) NULL);
+                    return TCL_ERROR;
+                }
+            }
+        }
+        /* Process unit and eventually get factor value */
+        switch (unit) {
+        case 'c': /* centimeter */
+            fFactor = 100.0;
+            break;
+        case 'i': /* inches */
+            fFactor = 1.0/0.0254;
+            break;
+        case 'm': /* millimeter */
+            fFactor = 1000.0;
+            break;
+        case 'p': /* printer points (1/72 inch) */
+            fFactor = 72.0/0.0254;
+            break;
+        default: /* no unit given - 75*39 as X resolution */
+            if (fResX == 0) {
+                resX = 0;
+                resY = 0;
+            } else {
+                if (fResY != -1) {
+                    resY = (int) ( fResY * 75.0*39.0 / fResX + 0.5);
+                }
+            }
+            break;
+        }
+        if (fFactor != 0) {
+            resX = (int) ( fResX * fFactor + 0.5);
+            if (fResY == -1) {
+                resY = resX;
+            } else {
+                resY = (int) ( fResY * fFactor + 0.5);
+            }
+        }
+    }
 
     greenOffset = blockPtr->offset[1] - blockPtr->offset[0];
-    blueOffset = blockPtr->offset[2] - blockPtr->offset[0];
+    blueOffset  = blockPtr->offset[2] - blockPtr->offset[0];
     alphaOffset = blockPtr->offset[0];
     if (alphaOffset < blockPtr->offset[2]) {
         alphaOffset = blockPtr->offset[2];
@@ -652,36 +763,32 @@ CommonWrite(interp, handle, blockPtr)
         alphaOffset = 0;
     }
     ncolors = 0;
-    if (greenOffset || blueOffset) {
-        for (y = 0; ncolors <= 256 && y < blockPtr->height; y++) {
-            pixelPtr = blockPtr->pixelPtr + y*blockPtr->pitch + blockPtr->offset[0];
-            for (x=0; ncolors <= 256 && x<blockPtr->width; x++) {
-                int pixel;
-                if (alphaOffset && (pixelPtr[alphaOffset] == 0))
-                    pixel = 0xd9d9d9;
-                else
-                    pixel = (pixelPtr[0]<<16) | (pixelPtr[greenOffset]<<8) | pixelPtr[blueOffset];
-                for (i = 0; i < ncolors && pixel != colors[i]; i++);
-                if (i == ncolors) {
-                    if (ncolors < 256) {
-                        colors[ncolors] = pixel;
-                    }
-                    ncolors++;
+    for (y = 0; ncolors <= 256 && y < blockPtr->height; y++) {
+        pixelPtr = blockPtr->pixelPtr + y*blockPtr->pitch + blockPtr->offset[0];
+        for (x=0; ncolors <= 256 && x<blockPtr->width; x++) {
+            int pixel;
+            if (alphaOffset && (pixelPtr[alphaOffset] == 0))
+                pixel = 0xd9d9d9;
+            else
+                pixel = (pixelPtr[0]<<16) | (pixelPtr[greenOffset]<<8) | pixelPtr[blueOffset];
+            for (i = 0; i < ncolors && pixel != colors[i]; i++);
+            if (i == ncolors) {
+                if (ncolors < 256) {
+                    colors[ncolors] = pixel;
                 }
-                pixelPtr += blockPtr->pixelSize;
+                ncolors++;
             }
+            pixelPtr += blockPtr->pixelSize;
         }
-        if (ncolors <= 256 && (blockPtr->width * blockPtr->height >= 512)) {
-            while (ncolors < 256) {
-                colors[ncolors++] = 0;
-            }
-            nbytes = 1;
-        } else {
-            nbytes = 3;
-            ncolors = 0;
+    }
+    if (ncolors <= 256 && (blockPtr->width * blockPtr->height >= 512)) {
+        while (ncolors < 256) {
+            colors[ncolors++] = 0;
         }
-    } else {
         nbytes = 1;
+    } else {
+        nbytes = 3;
+        ncolors = 0;
     }
 
     bperline = ((blockPtr->width  * nbytes + 3) / 4) * 4;
@@ -696,8 +803,8 @@ CommonWrite(interp, handle, blockPtr)
     putint(handle, 1 + (nbytes<<19));
     putint(handle, 0);
     putint(handle, bperline * blockPtr->height);
-    putint(handle, 75*39);
-    putint(handle, 75*39);
+    putint(handle, resX);
+    putint(handle, resY);
     putint(handle, ncolors);
     putint(handle, ncolors);
 

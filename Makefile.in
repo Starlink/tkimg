@@ -40,10 +40,13 @@ mandir      = @mandir@
 # Directory containing scripts supporting the work of this makefile
 tool		=	$(srcdir)/tools
 
-INSTALL		= @INSTALL@
-INSTALL_PROGRAM	= @INSTALL_PROGRAM@
-INSTALL_DATA	= @INSTALL_DATA@
-INSTALL_SCRIPT	= @INSTALL_SCRIPT@
+INSTALL_OPTIONS =
+INSTALL		= $(SHELL) $(srcdir)/tclconfig/install-sh -c ${INSTALL_OPTIONS}
+INSTALL_DATA_DIR = ${INSTALL} -d -m 755
+INSTALL_PROGRAM	= ${INSTALL} -m 755
+INSTALL_DATA	= ${INSTALL} -m 644
+INSTALL_SCRIPT	= ${INSTALL_PROGRAM}
+INSTALL_LIBRARY	= ${INSTALL_DATA}
 
 
 # The following definition can be set to non-null for special systems
@@ -81,8 +84,6 @@ SHELL =		/bin/sh
 # modify any of this stuff by hand.
 #----------------------------------------------------------------
 
-INSTALL_PROGRAM =	$(INSTALL) -m 744
-INSTALL_DATA =		$(INSTALL) -m 644
 INSTALL_SHLIB =		$(INSTALL) -m 555
 RANLIB =		@RANLIB@
 SHLIB_SUFFIX =		@SHLIB_SUFFIX@
@@ -140,7 +141,9 @@ collate: all
 		cat Img/exec_prefix/lib/Img/pkgIndex.tcl >> pkgIndex.tcl ; \
 		fi ; \
 	done
+	chmod ugo+w     Img/exec_prefix/lib/Img/pkgIndex.tcl
 	mv pkgIndex.tcl Img/exec_prefix/lib/Img/pkgIndex.tcl
+	chmod ugo+w     Img/exec_prefix/lib/Img/pkgIndex.tcl
 	for p in Img/exec_prefix/lib/*.sh ; do \
 		sed -e 's#$(libdir)/[^/ ]*\([/ ]\)#$(LIB_RUNTIME_DIR)\1#' \
 			$$p > $$p.1 && mv -f $$p.1 $$p ; \

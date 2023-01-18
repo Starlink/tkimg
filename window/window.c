@@ -5,7 +5,7 @@
  *
  * Author : Jan Nijtmans
  *
- * $Id: window.c 233 2010-04-01 09:28:00Z nijtmans $
+ * $Id: window.c 363 2013-10-03 09:48:24Z nijtmans $
  *
  */
 
@@ -22,24 +22,23 @@
 #  else
 #   include "X11/Xlib.h"
 #   include "X11/Xfuncproto.h"
-#   undef X_GetImage
 #  endif
 #else
-/*#   include <windows.h>*/
 #   include "X11/Xlib.h"
 #   include "tkInt.h"
 #   include "tkWinInt.h"
 #   include "X11/Xfuncproto.h"
-#   undef X_GetImage
+#endif
+
+#ifndef X_GetImage
+#   define X_GetImage 73
 #endif
 
 /*
  * The format record for the Win data format:
  */
 
-#ifdef X_GetImage
 static int xerrorhandler(ClientData clientData, XErrorEvent *e);
-#endif
 
 typedef struct ColormapData {	/* Hold color information for a window */
     int separated;		/* Whether to use separate color bands */
@@ -72,7 +71,6 @@ typedef struct ColormapData {	/* Hold color information for a window */
  *--------------------------------------------------------------
  */
 
-#ifdef X_GetImage
 static int
 xerrorhandler(clientData, e)
     ClientData clientData;
@@ -80,7 +78,6 @@ xerrorhandler(clientData, e)
 {
     return 0;
 }
-#endif
 
 /* OPA TODO: Must be a better way to specify non-existing format functions. */
 static int
@@ -220,24 +217,22 @@ static int ObjRead(interp, data, format, imageHandle,
 {
 	Tk_PhotoImageBlock block;
     Tk_Window tkwin;
-    int fileWidth, fileHeight, depth, nBytes, x, y;
+    int fileWidth, fileHeight, nBytes, x, y;
     const char *name;
 #ifndef	__WIN32__
     XImage *ximage;
     ColormapData cdata;
     Colormap cmap;
     int i, ncolors;
+    Visual *visual;
 #else
 #   undef XGetPixel
 #   define XGetPixel(P,X,Y) GetPixel(P, X, Y)
     TkWinDCState DCi;
     HDC			ximage;
 #endif
-    Visual *visual;
     unsigned char *p;
-#ifdef X_GetImage
     Tk_ErrorHandler	handle;
-#endif
     int green, blue;
     int result = TCL_OK;
 
@@ -273,10 +268,8 @@ static int ObjRead(interp, data, format, imageHandle,
      * We catch any BadMatch errors here
      */
 
-#ifdef X_GetImage
     handle = Tk_CreateErrorHandler(Tk_Display(tkwin), BadMatch,
 	    X_GetImage, -1, xerrorhandler, (ClientData) tkwin);
-#endif
 
 #ifndef	__WIN32__
     /*
@@ -287,9 +280,7 @@ static int ObjRead(interp, data, format, imageHandle,
     ximage = XGetImage(Tk_Display(tkwin), Tk_WindowId(tkwin), srcX, srcY,
 	width, height, AllPlanes, ZPixmap);
 
-#ifdef X_GetImage
     Tk_DeleteErrorHandler(handle);
-#endif
 
     if (ximage == (XImage*) NULL) {
 	Tcl_AppendResult(interp, "Window \"", name,
@@ -299,15 +290,16 @@ static int ObjRead(interp, data, format, imageHandle,
     }
 #else
     ximage = TkWinGetDrawableDC(Tk_Display(tkwin), Tk_WindowId(tkwin), &DCi);
+
+    Tk_DeleteErrorHandler(handle);
 #endif
 
     if (tkimg_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 
-    depth = Tk_Depth(tkwin);
-    visual = Tk_Visual(tkwin);
 #ifndef	__WIN32__
+    visual = Tk_Visual(tkwin);
     cmap = Tk_Colormap(tkwin);
 
     /*
@@ -412,7 +404,6 @@ static int ObjRead(interp, data, format, imageHandle,
     XDestroyImage(ximage);
     ckfree((char *) cdata.colors);
 #else
-#   undef XGetPixel
     TkWinReleaseDrawableDC(Tk_WindowId(tkwin), ximage, &DCi);
 #endif
     ckfree((char *) block.pixelPtr);

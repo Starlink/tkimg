@@ -12,7 +12,7 @@
  * Feb 2001:
  *      - Bugfix  in CommonWrite: const char *fileName was overwritten.
  *
- * $Id: xbm.c 262 2010-05-31 15:03:33Z nijtmans $
+ * $Id: xbm.c 327 2011-07-27 09:06:39Z nijtmans $
  *
  */
 
@@ -394,7 +394,7 @@ ReadXBMFileHeader(pi, widthPtr, heightPtr)
     int *widthPtr, *heightPtr;	/* The dimensions of the image are
 				 * returned here. */
 {
-    int width, height, hotX, hotY;
+    int width, height;
     char *end;
 
     /*
@@ -416,8 +416,6 @@ ReadXBMFileHeader(pi, widthPtr, heightPtr)
 
     width = 0;
     height = 0;
-    hotX = -1;
-    hotY = -1;
     while (1) {
 	if (NextBitmapWord(pi) != TCL_OK) {
 	    return 0;
@@ -445,7 +443,7 @@ ReadXBMFileHeader(pi, widthPtr, heightPtr)
 	    if (NextBitmapWord(pi) != TCL_OK) {
 		return 0;
 	    }
-	    hotX = strtol(pi->word, &end, 0);
+	    strtol(pi->word, &end, 0);
 	    if ((end == pi->word) || (*end != 0)) {
 		return 0;
 	    }
@@ -454,7 +452,7 @@ ReadXBMFileHeader(pi, widthPtr, heightPtr)
 	    if (NextBitmapWord(pi) != TCL_OK) {
 		return 0;
 	    }
-	    hotY = strtol(pi->word, &end, 0);
+	    strtol(pi->word, &end, 0);
 	    if ((end == pi->word) || (*end != 0)) {
 		return 0;
 	    }

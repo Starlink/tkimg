@@ -53,7 +53,8 @@ PNG_IMPEXP png_structp	png_create_write_struct(png_const_charp user_png_ver,
 				png_voidp error_ptr, png_error_ptr error_fn,
 				png_error_ptr warn_fn);
 /* 6 */
-PNG_IMPEXP png_size_t	png_get_compression_buffer_size(png_structp png_ptr);
+PNG_IMPEXP png_size_t	png_get_compression_buffer_size(
+				png_const_structp png_ptr);
 /* 7 */
 PNG_IMPEXP void		png_set_compression_buffer_size(png_structp png_ptr,
 				png_size_t size);
@@ -125,7 +126,7 @@ PNG_IMPEXP void		png_set_rgb_to_gray_fixed(png_structp png_ptr,
 				int error_action, png_fixed_point red,
 				png_fixed_point green);
 /* 31 */
-PNG_IMPEXP png_byte	png_get_rgb_to_gray_status(png_structp png_ptr);
+PNG_IMPEXP png_byte	png_get_rgb_to_gray_status(png_const_structp png_ptr);
 /* 32 */
 PNG_IMPEXP void		png_build_grayscale_palette(int bit_depth,
 				png_colorp palette);
@@ -246,7 +247,7 @@ PNG_IMPEXP void		png_set_error_fn(png_structp png_ptr,
 				png_voidp error_ptr, png_error_ptr error_fn,
 				png_error_ptr warning_fn);
 /* 76 */
-PNG_IMPEXP png_voidp	png_get_error_ptr(png_structp png_ptr);
+PNG_IMPEXP png_voidp	png_get_error_ptr(png_const_structp png_ptr);
 /* 77 */
 PNG_IMPEXP void		png_set_write_fn(png_structp png_ptr,
 				png_voidp io_ptr, png_rw_ptr write_data_fn,
@@ -267,7 +268,7 @@ PNG_IMPEXP void		png_set_mem_fn(png_structp png_ptr,
 				png_voidp mem_ptr, png_malloc_ptr malloc_fn,
 				png_free_ptr free_fn);
 /* 83 */
-PNG_IMPEXP png_voidp	png_get_mem_ptr(png_structp png_ptr);
+PNG_IMPEXP png_voidp	png_get_mem_ptr(png_const_structp png_ptr);
 /* 84 */
 PNG_IMPEXP void		png_set_read_user_transform_fn(png_structp png_ptr,
 				png_user_transform_ptr read_user_transform_fn);
@@ -280,13 +281,13 @@ PNG_IMPEXP void		png_set_user_transform_info(png_structp png_ptr,
 				int user_transform_depth,
 				int user_transform_channels);
 /* 87 */
-PNG_IMPEXP png_voidp	png_get_user_transform_ptr(png_structp png_ptr);
+PNG_IMPEXP png_voidp	png_get_user_transform_ptr(png_const_structp png_ptr);
 /* 88 */
 PNG_IMPEXP void		png_set_read_user_chunk_fn(png_structp png_ptr,
 				png_voidp user_chunk_ptr,
 				png_user_chunk_ptr read_user_chunk_fn);
 /* 89 */
-PNG_IMPEXP png_voidp	png_get_user_chunk_ptr(png_structp png_ptr);
+PNG_IMPEXP png_voidp	png_get_user_chunk_ptr(png_const_structp png_ptr);
 /* 90 */
 PNG_IMPEXP void		png_set_progressive_read_fn(png_structp png_ptr,
 				png_voidp progressive_ptr,
@@ -294,7 +295,7 @@ PNG_IMPEXP void		png_set_progressive_read_fn(png_structp png_ptr,
 				png_progressive_row_ptr row_fn,
 				png_progressive_end_ptr end_fn);
 /* 91 */
-PNG_IMPEXP png_voidp	png_get_progressive_ptr(png_structp png_ptr);
+PNG_IMPEXP png_voidp	png_get_progressive_ptr(png_const_structp png_ptr);
 /* 92 */
 PNG_IMPEXP void		png_process_data(png_structp png_ptr,
 				png_infop info_ptr, png_bytep buffer,
@@ -337,82 +338,85 @@ PNG_IMPEXP void		png_warning(png_structp png_ptr,
 PNG_IMPEXP void		png_chunk_warning(png_structp png_ptr,
 				png_const_charp message);
 /* 107 */
-PNG_IMPEXP png_uint_32	png_get_valid(png_structp png_ptr,
-				png_infop info_ptr, png_uint_32 flag);
+PNG_IMPEXP png_uint_32	png_get_valid(png_const_structp png_ptr,
+				png_const_infop info_ptr, png_uint_32 flag);
 /* 108 */
-PNG_IMPEXP png_size_t	png_get_rowbytes(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_size_t	png_get_rowbytes(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 109 */
-PNG_IMPEXP png_bytepp	png_get_rows(png_structp png_ptr, png_infop info_ptr);
+PNG_IMPEXP png_bytepp	png_get_rows(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 110 */
 PNG_IMPEXP void		png_set_rows(png_structp png_ptr, png_infop info_ptr,
 				png_bytepp row_pointers);
 /* 111 */
-PNG_IMPEXP png_byte	png_get_channels(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_byte	png_get_channels(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 112 */
-PNG_IMPEXP png_uint_32	png_get_image_width(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_uint_32	png_get_image_width(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 113 */
-PNG_IMPEXP png_uint_32	png_get_image_height(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_uint_32	png_get_image_height(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 114 */
-PNG_IMPEXP png_byte	png_get_bit_depth(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_byte	png_get_bit_depth(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 115 */
-PNG_IMPEXP png_byte	png_get_color_type(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_byte	png_get_color_type(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 116 */
-PNG_IMPEXP png_byte	png_get_filter_type(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_byte	png_get_filter_type(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 117 */
-PNG_IMPEXP png_byte	png_get_interlace_type(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_byte	png_get_interlace_type(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 118 */
-PNG_IMPEXP png_byte	png_get_compression_type(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_byte	png_get_compression_type(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 119 */
-PNG_IMPEXP png_uint_32	png_get_pixels_per_meter(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_uint_32	png_get_pixels_per_meter(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 120 */
-PNG_IMPEXP png_uint_32	png_get_x_pixels_per_meter(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_uint_32	png_get_x_pixels_per_meter(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 121 */
-PNG_IMPEXP png_uint_32	png_get_y_pixels_per_meter(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_uint_32	png_get_y_pixels_per_meter(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 122 */
-PNG_IMPEXP float	png_get_pixel_aspect_ratio(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP float	png_get_pixel_aspect_ratio(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 123 */
-PNG_IMPEXP png_int_32	png_get_x_offset_pixels(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_int_32	png_get_x_offset_pixels(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 124 */
-PNG_IMPEXP png_int_32	png_get_y_offset_pixels(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_int_32	png_get_y_offset_pixels(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 125 */
-PNG_IMPEXP png_int_32	png_get_x_offset_microns(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_int_32	png_get_x_offset_microns(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 126 */
-PNG_IMPEXP png_int_32	png_get_y_offset_microns(png_structp png_ptr,
-				png_infop info_ptr);
+PNG_IMPEXP png_int_32	png_get_y_offset_microns(png_const_structp png_ptr,
+				png_const_infop info_ptr);
 /* 127 */
-PNG_IMPEXP png_bytep	png_get_signature(png_structp png_ptr,
+PNG_IMPEXP png_bytep	png_get_signature(png_const_structp png_ptr,
 				png_infop info_ptr);
 /* 128 */
-PNG_IMPEXP png_uint_32	png_get_bKGD(png_structp png_ptr, png_infop info_ptr,
+PNG_IMPEXP png_uint_32	png_get_bKGD(png_const_structp png_ptr,
+				png_infop info_ptr,
 				png_color_16p *background);
 /* 129 */
 PNG_IMPEXP void		png_set_bKGD(png_structp png_ptr, png_infop info_ptr,
 				png_color_16p background);
 /* 130 */
-PNG_IMPEXP png_uint_32	png_get_cHRM(png_structp png_ptr, png_infop info_ptr,
-				double *white_x, double *white_y,
-				double *red_x, double *red_y,
-				double *green_x, double *green_y,
-				double *blue_x, double *blue_y);
+PNG_IMPEXP png_uint_32	png_get_cHRM(png_const_structp png_ptr,
+				png_const_infop info_ptr, double *white_x,
+				double *white_y, double *red_x,
+				double *red_y, double *green_x,
+				double *green_y, double *blue_x,
+				double *blue_y);
 /* 131 */
-PNG_IMPEXP png_uint_32	png_get_cHRM_fixed(png_structp png_ptr,
-				png_infop info_ptr,
+PNG_IMPEXP png_uint_32	png_get_cHRM_fixed(png_const_structp png_ptr,
+				png_const_infop info_ptr,
 				png_fixed_point *int_white_x,
 				png_fixed_point *int_white_y,
 				png_fixed_point *int_red_x,
@@ -438,11 +442,11 @@ PNG_IMPEXP void		png_set_cHRM_fixed(png_structp png_ptr,
 				png_fixed_point int_blue_x,
 				png_fixed_point int_blue_y);
 /* 134 */
-PNG_IMPEXP png_uint_32	png_get_gAMA(png_structp png_ptr, png_infop info_ptr,
-				double *file_gamma);
+PNG_IMPEXP png_uint_32	png_get_gAMA(png_const_structp png_ptr,
+				png_const_infop info_ptr, double *file_gamma);
 /* 135 */
-PNG_IMPEXP png_uint_32	png_get_gAMA_fixed(png_structp png_ptr,
-				png_infop info_ptr,
+PNG_IMPEXP png_uint_32	png_get_gAMA_fixed(png_const_structp png_ptr,
+				png_const_infop info_ptr,
 				png_fixed_point *int_file_gamma);
 /* 136 */
 PNG_IMPEXP void		png_set_gAMA(png_structp png_ptr, png_infop info_ptr,
@@ -452,8 +456,8 @@ PNG_IMPEXP void		png_set_gAMA_fixed(png_structp png_ptr,
 				png_infop info_ptr,
 				png_fixed_point int_file_gamma);
 /* 138 */
-PNG_IMPEXP png_uint_32	png_get_hIST(png_structp png_ptr, png_infop info_ptr,
-				png_uint_16p *hist);
+PNG_IMPEXP png_uint_32	png_get_hIST(png_const_structp png_ptr,
+				png_const_infop info_ptr, png_uint_16p *hist);
 /* 139 */
 PNG_IMPEXP void		png_set_hIST(png_structp png_ptr, png_infop info_ptr,
 				png_uint_16p hist);
@@ -470,7 +474,8 @@ PNG_IMPEXP void		png_set_IHDR(png_structp png_ptr, png_infop info_ptr,
 				int interlace_type, int compression_type,
 				int filter_type);
 /* 142 */
-PNG_IMPEXP png_uint_32	png_get_oFFs(png_structp png_ptr, png_infop info_ptr,
+PNG_IMPEXP png_uint_32	png_get_oFFs(png_const_structp png_ptr,
+				png_const_infop info_ptr,
 				png_int_32 *offset_x, png_int_32 *offset_y,
 				int *unit_type);
 /* 143 */
@@ -478,38 +483,40 @@ PNG_IMPEXP void		png_set_oFFs(png_structp png_ptr, png_infop info_ptr,
 				png_int_32 offset_x, png_int_32 offset_y,
 				int unit_type);
 /* 144 */
-PNG_IMPEXP png_uint_32	png_get_pCAL(png_structp png_ptr, png_infop info_ptr,
-				png_charp *purpose, png_int_32 *X0,
-				png_int_32 *X1, int *type, int *nparams,
-				png_charp *units, png_charpp *params);
+PNG_IMPEXP png_uint_32	png_get_pCAL(png_const_structp png_ptr,
+				png_const_infop info_ptr, png_charp *purpose,
+				png_int_32 *X0, png_int_32 *X1, int *type,
+				int *nparams, png_charp *units,
+				png_charpp *params);
 /* 145 */
 PNG_IMPEXP void		png_set_pCAL(png_structp png_ptr, png_infop info_ptr,
 				png_charp purpose, png_int_32 X0,
 				png_int_32 X1, int type, int nparams,
 				png_charp units, png_charpp params);
 /* 146 */
-PNG_IMPEXP png_uint_32	png_get_pHYs(png_structp png_ptr, png_infop info_ptr,
-				png_uint_32 *res_x, png_uint_32 *res_y,
-				int *unit_type);
+PNG_IMPEXP png_uint_32	png_get_pHYs(png_const_structp png_ptr,
+				png_const_infop info_ptr, png_uint_32 *res_x,
+				png_uint_32 *res_y, int *unit_type);
 /* 147 */
 PNG_IMPEXP void		png_set_pHYs(png_structp png_ptr, png_infop info_ptr,
 				png_uint_32 res_x, png_uint_32 res_y,
 				int unit_type);
 /* 148 */
-PNG_IMPEXP png_uint_32	png_get_PLTE(png_structp png_ptr, png_infop info_ptr,
+PNG_IMPEXP png_uint_32	png_get_PLTE(png_const_structp png_ptr,
+				png_const_infop info_ptr,
 				png_colorp *palette, int *num_palette);
 /* 149 */
 PNG_IMPEXP void		png_set_PLTE(png_structp png_ptr, png_infop info_ptr,
 				png_colorp palette, int num_palette);
 /* 150 */
-PNG_IMPEXP png_uint_32	png_get_sBIT(png_structp png_ptr, png_infop info_ptr,
-				png_color_8p *sig_bit);
+PNG_IMPEXP png_uint_32	png_get_sBIT(png_const_structp png_ptr,
+				png_infop info_ptr, png_color_8p *sig_bit);
 /* 151 */
 PNG_IMPEXP void		png_set_sBIT(png_structp png_ptr, png_infop info_ptr,
 				png_color_8p sig_bit);
 /* 152 */
-PNG_IMPEXP png_uint_32	png_get_sRGB(png_structp png_ptr, png_infop info_ptr,
-				int *intent);
+PNG_IMPEXP png_uint_32	png_get_sRGB(png_const_structp png_ptr,
+				png_const_infop info_ptr, int *intent);
 /* 153 */
 PNG_IMPEXP void		png_set_sRGB(png_structp png_ptr, png_infop info_ptr,
 				int intent);
@@ -517,45 +524,49 @@ PNG_IMPEXP void		png_set_sRGB(png_structp png_ptr, png_infop info_ptr,
 PNG_IMPEXP void		png_set_sRGB_gAMA_and_cHRM(png_structp png_ptr,
 				png_infop info_ptr, int intent);
 /* 155 */
-PNG_IMPEXP png_uint_32	png_get_iCCP(png_structp png_ptr, png_infop info_ptr,
-				png_charpp name, int *compression_type,
-				png_charpp profile, png_uint_32 *proflen);
+PNG_IMPEXP png_uint_32	png_get_iCCP(png_const_structp png_ptr,
+				png_const_infop info_ptr, png_charpp name,
+				int *compression_type, png_charpp profile,
+				png_uint_32 *proflen);
 /* 156 */
 PNG_IMPEXP void		png_set_iCCP(png_structp png_ptr, png_infop info_ptr,
 				png_charp name, int compression_type,
 				png_charp profile, png_uint_32 proflen);
 /* 157 */
-PNG_IMPEXP png_uint_32	png_get_sPLT(png_structp png_ptr, png_infop info_ptr,
+PNG_IMPEXP png_uint_32	png_get_sPLT(png_const_structp png_ptr,
+				png_const_infop info_ptr,
 				png_sPLT_tpp entries);
 /* 158 */
 PNG_IMPEXP void		png_set_sPLT(png_structp png_ptr, png_infop info_ptr,
 				png_sPLT_tp entries, int nentries);
 /* 159 */
-PNG_IMPEXP png_uint_32	png_get_text(png_structp png_ptr, png_infop info_ptr,
+PNG_IMPEXP png_uint_32	png_get_text(png_const_structp png_ptr,
+				png_const_infop info_ptr,
 				png_textp *text_ptr, int *num_text);
 /* 160 */
 PNG_IMPEXP void		png_set_text(png_structp png_ptr, png_infop info_ptr,
 				png_textp text_ptr, int num_text);
 /* 161 */
-PNG_IMPEXP png_uint_32	png_get_tIME(png_structp png_ptr, png_infop info_ptr,
-				png_timep *mod_time);
+PNG_IMPEXP png_uint_32	png_get_tIME(png_const_structp png_ptr,
+				png_infop info_ptr, png_timep *mod_time);
 /* 162 */
 PNG_IMPEXP void		png_set_tIME(png_structp png_ptr, png_infop info_ptr,
 				png_timep mod_time);
 /* 163 */
-PNG_IMPEXP png_uint_32	png_get_tRNS(png_structp png_ptr, png_infop info_ptr,
-				png_bytep *trans, int *num_trans,
-				png_color_16p *trans_values);
+PNG_IMPEXP png_uint_32	png_get_tRNS(png_const_structp png_ptr,
+				png_infop info_ptr, png_bytep *trans,
+				int *num_trans, png_color_16p *trans_values);
 /* 164 */
 PNG_IMPEXP void		png_set_tRNS(png_structp png_ptr, png_infop info_ptr,
 				png_bytep trans, int num_trans,
 				png_color_16p trans_values);
 /* 165 */
-PNG_IMPEXP png_uint_32	png_get_sCAL(png_structp png_ptr, png_infop info_ptr,
-				int *unit, double *width, double *height);
+PNG_IMPEXP png_uint_32	png_get_sCAL(png_const_structp png_ptr,
+				png_const_infop info_ptr, int *unit,
+				double *width, double *height);
 /* 166 */
-PNG_IMPEXP png_uint_32	png_get_sCAL_s(png_structp png_ptr,
-				png_infop info_ptr, int *unit,
+PNG_IMPEXP png_uint_32	png_get_sCAL_s(png_const_structp png_ptr,
+				png_const_infop info_ptr, int *unit,
 				png_charpp swidth, png_charpp sheight);
 /* 167 */
 PNG_IMPEXP void		png_set_sCAL(png_structp png_ptr, png_infop info_ptr,
@@ -577,8 +588,8 @@ PNG_IMPEXP void		png_set_unknown_chunks(png_structp png_ptr,
 PNG_IMPEXP void		png_set_unknown_chunk_location(png_structp png_ptr,
 				png_infop info_ptr, int chunk, int location);
 /* 172 */
-PNG_IMPEXP png_uint_32	png_get_unknown_chunks(png_structp png_ptr,
-				png_infop info_ptr,
+PNG_IMPEXP png_uint_32	png_get_unknown_chunks(png_const_structp png_ptr,
+				png_const_infop info_ptr,
 				png_unknown_chunkpp entries);
 /* 173 */
 PNG_IMPEXP void		png_set_invalid(png_structp png_ptr,
@@ -593,13 +604,13 @@ PNG_IMPEXP void		png_write_png(png_structp png_ptr,
 /* 176 */
 PNG_IMPEXP png_bytep	png_sig_bytes(void);
 /* 177 */
-PNG_IMPEXP png_charp	png_get_copyright(png_structp png_ptr);
+PNG_IMPEXP png_charp	png_get_copyright(png_const_structp png_ptr);
 /* 178 */
-PNG_IMPEXP png_charp	png_get_header_ver(png_structp png_ptr);
+PNG_IMPEXP png_charp	png_get_header_ver(png_const_structp png_ptr);
 /* 179 */
-PNG_IMPEXP png_charp	png_get_header_version(png_structp png_ptr);
+PNG_IMPEXP png_charp	png_get_header_version(png_const_structp png_ptr);
 /* 180 */
-PNG_IMPEXP png_charp	png_get_libpng_ver(png_structp png_ptr);
+PNG_IMPEXP png_charp	png_get_libpng_ver(png_const_structp png_ptr);
 /* Slot 181 is reserved */
 /* Slot 182 is reserved */
 /* Slot 183 is reserved */
@@ -625,10 +636,8 @@ PNG_IMPEXP void		png_destroy_struct_2(png_voidp struct_ptr,
 /* 192 */
 PNG_IMPEXP void		png_info_destroy(png_structp png_ptr,
 				png_infop info_ptr);
-/* 193 */
-PNG_IMPEXP voidpf	png_zalloc(voidpf png_ptr, uInt items, uInt size);
-/* 194 */
-PNG_IMPEXP void		png_zfree(voidpf png_ptr, voidpf ptr);
+/* Slot 193 is reserved */
+/* Slot 194 is reserved */
 /* 195 */
 PNG_IMPEXP void		png_reset_crc(png_structp png_ptr);
 /* 196 */
@@ -1008,6 +1017,9 @@ PNG_IMPEXP void		png_push_read_iTXt(png_structp png_ptr,
 /* 318 */
 PNG_IMPEXP void		png_info_init_3(png_infopp info_ptr,
 				png_size_t png_info_struct_size);
+/* 319 */
+PNG_IMPEXP void		png_set_add_alpha(png_structp png_ptr,
+				png_uint_32 filler, int flags);
 
 typedef struct PngtclStubs {
     int magic;
@@ -1019,7 +1031,7 @@ typedef struct PngtclStubs {
     void (*reserved3)(void);
     png_structp (*png_create_read_structPtr) (png_const_charp user_png_ver, png_voidp error_ptr, png_error_ptr error_fn, png_error_ptr warn_fn); /* 4 */
     png_structp (*png_create_write_structPtr) (png_const_charp user_png_ver, png_voidp error_ptr, png_error_ptr error_fn, png_error_ptr warn_fn); /* 5 */
-    png_size_t (*png_get_compression_buffer_sizePtr) (png_structp png_ptr); /* 6 */
+    png_size_t (*png_get_compression_buffer_sizePtr) (png_const_structp png_ptr); /* 6 */
     void (*png_set_compression_buffer_sizePtr) (png_structp png_ptr, png_size_t size); /* 7 */
     int (*png_reset_zstreamPtr) (png_structp png_ptr); /* 8 */
     png_structp (*png_create_read_struct_2Ptr) (png_const_charp user_png_ver, png_voidp error_ptr, png_error_ptr error_fn, png_error_ptr warn_fn, png_voidp mem_ptr, png_malloc_ptr malloc_fn, png_free_ptr free_fn); /* 9 */
@@ -1044,7 +1056,7 @@ typedef struct PngtclStubs {
     void (*png_set_gray_to_rgbPtr) (png_structp png_ptr); /* 28 */
     void (*png_set_rgb_to_grayPtr) (png_structp png_ptr, int error_action, double red, double green); /* 29 */
     void (*png_set_rgb_to_gray_fixedPtr) (png_structp png_ptr, int error_action, png_fixed_point red, png_fixed_point green); /* 30 */
-    png_byte (*png_get_rgb_to_gray_statusPtr) (png_structp png_ptr); /* 31 */
+    png_byte (*png_get_rgb_to_gray_statusPtr) (png_const_structp png_ptr); /* 31 */
     void (*png_build_grayscale_palettePtr) (int bit_depth, png_colorp palette); /* 32 */
     void (*png_set_strip_alphaPtr) (png_structp png_ptr); /* 33 */
     void (*png_set_swap_alphaPtr) (png_structp png_ptr); /* 34 */
@@ -1089,29 +1101,29 @@ typedef struct PngtclStubs {
     void (*png_set_compression_methodPtr) (png_structp png_ptr, int method); /* 73 */
     void (*png_init_ioPtr) (png_structp png_ptr, png_FILE_p fp); /* 74 */
     void (*png_set_error_fnPtr) (png_structp png_ptr, png_voidp error_ptr, png_error_ptr error_fn, png_error_ptr warning_fn); /* 75 */
-    png_voidp (*png_get_error_ptrPtr) (png_structp png_ptr); /* 76 */
+    png_voidp (*png_get_error_ptrPtr) (png_const_structp png_ptr); /* 76 */
     void (*png_set_write_fnPtr) (png_structp png_ptr, png_voidp io_ptr, png_rw_ptr write_data_fn, png_flush_ptr output_flush_fn); /* 77 */
     void (*png_set_read_fnPtr) (png_structp png_ptr, png_voidp io_ptr, png_rw_ptr read_data_fn); /* 78 */
     png_voidp (*png_get_io_ptrPtr) (png_structp png_ptr); /* 79 */
     void (*png_set_read_status_fnPtr) (png_structp png_ptr, png_read_status_ptr read_row_fn); /* 80 */
     void (*png_set_write_status_fnPtr) (png_structp png_ptr, png_write_status_ptr write_row_fn); /* 81 */
     void (*png_set_mem_fnPtr) (png_structp png_ptr, png_voidp mem_ptr, png_malloc_ptr malloc_fn, png_free_ptr free_fn); /* 82 */
-    png_voidp (*png_get_mem_ptrPtr) (png_structp png_ptr); /* 83 */
+    png_voidp (*png_get_mem_ptrPtr) (png_const_structp png_ptr); /* 83 */
     void (*png_set_read_user_transform_fnPtr) (png_structp png_ptr, png_user_transform_ptr read_user_transform_fn); /* 84 */
     void (*png_set_write_user_transform_fnPtr) (png_structp png_ptr, png_user_transform_ptr write_user_transform_fn); /* 85 */
     void (*png_set_user_transform_infoPtr) (png_structp png_ptr, png_voidp user_transform_ptr, int user_transform_depth, int user_transform_channels); /* 86 */
-    png_voidp (*png_get_user_transform_ptrPtr) (png_structp png_ptr); /* 87 */
+    png_voidp (*png_get_user_transform_ptrPtr) (png_const_structp png_ptr); /* 87 */
     void (*png_set_read_user_chunk_fnPtr) (png_structp png_ptr, png_voidp user_chunk_ptr, png_user_chunk_ptr read_user_chunk_fn); /* 88 */
-    png_voidp (*png_get_user_chunk_ptrPtr) (png_structp png_ptr); /* 89 */
+    png_voidp (*png_get_user_chunk_ptrPtr) (png_const_structp png_ptr); /* 89 */
     void (*png_set_progressive_read_fnPtr) (png_structp png_ptr, png_voidp progressive_ptr, png_progressive_info_ptr info_fn, png_progressive_row_ptr row_fn, png_progressive_end_ptr end_fn); /* 90 */
-    png_voidp (*png_get_progressive_ptrPtr) (png_structp png_ptr); /* 91 */
+    png_voidp (*png_get_progressive_ptrPtr) (png_const_structp png_ptr); /* 91 */
     void (*png_process_dataPtr) (png_structp png_ptr, png_infop info_ptr, png_bytep buffer, png_size_t buffer_size); /* 92 */
     void (*png_progressive_combine_rowPtr) (png_structp png_ptr, png_bytep old_row, png_bytep new_row); /* 93 */
     png_voidp (*png_mallocPtr) (png_structp png_ptr, png_alloc_size_t size); /* 94 */
     void (*png_freePtr) (png_structp png_ptr, png_voidp ptr); /* 95 */
     void (*png_free_dataPtr) (png_structp png_ptr, png_infop info_ptr, png_uint_32 free_me, int num); /* 96 */
     void (*png_data_freerPtr) (png_structp png_ptr, png_infop info_ptr, int freer, png_uint_32 mask); /* 97 */
-    png_voidp (*png_malloc_defaultPtr) (png_structp png_ptr, png_uint_32 size); /* 98 */
+    png_voidp (*png_malloc_defaultPtr) (png_structp png_ptr, png_alloc_size_t size); /* 98 */
     void (*png_free_defaultPtr) (png_structp png_ptr, png_voidp ptr); /* 99 */
     void (*reserved100)(void);
     void (*reserved101)(void);
@@ -1120,80 +1132,80 @@ typedef struct PngtclStubs {
     void (*png_chunk_errorPtr) (png_structp png_ptr, png_const_charp error); /* 104 */
     void (*png_warningPtr) (png_structp png_ptr, png_const_charp message); /* 105 */
     void (*png_chunk_warningPtr) (png_structp png_ptr, png_const_charp message); /* 106 */
-    png_uint_32 (*png_get_validPtr) (png_structp png_ptr, png_infop info_ptr, png_uint_32 flag); /* 107 */
-    png_size_t (*png_get_rowbytesPtr) (png_structp png_ptr, png_infop info_ptr); /* 108 */
-    png_bytepp (*png_get_rowsPtr) (png_structp png_ptr, png_infop info_ptr); /* 109 */
+    png_uint_32 (*png_get_validPtr) (png_const_structp png_ptr, png_const_infop info_ptr, png_uint_32 flag); /* 107 */
+    png_size_t (*png_get_rowbytesPtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 108 */
+    png_bytepp (*png_get_rowsPtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 109 */
     void (*png_set_rowsPtr) (png_structp png_ptr, png_infop info_ptr, png_bytepp row_pointers); /* 110 */
-    png_byte (*png_get_channelsPtr) (png_structp png_ptr, png_infop info_ptr); /* 111 */
-    png_uint_32 (*png_get_image_widthPtr) (png_structp png_ptr, png_infop info_ptr); /* 112 */
-    png_uint_32 (*png_get_image_heightPtr) (png_structp png_ptr, png_infop info_ptr); /* 113 */
-    png_byte (*png_get_bit_depthPtr) (png_structp png_ptr, png_infop info_ptr); /* 114 */
-    png_byte (*png_get_color_typePtr) (png_structp png_ptr, png_infop info_ptr); /* 115 */
-    png_byte (*png_get_filter_typePtr) (png_structp png_ptr, png_infop info_ptr); /* 116 */
-    png_byte (*png_get_interlace_typePtr) (png_structp png_ptr, png_infop info_ptr); /* 117 */
-    png_byte (*png_get_compression_typePtr) (png_structp png_ptr, png_infop info_ptr); /* 118 */
-    png_uint_32 (*png_get_pixels_per_meterPtr) (png_structp png_ptr, png_infop info_ptr); /* 119 */
-    png_uint_32 (*png_get_x_pixels_per_meterPtr) (png_structp png_ptr, png_infop info_ptr); /* 120 */
-    png_uint_32 (*png_get_y_pixels_per_meterPtr) (png_structp png_ptr, png_infop info_ptr); /* 121 */
-    float (*png_get_pixel_aspect_ratioPtr) (png_structp png_ptr, png_infop info_ptr); /* 122 */
-    png_int_32 (*png_get_x_offset_pixelsPtr) (png_structp png_ptr, png_infop info_ptr); /* 123 */
-    png_int_32 (*png_get_y_offset_pixelsPtr) (png_structp png_ptr, png_infop info_ptr); /* 124 */
-    png_int_32 (*png_get_x_offset_micronsPtr) (png_structp png_ptr, png_infop info_ptr); /* 125 */
-    png_int_32 (*png_get_y_offset_micronsPtr) (png_structp png_ptr, png_infop info_ptr); /* 126 */
-    png_bytep (*png_get_signaturePtr) (png_structp png_ptr, png_infop info_ptr); /* 127 */
-    png_uint_32 (*png_get_bKGDPtr) (png_structp png_ptr, png_infop info_ptr, png_color_16p *background); /* 128 */
+    png_byte (*png_get_channelsPtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 111 */
+    png_uint_32 (*png_get_image_widthPtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 112 */
+    png_uint_32 (*png_get_image_heightPtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 113 */
+    png_byte (*png_get_bit_depthPtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 114 */
+    png_byte (*png_get_color_typePtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 115 */
+    png_byte (*png_get_filter_typePtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 116 */
+    png_byte (*png_get_interlace_typePtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 117 */
+    png_byte (*png_get_compression_typePtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 118 */
+    png_uint_32 (*png_get_pixels_per_meterPtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 119 */
+    png_uint_32 (*png_get_x_pixels_per_meterPtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 120 */
+    png_uint_32 (*png_get_y_pixels_per_meterPtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 121 */
+    float (*png_get_pixel_aspect_ratioPtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 122 */
+    png_int_32 (*png_get_x_offset_pixelsPtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 123 */
+    png_int_32 (*png_get_y_offset_pixelsPtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 124 */
+    png_int_32 (*png_get_x_offset_micronsPtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 125 */
+    png_int_32 (*png_get_y_offset_micronsPtr) (png_const_structp png_ptr, png_const_infop info_ptr); /* 126 */
+    png_bytep (*png_get_signaturePtr) (png_const_structp png_ptr, png_infop info_ptr); /* 127 */
+    png_uint_32 (*png_get_bKGDPtr) (png_const_structp png_ptr, png_infop info_ptr, png_color_16p *background); /* 128 */
     void (*png_set_bKGDPtr) (png_structp png_ptr, png_infop info_ptr, png_color_16p background); /* 129 */
-    png_uint_32 (*png_get_cHRMPtr) (png_structp png_ptr, png_infop info_ptr, double *white_x, double *white_y, double *red_x, double *red_y, double *green_x, double *green_y, double *blue_x, double *blue_y); /* 130 */
-    png_uint_32 (*png_get_cHRM_fixedPtr) (png_structp png_ptr, png_infop info_ptr, png_fixed_point *int_white_x, png_fixed_point *int_white_y, png_fixed_point *int_red_x, png_fixed_point *int_red_y, png_fixed_point *int_green_x, png_fixed_point *int_green_y, png_fixed_point *int_blue_x, png_fixed_point *int_blue_y); /* 131 */
+    png_uint_32 (*png_get_cHRMPtr) (png_const_structp png_ptr, png_const_infop info_ptr, double *white_x, double *white_y, double *red_x, double *red_y, double *green_x, double *green_y, double *blue_x, double *blue_y); /* 130 */
+    png_uint_32 (*png_get_cHRM_fixedPtr) (png_const_structp png_ptr, png_const_infop info_ptr, png_fixed_point *int_white_x, png_fixed_point *int_white_y, png_fixed_point *int_red_x, png_fixed_point *int_red_y, png_fixed_point *int_green_x, png_fixed_point *int_green_y, png_fixed_point *int_blue_x, png_fixed_point *int_blue_y); /* 131 */
     void (*png_set_cHRMPtr) (png_structp png_ptr, png_infop info_ptr, double white_x, double white_y, double red_x, double red_y, double green_x, double green_y, double blue_x, double blue_y); /* 132 */
     void (*png_set_cHRM_fixedPtr) (png_structp png_ptr, png_infop info_ptr, png_fixed_point int_white_x, png_fixed_point int_white_y, png_fixed_point int_red_x, png_fixed_point int_red_y, png_fixed_point int_green_x, png_fixed_point int_green_y, png_fixed_point int_blue_x, png_fixed_point int_blue_y); /* 133 */
-    png_uint_32 (*png_get_gAMAPtr) (png_structp png_ptr, png_infop info_ptr, double *file_gamma); /* 134 */
-    png_uint_32 (*png_get_gAMA_fixedPtr) (png_structp png_ptr, png_infop info_ptr, png_fixed_point *int_file_gamma); /* 135 */
+    png_uint_32 (*png_get_gAMAPtr) (png_const_structp png_ptr, png_const_infop info_ptr, double *file_gamma); /* 134 */
+    png_uint_32 (*png_get_gAMA_fixedPtr) (png_const_structp png_ptr, png_const_infop info_ptr, png_fixed_point *int_file_gamma); /* 135 */
     void (*png_set_gAMAPtr) (png_structp png_ptr, png_infop info_ptr, double file_gamma); /* 136 */
     void (*png_set_gAMA_fixedPtr) (png_structp png_ptr, png_infop info_ptr, png_fixed_point int_file_gamma); /* 137 */
-    png_uint_32 (*png_get_hISTPtr) (png_structp png_ptr, png_infop info_ptr, png_uint_16p *hist); /* 138 */
+    png_uint_32 (*png_get_hISTPtr) (png_const_structp png_ptr, png_const_infop info_ptr, png_uint_16p *hist); /* 138 */
     void (*png_set_hISTPtr) (png_structp png_ptr, png_infop info_ptr, png_uint_16p hist); /* 139 */
     png_uint_32 (*png_get_IHDRPtr) (png_structp png_ptr, png_infop info_ptr, png_uint_32 *width, png_uint_32 *height, int *bit_depth, int *color_type, int *interlace_type, int *compression_type, int *filter_type); /* 140 */
     void (*png_set_IHDRPtr) (png_structp png_ptr, png_infop info_ptr, png_uint_32 width, png_uint_32 height, int bit_depth, int color_type, int interlace_type, int compression_type, int filter_type); /* 141 */
-    png_uint_32 (*png_get_oFFsPtr) (png_structp png_ptr, png_infop info_ptr, png_int_32 *offset_x, png_int_32 *offset_y, int *unit_type); /* 142 */
+    png_uint_32 (*png_get_oFFsPtr) (png_const_structp png_ptr, png_const_infop info_ptr, png_int_32 *offset_x, png_int_32 *offset_y, int *unit_type); /* 142 */
     void (*png_set_oFFsPtr) (png_structp png_ptr, png_infop info_ptr, png_int_32 offset_x, png_int_32 offset_y, int unit_type); /* 143 */
-    png_uint_32 (*png_get_pCALPtr) (png_structp png_ptr, png_infop info_ptr, png_charp *purpose, png_int_32 *X0, png_int_32 *X1, int *type, int *nparams, png_charp *units, png_charpp *params); /* 144 */
+    png_uint_32 (*png_get_pCALPtr) (png_const_structp png_ptr, png_const_infop info_ptr, png_charp *purpose, png_int_32 *X0, png_int_32 *X1, int *type, int *nparams, png_charp *units, png_charpp *params); /* 144 */
     void (*png_set_pCALPtr) (png_structp png_ptr, png_infop info_ptr, png_charp purpose, png_int_32 X0, png_int_32 X1, int type, int nparams, png_charp units, png_charpp params); /* 145 */
-    png_uint_32 (*png_get_pHYsPtr) (png_structp png_ptr, png_infop info_ptr, png_uint_32 *res_x, png_uint_32 *res_y, int *unit_type); /* 146 */
+    png_uint_32 (*png_get_pHYsPtr) (png_const_structp png_ptr, png_const_infop info_ptr, png_uint_32 *res_x, png_uint_32 *res_y, int *unit_type); /* 146 */
     void (*png_set_pHYsPtr) (png_structp png_ptr, png_infop info_ptr, png_uint_32 res_x, png_uint_32 res_y, int unit_type); /* 147 */
-    png_uint_32 (*png_get_PLTEPtr) (png_structp png_ptr, png_infop info_ptr, png_colorp *palette, int *num_palette); /* 148 */
+    png_uint_32 (*png_get_PLTEPtr) (png_const_structp png_ptr, png_const_infop info_ptr, png_colorp *palette, int *num_palette); /* 148 */
     void (*png_set_PLTEPtr) (png_structp png_ptr, png_infop info_ptr, png_colorp palette, int num_palette); /* 149 */
-    png_uint_32 (*png_get_sBITPtr) (png_structp png_ptr, png_infop info_ptr, png_color_8p *sig_bit); /* 150 */
+    png_uint_32 (*png_get_sBITPtr) (png_const_structp png_ptr, png_infop info_ptr, png_color_8p *sig_bit); /* 150 */
     void (*png_set_sBITPtr) (png_structp png_ptr, png_infop info_ptr, png_color_8p sig_bit); /* 151 */
-    png_uint_32 (*png_get_sRGBPtr) (png_structp png_ptr, png_infop info_ptr, int *intent); /* 152 */
+    png_uint_32 (*png_get_sRGBPtr) (png_const_structp png_ptr, png_const_infop info_ptr, int *intent); /* 152 */
     void (*png_set_sRGBPtr) (png_structp png_ptr, png_infop info_ptr, int intent); /* 153 */
     void (*png_set_sRGB_gAMA_and_cHRMPtr) (png_structp png_ptr, png_infop info_ptr, int intent); /* 154 */
-    png_uint_32 (*png_get_iCCPPtr) (png_structp png_ptr, png_infop info_ptr, png_charpp name, int *compression_type, png_charpp profile, png_uint_32 *proflen); /* 155 */
+    png_uint_32 (*png_get_iCCPPtr) (png_const_structp png_ptr, png_const_infop info_ptr, png_charpp name, int *compression_type, png_charpp profile, png_uint_32 *proflen); /* 155 */
     void (*png_set_iCCPPtr) (png_structp png_ptr, png_infop info_ptr, png_charp name, int compression_type, png_charp profile, png_uint_32 proflen); /* 156 */
-    png_uint_32 (*png_get_sPLTPtr) (png_structp png_ptr, png_infop info_ptr, png_sPLT_tpp entries); /* 157 */
+    png_uint_32 (*png_get_sPLTPtr) (png_const_structp png_ptr, png_const_infop info_ptr, png_sPLT_tpp entries); /* 157 */
     void (*png_set_sPLTPtr) (png_structp png_ptr, png_infop info_ptr, png_sPLT_tp entries, int nentries); /* 158 */
-    png_uint_32 (*png_get_textPtr) (png_structp png_ptr, png_infop info_ptr, png_textp *text_ptr, int *num_text); /* 159 */
+    png_uint_32 (*png_get_textPtr) (png_const_structp png_ptr, png_const_infop info_ptr, png_textp *text_ptr, int *num_text); /* 159 */
     void (*png_set_textPtr) (png_structp png_ptr, png_infop info_ptr, png_textp text_ptr, int num_text); /* 160 */
-    png_uint_32 (*png_get_tIMEPtr) (png_structp png_ptr, png_infop info_ptr, png_timep *mod_time); /* 161 */
+    png_uint_32 (*png_get_tIMEPtr) (png_const_structp png_ptr, png_infop info_ptr, png_timep *mod_time); /* 161 */
     void (*png_set_tIMEPtr) (png_structp png_ptr, png_infop info_ptr, png_timep mod_time); /* 162 */
-    png_uint_32 (*png_get_tRNSPtr) (png_structp png_ptr, png_infop info_ptr, png_bytep *trans, int *num_trans, png_color_16p *trans_values); /* 163 */
+    png_uint_32 (*png_get_tRNSPtr) (png_const_structp png_ptr, png_infop info_ptr, png_bytep *trans, int *num_trans, png_color_16p *trans_values); /* 163 */
     void (*png_set_tRNSPtr) (png_structp png_ptr, png_infop info_ptr, png_bytep trans, int num_trans, png_color_16p trans_values); /* 164 */
-    png_uint_32 (*png_get_sCALPtr) (png_structp png_ptr, png_infop info_ptr, int *unit, double *width, double *height); /* 165 */
-    png_uint_32 (*png_get_sCAL_sPtr) (png_structp png_ptr, png_infop info_ptr, int *unit, png_charpp swidth, png_charpp sheight); /* 166 */
+    png_uint_32 (*png_get_sCALPtr) (png_const_structp png_ptr, png_const_infop info_ptr, int *unit, double *width, double *height); /* 165 */
+    png_uint_32 (*png_get_sCAL_sPtr) (png_const_structp png_ptr, png_const_infop info_ptr, int *unit, png_charpp swidth, png_charpp sheight); /* 166 */
     void (*png_set_sCALPtr) (png_structp png_ptr, png_infop info_ptr, int unit, double width, double height); /* 167 */
     void (*png_set_sCAL_sPtr) (png_structp png_ptr, png_infop info_ptr, int unit, png_charp swidth, png_charp sheight); /* 168 */
     void (*png_set_keep_unknown_chunksPtr) (png_structp png_ptr, int keep, png_bytep chunk_list, int num_chunks); /* 169 */
     void (*png_set_unknown_chunksPtr) (png_structp png_ptr, png_infop info_ptr, png_unknown_chunkp unknowns, int num_unknowns); /* 170 */
     void (*png_set_unknown_chunk_locationPtr) (png_structp png_ptr, png_infop info_ptr, int chunk, int location); /* 171 */
-    png_uint_32 (*png_get_unknown_chunksPtr) (png_structp png_ptr, png_infop info_ptr, png_unknown_chunkpp entries); /* 172 */
+    png_uint_32 (*png_get_unknown_chunksPtr) (png_const_structp png_ptr, png_const_infop info_ptr, png_unknown_chunkpp entries); /* 172 */
     void (*png_set_invalidPtr) (png_structp png_ptr, png_infop info_ptr, int mask); /* 173 */
     void (*png_read_pngPtr) (png_structp png_ptr, png_infop info_ptr, int transforms, voidp params); /* 174 */
     void (*png_write_pngPtr) (png_structp png_ptr, png_infop info_ptr, int transforms, voidp params); /* 175 */
     png_bytep (*png_sig_bytesPtr) (void); /* 176 */
-    png_charp (*png_get_copyrightPtr) (png_structp png_ptr); /* 177 */
-    png_charp (*png_get_header_verPtr) (png_structp png_ptr); /* 178 */
-    png_charp (*png_get_header_versionPtr) (png_structp png_ptr); /* 179 */
-    png_charp (*png_get_libpng_verPtr) (png_structp png_ptr); /* 180 */
+    png_charp (*png_get_copyrightPtr) (png_const_structp png_ptr); /* 177 */
+    png_charp (*png_get_header_verPtr) (png_const_structp png_ptr); /* 178 */
+    png_charp (*png_get_header_versionPtr) (png_const_structp png_ptr); /* 179 */
+    png_charp (*png_get_libpng_verPtr) (png_const_structp png_ptr); /* 180 */
     void (*reserved181)(void);
     void (*reserved182)(void);
     void (*reserved183)(void);
@@ -1206,8 +1218,8 @@ typedef struct PngtclStubs {
     png_voidp (*png_create_struct_2Ptr) (int type, png_malloc_ptr malloc_fn); /* 190 */
     void (*png_destroy_struct_2Ptr) (png_voidp struct_ptr, png_free_ptr free_fn); /* 191 */
     void (*png_info_destroyPtr) (png_structp png_ptr, png_infop info_ptr); /* 192 */
-    voidpf (*png_zallocPtr) (voidpf png_ptr, uInt items, uInt size); /* 193 */
-    void (*png_zfreePtr) (voidpf png_ptr, voidpf ptr); /* 194 */
+    void (*reserved193)(void);
+    void (*reserved194)(void);
     void (*png_reset_crcPtr) (png_structp png_ptr); /* 195 */
     void (*png_write_dataPtr) (png_structp png_ptr, png_bytep data, png_size_t length); /* 196 */
     void (*png_read_dataPtr) (png_structp png_ptr, png_bytep data, png_size_t length); /* 197 */
@@ -1332,6 +1344,7 @@ typedef struct PngtclStubs {
     void (*png_push_handle_iTXtPtr) (png_structp png_ptr, png_infop info_ptr, png_uint_32 length); /* 316 */
     void (*png_push_read_iTXtPtr) (png_structp png_ptr, png_infop info_ptr, png_uint_32 length); /* 317 */
     void (*png_info_init_3Ptr) (png_infopp info_ptr, png_size_t png_info_struct_size); /* 318 */
+    void (*png_set_add_alphaPtr) (png_structp png_ptr, png_uint_32 filler, int flags); /* 319 */
 } PngtclStubs;
 
 #ifdef __cplusplus
@@ -1721,10 +1734,8 @@ PNG_IMPEXP const PngtclStubs *pngtclStubsPtr;
 	(pngtclStubsPtr->png_destroy_struct_2Ptr) /* 191 */
 #define png_info_destroy \
 	(pngtclStubsPtr->png_info_destroyPtr) /* 192 */
-#define png_zalloc \
-	(pngtclStubsPtr->png_zallocPtr) /* 193 */
-#define png_zfree \
-	(pngtclStubsPtr->png_zfreePtr) /* 194 */
+/* Slot 193 is reserved */
+/* Slot 194 is reserved */
 #define png_reset_crc \
 	(pngtclStubsPtr->png_reset_crcPtr) /* 195 */
 #define png_write_data \
@@ -1973,6 +1984,8 @@ PNG_IMPEXP const PngtclStubs *pngtclStubsPtr;
 	(pngtclStubsPtr->png_push_read_iTXtPtr) /* 317 */
 #define png_info_init_3 \
 	(pngtclStubsPtr->png_info_init_3Ptr) /* 318 */
+#define png_set_add_alpha \
+	(pngtclStubsPtr->png_set_add_alphaPtr) /* 319 */
 
 #endif /* defined(USE_PNGTCL_STUBS) */
 

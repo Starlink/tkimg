@@ -1,3 +1,8 @@
+2011-11-27	Harald Oehlmann <oehhar@users.sourceforge.net>
+
+	* bmp.c: image resolution parameter may be given when saving bmp
+	  (TkImg Feature Request 3062062)
+
 2009-01-06	Jan Nijtmans <nijtmans@users.sourceforge.net>
 
 	* No longer Panic when an out-of-memory error occurs,

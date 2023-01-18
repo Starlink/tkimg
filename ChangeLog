@@ -1,3 +1,50 @@
+2012-09-16  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* renumber tkimg version to 1.4.2
+
+2013-09-10  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to libjpeg version 8d
+
+2013-05-12  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to zlib 1.2.8
+
+2012-07-22  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to libpng 1.4.12
+	* renumber tkimg version to 1.4.1
+
+2012-06-10  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to zlib 1.2.7
+
+2011-11-27	Harald Oehlmann <oehhar@users.sourceforge.net>
+
+	* bmp.c: image resolution parameter may be given when saving bmp
+	  (TkImg Feature Request 3062062)
+
+2011-11-17  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to libjpeg version 8c
+
+2011-07-26  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to latest TEA tcl.m4 and install.sh
+	* upgrade to libpng 1.4.8
+
+2011-04-22  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to libpng 1.4.7
+
+2010-12-14  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* upgrade to latest TEA tcl.m4 and autoconf 2.68
+
+2010-11-26  Jan Nijtmans <nijtmans@users.sourceforge.net>
+
+	* Upgrade to TEA 3.9
+
 2010-09-17  Jan Nijtmans <nijtmans@users.sourceforge.net>
 
 	*

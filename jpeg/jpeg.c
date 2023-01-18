@@ -45,13 +45,15 @@
  * Modified for dynamical loading, reading from channels and Tcl_Obj's by:
  *	Jan Nijtmans (nijtmans@users.sourceforge.net)
  *
- * $Id: jpeg.c 271 2010-06-17 13:40:24Z nijtmans $
+ * $Id: jpeg.c 316 2010-12-11 21:25:54Z nijtmans $
  */
 
 /*
  * Generic initialization code, parameterized via CPACKAGE and PACKAGE.
  */
-
+#ifdef _WIN32
+#   define HAVE_BOOLEAN
+#endif
 #include "tkimg.h"
 #include "jpegtcl.h"
 

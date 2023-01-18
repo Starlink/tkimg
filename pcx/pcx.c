@@ -52,7 +52,7 @@
  *
  * ENDHEADER
  *
- * $Id: pcx.c 278 2010-06-30 14:44:44Z nijtmans $
+ * $Id: pcx.c 345 2013-09-09 20:29:59Z obermeier $
  *
  */
 
@@ -178,7 +178,8 @@ static void printImgInfo (PCXHEADER *ph, const char *filename, const char *msg)
     sprintf(str, "%s %s\n", msg, filename);                                 OUT;
     sprintf(str, "\tSize in pixel   : %d x %d\n", width, height);           OUT;
     sprintf(str, "\tNo. of channels : %d\n", ph->planes);                   OUT;
-    sprintf(str, "\tBytes per pixel : %d\n", ph->bpp);                      OUT;
+    sprintf(str, "\tBits per pixel  : %d\n", ph->bpp);                      OUT;
+    sprintf(str, "\tBytes per line  : %d\n", ph->bytesperline);             OUT;
     sprintf(str, "\tRLE compression : %s\n", ph->compression? "yes": "no"); OUT;
     Tcl_Flush(outChan);
 }
@@ -192,14 +193,14 @@ static Boln readline (tkimg_MFile *handle, UByte *buffer, Int bytes, Int compr)
 	while (bytes--) {
 	    if (count == 0) {
 	        if (!readUByte (handle, &value)) {
-		    return FALSE;
+		    return TRUE;
 		}
 	        if (value < 0xc0) {
 		    count = 1;
 		} else {
 		    count = value - 0xc0;
 		    if (!readUByte (handle, &value)) {
-			return FALSE;
+			return TRUE;
 		    }
 		}
 	    }
@@ -254,9 +255,11 @@ static Boln load_8 (Tcl_Interp *interp, tkimg_MFile *ifp,
     Tk_PhotoImageBlock block;
     UByte *line, *buffer, *indBuf, *indBufPtr;
     UByte cmap[768], sepChar;
+    Boln haveColormap = FALSE;
     Boln result = TRUE;
+    char errMsg[200];
 
-    line   = (UByte *) ckalloc (fileWidth);
+    line   = (UByte *) ckalloc (bytesPerLine);
     buffer = (UByte *) ckalloc (fileWidth * 3);
     indBuf = (UByte *) ckalloc (fileWidth * fileHeight);
     indBufPtr = indBuf;
@@ -281,25 +284,44 @@ static Boln load_8 (Tcl_Interp *interp, tkimg_MFile *ifp,
 	    ckfree ((char *) line);
 	    ckfree ((char *) buffer);
 	    ckfree ((char *) indBuf);
+            sprintf(errMsg, "Unexpected end-of-file while scanline %d", y);
+            Tcl_AppendResult(interp, errMsg, (char *)NULL);
 	    return FALSE;
 	}
         memcpy (indBufPtr, line, fileWidth);
 	indBufPtr += fileWidth;
     }
-    /* Read the colormap: 256 entries */
-    if ((tkimg_Read(ifp, (char *)&sepChar, 1) != 1) ||
-        (tkimg_Read(ifp, (char *)&cmap, 768) != 768)) {
-	ckfree ((char *) line);
-	ckfree ((char *) buffer);
-	ckfree ((char *) indBuf);
-	return FALSE;
+    /* Read the colormap: 256 entries a 3 values for RGB */
+    if (tkimg_Read(ifp, (char *)&sepChar, 1) == 1) {
+        if (sepChar == 12) {
+            /* A colormap is available, if sepChar equals 0x0C */
+            if (tkimg_Read(ifp, (char *)&cmap, 768) != 768) {
+                ckfree ((char *) line);
+                ckfree ((char *) buffer);
+                ckfree ((char *) indBuf);
+                Tcl_AppendResult (interp, "Unexpected end-of-file while reading colormap",
+		                 (char *) NULL);
+                return FALSE;
+            }
+            haveColormap = TRUE;
+        }
     }
 
     for (y=srcY; y<stopY; y++) {
-        for (x=0; x<fileWidth; x++) {
-            buffer[x * 3 + 0] = cmap[indBuf[y*fileWidth + x]*3 + 0 ];
-            buffer[x * 3 + 1] = cmap[indBuf[y*fileWidth + x]*3 + 1 ];
-            buffer[x * 3 + 2] = cmap[indBuf[y*fileWidth + x]*3 + 2 ];
+        if (haveColormap) {
+            /* An indexed colormap image */
+            for (x=0; x<fileWidth; x++) {
+                buffer[x * 3 + 0] = cmap[indBuf[y*fileWidth + x]*3 + 0 ];
+                buffer[x * 3 + 1] = cmap[indBuf[y*fileWidth + x]*3 + 1 ];
+                buffer[x * 3 + 2] = cmap[indBuf[y*fileWidth + x]*3 + 2 ];
+            }
+        } else {
+            /* A grey-scale image */
+            for (x=0; x<fileWidth; x++) {
+                buffer[x * 3 + 0] = indBuf[y*fileWidth + x];
+                buffer[x * 3 + 1] = indBuf[y*fileWidth + x];
+                buffer[x * 3 + 2] = indBuf[y*fileWidth + x];
+            }
         }
         if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
             result = FALSE;
@@ -442,7 +464,7 @@ static int ParseFormatOpts (interp, format, comp, verb, matte)
     int *verb;
     int *matte;
 {
-    static const char *const pcxOptions[] = {"-compression", "-verbose", "-matte"};
+    static const char *const pcxOptions[] = {"-compression", "-verbose", "-matte", NULL};
     int objc, length, c, i, index;
     Tcl_Obj **objv;
     const char *compression, *verbose, *transp;
@@ -641,7 +663,6 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
     int srcX, srcY;             /* Coordinates of top-left pixel to be used
 			         * in image being read. */
 {
-    int nchan;
     int fileWidth, fileHeight;
     int outWidth, outHeight;
     int retCode = TCL_OK;
@@ -678,8 +699,6 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
 
     if (ph.compression)
 	tkimg_ReadBuffer (1);
-
-    nchan = ph.planes;
 
     if (ph.planes == 1 && ph.bpp == 1) {
         if (!load_1 (interp, handle, imageHandle, destX, destY,

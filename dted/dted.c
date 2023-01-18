@@ -479,7 +479,6 @@ static Boln readDtedColumn (tkimg_MFile *handle, Short *pixels, Int nRows,
     Int   block_count;
     UByte *cp;
     Int  checksum, checksum1 = 0;
-    UByte sentinel;
 
     /* Read data column header. */
     if (!readInt   (handle, &block_count) ||
@@ -498,10 +497,8 @@ static Boln readDtedColumn (tkimg_MFile *handle, Short *pixels, Int nRows,
     checksum1 += cp[0] + cp[1];
 
     if (hostIsIntel) {
-	sentinel = (UByte) ((block_count & 0xff000000) >> 24);
 	block_count = block_count & 0x00ffffff;
     } else {
-	sentinel = (UByte) (block_count & 0x000000ff);
 	block_count = (block_count & 0xffffff00) >> 8;
     }
 
@@ -682,9 +679,9 @@ static int ParseFormatOpts (interp, format, opts)
     FMTOPT *opts;
 {
     static const char *const dtedOptions[] = {
-         "-verbose", "-nchan", "-min", "-max", "-gamma", "-nomap"
+         "-verbose", "-nchan", "-min", "-max", "-gamma", "-nomap", NULL
     };
-    int objc, length, c, i, index;
+    int objc, length, i, index;
     Tcl_Obj **objv;
     const char *nchanStr, *verboseStr, *minStr, *maxStr, *gammaStr, *nomapStr;
 
@@ -739,7 +736,7 @@ static int ParseFormatOpts (interp, format, opts)
     opts->maxVal = atoi (maxStr);
     opts->gamma  = atof (gammaStr);
 
-    c = verboseStr[0]; length = strlen (verboseStr);
+    length = strlen (verboseStr);
     if (!strncmp (verboseStr, "1", length) || \
 	!strncmp (verboseStr, "true", length) || \
 	!strncmp (verboseStr, "on", length)) {
@@ -755,7 +752,7 @@ static int ParseFormatOpts (interp, format, opts)
 	return TCL_ERROR;
     }
 
-    c = nomapStr[0]; length = strlen (nomapStr);
+    length = strlen (nomapStr);
     if (!strncmp (nomapStr, "1", length) || \
 	!strncmp (nomapStr, "true", length) || \
 	!strncmp (nomapStr, "on", length)) {

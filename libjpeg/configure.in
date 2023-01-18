@@ -1,16 +1,16 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Id: configure.in 282 2010-07-06 13:48:46Z nijtmans $)
+AC_REVISION($Id: configure.in 346 2013-09-10 12:11:43Z nijtmans $)
 
 #--------------------------------------------------------------------
 # Configure script for package 'jpegtcl', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([jpegtcl],[8.2])
+AC_INIT([jpegtcl],[8.4])
 
-TEA_INIT([3.7])
+TEA_INIT([3.9])
 
 AC_CONFIG_AUX_DIR(../tclconfig)
 

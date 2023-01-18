@@ -146,6 +146,11 @@ This option is supported for reading only.
 If set to [const true], no mapping of input values is done.
 Use this option, if your image already contains RGB
 values in the range of [const 0] .. [const 255].
+When using the nomap mode, no information about the
+minimum and maximum pixel values is gathered during
+reading and therefore no verbose output is printed.
+On the other hand reading the image is faster.
+
 Default is [const false].
 
 [lst_item "[option -min] [arg float]"]

@@ -76,7 +76,7 @@
  *
  * ENDHEADER
  *
- * $Id: ppm.c 298 2010-08-28 12:56:41Z obermeier $
+ * $Id: ppm.c 360 2013-10-01 14:47:01Z nijtmans $
  *
  */
 
@@ -267,6 +267,8 @@ static void ppmClose (PPMFILE *tf)
     return;
 }
 
+#define UCHAR(c) ((unsigned char) (c))
+
 static int getNextVal (Tcl_Interp *interp, tkimg_MFile *handle, UInt *val)
 {
     char c, buf[TCL_INTEGER_SPACE];
@@ -274,7 +276,7 @@ static int getNextVal (Tcl_Interp *interp, tkimg_MFile *handle, UInt *val)
 
     /* First skip leading whitespaces. */
     while (tkimg_Read (handle, &c, 1) == 1) {
-        if (!isspace (c)) {
+        if (!isspace(UCHAR(c))) {
             break;
         }
     }
@@ -282,7 +284,7 @@ static int getNextVal (Tcl_Interp *interp, tkimg_MFile *handle, UInt *val)
     buf[0] = c;
     i = 1;
     while (tkimg_Read (handle, &c, 1) == 1 && i < TCL_INTEGER_SPACE) {
-        if (isspace (c)) {
+        if (isspace(UCHAR(c))) {
             buf[i] = '\0';
             sscanf (buf, "%u", val);
             return TRUE;
@@ -485,9 +487,9 @@ static int ParseFormatOpts (interp, format, opts)
     FMTOPT *opts;
 {
     static const char *const ppmOptions[] = {
-         "-verbose", "-min", "-max", "-gamma", "-scanorder", "-ascii"
+         "-verbose", "-min", "-max", "-gamma", "-scanorder", "-ascii", NULL
     };
-    int objc, length, c, i, index;
+    int objc, length, i, index;
     Tcl_Obj **objv;
     const char *verboseStr, *minStr, *maxStr, *gammaStr, *scanorderStr, *asciiStr;
 
@@ -540,7 +542,7 @@ static int ParseFormatOpts (interp, format, opts)
     opts->maxVal = (Float)atof(maxStr);
     opts->gamma  = (Float)atof(gammaStr);
 
-    c = verboseStr[0]; length = strlen (verboseStr);
+    length = strlen (verboseStr);
     if (!strncmp (verboseStr, "1", length) || \
         !strncmp (verboseStr, "true", length) || \
         !strncmp (verboseStr, "on", length)) {
@@ -556,7 +558,7 @@ static int ParseFormatOpts (interp, format, opts)
         return TCL_ERROR;
     }
 
-    c = scanorderStr[0]; length = strlen (scanorderStr);
+    length = strlen (scanorderStr);
     if (!strncmp (scanorderStr, strTopDown, length)) {
 	opts->scanOrder = TOP_DOWN;
     } else if (!strncmp (scanorderStr, strBottomUp, length)) {
@@ -568,7 +570,7 @@ static int ParseFormatOpts (interp, format, opts)
 	return TCL_ERROR;
     }
 
-    c = asciiStr[0]; length = strlen (asciiStr);
+    length = strlen (asciiStr);
     if (!strncmp (asciiStr, "1", length) || \
         !strncmp (asciiStr, "true", length) || \
         !strncmp (asciiStr, "on", length)) {
@@ -1099,7 +1101,7 @@ ReadPPMFileHeader (handle, widthPtr, heightPtr, maxIntensityPtr, isAsciiPtr)
          */
 
         while (1) {
-            while (isspace((unsigned char)c)) {
+            while (isspace(UCHAR(c))) {
                 if (tkimg_Read(handle, &c, 1) != 1) {
                     return 0;
                 }
@@ -1118,7 +1120,7 @@ ReadPPMFileHeader (handle, widthPtr, heightPtr, maxIntensityPtr, isAsciiPtr)
          * Read a field (everything up to the next white space).
          */
 
-        while (!isspace((unsigned char)c)) {
+        while (!isspace(UCHAR(c))) {
             if (i < (BUFFER_SIZE-2)) {
                 buffer[i] = c;
                 i++;

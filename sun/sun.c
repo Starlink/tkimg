@@ -57,7 +57,7 @@
  *
  * ENDHEADER
  *
- * $Id: sun.c 233 2010-04-01 09:28:00Z nijtmans $
+ * $Id: sun.c 360 2013-10-01 14:47:01Z nijtmans $
  *
  */
 
@@ -634,7 +634,7 @@ static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_MFile *ifp,
     indData = (UByte *)ckalloc (fileWidth * sizeof (UByte));
     if (!indData) {
 	sprintf(errMsg, "Can't allocate memory of size %d",
-			  fileWidth * sizeof (UByte));
+			  (int) (fileWidth * sizeof (UByte)));
 	Tcl_AppendResult(interp, errMsg, (char *)NULL);
 	return TCL_ERROR;
     }
@@ -834,7 +834,7 @@ static int ParseFormatOpts (interp, format, comp, verb, matte)
     int *verb;
     int *matte;
 {
-    static const char *const sunOptions[] = {"-compression", "-verbose", "-matte"};
+    static const char *const sunOptions[] = {"-compression", "-verbose", "-matte", NULL};
     int objc, length, c, i, index;
     Tcl_Obj **objv;
     const char *compression, *verbose, *transp;
@@ -1043,7 +1043,13 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
         return TCL_ERROR;
     }
 
-    CommonMatch(handle, &fileWidth, &fileHeight, &sh);
+    if (!CommonMatch(handle, &fileWidth, &fileHeight, &sh)) {
+        if (interp){
+            Tcl_AppendResult(interp, "Cannot read image data",
+                (char *) NULL);
+        }
+        return TCL_ERROR;
+    }
     if (verbose)
         printImgInfo (&sh, filename, "Reading image:");
 

@@ -12,20 +12,20 @@ set modeUUStr   "UUencoded IO"
 # Third entry specifies optional format options.
 
 set fmtList [list \
-    	[list ".bmp"   "bmp"  ""] \
-    	[list ".gif"   "gif"  ""] \
-    	[list ".ico"   "ico"  ""] \
-    	[list ".jpg"   "jpeg" ""] \
-    	[list ".pcx"   "pcx"  ""] \
-    	[list ".png"   "png"  ""] \
-	[list ".ppm"   "ppm"  ""] \
-    	[list ".raw"   "raw"  "-useheader true -nomap true -nchan 3"] \
-    	[list ".rgb"   "sgi"  ""] \
-    	[list ".ras"   "sun"  ""] \
-    	[list ".tga"   "tga"  ""] \
-    	[list ".tif"   "tiff" ""] \
-    	[list ".xbm"   "xbm"  ""] \
-    	[list ".xpm"   "xpm"  ""] ]
+        [list ".bmp"   "bmp"  ""] \
+        [list ".gif"   "gif"  ""] \
+        [list ".ico"   "ico"  ""] \
+        [list ".jpg"   "jpeg" ""] \
+        [list ".pcx"   "pcx"  ""] \
+        [list ".png"   "png"  ""] \
+        [list ".ppm"   "ppm"  ""] \
+        [list ".raw"   "raw"  "-useheader true -nomap true -nchan 3"] \
+        [list ".rgb"   "sgi"  ""] \
+        [list ".ras"   "sun"  ""] \
+        [list ".tga"   "tga"  ""] \
+        [list ".tif"   "tiff" ""] \
+        [list ".xbm"   "xbm"  ""] \
+        [list ".xpm"   "xpm"  ""] ]
 
 
 # Load image data directly from a file into a photo image.
@@ -36,14 +36,14 @@ proc readPhotoFile1 { name fmt } {
     set sTime [clock clicks -milliseconds]
     set retVal [catch {image create photo -file $name} ph]
     if { $retVal != 0 } {
-	P "\n\tWarning: Cannot detect image file format. Trying again with -format."
-	P "\tError message: $ph"
-	set retVal [catch {image create photo -file $name -format $fmt} ph]
-	if { $retVal != 0 } {
-	    P "\tERROR: Cannot read image file with format option $fmt" 
-	    P "\tError message: $ph"
+        P "\n\tWarning: Cannot detect image file format. Trying again with -format."
+        P "\tError message: $ph"
+        set retVal [catch {image create photo -file $name -format $fmt} ph]
+        if { $retVal != 0 } {
+            P "\tERROR: Cannot read image file with format option $fmt" 
+            P "\tError message: $ph"
             return ""
-	}
+        }
     }
     set eTime [clock clicks -milliseconds]
     PN "[format "%.2f " [expr ($eTime - $sTime) / 1.0E3]]"
@@ -64,14 +64,14 @@ proc readPhotoFile2 { name fmt width height args } {
     }
     set retVal [catch {eval {$ph read $name} $args} errMsg]
     if { $retVal != 0 } {
-	P "\n\tWarning: Cannot detect image file format. Trying again with -format."
-	P "\tError message: $errMsg"
-	set retVal [catch {eval {$ph read $name -format $fmt} $args} errMsg]
-	if { $retVal != 0 } {
-	    P "\tERROR: Cannot read image file with format option $fmt" 
-	    P "\tError message: $errMsg"
+        P "\n\tWarning: Cannot detect image file format. Trying again with -format."
+        P "\tError message: $errMsg"
+        set retVal [catch {eval {$ph read $name -format $fmt} $args} errMsg]
+        if { $retVal != 0 } {
+            P "\tERROR: Cannot read image file with format option $fmt" 
+            P "\tError message: $errMsg"
             return ""
-	}
+        }
     }
     set eTime [clock clicks -milliseconds]
     PN "[format "%.2f " [expr ($eTime - $sTime) / 1.0E3]]"
@@ -86,7 +86,7 @@ proc readPhotoBinary1 { name fmt args } {
     set sTime [clock clicks -milliseconds]
     set retVal [catch {open $name r} fp]
     if { $retVal != 0 } {
-	P "\n\tERROR: Cannot open image file $name for binary reading."
+        P "\n\tERROR: Cannot open image file $name for binary reading."
         return ""
     }
     fconfigure $fp -translation binary
@@ -95,14 +95,14 @@ proc readPhotoBinary1 { name fmt args } {
 
     set retVal [catch {image create photo -data $imgData} ph]
     if { $retVal != 0 } {
-	P "\n\tWarning: Cannot detect image file format. Trying again with -format."
-	P "\tError message: $ph"
-	set retVal [catch {image create photo -data $imgData -format $fmt} ph]
-	if { $retVal != 0 } {
-	    P "\tERROR: Cannot create photo from binary image data." 
-	    P "\tError message: $ph"
+        P "\n\tWarning: Cannot detect image file format. Trying again with -format."
+        P "\tError message: $ph"
+        set retVal [catch {image create photo -data $imgData -format $fmt} ph]
+        if { $retVal != 0 } {
+            P "\tERROR: Cannot create photo from binary image data." 
+            P "\tError message: $ph"
             return ""
-	}
+        }
     }
     set eTime [clock clicks -milliseconds]
     PN "[format "%.2f " [expr ($eTime - $sTime) / 1.0E3]]"
@@ -118,7 +118,7 @@ proc readPhotoBinary2 { name fmt width height args } {
     set sTime [clock clicks -milliseconds]
     set retVal [catch {open $name r} fp]
     if { $retVal != 0 } {
-	P "\n\tERROR: Cannot open image file $name for binary reading."
+        P "\n\tERROR: Cannot open image file $name for binary reading."
         return ""
     }
     fconfigure $fp -translation binary
@@ -132,14 +132,14 @@ proc readPhotoBinary2 { name fmt width height args } {
     }
     set retVal [catch {eval {$ph put $imgData} $args} errMsg]
     if { $retVal != 0 } {
-	P "\n\tWarning: Cannot detect image file format. Trying again with -format."
-	P "\tError message: $errMsg"
-	set retVal [catch {eval {$ph put $imgData -format $fmt} $args} errMsg]
-	if { $retVal != 0 } {
-	    P "\tERROR: Cannot create photo from binary image data."
-	    P "\tError message: $errMsg"
+        P "\n\tWarning: Cannot detect image file format. Trying again with -format."
+        P "\tError message: $errMsg"
+        set retVal [catch {eval {$ph put $imgData -format $fmt} $args} errMsg]
+        if { $retVal != 0 } {
+            P "\tERROR: Cannot create photo from binary image data."
+            P "\tError message: $errMsg"
             return ""
-	}
+        }
     }
     set eTime [clock clicks -milliseconds]
     PN "[format "%.2f " [expr ($eTime - $sTime) / 1.0E3]]"
@@ -159,12 +159,12 @@ proc readPhotoString { str fmt width height args } {
     }
     set retVal [catch {eval {$ph put $str} $args}]
     if { $retVal != 0 } {
-	P "\n\tWarning: Cannot detect image string format. Trying again with -format."
-	set retVal [catch {eval {$ph put $str -format $fmt} $args}]
-	if { $retVal != 0 } {
-	    P "\tERROR: Cannot read image string with format option: $fmt" 
+        P "\n\tWarning: Cannot detect image string format. Trying again with -format."
+        set retVal [catch {eval {$ph put $str -format $fmt} $args}]
+        if { $retVal != 0 } {
+            P "\tERROR: Cannot read image string with format option: $fmt" 
             return ""
-	}
+        }
     }
     set eTime [clock clicks -milliseconds]
     PN "[format "%.2f " [expr ($eTime - $sTime) / 1.0E3]]"
@@ -179,12 +179,12 @@ proc writePhotoFile { ph name fmt del args } {
     set eTime [clock clicks -milliseconds]
 
     if { $retVal != 0 } {
-	P "\n\tERROR: Cannot write image file $name (Format: $fmt)" 
+        P "\n\tERROR: Cannot write image file $name (Format: $fmt)" 
         P "\tError message: $str"
         return ""
     }
     if { $del } {
-	image delete $ph
+        image delete $ph
     }
     PN "[format "%.2f " [expr ($eTime - $sTime) / 1.0E3]]"
     return $str
@@ -197,12 +197,12 @@ proc writePhotoString { ph fmt del args } {
     set retVal [catch {eval {$ph data -format $fmt} $args} str]
     set eTime [clock clicks -milliseconds]
     if { $retVal != 0 } {
-	P "\n\tERROR: Cannot write image to string (Format: $fmt)" 
-	P "\tError message: $str"
-	return ""
+        P "\n\tERROR: Cannot write image to string (Format: $fmt)" 
+        P "\tError message: $str"
+        return ""
     }
     if { $del } {
-	image delete $ph
+        image delete $ph
     }
     PN "[format "%.2f " [expr ($eTime - $sTime) / 1.0E3]]"
     return $str
@@ -211,19 +211,23 @@ proc writePhotoString { ph fmt del args } {
 proc createErrImg {} {
     set retVal [catch {image create photo -data [unsupportedImg]} errImg]
     if { $retVal != 0 } {
-	P "FATAL ERROR: Cannot load uuencode GIF image into canvas."
-	P "             Test will be cancelled."
-	exit 1
+        P "FATAL ERROR: Cannot load uuencode GIF image into canvas."
+        P "             Test will be cancelled."
+        exit 1
     }
     return $errImg
 }
 
 proc getCanvasPhoto { canvId } {
+    PN "Canvas photo: "
+    set sTime [clock clicks -milliseconds]
     set retVal [catch {image create photo -format window -data $canvId} ph]
+    set eTime [clock clicks -milliseconds]
     if { $retVal != 0 } {
-	P "\n\tFATAL ERROR: Cannot create photo from canvas window"
-	exit 1
+        P "\n\tFATAL ERROR: Cannot create photo from canvas window"
+        exit 1
     }
+    P "[format "%.2f secs" [expr ($eTime - $sTime) / 1.0E3]]"
     return $ph
 }
 
@@ -251,9 +255,9 @@ proc drawTestCanvas { imgVersion} {
     P "Loading uuencoded GIF image into canvas .." 
     set retVal [catch {image create photo -data [pwrdLogo]} phImg]
     if { $retVal != 0 } {
-	P "FATAL ERROR: Cannot load uuencode GIF image into canvas." 
-	P "             Test will be cancelled." 
-	exit 1
+        P "FATAL ERROR: Cannot load uuencode GIF image into canvas." 
+        P "             Test will be cancelled." 
+        exit 1
     }
 
     .t.c create image 0 0 -anchor nw -tags MyImage
