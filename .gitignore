@@ -3,9 +3,13 @@
 *.dSYM
 *.dylib
 *.so
+*~
+.*.swp
 
 init.c
 Makefile
+autom4te.cache
+libtool
 
 config.log
 config.status
@@ -13,9 +17,6 @@ configure.lineno
 pkgIndex.tcl
 *Config.sh
 
-libjpeg/tcl/libjpeg/
-libtiff/tcl/libtiff/
-libtiff/tcl/mkg3states
-libtiff/tcl/port/
-libtiff/tcl/tif_fax3sm.c
-
+/libjpeg/libjpeg/jconfig.h
+/libjpeg/libjpeg/libtool
+/libtiff/libtiff/tif_config.h
