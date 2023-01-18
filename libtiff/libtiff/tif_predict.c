@@ -1,4 +1,4 @@
-/* $Header: /project16/CVS/tcltk/tkimg1.3/libtiff/libtiff/tif_predict.c,v 1.1.1.1 2006/01/16 18:13:26 abrighto Exp $ */
+/* $Header: /cvsroot/tkimg/tkimg/libtiff/libtiff/tif_predict.c,v 1.1 2004/08/13 22:02:17 andreas_kupries Exp $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler

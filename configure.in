@@ -33,10 +33,16 @@ TEA_SETUP_COMPILER
 
 ## All relevant packages are configuration subdirectories.
 
+# I. Support
 
+# Remove all arguments after the command name. Without doing that we
+# might transmit something like 'gcc -pipe' down to the sub
+# configure's, and they may hang in 'which gcc -pipe' (platform
+# dependent. So far only seen for Linux).
+
+CC=`echo $CC | sed -e 's/ .*$//'`
 
 TEA_CONFIG_COLLECT
-
 TEA_CONFIG_SUBDIR(libz/tcl,   [])
 TEA_CONFIG_SUBDIR(libpng/tcl, [--with-zlibtcl=`pwd`/libz/tcl])
 TEA_CONFIG_SUBDIR(libtiff/tcl,[])

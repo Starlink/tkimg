@@ -14,7 +14,7 @@
  * Feb 2001:
  *      - Bugfix  in CommonWrite: const char *fileName was overwritten. 
  *
- * $Id: xbm.c,v 1.1.1.1 2006/01/16 18:04:16 abrighto Exp $
+ * $Id: xbm.c,v 1.2 2004/06/03 21:54:43 andreas_kupries Exp $
  *
  */
 

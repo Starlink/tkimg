@@ -14,7 +14,7 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: pngtcl.h,v 1.1.1.1 2006/01/16 18:15:55 abrighto Exp $
+ * $Id: pngtcl.h,v 1.3 2004/08/16 19:23:38 andreas_kupries Exp $
  *
  */
 

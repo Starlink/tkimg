@@ -1,11 +1,8 @@
-/* $Id: tiff2pdf.c,v 1.1.1.1 2006/01/16 18:13:06 abrighto Exp $
+/* $Id: tiff2pdf.c,v 1.1 2004/08/13 22:02:20 andreas_kupries Exp $
  *
  * tiff2pdf - converts a TIFF image to a PDF document
  *
  * $Log: tiff2pdf.c,v $
- * Revision 1.1.1.1  2006/01/16 18:13:06  abrighto
- * Imported sources
- *
  * Revision 1.1  2004/08/13 22:02:20  andreas_kupries
  *
  * 	* libtiff:     Updated libtiff from version 3.5.5 to 3.6.1.

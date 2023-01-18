@@ -6,7 +6,7 @@
  * Copyright (c) 1997-2003 Jan Nijtmans    <nijtmans@users.sourceforge.net>
  * Copyright (c) 2002      Andreas Kupries <andreas_kupries@users.sourceforge.net>
  *
- * $Id: bmp.c,v 1.1.1.1 2006/01/16 18:01:10 abrighto Exp $
+ * $Id: bmp.c,v 1.4 2004/06/03 21:54:42 andreas_kupries Exp $
  *
  */
 

@@ -1,4 +1,4 @@
-/* "$Header: /project16/CVS/tcltk/tkimg1.3/libtiff/libtiff/mkg3states.c,v 1.1.1.1 2006/01/16 18:13:24 abrighto Exp $ */
+/* "$Header: /cvsroot/tkimg/tkimg/libtiff/libtiff/mkg3states.c,v 1.1 2004/08/13 22:02:17 andreas_kupries Exp $ */
 
 /*
  * Copyright (c) 1991-1997 Sam Leffler

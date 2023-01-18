@@ -5,7 +5,7 @@
  *
  * Author : Jan Nijtmans
  *
- * $Id: window.c,v 1.1.1.1 2006/01/16 18:17:37 abrighto Exp $
+ * $Id: window.c,v 1.2 2004/06/03 21:54:43 andreas_kupries Exp $
  *
  */
 

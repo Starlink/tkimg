@@ -1,4 +1,4 @@
-#	$Header: /project16/CVS/tcltk/tkimg1.3/libtiff/contrib/dosdjgpp/Makefile.tools,v 1.1.1.1 2006/01/16 18:12:17 abrighto Exp $
+#	$Header: /cvsroot/tkimg/tkimg/libtiff/contrib/dosdjgpp/Makefile.tools,v 1.1 2004/08/13 22:02:10 andreas_kupries Exp $
 #
 # manually derived from Makefile.in for DJGPP v2.x (GNU C for DOS/386).
 #

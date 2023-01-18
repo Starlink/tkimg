@@ -1,4 +1,4 @@
-/* $Header: /project16/CVS/tcltk/tkimg1.3/libtiff/libtiff/tif_tile.c,v 1.1.1.1 2006/01/16 18:13:52 abrighto Exp $ */
+/* $Header: /cvsroot/tkimg/tkimg/libtiff/libtiff/tif_tile.c,v 1.1 2004/08/13 22:02:17 andreas_kupries Exp $ */
 
 /*
  * Copyright (c) 1991-1997 Sam Leffler

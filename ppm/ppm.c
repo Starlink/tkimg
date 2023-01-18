@@ -50,7 +50,7 @@
  *
  * ENDHEADER
  *
- * $Id: ppm.c,v 1.1.1.1 2006/01/16 18:02:48 abrighto Exp $
+ * $Id: ppm.c,v 1.2 2004/06/03 21:54:43 andreas_kupries Exp $
  *
  */
 

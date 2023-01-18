@@ -14,7 +14,7 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: tkimg.c,v 1.1.1.1 2006/01/16 18:04:52 abrighto Exp $
+ * $Id: tkimg.c,v 1.2 2002/12/05 07:08:41 andreas_kupries Exp $
  *
  */
 

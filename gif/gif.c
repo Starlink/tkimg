@@ -34,7 +34,7 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * $Id: gif.c,v 1.1.1.1 2006/01/16 18:01:45 abrighto Exp $
+ * $Id: gif.c,v 1.5 2004/06/03 21:54:42 andreas_kupries Exp $
  *
  */
 

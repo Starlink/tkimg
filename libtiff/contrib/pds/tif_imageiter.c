@@ -1,4 +1,4 @@
-/* $Header: /project16/CVS/tcltk/tkimg1.3/libtiff/contrib/pds/tif_imageiter.c,v 1.1.1.1 2006/01/16 18:12:09 abrighto Exp $ */
+/* $Header: /cvsroot/tkimg/tkimg/libtiff/contrib/pds/tif_imageiter.c,v 1.1 2004/08/13 22:02:13 andreas_kupries Exp $ */
 
 /*
  * Copyright (c) 1991-1996 Sam Leffler

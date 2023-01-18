@@ -12,7 +12,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: Makefile.in,v 1.2 2006/01/17 17:06:35 abrighto Exp $
+# RCS: @(#) $Id: Makefile.in,v 1.4 2004/08/17 16:08:34 andreas_kupries Exp $
 
 #========================================================================
 # Edit the following few lines when writing a new extension
@@ -328,7 +328,7 @@ tif_fax3sm.c: mkg3states$(EXEEXT)
 	./mkg3states$(EXEEXT) -c const tif_fax3sm.c
 
 mkg3states$(EXEEXT): mkg3states.c
-	$(COMPILE) `@CYGPATH@ $?` -o $@
+	$(COMPILE) `@CYGPATH@ $<` -o $@
 	chmod u+x $@
 
 #========================================================================

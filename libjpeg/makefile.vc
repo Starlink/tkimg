@@ -1,7 +1,7 @@
 # Visual C++ 2.x, 4.x and 5.0 makefile for jpeg
 # adapted from suns example makefile (related to the TCL script language)
 #
-# CVS:  $Id: makefile.vc,v 1.1.1.1 2006/01/16 18:09:40 abrighto Exp $
+# CVS:  $Id: makefile.vc,v 1.1.1.1 2002/05/10 17:20:28 andreas_kupries Exp $
 
 
 # Does not depend on the presence of any environment variables in

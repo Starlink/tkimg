@@ -52,7 +52,7 @@
  *
  * ENDHEADER
  *
- * $Id: pcx.c,v 1.1.1.1 2006/01/16 18:02:15 abrighto Exp $
+ * $Id: pcx.c,v 1.5 2004/08/12 19:19:34 andreas_kupries Exp $
  *
  */
 

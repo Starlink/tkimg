@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: tkimgStubLib.c,v 1.1.1.1 2006/01/16 18:04:55 abrighto Exp $
+ * RCS: @(#) $Id: tkimgStubLib.c,v 1.1 2002/11/19 06:36:44 andreas_kupries Exp $
  */
 
 #ifndef USE_TCL_STUBS

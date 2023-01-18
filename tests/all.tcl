@@ -8,7 +8,7 @@
 # Copyright (c) 2002         Andreas Kupries <andreas_kupries@users.sourceforge.net>
 # All rights reserved.
 # 
-# RCS: @(#) $Id: all.tcl,v 1.1.1.1 2006/01/16 18:07:35 abrighto Exp $
+# RCS: @(#) $Id: all.tcl,v 1.1 2002/12/07 00:12:11 andreas_kupries Exp $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     package require tcltest

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: addtiffo.c,v 1.1.1.1 2006/01/16 18:12:31 abrighto Exp $
+ * $Id: addtiffo.c,v 1.1 2004/08/13 22:02:09 andreas_kupries Exp $
  *
  * Project:  GeoTIFF Overview Builder
  * Purpose:  Mainline for building overviews in a TIFF file.
@@ -28,9 +28,6 @@
  ******************************************************************************
  *
  * $Log: addtiffo.c,v $
- * Revision 1.1.1.1  2006/01/16 18:12:31  abrighto
- * Imported sources
- *
  * Revision 1.1  2004/08/13 22:02:09  andreas_kupries
  *
  * 	* libtiff:     Updated libtiff from version 3.5.5 to 3.6.1.

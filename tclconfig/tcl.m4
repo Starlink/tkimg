@@ -911,10 +911,10 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    LDFLAGS=""
 
 	    # AIX v<=4.1 has some different flags than 4.2+
-dnl	    if test "$system" = "AIX-4.1" -o "`uname -v`" -lt "4" ; then
-dnl		LIBOBJS="$LIBOBJS tclLoadAix.o"
-dnl		DL_LIBS="-lld"
-dnl	    fi
+	    if test "$system" = "AIX-4.1" -o "`uname -v`" -lt "4" ; then
+		LIBOBJS="$LIBOBJS tclLoadAix.o"
+		DL_LIBS="-lld"
+	    fi
 
 	    # On AIX <=v4 systems, libbsd.a has to be linked in to support
 	    # non-blocking file IO.  This library has to be linked in after
@@ -1143,9 +1143,9 @@ dnl	    fi
 	    # is kind of overkill but it works.
 	    # Disable inlining only when one of the
 	    # files in compat/*.c is being linked in.
-dnl	    if test x"${LIBOBJS}" != x ; then
-dnl	        EXTRA_CFLAGS="${EXTRA_CFLAGS} -fno-inline"
-dnl	    fi
+	    if test x"${LIBOBJS}" != x ; then
+	        EXTRA_CFLAGS="${EXTRA_CFLAGS} -fno-inline"
+	    fi
 
 	    ;;
 	GNU*)
@@ -2178,8 +2178,8 @@ AC_DEFUN(TEA_BUGGY_STRTOD, [
 	    AC_MSG_RESULT([ok])
 	else
 	    AC_MSG_RESULT([buggy])
-dnl	    LIBOBJS="$LIBOBJS fixstrtod.o"
-dnl	    AC_DEFINE(strtod, fixstrtod)
+	    LIBOBJS="$LIBOBJS fixstrtod.o"
+	    AC_DEFINE(strtod, fixstrtod)
 	fi
     fi
 ])
@@ -2490,9 +2490,6 @@ AC_DEFUN(TEA_PREFIX, [
 #	Sets up CC var and other standard bits we need to make executables.
 #------------------------------------------------------------------------
 AC_DEFUN(TEA_SETUP_COMPILER, [
-    # Don't put any macros that use the compiler (e.g. AC_TRY_COMPILE)
-    # in this macro, they need to go into TEA_SETUP_COMPILER instead.
-
     # If the user did not set CFLAGS, set it now to keep
     # the AC_PROG_CC macro from adding "-g -O2".
     if test "${CFLAGS+set}" != "set" ; then
@@ -2500,9 +2497,19 @@ AC_DEFUN(TEA_SETUP_COMPILER, [
     fi
 
     AC_PROG_CC
-    AC_PROG_CPP
 
-    AC_PROG_CXX
+    #------------------------------------------------------------------------
+    # If we're using GCC, see if the compiler understands -pipe. If so, use it.
+    # It makes compiling go faster.  (This is only a performance feature.)
+    #------------------------------------------------------------------------
+
+    if test -z "$no_pipe" -a -n "$GCC"; then
+	AC_MSG_CHECKING([if the compiler understands -pipe])
+	OLDCC="$CC"
+	CC="$CC -pipe"
+	AC_TRY_COMPILE(,, AC_MSG_RESULT([yes]), CC="$OLDCC"
+	    AC_MSG_RESULT([no]))
+    fi
 
     AC_PROG_INSTALL
 
@@ -2524,6 +2531,18 @@ AC_DEFUN(TEA_SETUP_COMPILER, [
 
     AC_OBJEXT
     AC_EXEEXT
+
+    #--------------------------------------------------------------------
+    # Common compiler flag setup
+    #--------------------------------------------------------------------
+
+    TEA_TCL_EARLY_FLAGS
+    TEA_TCL_64BIT_FLAGS
+    #TEA_C_BIGENDIAN
+    if test "${TEA_PLATFORM}" = "unix" ; then
+	TEA_MISSING_POSIX_HEADERS
+	TEA_BUGGY_STRTOD
+    fi
 ])
 
 #------------------------------------------------------------------------

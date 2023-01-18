@@ -1,5 +1,5 @@
 #! smake
-#	$Header: /project16/CVS/tcltk/tkimg1.3/libtiff/port/Makefile.in,v 1.1.1.1 2006/01/16 18:12:02 abrighto Exp $
+#	$Header: /cvsroot/tkimg/tkimg/libtiff/port/Makefile.in,v 1.1 2004/08/13 22:02:19 andreas_kupries Exp $
 #
 # @WARNING@
 #

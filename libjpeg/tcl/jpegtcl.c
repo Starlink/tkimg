@@ -14,7 +14,7 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: jpegtcl.c,v 1.1.1.1 2006/01/16 18:10:06 abrighto Exp $
+ * $Id: jpegtcl.c,v 1.2 2002/12/05 07:08:41 andreas_kupries Exp $
  *
  */
 

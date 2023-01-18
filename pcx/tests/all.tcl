@@ -5,7 +5,7 @@
 # Copyright (c) 2002         Andreas Kupries <andreas_kupries@users.sourceforge.net>
 # All rights reserved.
 # 
-# RCS: @(#) $Id: all.tcl,v 1.1.1.1 2006/01/16 18:02:33 abrighto Exp $
+# RCS: @(#) $Id: all.tcl,v 1.1 2002/12/07 00:11:37 andreas_kupries Exp $
 
 set _pwd  [pwd]
 cd  [file dirname [file join [pwd] [info script]]]

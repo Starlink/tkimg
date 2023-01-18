@@ -1,7 +1,7 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Id: configure.in,v 1.1.1.1 2006/01/16 18:17:19 abrighto Exp $)
+AC_REVISION($Id: configure.in,v 1.4 2003/02/07 07:08:36 andreas_kupries Exp $)
 
 #--------------------------------------------------------------------
 # Configure script for package 'tkimgpixmap', as distributed at November 20, 2001.

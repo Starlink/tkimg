@@ -1,7 +1,7 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Id: configure.in,v 1.1.1.1 2006/01/16 18:16:13 abrighto Exp $)
+AC_REVISION($Id: configure.in,v 1.2 2004/08/13 22:34:12 andreas_kupries Exp $)
 
 #--------------------------------------------------------------------
 # Configure script for package 'pngtcl', as distributed at November 20, 2001.

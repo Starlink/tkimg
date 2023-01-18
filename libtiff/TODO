@@ -1,4 +1,4 @@
-#	$Header: /project16/CVS/tcltk/tkimg1.3/libtiff/TODO,v 1.1.1.1 2006/01/16 18:10:14 abrighto Exp $
+#	$Header: /cvsroot/tkimg/tkimg/libtiff/TODO,v 1.1 2004/08/13 22:02:07 andreas_kupries Exp $
 
 o gif2tiff segaulting on selected images
 o tiffcmp read data by strip/tile instead of scanline

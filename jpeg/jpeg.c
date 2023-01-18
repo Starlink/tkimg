@@ -45,7 +45,7 @@
  * Modified for dynamical loading, reading from channels and Tcl_Obj's by:
  *	Jan Nijtmans (j.nijtmans@chello.nl)
  *
- * $Id: jpeg.c,v 1.1.1.1 2006/01/16 18:05:30 abrighto Exp $
+ * $Id: jpeg.c,v 1.3 2004/06/03 21:54:43 andreas_kupries Exp $
  */
 
 /*

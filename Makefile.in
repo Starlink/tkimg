@@ -166,11 +166,5 @@ distclean:	clean
 		cd $$here ; \
 	done
 
-
-autoconf:
-	autoconf
-	for i in * */* ; do (test -d $$i && cd $$i && test -f configure.in && echo "run autoconf in $$i" && autoconf) ; done
-
-
 #-------------------------------------------------------#
 # DO NOT DELETE THIS LINE -- make depend depends on it.

@@ -13,7 +13,7 @@
  * Date   : 2/13/97        *
  * Original implementation : Joel Crisp     *
  *
- * $Id: png.c,v 1.1.1.1 2006/01/16 18:02:33 abrighto Exp $
+ * $Id: png.c,v 1.4 2004/08/16 19:23:39 andreas_kupries Exp $
  */
 
 /*

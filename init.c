@@ -5,7 +5,7 @@
  *
  * Copyright (c) 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
  *
- * $Id: init.c,v 1.1.1.1 2006/01/16 18:00:52 abrighto Exp $
+ * $Id: init.c,v 1.4 2002/12/07 00:11:37 andreas_kupries Exp $
  *
  */
 

@@ -8,7 +8,7 @@
    subject to change. Applications should only use zlib.h.
  */
 
-/* @(#) $Id: zutil.h,v 1.1.1.1 2006/01/16 18:05:39 abrighto Exp $ */
+/* @(#) $Id: zutil.h,v 1.2 2004/08/12 20:24:11 andreas_kupries Exp $ */
 
 #ifndef ZUTIL_H
 #define ZUTIL_H

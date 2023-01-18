@@ -10,7 +10,7 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: pngtclStubLib.c,v 1.1.1.1 2006/01/16 18:16:13 abrighto Exp $
+ * RCS: @(#) $Id: pngtclStubLib.c,v 1.1 2002/11/19 00:28:54 andreas_kupries Exp $
  */
 
 #ifndef USE_TCL_STUBS

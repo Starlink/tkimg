@@ -910,11 +910,11 @@ dnl AC_CHECK_TOOL(AR, ar, :)
 	    DL_OBJS="tclLoadDl.o"
 	    LDFLAGS=""
 
-dnl	    # AIX v<=4.1 has some different flags than 4.2+
-dnl	    if test "$system" = "AIX-4.1" -o "`uname -v`" -lt "4" ; then
-dnl		LIBOBJS="$LIBOBJS tclLoadAix.o"
-dnl		DL_LIBS="-lld"
-dnl	    fi
+	    # AIX v<=4.1 has some different flags than 4.2+
+	    if test "$system" = "AIX-4.1" -o "`uname -v`" -lt "4" ; then
+		LIBOBJS="$LIBOBJS tclLoadAix.o"
+		DL_LIBS="-lld"
+	    fi
 
 	    # On AIX <=v4 systems, libbsd.a has to be linked in to support
 	    # non-blocking file IO.  This library has to be linked in after
@@ -1143,9 +1143,9 @@ dnl	    fi
 	    # is kind of overkill but it works.
 	    # Disable inlining only when one of the
 	    # files in compat/*.c is being linked in.
-dnl	    if test x"${LIBOBJS}" != x ; then
-dnl	        EXTRA_CFLAGS="${EXTRA_CFLAGS} -fno-inline"
-dnl	    fi
+	    if test x"${LIBOBJS}" != x ; then
+	        EXTRA_CFLAGS="${EXTRA_CFLAGS} -fno-inline"
+	    fi
 
 	    ;;
 	GNU*)
@@ -2178,8 +2178,8 @@ AC_DEFUN(TEA_BUGGY_STRTOD, [
 	    AC_MSG_RESULT([ok])
 	else
 	    AC_MSG_RESULT([buggy])
-dnl	    LIBOBJS="$LIBOBJS fixstrtod.o"
-dnl	    AC_DEFINE(strtod, fixstrtod)
+	    LIBOBJS="$LIBOBJS fixstrtod.o"
+	    AC_DEFINE(strtod, fixstrtod)
 	fi
     fi
 ])
@@ -2497,7 +2497,6 @@ AC_DEFUN(TEA_SETUP_COMPILER, [
     fi
 
     AC_PROG_CC
-    AC_PROG_CPP
 
     #------------------------------------------------------------------------
     # If we're using GCC, see if the compiler understands -pipe. If so, use it.

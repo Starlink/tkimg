@@ -1,4 +1,4 @@
-/* $Header: /project16/CVS/tcltk/tkimg1.3/libtiff/tools/thumbnail.c,v 1.1.1.1 2006/01/16 18:12:51 abrighto Exp $ */
+/* $Header: /cvsroot/tkimg/tkimg/libtiff/tools/thumbnail.c,v 1.1 2004/08/13 22:02:20 andreas_kupries Exp $ */
 
 /*
  * Copyright (c) 1994-1997 Sam Leffler

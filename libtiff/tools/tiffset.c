@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tiffset.c,v 1.1.1.1 2006/01/16 18:12:43 abrighto Exp $
+ * $Id: tiffset.c,v 1.1 2004/08/13 22:02:20 andreas_kupries Exp $
  *
  * Project:  libtiff tools
  * Purpose:  Mainline for setting metadata in existing TIFF files.
@@ -29,9 +29,6 @@
  ******************************************************************************
  *
  * $Log: tiffset.c,v $
- * Revision 1.1.1.1  2006/01/16 18:12:43  abrighto
- * Imported sources
- *
  * Revision 1.1  2004/08/13 22:02:20  andreas_kupries
  *
  * 	* libtiff:     Updated libtiff from version 3.5.5 to 3.6.1.

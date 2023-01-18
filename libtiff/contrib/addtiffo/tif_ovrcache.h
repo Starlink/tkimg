@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: tif_ovrcache.h,v 1.1.1.1 2006/01/16 18:12:31 abrighto Exp $
+ * $Id: tif_ovrcache.h,v 1.1 2004/08/13 22:02:09 andreas_kupries Exp $
  *
  * Project:  TIFF Overview Builder
  * Purpose:  Library functions to maintain two rows of tiles or two strips
@@ -32,9 +32,6 @@
  ******************************************************************************
  *
  * $Log: tif_ovrcache.h,v $
- * Revision 1.1.1.1  2006/01/16 18:12:31  abrighto
- * Imported sources
- *
  * Revision 1.1  2004/08/13 22:02:09  andreas_kupries
  *
  * 	* libtiff:     Updated libtiff from version 3.5.5 to 3.6.1.

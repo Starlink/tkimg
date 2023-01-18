@@ -1,4 +1,4 @@
-#	$Header: /project16/CVS/tcltk/tkimg1.3/libtiff/dist/tiff.spec,v 1.1.1.1 2006/01/16 18:11:08 abrighto Exp $
+#	$Header: /cvsroot/tkimg/tkimg/libtiff/dist/tiff.spec,v 1.1 2004/08/13 22:02:15 andreas_kupries Exp $
 #
 # TIFF Software
 #

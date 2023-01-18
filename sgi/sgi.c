@@ -59,7 +59,7 @@
  *
  * ENDHEADER
  *
- * $Id: sgi.c,v 1.1.1.1 2006/01/16 18:03:22 abrighto Exp $
+ * $Id: sgi.c,v 1.4 2004/08/12 19:19:34 andreas_kupries Exp $
  *
  */
 
