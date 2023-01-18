@@ -5,9 +5,8 @@
 puts "img::gif [package require img::gif]"
 
 set gifdata \
-{R0lGODlhEAAMAJEAANnZ2QAAAPD/gP///yH5BAEAAAAALAAAAAAQAAwAAAI/hBMRZmYGSCSR
-IPgXJD8IPlB8PAAIko8SAEChfJQAAArlowQAUCgfJQCAQvkoAQAUykcJAKBQPkoAAMXHA4AC
-ADs=}
+{R0lGODlhEAAMAJEAANnZ2QAAAPD/gP///yH5BAEAAAAALAAAAAAQAAwAAAIghINhyycvVFsB
+QtmS3rjaH1Hg141WaT5ouprt2HHcUgAAOw==}
 
 test gif-1.1 {} {
     catch {image delete i}

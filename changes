@@ -220,7 +220,7 @@ released in April, 1997.
 3/14/99  Added 8.1b2 compatible Stub support
 
 3/14/99  Removed libttf and libgif support.
- 
+
 ----------------- Released 1.2b1, 3/14/99  -----------------------
 
 3/19/99  Finished "Makefile.gnu". Some more tweaking of Tk and CygWin

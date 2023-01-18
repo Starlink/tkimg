@@ -8,8 +8,8 @@
 # This is the master makefile to compile all the packages in this
 # extensions in one go.
 
-EXTENSION	=	Img
-VERSION		=	@IMG_VERSION@
+PACKAGE_NAME	=	@PACKAGE_NAME@
+PACKAGE_VERSION	=	@PACKAGE_VERSION@
 CYGPATH		=	@CYGPATH@
 SUBDIRS		=	@subdirs@
 
@@ -30,18 +30,23 @@ srcdir		=	@srcdir@
 # at configure-time with the --exec-prefix and --prefix options
 # to the "configure" script.
 
-prefix		=	@prefix@
-exec_prefix	=	@exec_prefix@
-libdir          =	@libdir@
-includedir      =	@includedir@
+prefix		= @prefix@
+exec_prefix	= @exec_prefix@
+libdir      = @libdir@
+datarootdir	= @datarootdir@
+includedir  = @includedir@
+mandir      = @mandir@
 
 # Directory containing scripts supporting the work of this makefile
 tool		=	$(srcdir)/tools
 
-INSTALL		= @INSTALL@
-INSTALL_PROGRAM	= @INSTALL_PROGRAM@
-INSTALL_DATA	= @INSTALL_DATA@
-INSTALL_SCRIPT	= @INSTALL_SCRIPT@
+INSTALL_OPTIONS =
+INSTALL		= $(SHELL) $(srcdir)/tclconfig/install-sh -c ${INSTALL_OPTIONS}
+INSTALL_DATA_DIR = ${INSTALL} -d -m 755
+INSTALL_PROGRAM	= ${INSTALL} -m 755
+INSTALL_DATA	= ${INSTALL} -m 644
+INSTALL_SCRIPT	= ${INSTALL_PROGRAM}
+INSTALL_LIBRARY	= ${INSTALL_DATA}
 
 
 # The following definition can be set to non-null for special systems
@@ -52,7 +57,7 @@ INSTALL_SCRIPT	= @INSTALL_SCRIPT@
 INSTALL_ROOT =
 
 # Directory where libimg.a is at run-time:
-LIB_RUNTIME_DIR =	$(libdir)/$(EXTENSION)$(VERSION)
+LIB_RUNTIME_DIR =	$(libdir)/$(PACKAGE_NAME)$(PACKAGE_VERSION)
 
 # Directory in which to install the archive libimg.a:
 LIB_INSTALL_DIR =	$(INSTALL_ROOT)$(LIB_RUNTIME_DIR)
@@ -64,7 +69,7 @@ BIN_INSTALL_DIR =	$(INSTALL_ROOT)$(exec_prefix)/bin
 INCLUDE_INSTALL_DIR =	$(INSTALL_ROOT)$(prefix)/include
 
 # Top-level directory in which to install manual entries:
-MAN_INSTALL_DIR =	$(INSTALL_ROOT)$(prefix)/man
+MAN_INSTALL_DIR =	$(INSTALL_ROOT)$(mandir)
 
 # Directory where libz, libpng and libjpeg are (or will be) installed.
 IMG_INSTALL_DIR	=	$(INSTALL_ROOT)$(IMG_RUNTIME_DIR)
@@ -79,11 +84,10 @@ SHELL =		/bin/sh
 # modify any of this stuff by hand.
 #----------------------------------------------------------------
 
-INSTALL_PROGRAM =	$(INSTALL) -m 744
-INSTALL_DATA =		$(INSTALL) -m 644
 INSTALL_SHLIB =		$(INSTALL) -m 555
 RANLIB =		@RANLIB@
 SHLIB_SUFFIX =		@SHLIB_SUFFIX@
+SHARED_BUILD	= @SHARED_BUILD@
 
 #----------------------------------------------------------------
 
@@ -94,19 +98,27 @@ default:	all
 all:
 	for sub in $(SUBDIRS) ; \
 	do	\
-		here=`pwd` ; \
-		cd $$sub ; \
-		$(MAKE) all ; \
+		here=`pwd` && \
+		cd $$sub && \
+		$(MAKE) all || exit $$? && \
 		cd $$here ; \
 	done
 
 test:	all
 	for sub in $(SUBDIRS) ; \
 	do	\
-		here=`pwd` ; \
-		cd $$sub ; \
-		$(MAKE) test ; \
+		test -d $(srcdir)/$$sub/tests || continue ; \
+		here=`pwd` && \
+		cd $$sub && \
+		$(MAKE) top_builddir=$$here test || exit $$? && \
 		cd $$here ; \
+	done
+
+install-man:
+	mkdir -p $(MAN_INSTALL_DIR)/mann
+	for i in $(srcdir)/doc/*.man ; \
+	do	\
+		dtplite -ext n -o $(MAN_INSTALL_DIR)/mann nroff $$i ; \
 	done
 
 collate: all
@@ -114,20 +126,31 @@ collate: all
 	touch pkgIndex.tcl
 	for sub in $(SUBDIRS) ; \
 	do	\
-		here=`pwd` ; \
-		cd $$sub ; \
-		$(MAKE) install DESTDIR=$$DESTDIR \
+		here=`pwd` && \
+		cd $$sub && \
+		$(MAKE) install \
 			exec_prefix=$$here/Img/exec_prefix		\
 			prefix=$$here/Img/prefix			\
 			pkglibdir=$$here/Img/exec_prefix/lib/Img	\
-			;						\
-		cd $$here ; \
+			libdir=$$here/Img/exec_prefix/lib		\
+			includedir=$$here/Img/prefix/include		\
+			DESTDIR=$$DESTDIR				\
+			|| exit $$? &&					\
+		cd $$here && \
+		if test "x$(SHARED_BUILD)" = "x1"; then \
 		cat $$DESTDIR/$$here/Img/exec_prefix/lib/Img/pkgIndex.tcl >> pkgIndex.tcl ; \
+		fi ; \
 	done
 	here=`pwd` ;\
-	cp pkgIndex.tcl $$DESTDIR/$$here/Img/exec_prefix/lib/Img/pkgIndex.tcl
+	chmod ugo+w     $$DESTDIR/$$here/Img/exec_prefix/lib/Img/pkgIndex.tcl ;\
+	mv pkgIndex.tcl $$DESTDIR/$$here/Img/exec_prefix/lib/Img/pkgIndex.tcl ;\
+	chmod ugo+w     $$DESTDIR/$$here/Img/exec_prefix/lib/Img/pkgIndex.tcl ;\
+	for p in $$DESTDIR/$$here/Img/exec_prefix/lib/*.sh ; do \
+		sed -e 's#$(libdir)/[^/ ]*\([/ ]\)#$(LIB_RUNTIME_DIR)\1#' \
+			$$p > $$p.1 && mv -f $$p.1 $$p ; \
+	done
 
-install: collate
+install: collate install-man
 	here=`pwd` ;\
 	mkdir -p    $(INSTALL_ROOT)$(LIB_RUNTIME_DIR) ;\
 	for p in $$DESTDIR/$$here/Img/exec_prefix/lib/Img/* ; do \
@@ -139,10 +162,11 @@ install: collate
 		$(INSTALL_PROGRAM) $$p $(INSTALL_ROOT)$(libdir)/`basename $$p` ; \
 	done
 	here=`pwd` ;\
-	mkdir -p $(INSTALL_ROOT)$(includedir) ;\
+	if [ -n "`ls $$DESTDIR/$$here/Img/prefix/include`" ]; then \
+	mkdir -p $(INSTALL_ROOT)$(includedir) && \
 	for p in $$DESTDIR/$$here/Img/prefix/include/* ; do \
-		$(INSTALL_PROGRAM) $$p $(INSTALL_ROOT)$(includedir)/`basename $$p` ; \
-	done
+		$(INSTALL_DATA) $$p $(INSTALL_ROOT)$(includedir)/`basename $$p` ; \
+	done; fi
 
 
 bindist:
@@ -152,9 +176,9 @@ bindist:
 clean:
 	for sub in $(SUBDIRS) ; \
 	do	\
-		here=`pwd` ; \
-		cd $$sub ; \
-		$(MAKE) clean ; \
+		here=`pwd` && \
+		cd $$sub && \
+		$(MAKE) clean || exit $$? && \
 		cd $$here ; \
 	done
 	rm -rf Img
@@ -164,17 +188,11 @@ distclean:	clean
 	rm -f Makefile
 	for sub in $(SUBDIRS) ; \
 	do	\
-		here=`pwd` ; \
-		cd $$sub ; \
-		$(MAKE) distclean ; \
+		here=`pwd` && \
+		cd $$sub && \
+		$(MAKE) distclean || exit $$? && \
 		cd $$here ; \
 	done
-
-
-autoconf:
-	autoconf
-	for i in * */* ; do (test -d $$i && cd $$i && test -f configure.in && echo "run autoconf in $$i" && autoconf) ; done
-
 
 #-------------------------------------------------------#
 # DO NOT DELETE THIS LINE -- make depend depends on it.

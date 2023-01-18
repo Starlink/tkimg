@@ -1,26 +1,26 @@
-/* $Header: /project16/CVS/tcltk/tkimg1.3/tiff/tiffZip.c,v 1.1.1.1 2006/01/16 18:07:17 abrighto Exp $ */
+/* $Header$ */
 
 /*
  * Copyright (c) 1995-1996 Sam Leffler
  * Copyright (c) 1995-1996 Silicon Graphics, Inc.
  *
- * Permission to use, copy, modify, distribute, and sell this software and 
+ * Permission to use, copy, modify, distribute, and sell this software and
  * its documentation for any purpose is hereby granted without fee, provided
  * that (i) the above copyright notices and this permission notice appear in
  * all copies of the software and related documentation, and (ii) the names of
  * Sam Leffler and Silicon Graphics may not be used in any advertising or
  * publicity relating to the software without the specific, prior written
  * permission of Sam Leffler and Silicon Graphics.
- * 
- * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
- * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
- * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
- * 
+ *
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+ *
  * IN NO EVENT SHALL SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
  * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
  * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
- * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
- * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
  * OF THIS SOFTWARE.
  */
 
@@ -47,7 +47,7 @@
  * last found at ftp://ftp.uu.net/pub/archiving/zip/zlib/zlib-0.99.tar.gz.
  */
 
-#include <zlibtcl.h>
+#include "zlibtcl.h"
 #include <assert.h>
 
 
@@ -80,12 +80,11 @@ typedef	struct {
 #define	DecoderState(tif)	ZState(tif)
 #define	EncoderState(tif)	ZState(tif)
 
-static int ZIPSetupDecode _ANSI_ARGS_((TIFF* tif));
+static int ZIPSetupDecode(TIFF* tif);
 
-static int
-ZIPSetupDecode(tif)
-    TIFF* tif;
-{
+static int ZIPSetupDecode(
+    TIFF* tif
+) {
     ZIPState* sp = DecoderState(tif);
     static char module[] = "ZIPSetupDecode";
 
@@ -103,17 +102,10 @@ ZIPSetupDecode(tif)
  * Setup state for decoding a strip.
  */
 
-static int
-#ifdef _USING_PROTOTYPES_
-ZIPPreDecode (
+static int ZIPPreDecode(
     TIFF* tif,
-    tsample_t s)
-#else
-ZIPPreDecode(tif, s)
-    TIFF* tif;
-    tsample_t s;
-#endif
-{
+    tsample_t s
+) {
     ZIPState* sp = DecoderState(tif);
 
     (void) s;
@@ -123,21 +115,12 @@ ZIPPreDecode(tif, s)
     return (inflateReset(&sp->stream) == Z_OK);
 }
 
-static int
-#ifdef _USING_PROTOTYPES_
-ZIPDecode (
+static int ZIPDecode(
     TIFF* tif,
     tidata_t op,
     tsize_t occ,
-    tsample_t s)
-#else
-ZIPDecode(tif, op, occ, s)
-    TIFF* tif;
-    tidata_t op;
-    tsize_t occ;
-    tsample_t s;
-#endif
-{
+    tsample_t s
+) {
     ZIPState* sp = DecoderState(tif);
     static char module[] = "ZIPDecode";
 
@@ -172,15 +155,9 @@ ZIPDecode(tif, op, occ, s)
     return (1);
 }
 
-static int
-#ifdef _USING_PROTOTYPES_
-ZIPSetupEncode (
-    TIFF* tif)
-#else
-ZIPSetupEncode(tif)
-    TIFF* tif;
-#endif
-{
+static int ZIPSetupEncode (
+    TIFF* tif
+) {
     ZIPState* sp = EncoderState(tif);
     static char module[] = "ZIPSetupEncode";
 
@@ -198,17 +175,10 @@ ZIPSetupEncode(tif)
  * Reset encoding state at the start of a strip.
  */
 
-static int
-#ifdef _USING_PROTOTYPES_
-ZIPPreEncode (
+static int ZIPPreEncode(
     TIFF* tif,
-    tsample_t s)
-#else
-ZIPPreEncode(tif, s)
-    TIFF* tif;
-    tsample_t s;
-#endif
-{
+    tsample_t s
+) {
     ZIPState *sp = EncoderState(tif);
 
     (void) s;
@@ -222,20 +192,12 @@ ZIPPreEncode(tif, s)
  * Encode a chunk of pixels.
  */
 
-static int
-#ifdef _USING_PROTOTYPES_
-ZIPEncode (TIFF* tif,
+static int ZIPEncode(
+    TIFF* tif,
     tidata_t bp,
     tsize_t cc,
-    tsample_t s)
-#else
-ZIPEncode(tif, bp, cc, s)
-    TIFF* tif;
-    tidata_t bp;
-    tsize_t cc;
-    tsample_t s;
-#endif
-{
+    tsample_t s
+) {
     ZIPState *sp = EncoderState(tif);
     static char module[] = "ZIPEncode";
 
@@ -263,12 +225,9 @@ ZIPEncode(tif, bp, cc, s)
  * string and tacking on an End Of Information code.
  */
 
-static int ZIPPostEncode _ANSI_ARGS_((TIFF* tif));
-
-static int
-ZIPPostEncode(tif)
-    TIFF* tif;
-{
+static int ZIPPostEncode(
+    TIFF* tif
+) {
     ZIPState *sp = EncoderState(tif);
     static char module[] = "ZIPPostEncode";
     int state;
@@ -296,12 +255,9 @@ ZIPPostEncode(tif)
     return (1);
 }
 
-static void ZIPCleanup _ANSI_ARGS_((TIFF* tif));
-
-static void
-ZIPCleanup(tif)
-    TIFF* tif;
-{
+static void ZIPCleanup(
+    TIFF* tif
+) {
     ZIPState* sp = ZState(tif);
     if (sp) {
         if (tif->tif_mode == O_RDONLY) {
@@ -314,14 +270,11 @@ ZIPCleanup(tif)
     }
 }
 
-static int ZIPVSetField _ANSI_ARGS_((TIFF* tif, ttag_t tag, va_list ap));
-
-static int
-ZIPVSetField(tif, tag, ap)
-    TIFF* tif;
-    ttag_t tag;
-    va_list ap;
-{
+static int ZIPVSetField(
+    TIFF* tif,
+    ttag_t tag,
+    va_list ap
+) {
     ZIPState* sp = ZState(tif);
     static char module[] = "ZIPVSetField";
 
@@ -343,14 +296,12 @@ ZIPVSetField(tif, tag, ap)
     /*NOTREACHED*/
 }
 
-static int ZIPVGetField _ANSI_ARGS_((TIFF* tif, ttag_t tag, va_list ap));
-
 static int
-ZIPVGetField(tif, tag, ap)
-    TIFF* tif;
-    ttag_t tag;
-    va_list ap;
-{
+ZIPVGetField(
+    TIFF* tif,
+    ttag_t tag,
+    va_list ap
+) {
     ZIPState* sp = ZState(tif);
 
     switch (tag) {
@@ -363,37 +314,35 @@ ZIPVGetField(tif, tag, ap)
     return (1);
 }
 
-static CONST TIFFFieldInfo zipFieldInfo[] = {
+static const TIFFFieldInfo zipFieldInfo[] = {
     { TIFFTAG_ZIPQUALITY,	 0, 0,	TIFF_ANY,	FIELD_PSEUDO,
       TRUE,	FALSE,	"" },
 };
 #define	N(a)	(sizeof (a) / sizeof (a[0]))
 
-static voidpf
-ZipAlloc(opaque, items, size)
-    voidpf opaque;
-    uInt items;
-    uInt size;
-{
+static voidpf ZipAlloc(
+    voidpf opaque,
+    uInt items,
+    uInt size
+) {
     return (voidpf) TkimgTIFFmalloc((tsize_t)(items * size));
 }
 
-static void
-ZipFree(opaque, address)
-    voidpf opaque;
-    voidpf address;
-{
+static void ZipFree(
+    voidpf opaque,
+    voidpf address
+) {
     TkimgTIFFfree((tdata_t) address);
 }
 
-int
-TkimgTIFFInitZip(handle, scheme)
-    TIFF * handle;
-    int scheme;
-{
+int TkimgTIFFInitZip(
+    TIFF * handle,
+    int scheme
+) {
     TIFF* tif = (TIFF *) handle;
     ZIPState* sp;
-    assert(scheme == COMPRESSION_DEFLATE);
+	assert( (scheme == COMPRESSION_DEFLATE)
+		|| (scheme == COMPRESSION_ADOBE_DEFLATE));
 
     /*
      * We assume here that package zlibtcl is loaded and its stub
@@ -421,7 +370,7 @@ TkimgTIFFInitZip(handle, scheme)
      * override parent get/set field methods.
      */
 
-    _TIFFMergeFieldInfo(tif, (CONST VOID *) zipFieldInfo, N(zipFieldInfo));
+    _TIFFMergeFieldInfo(tif, (const void *) zipFieldInfo, N(zipFieldInfo));
     sp->vgetparent     = tif->tif_tagmethods.vgetfield;
     tif->tif_tagmethods.vgetfield = ZIPVGetField;	/* hook for codec tags */
     sp->vsetparent     = tif->tif_tagmethods.vsetfield;

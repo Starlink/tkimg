@@ -1,40 +1,39 @@
-I'm happy to announce version 1.3 of the "tkImg" package
+I'm happy to announce version 1.4.2 of the "tkImg" package
 (formerly known as 'Img").
 
 This package enhances Tk, adding support for many other Image formats.
 
-Changes compared to version 1.2.4:
+Changes compared to version 1.4.1:
 
--	New formats: ICO, PCX, PPM, SGI, SUN, TGA.
--	New build system, based upon TEA 2.
--	Refactored into several smaler and more independent
-	packages. See file README in the (source) distributions for
-	more information.
--	Bug fixes and enhancements in some formats.
+-  Will build correctly on more platforms (TEA upgraded
+   to latest version 3.9)
+-  upgrade to zlib 1.2.8, libjpeg-8d
+-  Added format option "-alpha" to PNG reader to be compatible with Tk 8.6.
+-  Bug fixes in various parsers to avoid core dumps when specifying a
+   wrong format option.
 
-This version only works with Tcl/Tk 8.0 or higher (tested up to
-8.4a1). If you are using Tk4.2 or lower, please stick with Img1.1.4
+Changes compared to version 1.4:
+
+-  Will build correctly on more platforms (TEA upgraded
+   to version 3.9)
+-  upgrade to zlib 1.2.7, libpng-1.4.12, libtiff-3.9.4, libjpeg-8c
+
+This version only works with Tcl/Tk 8.3 or higher (tested up to
+8.6.1). If you are using Tk8.2 or lower, please stick with tkImg1.3
 (which is still available).
 
-Currently there are two identical source distributions:
-	tkimg13.zip             (for Windows)	(about 2.9 Mb)
-	tkimg1.3.tar.gz         (for Unix)	(about 2.6 Mb)
-	tkimg1.3.tar.bz2        (for Unix)	(about 1.7 Mb)
+Currently there are three identical source distributions:
+	tkimg142.zip             (for Windows)  (about 7.4 Mb)
+	tkimg1.4.2.tar.gz        (for Unix)     (about 6.6 Mb)
+	tkimg1.4.2.tar.bz2       (for Unix)     (about 4.9 Mb)
 
 All these files can be downloaded from:
-	http://source.net/project/tkimg/
+	http://sourceforge.net/projects/tkimg/
 
 The most recent info is always available at:
-	http://source.net/project/tkimg/
+	http://sourceforge.net/projects/tkimg/
 
 See the README on how to build and use the packages.
-
-If you want to write images to disk which contain transparency
-information (e.g. GIF89 or PNG with alpha channel), you need
-at least Tk 8.3. Without lower Tk versions only GIF87 will be
-written, and the alpha channel will be missing from PNG files. In
-other words: The background color will not be as intended but
-everything else should be O.K.
 
 For PNG, JPEG and TIFF support the supporting packages have to be
 build and installed. See the file README for more in-depth
@@ -69,13 +68,12 @@ Mario Weilguni <mweilguni@sime.com>
   Many improvements to imgXPM.c.
 
 Enjoy,
-	Jan Nijtmans, CMG Oost-Nederland B.V.
-	email: jan.nijtmans@xs4all.nl (private)
-	       jan.nijtmans@cmg.nl    (work)
+	Jan Nijtmans
+	email: nijtmans@users.sourceforge.net
 	url:   http://purl.oclc.org/net/nijtmans/
 
 	Andreas Kupries, ActiveState Corp
-	email:	andreas_kupries@users.sourceforg.net	(private)
+	email:	andreas_kupries@users.sourceforge.net	(private)
 		akupries@shaw.ca			(private)
 		andreask@activestate.com		(work)
 	url:	http://www.purl.org/NET/akupries/

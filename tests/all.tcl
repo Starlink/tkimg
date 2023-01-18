@@ -7,8 +7,8 @@
 # Copyright (c) 1998-2000 by Scriptics Corporation.
 # Copyright (c) 2002         Andreas Kupries <andreas_kupries@users.sourceforge.net>
 # All rights reserved.
-# 
-# RCS: @(#) $Id: all.tcl,v 1.1.1.1 2006/01/16 18:07:35 abrighto Exp $
+#
+# RCS: @(#) $Id: all.tcl 156 2008-10-23 15:52:49Z nijtmans $
 
 if {[lsearch [namespace children] ::tcltest] == -1} {
     package require tcltest

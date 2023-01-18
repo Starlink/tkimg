@@ -4,8 +4,8 @@
 #
 # Copyright (c) 2002         Andreas Kupries <andreas_kupries@users.sourceforge.net>
 # All rights reserved.
-# 
-# RCS: @(#) $Id: all.tcl,v 1.1.1.1 2006/01/16 18:04:40 abrighto Exp $
+#
+# RCS: @(#) $Id: all.tcl 224 2009-07-27 08:47:46Z nijtmans $
 
 set _pwd  [pwd]
 cd  [file dirname [file join [pwd] [info script]]]
@@ -21,4 +21,4 @@ set ::tcltest::testsDirectory [file dirname [info script]]
 ::tcltest::normalizePath ::tcltest::testsDirectory
 
 run_tests
-return
+exit
