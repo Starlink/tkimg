@@ -150,7 +150,7 @@ collate: all
 			$$p > $$p.1 && mv -f $$p.1 $$p ; \
 	done
 
-install: collate install-man
+install: collate
 	here=`pwd` ;\
 	mkdir -p    $(INSTALL_ROOT)$(LIB_RUNTIME_DIR) ;\
 	for p in $$DESTDIR/$$here/Img/exec_prefix/lib/Img/* ; do \
