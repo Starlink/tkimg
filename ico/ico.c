@@ -4,9 +4,9 @@
  *
  * Author :     Paul Obermeier (paul@poSoft.de)
  *
- * Date :       Mon Aug 12 20:30:46 CEST 2002
+ * Date :       2002 / 08 / 12
  *
- * Copyright :  (C) 2002 Paul Obermeier
+ * Copyright :  (C) 2002-2019 Paul Obermeier
  *
  * Description :
  *
@@ -71,44 +71,44 @@ typedef int Int;                /* Signed   32 bit integer */
 #define BI_RGB 0
 
 typedef struct {
-   UByte  width;
-   UByte  height;
-   UShort nColors;
-   UByte  reserved;
-   UShort nPlanes;
-   UShort bitCount;
-   UInt   sizeInBytes;
-   UInt   fileOffset;
+    UByte  width;
+    UByte  height;
+    UShort nColors;
+    UByte  reserved;
+    UShort nPlanes;
+    UShort bitCount;
+    UInt   sizeInBytes;
+    UInt   fileOffset;
 } ICOENTRY;
 
 /* ICO file header structure */
 typedef struct {
-   UShort   nIcons;
-   ICOENTRY *entries;
+    UShort   nIcons;
+    ICOENTRY *entries;
 } ICOHEADER;
 
 typedef struct {
-   UInt   size;
-   UInt   width;
-   UInt   height;
-   UShort nPlanes;
-   UShort nBitsPerPixel;
-   UInt   compression;
-   UInt   imageSize;
-   UInt   xPixelsPerM;
-   UInt   yPixelsPerM;
-   UInt   nColorsUsed;
-   UInt   nColorsImportant;
+    UInt   size;
+    UInt   width;
+    UInt   height;
+    UShort nPlanes;
+    UShort nBitsPerPixel;
+    UInt   compression;
+    UInt   imageSize;
+    UInt   xPixelsPerM;
+    UInt   yPixelsPerM;
+    UInt   nColorsUsed;
+    UInt   nColorsImportant;
 } INFOHEADER;
 
 typedef struct {
-   UByte red;
-   UByte green;
-   UByte blue;
-   UByte matte;
+    UByte red;
+    UByte green;
+    UByte blue;
+    UByte matte;
 } ICOCOLOR;
 
-/* ICO file format options structure for use with ParseFormatOpts */
+/* Format options structure for use with ParseFormatOpts */
 typedef struct {
     UInt  index;
     Boln  verbose;
@@ -438,16 +438,19 @@ static int ParseFormatOpts (interp, format, opts)
     static const char *const icoOptions[] = {
          "-verbose", "-index", NULL
     };
-    int objc, length, i, index;
+    int objc, i, index;
+    char *optionStr;
     Tcl_Obj **objv;
-    const char *indexStr, *verboseStr;
+    int intVal;
+    int boolVal;
 
-    /* Initialize format options with default values. */
-    verboseStr = "0";
-    indexStr   = "0";
+    /* Initialize options with default values. */
+    opts->index   = 0;
+    opts->verbose = 0;
 
-    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK)
+    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK) {
         return TCL_ERROR;
+    }
     if (objc) {
         for (i=1; i<objc; i++) {
             if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)icoOptions,
@@ -460,36 +463,30 @@ static int ParseFormatOpts (interp, format, opts)
                         "\"", (char *) NULL);
                 return TCL_ERROR;
             }
+            optionStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
             switch (index) {
                 case 0:
-                    verboseStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_AppendResult (interp, "Invalid verbose mode \"", optionStr,
+                                          "\": should be 1 or 0, on or off, true or false",
+                                          (char *) NULL);
+                        return TCL_ERROR;
+                    }
+                    opts->verbose = boolVal;
                     break;
                 case 1:
-                    indexStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
+                    if (Tcl_GetInt(interp, optionStr, &intVal) == TCL_ERROR || intVal <= 0) {
+                        Tcl_AppendResult (interp, "Invalid index \"", optionStr,
+                                          "\": Must be zero or positive.", (char *) NULL);
+                        return TCL_ERROR;
+                    }
+                    if (intVal >= 0 ) {
+                        opts->index = intVal;
+                    }
                     break;
             }
         }
     }
-
-    /* OPA TODO: Check for valid integer strings. */
-    opts->index  = atoi (indexStr);
-
-    length = strlen (verboseStr);
-    if (!strncmp (verboseStr, "1", length) || \
-        !strncmp (verboseStr, "true", length) || \
-        !strncmp (verboseStr, "on", length)) {
-        opts->verbose = 1;
-    } else if (!strncmp (verboseStr, "0", length) || \
-        !strncmp (verboseStr, "false", length) || \
-        !strncmp (verboseStr, "off", length)) {
-        opts->verbose = 0;
-    } else {
-        Tcl_AppendResult(interp, "invalid verbose mode \"", verboseStr,
-                         "\": should be 1 or 0, on or off, true or false",
-                         (char *) NULL);
-        return TCL_ERROR;
-    }
-
     return TCL_OK;
 }
 

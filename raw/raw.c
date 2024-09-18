@@ -4,9 +4,9 @@
  *
  * Author :     Paul Obermeier (paul@poSoft.de)
  *
- * Date :       Wed Feb 21 12:45:08 CET 2001
+ * Date :       2001 / 02 / 21
  *
- * Copyright :  (C) 2001-2018 Paul Obermeier
+ * Copyright :  (C) 2001-2019 Paul Obermeier
  *
  * Description :
  *
@@ -150,8 +150,6 @@
 
 #include "init.c"
 
-#define DEBUG_READ 0
-
 /* Maximum length of a header line. */
 #define HEADLEN 100
 
@@ -183,26 +181,9 @@
 #define TYPE_USHORT 1
 #define TYPE_UBYTE  2
 
-#define MAXCHANS  4
-
- /* Mapping modes. */
-#define MAP_NONE   0
-#define MAP_MINMAX 1
-#define MAP_AGC    2
-#define strNone    "none"
-#define strMinmax  "minmax"
-#define strAgc     "agc"
-
-/* The size of the histogram and lookup tables for Automatic Gain Control */
-#define HISTOGRAM_SIZE  256
-#define HISTOGRAM_SCALE 255.0
-
 /* Some general defines and typedefs. */
 #define TRUE  1
 #define FALSE 0
-#define MIN(a,b) ((a)<(b)? (a): (b))
-#define MAX(a,b) ((a)>(b)? (a): (b))
-#define CLAMP(val,min,max) (MAX (min, MIN (val, max)))
 
 typedef unsigned char Boln;     /* Boolean value: TRUE or FALSE */
 typedef unsigned char UByte;    /* Unsigned  8 bit integer */
@@ -225,7 +206,7 @@ typedef struct {
     Int   pixelType;
 } RAWHEADER;
 
-/* RAW file format options structure for use with ParseFormatOpts */
+/* Format options structure for use with ParseFormatOpts */
 typedef struct {
     Int   width;
     Int   height;
@@ -234,11 +215,11 @@ typedef struct {
     Int   byteOrder;
     Int   pixelType;
     Int   mapMode;
-    Float gamma;        /* MAP_MINMAX and MAP_AGC */
-    Float minVal;       /* MAP_MINMAX */
-    Float maxVal;       /* MAP_MINMAX */
-    Float saturation;   /* MAP_AGC */
-    Float cutOff;       /* MAP_AGC */
+    Float gamma;        /* IMG_MAP_MINMAX and IMG_MAP_AGC */
+    Float minVal;       /* IMG_MAP_MINMAX */
+    Float maxVal;       /* IMG_MAP_MINMAX */
+    Float saturation;   /* IMG_MAP_AGC */
+    Float cutOff;       /* IMG_MAP_AGC */
     Boln  verbose;
     Boln  printAgc;
     Boln  uuencode;
@@ -254,119 +235,6 @@ typedef struct {
     UByte  *ubyteBuf;
 } RAWFILE;
 
-#define GTABSIZE 257
-
-/* Given a pixel value in Float format, "valIn", and a gamma-correction
- * lookup table, "tab", macro "gcorrectFloat" returns the gamma-corrected
- * pixel value in "valOut".
- */
-
-#define gcorrectFloat(valIn,tab,valOut)                                 \
-    {                                                                   \
-        Int     gc_i;                                                   \
-        Float   gc_t;                                                   \
-        gc_t = (valIn) * (GTABSIZE - 2);                                \
-        gc_i = gc_t;                                                    \
-        gc_t -= gc_i;                                                   \
-        (valOut) = (tab)[gc_i] * (1.0-gc_t) + (tab)[gc_i+1] * gc_t;     \
-    }
-
-static Boln gtableFloat (Float gamma, Float table[])
-{
-    Int i;
-
-    for (i = 0; i < GTABSIZE - 1; ++i) {
-        table[i] = pow ((Float) i / (Float) (GTABSIZE - 2), 1.0 / gamma);
-    }
-    table[GTABSIZE - 1] = 1.0;
-    return TRUE;
-}
-
-/* If no gamma correction is needed (i.e. gamma == 1.0), specify NULL for
- * parameter gtable.
- */
-static void FloatGammaUByte (Int n, const Float floatIn[],
-                             const Float gtable[], UByte ubOut[])
-{
-    const Float *src, *stop;
-    Float       ftmp;
-    Int         itmp;
-    UByte       *ubdest;
-
-    src = floatIn;
-    stop = floatIn + n;
-    ubdest = ubOut;
-
-    /* Handle a gamma value of 1.0 (gtable == NULL) as a special case.
-       Quite nice speed improvement for the maybe most used case. */
-    if (gtable) {
-        while (src < stop) {
-            ftmp = CLAMP (*src, 0.0, 1.0);
-            gcorrectFloat (ftmp, gtable, ftmp);
-            itmp = (Int)(ftmp * 255.0 + 0.5);
-            *ubdest = CLAMP (itmp, 0, 255);
-            ++ubdest;
-            ++src;
-        }
-    } else {
-        while (src < stop) {
-            itmp = (Int)(*src * 255.0 + 0.5);
-            *ubdest = CLAMP (itmp, 0, 255);
-            ++ubdest;
-            ++src;
-        }
-    }
-    return;
-}
-
-/* If no gamma correction is needed (i.e. gamma == 1.0), specify NULL for
- * parameter gtable.
- */
-static void UShortGammaUByte (Int n, const UShort shortIn[],
-                              const Float gtable[], UByte ubOut[])
-{
-    const UShort *src, *stop;
-    Float        ftmp;
-    Int          itmp;
-    UByte        *ubdest;
-
-    src = shortIn;
-    stop = shortIn + n;
-    ubdest = ubOut;
-
-    /* Handle a gamma value of 1.0 (gtable == NULL) as a special case.
-       Quite nice speed improvement for the maybe most used case. */
-    if (gtable) {
-        while (src < stop) {
-            ftmp = *src / 65535.0;
-            ftmp = CLAMP (ftmp, 0.0, 1.0);
-            gcorrectFloat (ftmp, gtable, ftmp);
-            itmp = (Int)(ftmp * 255.0 + 0.5);
-            *ubdest = CLAMP (itmp, 0, 255);
-            ++ubdest;
-            ++src;
-        }
-    } else {
-        while (src < stop) {
-            itmp = (Int)(*src / 256);
-            *ubdest = CLAMP (itmp, 0, 255);
-            ++ubdest;
-            ++src;
-        }
-    }
-    return;
-}
-
-/* This function determines at runtime, whether we are on an Intel system. */
-
-static int isIntel (void)
-{
-    unsigned long val = 513;
-    /* On Intel (little-endian) systems this value is equal to "\01\02\00\00".
-       On big-endian systems this value equals "\00\00\02\01" */
-    return memcmp(&val, "\01\02", 2) == 0;
-}
-
 static void rawClose (RAWFILE *tf, Boln fastMode)
 {
     if (!fastMode) {
@@ -376,83 +244,6 @@ static void rawClose (RAWFILE *tf, Boln fastMode)
     if (tf->ushortBuf) ckfree ((char *)tf->ushortBuf);
     if (tf->ubyteBuf)  ckfree ((char *)tf->ubyteBuf);
     return;
-}
-
-static Boln readFloatRow (tkimg_MFile *handle, Float *pixels, Int nFloats,
-                          char *buf, Boln swapBytes)
-{
-    int   i;
-    Float *mPtr = pixels;
-    char  *bufPtr = buf;
-
-#if DEBUG_READ == 1
-    printf ("Reading %d floats\n", nFloats); fflush (stdout);
-#endif
-    if (4 * nFloats != tkimg_Read2(handle, buf, 4 * nFloats))
-        return FALSE;
-
-    if (swapBytes) {
-        for (i=0; i<nFloats; i++) {
-            ((char *)mPtr)[0] = bufPtr[3];
-            ((char *)mPtr)[1] = bufPtr[2];
-            ((char *)mPtr)[2] = bufPtr[1];
-            ((char *)mPtr)[3] = bufPtr[0];
-            mPtr++;
-            bufPtr += 4;
-        }
-    } else {
-        for (i=0; i<nFloats; i++) {
-            ((char *)mPtr)[0] = bufPtr[0];
-            ((char *)mPtr)[1] = bufPtr[1];
-            ((char *)mPtr)[2] = bufPtr[2];
-            ((char *)mPtr)[3] = bufPtr[3];
-            mPtr++;
-            bufPtr += 4;
-        }
-    }
-    return TRUE;
-}
-
-static Boln readUShortRow (tkimg_MFile *handle, UShort *pixels, Int nShorts,
-                           char *buf, Boln swapBytes)
-{
-    int    i;
-    UShort *mPtr = pixels;
-    char   *bufPtr = buf;
-
-#if DEBUG_READ == 1
-    printf ("Reading %d UShorts\n", nShorts); fflush (stdout);
-#endif
-    if (2 * nShorts != tkimg_Read2(handle, buf, 2 * nShorts))
-        return FALSE;
-
-    if (swapBytes) {
-        for (i=0; i<nShorts; i++) {
-            ((char *)mPtr)[0] = bufPtr[1];
-            ((char *)mPtr)[1] = bufPtr[0];
-            mPtr++;
-            bufPtr += 2;
-        }
-    } else {
-        for (i=0; i<nShorts; i++) {
-            ((char *)mPtr)[0] = bufPtr[0];
-            ((char *)mPtr)[1] = bufPtr[1];
-            mPtr++;
-            bufPtr += 2;
-        }
-    }
-    return TRUE;
-}
-
-static Boln readUByteRow (tkimg_MFile *handle, UByte *pixels, Int nBytes)
-{
-#if DEBUG_READ == 1
-    printf ("Reading %d UBytes\n", nBytes); fflush (stdout);
-#endif
-    if (nBytes != tkimg_Read2(handle, (char *)pixels, nBytes))
-        return FALSE;
-
-    return TRUE;
 }
 
 #define OUT Tcl_WriteChars (outChan, str, -1)
@@ -475,20 +266,20 @@ static void printImgInfo (RAWHEADER *th, FMTOPT *opts,
                                                                                    strUnknown)))); OUT;
     sprintf (str, "\tVertical encoding: %s\n",      th->scanOrder == TOP_DOWN?
                                                     strTopDown: strBottomUp);                      OUT;
-    sprintf (str, "\tHost byte order  : %s\n",      isIntel ()?  strIntel: strMotorola);           OUT;
+    sprintf (str, "\tHost byte order  : %s\n",      tkimg_IsIntel ()?  strIntel: strMotorola);     OUT;
     sprintf (str, "\tFile byte order  : %s\n",      th->byteOrder == INTEL?
                                                     strIntel: strMotorola);                        OUT;
-    sprintf (str, "\tMapping mode     : %s\n",      (opts->mapMode == MAP_NONE?   strNone:
-                                                    (opts->mapMode == MAP_MINMAX? strMinmax:
-                                                    (opts->mapMode == MAP_AGC?    strAgc:
+    sprintf (str, "\tMapping mode     : %s\n",      (opts->mapMode == IMG_MAP_NONE?   IMG_MAP_NONE_STR:
+                                                    (opts->mapMode == IMG_MAP_MINMAX? IMG_MAP_MINMAX_STR:
+                                                    (opts->mapMode == IMG_MAP_AGC?    IMG_MAP_AGC_STR:
                                                                                   strUnknown))));  OUT;
-    if (opts->mapMode != MAP_NONE) {
+    if (opts->mapMode != IMG_MAP_NONE) {
         sprintf (str, "\tGamma correction : %f\n",       opts->gamma);                             OUT;
-        if (opts->mapMode == MAP_MINMAX) {
+        if (opts->mapMode == IMG_MAP_MINMAX) {
             sprintf (str, "\tMinimum map value: %f\n",   opts->minVal);                            OUT;
             sprintf (str, "\tMaximum map value: %f\n",   opts->maxVal);                            OUT;
         }
-        if (opts->mapMode == MAP_AGC) {
+        if (opts->mapMode == IMG_MAP_AGC) {
             sprintf (str, "\tSaturation       : %f\n",   opts->saturation);                        OUT;
             sprintf (str, "\tCutOff           : %f%%\n", opts->cutOff);                            OUT;
         }
@@ -505,10 +296,6 @@ static Boln readHeaderLine (Tcl_Interp *interp, tkimg_MFile *handle, char *buf)
     bufPtr    = buf;
     bufEndPtr = buf + HEADLEN;
     failure   = TRUE;
-
-#if DEBUG_READ == 1
-    printf ("readHeaderLine\n"); fflush (stdout);
-#endif
 
     while (tkimg_Read2(handle, &c, 1) == 1 && bufPtr < bufEndPtr) {
         if (c == '\n') {
@@ -642,7 +429,7 @@ static Boln writeHeader (tkimg_MFile *handle, RAWHEADER *th)
     tkimg_Write2(handle, buf, strlen (buf));
     sprintf (buf, strNumChan, th->nChans);
     tkimg_Write2(handle, buf, strlen (buf));
-    sprintf (buf, strByteOrder, isIntel()? strIntel: strMotorola);
+    sprintf (buf, strByteOrder, tkimg_IsIntel()? strIntel: strMotorola);
     tkimg_Write2(handle, buf, strlen (buf));
     sprintf (buf, strScanOrder, th->scanOrder == TOP_DOWN?
                                 strTopDown: strBottomUp);
@@ -667,293 +454,6 @@ static void initHeader (RAWHEADER *th)
     th->byteOrder = INTEL;
     th->pixelType = TYPE_UBYTE;
     return;
-}
-
-static Boln readFloatFile (tkimg_MFile *handle, Float *buf, Int width, Int height,
-                           Int nchan, Boln swapBytes, Boln verbose, Boln findMinMax,
-                           Float minVals[], Float maxVals[], Float saturation)
-{
-    Int x, y, c;
-    Float *bufPtr = buf;
-    Float value;
-    char  *line;
-
-#if DEBUG_READ == 1
-    printf ("readFloatFile: Width=%d Height=%d nchan=%d swapBytes=%s findMinMax=%s\n",
-             width, height, nchan, swapBytes? "yes": "no", findMinMax? "yes": "no"); fflush (stdout);
-#endif
-    if (saturation <= 0.0) {
-        saturation = 1.0E30;
-    }
-    for (c=0; c<nchan; c++) {
-        minVals[c] = (Float) 1.0E30;
-        maxVals[c] = (Float)-1.0E30;
-    }
-    line = ckalloc (sizeof (Float) * nchan * width);
-
-    for (y=0; y<height; y++) {
-        if (!readFloatRow (handle, bufPtr, nchan * width, line, swapBytes))
-            return FALSE;
-        if (findMinMax) {
-            for (x=0; x<width; x++) {
-                for (c=0; c<nchan; c++) {
-                    value = MIN (*bufPtr, saturation);
-                    if (value > maxVals[c]) maxVals[c] = value;
-                    if (value < minVals[c]) minVals[c] = value;
-                    bufPtr++;
-                }
-            }
-        } else {
-            bufPtr += nchan * width;
-        }
-    }
-    if (verbose && findMinMax) {
-        printf ("\tMinimum pixel values :");
-        for (c=0; c<nchan; c++) {
-            printf (" %f", minVals[c]);
-        }
-        printf ("\n");
-        printf ("\tMaximum pixel values :");
-        for (c=0; c<nchan; c++) {
-            printf (" %f", maxVals[c]);
-        }
-        printf ("\n");
-        fflush (stdout);
-    }
-    ckfree (line);
-    return TRUE;
-}
-
-static Boln readUShortFile (tkimg_MFile *handle, UShort *buf, Int width, Int height,
-                            Int nchan, Boln swapBytes, Boln verbose, Boln findMinMax,
-                            Float minVals[], Float maxVals[])
-{
-    Int    x, y, c;
-    UShort *bufPtr = buf;
-    char   *line;
-
-#if DEBUG_READ == 1
-    printf ("readUShortFile: Width=%d Height=%d nchan=%d swapBytes=%s findMinMax=%s\n",
-             width, height, nchan, swapBytes? "yes": "no", findMinMax? "yes": "no"); fflush (stdout);
-#endif
-    for (c=0; c<nchan; c++) {
-        minVals[c] = (Float) 1.0E30;
-        maxVals[c] = (Float)-1.0E30;
-    }
-    line = ckalloc (sizeof (UShort) * nchan * width);
-
-    for (y=0; y<height; y++) {
-        if (!readUShortRow (handle, bufPtr, nchan * width, line, swapBytes))
-            return FALSE;
-        if (findMinMax) {
-            for (x=0; x<width; x++) {
-                for (c=0; c<nchan; c++) {
-                    if (*bufPtr > maxVals[c]) maxVals[c] = *bufPtr;
-                    if (*bufPtr < minVals[c]) minVals[c] = *bufPtr;
-                    bufPtr++;
-                }
-            }
-        } else {
-            bufPtr += nchan * width;
-        }
-    }
-    if (verbose && findMinMax) {
-        printf ("\tMinimum pixel values :");
-        for (c=0; c<nchan; c++) {
-            printf (" %d", (UShort)minVals[c]);
-        }
-        printf ("\n");
-        printf ("\tMaximum pixel values :");
-        for (c=0; c<nchan; c++) {
-            printf (" %d", (UShort)maxVals[c]);
-        }
-        printf ("\n");
-        fflush (stdout);
-    }
-    ckfree (line);
-    return TRUE;
-}
-
-static Boln readUByteFile (tkimg_MFile *handle, UByte *buf, Int width, Int height,
-                           Int nchan, Boln verbose, Boln findMinMax,
-                           Float minVals[], Float maxVals[])
-{
-    Int   x, y, c;
-    UByte *bufPtr = buf;
-
-#if DEBUG_READ == 1
-    printf ("readUByteFile: Width=%d Height=%d nchan=%d findMinMax=%s\n",
-             width, height, nchan, findMinMax? "yes": "no");
-        fflush (stdout);
-#endif
-    for (c=0; c<nchan; c++) {
-        minVals[c] = (Float) 1.0E30;
-        maxVals[c] = (Float)-1.0E30;
-    }
-    for (y=0; y<height; y++) {
-        if (!readUByteRow (handle, bufPtr, nchan * width))
-            return FALSE;
-        if (findMinMax) {
-            for (x=0; x<width; x++) {
-                for (c=0; c<nchan; c++) {
-                    if (*bufPtr > maxVals[c]) maxVals[c] = *bufPtr;
-                    if (*bufPtr < minVals[c]) minVals[c] = *bufPtr;
-                    bufPtr++;
-                }
-            }
-        } else {
-            bufPtr += nchan * width;
-        }
-    }
-    if (verbose && findMinMax) {
-        printf ("\tMinimum pixel values :");
-        for (c=0; c<nchan; c++) {
-            printf (" %d", (UByte)minVals[c]);
-        }
-        printf ("\n");
-        printf ("\tMaximum pixel values :");
-        for (c=0; c<nchan; c++) {
-            printf (" %d", (UByte)maxVals[c]);
-        }
-        printf ("\n");
-        fflush (stdout);
-    }
-    return TRUE;
-}
-
-static Int GetHistoIndex (Float val, Float minVal, Float maxVal )
-{
-    Float scaledVal;
-    Int histoInd;
-
-    scaledVal = HISTOGRAM_SCALE * (MAX (val - minVal, 0.0) / (maxVal - minVal));
-    histoInd = (int) CLAMP (scaledVal, 0.0, HISTOGRAM_SCALE);
-    return histoInd;
-}
-
-static Boln HistogramFloat (Float *buf, Int width, Int height, Int nchan,
-                            Float minVals[], Float maxVals[], Int histogram[],
-                            Boln printAgc)
-{
-    Int x, y, c;
-    Int histoInd;
-    Float *bufPtr = buf;
-
-    memset (histogram, 0, HISTOGRAM_SIZE * sizeof (Int));
-    /* Currently supported only for 1 channel images. */
-    c = 0;
-    for (y=0; y<height; y++) {
-        for (x=0; x<width; x++) {
-            histoInd = GetHistoIndex (*bufPtr, minVals[c], maxVals[c]);
-            histogram[histoInd]++;
-            bufPtr++;
-        }
-    }
-    if (printAgc) {
-        Int i;
-        Int count = 0;
-        printf("agc globalMin %f\n", minVals[0]);
-        printf("agc globalMax %f\n", maxVals[0]);
-        for(i=0; i<HISTOGRAM_SIZE; i++) {
-            printf ("agc histogram %3d %5d\n", i, histogram[i]);
-            if (histogram[i] != 0) count++;
-        }
-        printf( "agc histostat %d %d\n", count, HISTOGRAM_SIZE - count);
-    }
-    return TRUE;
-}
-
-static Boln remapFloatValues (Float *buf, Int width, Int height, Int nchan,
-                              Float minVals[], Float maxVals[],
-                              Float agcCutOffPercent, Boln printAgc)
-{
-    Int   x, y, c;
-    Float *bufPtr = buf;
-    Float m[MAXCHANS], t[MAXCHANS];
-    Float scaledVal;
-    Float minNewVals[MAXCHANS], maxNewVals[MAXCHANS];
-
-    for (c=0; c<nchan; c++) {
-        minNewVals[c] = minVals[c];
-        maxNewVals[c] = maxVals[c];
-    }
-
-    if (agcCutOffPercent > 0.0) {
-        Int i;
-        Int minLutInd = -1, maxLutInd = -1;
-        Int histogram[HISTOGRAM_SIZE];
-        Float lut[HISTOGRAM_SIZE];
-        Float agcCutOff = CLAMP(agcCutOffPercent * 0.01, 0.0, 1.0);
-        Float sum = 0.0;
-
-        /* Calculate histogram. */
-        HistogramFloat (buf, width, height, nchan, minVals, maxVals, histogram, printAgc);
-
-        /* Accumulate the histogram and divide by the image size. */
-        for (i=0; i<HISTOGRAM_SIZE; i++) {
-            sum = sum + histogram[i];
-            lut[i] = sum / (double)(width * height);
-            if( lut[i] >= agcCutOff && minLutInd < 0 ) {
-                minLutInd = i;
-            }
-            if (lut[i] >= (1.0 - agcCutOff) && maxLutInd < 0) {
-                maxLutInd = i;
-            }
-            if (printAgc) {
-                printf ("agc lut %3d %.3f\n", i, lut[i]);
-            }
-        }
-
-        for (c=0; c<nchan; c++) {
-            minNewVals[c] = minLutInd * (maxVals[c] - minVals[c]) / HISTOGRAM_SCALE + minVals[c];
-            maxNewVals[c] = maxLutInd * (maxVals[c] - minVals[c]) / HISTOGRAM_SCALE + minVals[c];
-            if (printAgc) {
-                printf ("agc cutOff %f\n", agcCutOff);
-                printf ("agc lutMinInd %d\n", minLutInd);
-                printf ("agc lutMaxInd %d\n", maxLutInd);
-                printf ("agc lutMin %f\n", minNewVals[c]);
-                printf ("agc lutMax %f\n", maxNewVals[c]);
-            }
-        }
-    }
-
-    for (c=0; c<nchan; c++) {
-        m[c] = (1.0 - 0.0) / (maxNewVals[c] - minNewVals[c]);
-        t[c] = 0.0 - m[c] * minNewVals[c];
-    }
-
-    for (y=0; y<height; y++) {
-        for (x=0; x<width; x++) {
-            for (c=0; c<nchan; c++) {
-                scaledVal = *bufPtr * m[c] + t[c];
-                *bufPtr = CLAMP (scaledVal, 0.0, 1.0);
-                bufPtr++;
-            }
-        }
-    }
-    return TRUE;
-}
-
-static Boln remapUShortValues (UShort *buf, Int width, Int height, Int nchan,
-                               Float minVals[], Float maxVals[])
-{
-    Int x, y, c;
-    UShort *bufPtr = buf;
-    Float m[MAXCHANS], t[MAXCHANS];
-
-    for (c=0; c<nchan; c++) {
-        m[c] = (65535.0 - 0.0) / (maxVals[c] - minVals[c]);
-        t[c] = 0.0 - m[c] * minVals[c];
-    }
-    for (y=0; y<height; y++) {
-        for (x=0; x<width; x++) {
-            for (c=0; c<nchan; c++) {
-                *bufPtr = *bufPtr * m[c] + t[c];
-                bufPtr++;
-            }
-        }
-    }
-    return TRUE;
 }
 
 /*
@@ -1000,14 +500,14 @@ static int ParseFormatOpts (interp, format, opts)
     opts->width      = 128;
     opts->height     = 128;
     opts->nchan      = 1;
-    opts->byteOrder  = isIntel()? INTEL: MOTOROLA;
+    opts->byteOrder  = tkimg_IsIntel()? INTEL: MOTOROLA;
     opts->scanOrder  = TOP_DOWN;
     opts->pixelType  = TYPE_UBYTE;
     opts->minVal     = -1.0;
     opts->maxVal     = -1.0;
     opts->gamma      = 1.0;
     opts->useHeader  = 1;
-    opts->mapMode    = MAP_MINMAX;
+    opts->mapMode    = IMG_MAP_MINMAX;
     opts->uuencode   = 1;
     opts->saturation = -1.0;
     opts->cutOff     = 3.0;
@@ -1142,12 +642,12 @@ static int ParseFormatOpts (interp, format, opts)
                     opts->useHeader = boolVal;
                     break;
                 case 11:
-                    if (!strncmp (optionStr, strNone, strlen (strNone))) {
-                        opts->mapMode = MAP_NONE;
-                    } else if (!strncmp (optionStr, strMinmax, strlen (strMinmax))) {
-                        opts->mapMode = MAP_MINMAX;
-                    } else if (!strncmp (optionStr, strAgc, strlen (strAgc))) {
-                        opts->mapMode = MAP_AGC;
+                    if (!strncmp (optionStr, IMG_MAP_NONE_STR, strlen (IMG_MAP_NONE_STR))) {
+                        opts->mapMode = IMG_MAP_NONE;
+                    } else if (!strncmp (optionStr, IMG_MAP_MINMAX_STR, strlen (IMG_MAP_MINMAX_STR))) {
+                        opts->mapMode = IMG_MAP_MINMAX;
+                    } else if (!strncmp (optionStr, IMG_MAP_AGC_STR, strlen (IMG_MAP_AGC_STR))) {
+                        opts->mapMode = IMG_MAP_AGC;
                     } else {
                         Tcl_AppendResult (interp, "Invalid mapping mode \"", optionStr,
                                           "\": should be none, minmax or agc",
@@ -1193,7 +693,7 @@ static int ParseFormatOpts (interp, format, opts)
                         return TCL_ERROR;
                     }
                     if (boolVal) {
-                        opts->mapMode = MAP_NONE;
+                        opts->mapMode = IMG_MAP_NONE;
                     }
                     break;
                 case 16:
@@ -1362,7 +862,7 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
     Tk_PhotoImageBlock block;
     Int x, y, c;
     Int fileWidth = 0, fileHeight = 0;
-    Float minVals[MAXCHANS], maxVals[MAXCHANS];
+    Float minVals[IMG_MAX_CHANNELS], maxVals[IMG_MAX_CHANNELS];
     int stopY, outY, outWidth, outHeight;
     RAWFILE tf;
     FMTOPT opts;
@@ -1376,7 +876,7 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
     Float  *floatBufPtr;
     UShort *ushortBufPtr;
     UByte  *ubyteBufPtr;
-    Float  gtable[GTABSIZE];
+    Float  gtable[IMG_GAMMA_TABLE_SIZE];
     int result = TCL_OK;
 
     memset (&tf, 0, sizeof (RAWFILE));
@@ -1412,45 +912,46 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
     byteOrder = opts.useHeader? tf.th.byteOrder: opts.byteOrder;
     scanOrder = opts.useHeader? tf.th.scanOrder: opts.scanOrder;
     pixelType = opts.useHeader? tf.th.pixelType: opts.pixelType;
-    swapBytes = (( isIntel () && (byteOrder != INTEL)) ||
-                 (!isIntel () && (byteOrder == INTEL)));
-    fastMode  = (opts.mapMode == MAP_NONE &&
+    swapBytes = (( tkimg_IsIntel () && (byteOrder != INTEL)) ||
+                 (!tkimg_IsIntel () && (byteOrder == INTEL)));
+    fastMode  = (opts.mapMode == IMG_MAP_NONE &&
                  pixelType == TYPE_UBYTE && scanOrder == TOP_DOWN &&
                  fileWidth == width && fileHeight == height);
 
     if (!fastMode) {
-        gtableFloat (opts.gamma, gtable);
+        tkimg_CreateGammaTable (opts.gamma, gtable);
     }
 
     switch (pixelType) {
         case TYPE_FLOAT: {
             tf.floatBuf = (Float *)ckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (Float));
-            readFloatFile (handle, tf.floatBuf, fileWidth, fileHeight, tf.th.nChans,
-                           swapBytes, opts.verbose, opts.mapMode != MAP_NONE, minVals, maxVals, opts.saturation);
+            tkimg_ReadFloatFile (handle, tf.floatBuf, fileWidth, fileHeight, tf.th.nChans,
+                                 swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE, 
+                                 minVals, maxVals, opts.saturation);
             break;
         }
         case TYPE_USHORT: {
             tf.ushortBuf = (UShort *)ckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (UShort));
-            readUShortFile (handle, tf.ushortBuf, fileWidth, fileHeight, tf.th.nChans,
-                            swapBytes, opts.verbose, opts.mapMode != MAP_NONE, minVals, maxVals);
+            tkimg_ReadUShortFile (handle, tf.ushortBuf, fileWidth, fileHeight, tf.th.nChans,
+                                  swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE, minVals, maxVals);
             break;
         }
         case TYPE_UBYTE: {
             tf.ubyteBuf = (UByte *)ckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (UByte));
-            readUByteFile (handle, tf.ubyteBuf, fileWidth, fileHeight, tf.th.nChans,
-                           opts.verbose, opts.mapMode != MAP_NONE, minVals, maxVals);
+            tkimg_ReadUByteFile (handle, tf.ubyteBuf, fileWidth, fileHeight, tf.th.nChans,
+                                 opts.verbose, opts.mapMode != IMG_MAP_NONE, minVals, maxVals);
             break;
         }
     }
     switch (opts.mapMode) {
-        case MAP_NONE: {
+        case IMG_MAP_NONE: {
             for (c=0; c<tf.th.nChans; c++) {
                 minVals[c] = 0.0;
                 maxVals[c] = 255.0;
             }
             break;
         }
-        case MAP_MINMAX: {
+        case IMG_MAP_MINMAX: {
             if (opts.minVal >= 0.0) {
                 for (c=0; c<tf.th.nChans; c++) {
                     minVals[c] = opts.minVal;
@@ -1463,22 +964,26 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
             }
             break;
         }
-        case MAP_AGC: {
-            /* Nothing to do. Saturation is considered on readFloatFile. */
+        case IMG_MAP_AGC: {
+            /* Nothing to do. Saturation is considered on tkimg_ReadFloatFile. */
             break;
         }
     }
 
     switch (pixelType) {
         case TYPE_FLOAT: {
-            remapFloatValues (tf.floatBuf, fileWidth, fileHeight, tf.th.nChans,
-                              minVals, maxVals, opts.mapMode == MAP_AGC? opts.cutOff: -1.0,
-                              opts.printAgc);
+            tkimg_RemapFloatValues (
+                tf.floatBuf, fileWidth, fileHeight, tf.th.nChans,
+                minVals, maxVals, opts.mapMode == IMG_MAP_AGC? opts.cutOff: -1.0,
+                opts.printAgc
+            );
             break;
         }
         case TYPE_USHORT: {
-            remapUShortValues (tf.ushortBuf, fileWidth, fileHeight, tf.th.nChans,
-                               minVals, maxVals);
+            tkimg_RemapUShortValues (
+                tf.ushortBuf, fileWidth, fileHeight, tf.th.nChans,
+                minVals, maxVals
+            );
             break;
         }
     }
@@ -1525,8 +1030,8 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
                     } else {
                         floatBufPtr = tf.floatBuf + y * fileWidth * tf.th.nChans;
                     }
-                    FloatGammaUByte (fileWidth * tf.th.nChans, floatBufPtr,
-                                     opts.gamma != 1.0? gtable: NULL, pixbufPtr);
+                    tkimg_FloatToUByte (fileWidth * tf.th.nChans, floatBufPtr,
+                                        opts.gamma != 1.0? gtable: NULL, pixbufPtr);
                     floatBufPtr += fileWidth * tf.th.nChans;
                     break;
                 }
@@ -1536,8 +1041,8 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
                     } else {
                         ushortBufPtr = tf.ushortBuf + y * fileWidth * tf.th.nChans;
                     }
-                    UShortGammaUByte (fileWidth * tf.th.nChans, ushortBufPtr,
-                                      opts.gamma != 1.0? gtable: NULL, pixbufPtr);
+                    tkimg_UShortToUByte (fileWidth * tf.th.nChans, ushortBufPtr,
+                                         opts.gamma != 1.0? gtable: NULL, pixbufPtr);
                     ushortBufPtr += fileWidth * tf.th.nChans;
                     break;
                 }

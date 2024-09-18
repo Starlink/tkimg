@@ -116,6 +116,83 @@ TKIMGAPI const char *	tkimg_GetStringFromObj2(Tcl_Obj *objPtr,
 /* 34 */
 TKIMGAPI unsigned char * tkimg_GetByteArrayFromObj2(Tcl_Obj *objPtr,
 				size_t *lengthPtr);
+/* Slot 35 is reserved */
+/* Slot 36 is reserved */
+/* Slot 37 is reserved */
+/* Slot 38 is reserved */
+/* Slot 39 is reserved */
+/* Slot 40 is reserved */
+/* Slot 41 is reserved */
+/* Slot 42 is reserved */
+/* Slot 43 is reserved */
+/* Slot 44 is reserved */
+/* Slot 45 is reserved */
+/* Slot 46 is reserved */
+/* Slot 47 is reserved */
+/* Slot 48 is reserved */
+/* Slot 49 is reserved */
+/* 50 */
+TKIMGAPI int		tkimg_IsIntel(void);
+/* 51 */
+TKIMGAPI void		tkimg_CreateGammaTable(float gammaVal,
+				float *gammaTable);
+/* 52 */
+TKIMGAPI float		tkimg_LookupGammaTable(float val,
+				const float *gammaTable);
+/* 53 */
+TKIMGAPI void		tkimg_UShortToUByte(int n,
+				const unsigned short *shortIn,
+				const float *gammaTable,
+				unsigned char *ubOut);
+/* 54 */
+TKIMGAPI void		tkimg_ShortToUByte(int n, const short *shortIn,
+				const float *gammaTable,
+				unsigned char *ubOut);
+/* 55 */
+TKIMGAPI void		tkimg_FloatToUByte(int n, const float *floatIn,
+				const float *gammaTable,
+				unsigned char *ubOut);
+/* 56 */
+TKIMGAPI int		tkimg_ReadUByteRow(tkimg_MFile *handle,
+				unsigned char *pixels, int nBytes);
+/* 57 */
+TKIMGAPI int		tkimg_ReadUShortRow(tkimg_MFile *handle,
+				unsigned short *pixels, int nShorts,
+				char *buf, int swapBytes);
+/* 58 */
+TKIMGAPI int		tkimg_ReadShortRow(tkimg_MFile *handle,
+				short *pixels, int nShorts, char *buf,
+				int swapBytes);
+/* 59 */
+TKIMGAPI int		tkimg_ReadFloatRow(tkimg_MFile *handle,
+				float *pixels, int nFloats, char *buf,
+				int swapBytes);
+/* 60 */
+TKIMGAPI int		tkimg_ReadUByteFile(tkimg_MFile *handle,
+				unsigned char *buf, int width, int height,
+				int nchan, int verbose, int findMinMax,
+				float *minVals, float *maxVals);
+/* 61 */
+TKIMGAPI int		tkimg_ReadUShortFile(tkimg_MFile *handle,
+				unsigned short *buf, int width, int height,
+				int nchan, int swapBytes, int verbose,
+				int findMinMax, float *minVals,
+				float *maxVals);
+/* 62 */
+TKIMGAPI int		tkimg_ReadFloatFile(tkimg_MFile *handle, float *buf,
+				int width, int height, int nchan,
+				int swapBytes, int verbose, int findMinMax,
+				float *minVals, float *maxVals,
+				float saturation);
+/* 63 */
+TKIMGAPI void		tkimg_RemapUShortValues(unsigned short *buf,
+				int width, int height, int nchan,
+				float *minVals, float *maxVals);
+/* 64 */
+TKIMGAPI void		tkimg_RemapFloatValues(float *buf, int width,
+				int height, int nchan, float *minVals,
+				float *maxVals, float agcCutOffPercent,
+				int printAgc);
 
 typedef struct TkimgStubs {
     int magic;
@@ -156,6 +233,36 @@ typedef struct TkimgStubs {
     int (*tkimg_ListObjGetElementsPtr) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *argc, Tcl_Obj ***argv); /* 32 */
     const char * (*tkimg_GetStringFromObj2Ptr) (Tcl_Obj *objPtr, size_t *lengthPtr); /* 33 */
     unsigned char * (*tkimg_GetByteArrayFromObj2Ptr) (Tcl_Obj *objPtr, size_t *lengthPtr); /* 34 */
+    void (*reserved35)(void);
+    void (*reserved36)(void);
+    void (*reserved37)(void);
+    void (*reserved38)(void);
+    void (*reserved39)(void);
+    void (*reserved40)(void);
+    void (*reserved41)(void);
+    void (*reserved42)(void);
+    void (*reserved43)(void);
+    void (*reserved44)(void);
+    void (*reserved45)(void);
+    void (*reserved46)(void);
+    void (*reserved47)(void);
+    void (*reserved48)(void);
+    void (*reserved49)(void);
+    int (*tkimg_IsIntelPtr) (void); /* 50 */
+    void (*tkimg_CreateGammaTablePtr) (float gammaVal, float *gammaTable); /* 51 */
+    float (*tkimg_LookupGammaTablePtr) (float val, const float *gammaTable); /* 52 */
+    void (*tkimg_UShortToUBytePtr) (int n, const unsigned short *shortIn, const float *gammaTable, unsigned char *ubOut); /* 53 */
+    void (*tkimg_ShortToUBytePtr) (int n, const short *shortIn, const float *gammaTable, unsigned char *ubOut); /* 54 */
+    void (*tkimg_FloatToUBytePtr) (int n, const float *floatIn, const float *gammaTable, unsigned char *ubOut); /* 55 */
+    int (*tkimg_ReadUByteRowPtr) (tkimg_MFile *handle, unsigned char *pixels, int nBytes); /* 56 */
+    int (*tkimg_ReadUShortRowPtr) (tkimg_MFile *handle, unsigned short *pixels, int nShorts, char *buf, int swapBytes); /* 57 */
+    int (*tkimg_ReadShortRowPtr) (tkimg_MFile *handle, short *pixels, int nShorts, char *buf, int swapBytes); /* 58 */
+    int (*tkimg_ReadFloatRowPtr) (tkimg_MFile *handle, float *pixels, int nFloats, char *buf, int swapBytes); /* 59 */
+    int (*tkimg_ReadUByteFilePtr) (tkimg_MFile *handle, unsigned char *buf, int width, int height, int nchan, int verbose, int findMinMax, float *minVals, float *maxVals); /* 60 */
+    int (*tkimg_ReadUShortFilePtr) (tkimg_MFile *handle, unsigned short *buf, int width, int height, int nchan, int swapBytes, int verbose, int findMinMax, float *minVals, float *maxVals); /* 61 */
+    int (*tkimg_ReadFloatFilePtr) (tkimg_MFile *handle, float *buf, int width, int height, int nchan, int swapBytes, int verbose, int findMinMax, float *minVals, float *maxVals, float saturation); /* 62 */
+    void (*tkimg_RemapUShortValuesPtr) (unsigned short *buf, int width, int height, int nchan, float *minVals, float *maxVals); /* 63 */
+    void (*tkimg_RemapFloatValuesPtr) (float *buf, int width, int height, int nchan, float *minVals, float *maxVals, float agcCutOffPercent, int printAgc); /* 64 */
 } TkimgStubs;
 
 #ifdef __cplusplus
@@ -225,6 +332,51 @@ TKIMGAPI const TkimgStubs *tkimgStubsPtr;
 	(tkimgStubsPtr->tkimg_GetStringFromObj2Ptr) /* 33 */
 #define tkimg_GetByteArrayFromObj2 \
 	(tkimgStubsPtr->tkimg_GetByteArrayFromObj2Ptr) /* 34 */
+/* Slot 35 is reserved */
+/* Slot 36 is reserved */
+/* Slot 37 is reserved */
+/* Slot 38 is reserved */
+/* Slot 39 is reserved */
+/* Slot 40 is reserved */
+/* Slot 41 is reserved */
+/* Slot 42 is reserved */
+/* Slot 43 is reserved */
+/* Slot 44 is reserved */
+/* Slot 45 is reserved */
+/* Slot 46 is reserved */
+/* Slot 47 is reserved */
+/* Slot 48 is reserved */
+/* Slot 49 is reserved */
+#define tkimg_IsIntel \
+	(tkimgStubsPtr->tkimg_IsIntelPtr) /* 50 */
+#define tkimg_CreateGammaTable \
+	(tkimgStubsPtr->tkimg_CreateGammaTablePtr) /* 51 */
+#define tkimg_LookupGammaTable \
+	(tkimgStubsPtr->tkimg_LookupGammaTablePtr) /* 52 */
+#define tkimg_UShortToUByte \
+	(tkimgStubsPtr->tkimg_UShortToUBytePtr) /* 53 */
+#define tkimg_ShortToUByte \
+	(tkimgStubsPtr->tkimg_ShortToUBytePtr) /* 54 */
+#define tkimg_FloatToUByte \
+	(tkimgStubsPtr->tkimg_FloatToUBytePtr) /* 55 */
+#define tkimg_ReadUByteRow \
+	(tkimgStubsPtr->tkimg_ReadUByteRowPtr) /* 56 */
+#define tkimg_ReadUShortRow \
+	(tkimgStubsPtr->tkimg_ReadUShortRowPtr) /* 57 */
+#define tkimg_ReadShortRow \
+	(tkimgStubsPtr->tkimg_ReadShortRowPtr) /* 58 */
+#define tkimg_ReadFloatRow \
+	(tkimgStubsPtr->tkimg_ReadFloatRowPtr) /* 59 */
+#define tkimg_ReadUByteFile \
+	(tkimgStubsPtr->tkimg_ReadUByteFilePtr) /* 60 */
+#define tkimg_ReadUShortFile \
+	(tkimgStubsPtr->tkimg_ReadUShortFilePtr) /* 61 */
+#define tkimg_ReadFloatFile \
+	(tkimgStubsPtr->tkimg_ReadFloatFilePtr) /* 62 */
+#define tkimg_RemapUShortValues \
+	(tkimgStubsPtr->tkimg_RemapUShortValuesPtr) /* 63 */
+#define tkimg_RemapFloatValues \
+	(tkimgStubsPtr->tkimg_RemapFloatValuesPtr) /* 64 */
 
 #endif /* defined(USE_TKIMG_STUBS) */
 

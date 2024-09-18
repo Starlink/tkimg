@@ -6,9 +6,9 @@
 # files.
 #
 
-# Declare each of the functions in the public BLT interface.  Note that
-# the an index should never be reused for a different function in order
-# to preserve backwards compatibility.
+# Declare each of the functions in the public tkimg interface.
+# Note that an index should never be reused for a different 
+# function in order to preserve backwards compatibility.
 
 library tkimg
 
@@ -86,6 +86,72 @@ declare 33 {
 }
 declare 34 {
     unsigned char *tkimg_GetByteArrayFromObj2(Tcl_Obj *objPtr, size_t *lengthPtr)
+}
+
+#########################################################################
+###  Specialized functions for handling images containing short or float values.
+
+declare 50 {
+    int tkimg_IsIntel (void)
+}
+declare 51 {
+    void tkimg_CreateGammaTable(float gammaVal, float *gammaTable)
+}
+declare 52 {
+    float tkimg_LookupGammaTable(float val, const float *gammaTable)
+}
+declare 53 {
+    void tkimg_UShortToUByte (int n, const unsigned short *shortIn,
+         const float *gammaTable, unsigned char *ubOut)
+}
+declare 54 {
+    void tkimg_ShortToUByte (int n, const short *shortIn,
+         const float *gammaTable, unsigned char *ubOut)
+}
+declare 55 {
+    void tkimg_FloatToUByte (int n, const float *floatIn,
+         const float *gammaTable, unsigned char *ubOut)
+}
+declare 56 {
+    int tkimg_ReadUByteRow (tkimg_MFile *handle, unsigned char *pixels, int nBytes)
+}
+declare 57 {
+    int tkimg_ReadUShortRow (tkimg_MFile *handle, unsigned short *pixels,
+        int nShorts, char *buf, int swapBytes)
+}
+declare 58 {
+    int tkimg_ReadShortRow (tkimg_MFile *handle, short *pixels,
+        int nShorts, char *buf, int swapBytes)
+}
+declare 59 {
+    int tkimg_ReadFloatRow (tkimg_MFile *handle, float *pixels,
+        int nFloats, char *buf, int swapBytes)
+}
+declare 60 {
+    int tkimg_ReadUByteFile (tkimg_MFile *handle, unsigned char *buf, 
+        int width, int height,
+        int nchan, int verbose, int findMinMax,
+        float *minVals, float *maxVals)
+}
+declare 61 {
+    int tkimg_ReadUShortFile (tkimg_MFile *handle, unsigned short *buf,
+        int width, int height,
+        int nchan, int swapBytes, int verbose, int findMinMax,
+        float *minVals, float *maxVals)
+}
+declare 62 {
+    int tkimg_ReadFloatFile (tkimg_MFile *handle, float *buf,
+        int width, int height,
+        int nchan, int swapBytes, int verbose, int findMinMax,
+        float *minVals, float *maxVals, float saturation)
+}
+declare 63 {
+    void tkimg_RemapUShortValues (unsigned short *buf, int width, int height,
+         int nchan, float *minVals, float *maxVals)
+}
+declare 64 {
+    void tkimg_RemapFloatValues (float *buf, int width, int height, int nchan,
+         float *minVals, float *maxVals, float agcCutOffPercent, int printAgc)
 }
 
 #########################################################################

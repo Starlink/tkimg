@@ -20,6 +20,7 @@ set fmtListStandard {
 
 set fmtListExtra {
     "dted"
+    "flir"
     "raw"
 }
 
