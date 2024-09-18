@@ -218,7 +218,7 @@ CommonRead(
 				 * in image being read. */
 ) {
     int fileWidth = 0, fileHeight = 0, numColors = 0, byteSize = 0;
-    int h, type;
+    int h, retVal;
     int nchan, matte = 1;
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
@@ -247,9 +247,9 @@ CommonRead(
 	isMono = 0;
     }
 
-    type = ReadXPMFileHeader(handle, &fileWidth, &fileHeight, &numColors, &byteSize);
-    if (type == 0) {
-	Tcl_AppendResult(interp, "couldn't read raw XPM header", NULL);
+    retVal = ReadXPMFileHeader(handle, &fileWidth, &fileHeight, &numColors, &byteSize);
+    if (retVal == 0) {
+	Tcl_AppendResult(interp, "couldn't read raw XPM header", (char *)NULL);
 	return TCL_ERROR;
     }
     if ((fileWidth <= 0) || (fileHeight <= 0)) {
@@ -275,7 +275,15 @@ CommonRead(
 	return TCL_ERROR;
     }
 
+    /* buffer must be large enough to hold either the color definitions
+     * as well as the row data. For images with little number of columns,
+     * the calculation done below does not give enough space for the
+     * color descriptions, ex. "  s None c None",
+     */
     maxBuffer = byteSize * fileWidth + 2;
+    if ( maxBuffer < 30 ) {
+	maxBuffer = 30;
+    }
     buffer = (char*)attemptckalloc(maxBuffer);
     if (buffer == NULL) {
         Tcl_AppendResult (interp, "Unable to allocate memory for row data.", (char *) NULL);
@@ -964,7 +972,7 @@ CommonWrite(
     col.value = 0;
     for (y = 0; y < blockPtr->height; y++) {
 	pp = blockPtr->pixelPtr + y * blockPtr->pitch + blockPtr->offset[0];
-	for (x = blockPtr->width; x >0; x--) {
+	for (x = blockPtr->width-1; x >=0; x--) {
 	    if (!alphaOffset || pp[alphaOffset]) {
 		col.component[0] = pp[0];
 		col.component[1] = pp[greenOffset];

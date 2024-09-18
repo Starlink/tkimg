@@ -36,8 +36,7 @@
  */
 
 int
-Jpegtcl_Init (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
+Jpegtcl_Init (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
   extern const JpegtclStubs jpegtclStubs;
 
@@ -71,8 +70,7 @@ Jpegtcl_Init (interp)
  */
 
 int
-Jpegtcl_SafeInit (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
+Jpegtcl_SafeInit (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
     return Jpegtcl_Init(interp);
 }

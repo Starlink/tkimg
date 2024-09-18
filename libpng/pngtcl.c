@@ -37,8 +37,7 @@
  */
 
 int
-Pngtcl_Init (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
+Pngtcl_Init (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
   extern const PngtclStubs pngtclStubs;
 
@@ -75,8 +74,7 @@ Pngtcl_Init (interp)
  */
 
 int
-Pngtcl_SafeInit (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
+Pngtcl_SafeInit (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
     return Pngtcl_Init(interp);
 }

@@ -722,11 +722,11 @@ static int CommonRead(
     return retCode;
 }
 
-static int ChnWrite (interp, filename, format, blockPtr)
-    Tcl_Interp *interp;
-    const char *filename;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
+static int ChnWrite (
+    Tcl_Interp *interp,
+    const char *filename,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Channel chan;
     tkimg_MFile handle;

@@ -8,6 +8,7 @@ set fmtListStandard {
     "ico"
     "jpeg"
     "pcx"
+    "pixmap"
     "png"
     "ppm"
     "sgi"

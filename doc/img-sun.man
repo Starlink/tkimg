@@ -4,6 +4,8 @@
 
 [include format-header.inc]
 
+[include format-package.inc]
+
 This handler provides new additional configuration options. See
 section [sectref {SUN OPTIONS}] for more detailed explanations.
 
@@ -46,24 +48,24 @@ The handler provides the following options:
 
 [list_begin definitions]
 
-[lst_item "[option -verbose] [arg bool]"]
+[def "[option -verbose] [arg bool]"]
 
 This option is supported for reading and writing.
-[nl]
+[para]
 If set to [const true], additional information about the loaded/stored image
 is printed to stdout. Default is [const false].
 
-[lst_item "[option -compression] [arg type]"]
+[def "[option -compression] [arg string]"]
 
 This option is supported for writing only.
-[nl]
+[para]
 Set the compression mode to either [const none] or [const rle].
 Default is [const rle].
 
-[lst_item "[option -matte] [arg bool]"]
+[def "[option -matte] [arg bool]"]
 
 This option is supported for reading and writing.
-[nl]
+[para]
 If set to [const false], a matte (alpha) channel is ignored
 during reading or writing. Default is [const true].
 

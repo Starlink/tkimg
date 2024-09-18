@@ -42,10 +42,10 @@ const JpegtclStubs *jpegtclStubsPtr;
 #endif
 
 MODULE_SCOPE const char *
-Jpegtcl_InitStubs(interp, version, exact)
-    Tcl_Interp *interp;
-    const char *version;
-    int exact;
+Jpegtcl_InitStubs(
+    Tcl_Interp *interp,
+    const char *version,
+    int exact)
 {
     const char *result;
     ClientData data;

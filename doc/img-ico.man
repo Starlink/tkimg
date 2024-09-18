@@ -4,6 +4,8 @@
 
 [include format-header.inc]
 
+[include format-package.inc]
+
 This handler provides new additional configuration options. See
 section [sectref {ICO OPTIONS}] for more detailed explanations.
 
@@ -42,17 +44,17 @@ The handler provides the following options:
 
 [list_begin definitions]
 
-[lst_item "[option -verbose] [arg bool]"]
+[def "[option -verbose] [arg bool]"]
 
 This option is supported for reading and writing.
-[nl]
+[para]
 If set to [const true], additional information about the loaded/stored image
 is printed to stdout. Default is [const false].
 
-[lst_item "[option -index] [arg n]"]
+[def "[option -index] [arg n]"]
 
 This option is supported for reading only.
-[nl]
+[para]
 Read the [arg n]'th image. The first image is at index [const 0].
 Default is [const 0].
 

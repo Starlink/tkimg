@@ -38,10 +38,10 @@ const TifftclStubs *tifftclStubsPtr;
  */
 
 MODULE_SCOPE const char *
-Tifftcl_InitStubs(interp, version, exact)
-    Tcl_Interp *interp;
-    const char *version;
-    int exact;
+Tifftcl_InitStubs(
+    Tcl_Interp *interp,
+    const char *version,
+    int exact)
 {
     const char *result;
     ClientData data;

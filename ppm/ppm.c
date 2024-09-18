@@ -664,7 +664,7 @@ static int CommonRead(
     type = ReadPPMFileHeader (handle, &fileWidth, &fileHeight, &maxIntensity, &isAscii);
     if (type == 0) {
         Tcl_AppendResult(interp, "couldn't read PPM header from file \"",
-                          filename, "\"", NULL);
+                          filename, "\"", (char *)NULL);
         return TCL_ERROR;
     }
 

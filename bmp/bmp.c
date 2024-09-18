@@ -97,7 +97,7 @@ ObjMatch(
 ) {
     tkimg_MFile handle;
 
-    if (!tkimg_ReadInit(data, 'B', &handle)) {
+    if (! tkimg_ReadInit(data, 'B', &handle)) {
         return 0;
     }
     return CommonMatch(&handle, widthPtr, heightPtr,
@@ -136,7 +136,9 @@ ObjRead(
 ) {
     tkimg_MFile handle;
 
-    tkimg_ReadInit(data,'B',&handle);
+    if (! tkimg_ReadInit(data, 'B', &handle)) {
+        return TCL_ERROR;
+    }
     return CommonRead(interp, &handle, imageHandle, destX, destY,
             width, height, srcX, srcY);
 }
@@ -192,7 +194,7 @@ static int StringWrite(
 static unsigned int
 getUInt32(unsigned char *buf)
 {
-    return (buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24);
+    return (buf[0] | buf[1] << 8 | buf[2] << 16 | (unsigned int)buf[3] << 24);
 }
 
 static unsigned int
@@ -250,11 +252,11 @@ CommonMatch(
         return 0;
     }
 
-    offBits = (buf[11]<<24) + (buf[10]<<16) + (buf[9]<<8) + buf[8];
+    offBits = ((unsigned int)buf[11]<<24) + (buf[10]<<16) + (buf[9]<<8) + buf[8];
     c = buf[12];
     if ((c == 40) || (c == 64)) {
-        *widthPtr = (buf[19]<<24) + (buf[18]<<16) + (buf[17]<<8) + buf[16];
-        *heightPtr = (buf[23]<<24) + (buf[22]<<16) + (buf[21]<<8) + buf[20];
+        *widthPtr = ((unsigned int)buf[19]<<24) + (buf[18]<<16) + (buf[17]<<8) + buf[16];
+        *heightPtr = ((unsigned int)buf[23]<<24) + (buf[22]<<16) + (buf[21]<<8) + buf[20];
         if (tkimg_Read2(handle, (char *) buf, 24) != 24) {
             return 0;
         }
@@ -345,7 +347,7 @@ CommonRead(
     int srcX, int srcY
 ) {
     Tk_PhotoImageBlock block;
-    int numBits, bytesPerLine, numCols, comp, x, y;
+    int numBits, bytesPerLine, numCols = 0, comp, x, y;
     int fileWidth, fileHeight;
     unsigned char *colorMap = NULL;
     unsigned int intMask[3];
@@ -485,7 +487,11 @@ CommonRead(
                         goto error;
                     }
                     for (x = srcX; x < (srcX+width); x++) {
-                        memcpy(expline, colorMap+(3*line[x]),3);
+                        if (line[x] > numCols) {
+                            Tcl_AppendResult(interp, "Color index exceeds color map size", (char *) NULL);
+                            goto error;
+                        }
+                        memcpy(expline, colorMap + 3*line[x], 3);
                         expline += 3;
                     }
                     if (tkimg_PhotoPutBlock(interp, imageHandle, &block,
@@ -513,7 +519,11 @@ CommonRead(
                         } else {
                             c = line[x/2] >> 4;
                         }
-                        memcpy(expline, colorMap+(3*c),3);
+                        if (c > numCols) {
+                            Tcl_AppendResult(interp, "Color index exceeds color map size", (char *) NULL);
+                            goto error;
+                        }
+                        memcpy(expline, colorMap + 3*c, 3);
                         expline += 3;
                     }
                     if (tkimg_PhotoPutBlock(interp, imageHandle, &block,
@@ -537,7 +547,11 @@ CommonRead(
                     }
                     for (x = srcX; x < (srcX+width); x++) {
                         c = (line[x/8] >> (7-(x%8))) & 1;
-                        memcpy(expline, colorMap+(3*c),3);
+                        if (c > numCols) {
+                            Tcl_AppendResult(interp, "Color index exceeds color map size", (char *) NULL);
+                            goto error;
+                        }
+                        memcpy(expline, colorMap + 3*c, 3);
                         expline += 3;
                     }
                     if (tkimg_PhotoPutBlock(interp, imageHandle, &block,
@@ -588,6 +602,10 @@ CommonRead(
                 switch (numBits) {
                     case 8: {
                         for (i=0; i<howMuch; i++, x++) {
+                            if (rleBuf[1] > numCols) {
+                                Tcl_AppendResult(interp, "Color index exceeds color map size", (char *) NULL);
+                                goto error;
+                            }
                             memcpy (expline, colorMap + 3*rleBuf[1], 3);
                             if (x>=srcX+width-1) {
                                 break;
@@ -602,6 +620,10 @@ CommonRead(
                                 c = rleBuf[1] & 0x0f;
                             } else {
                                 c = rleBuf[1] >> 4;
+                            }
+                            if (c > numCols) {
+                                Tcl_AppendResult(interp, "Color index exceeds color map size", (char *) NULL);
+                                goto error;
                             }
                             memcpy(expline, colorMap + 3*c, 3);
                             if (x>=srcX+width-1) {
@@ -626,6 +648,10 @@ CommonRead(
                                     Tcl_AppendResult(interp, "Unexpected EOF", (char *)NULL);
                                     goto error;
                                 }
+                                if (val > numCols) {
+                                    Tcl_AppendResult(interp, "Color index exceeds color map size", (char *) NULL);
+                                    goto error;
+                                }
                                 memcpy(expline, colorMap + 3*val, 3);
                                 if (x>=srcX+width-1) {
                                     break;
@@ -645,6 +671,10 @@ CommonRead(
                                         c = val & 0x0f;
                                     } else {
                                         c = val >> 4;
+                                    }
+                                    if (c > numCols) {
+                                        Tcl_AppendResult(interp, "Color index exceeds color map size", (char *) NULL);
+                                        goto error;
                                     }
                                     memcpy(expline, colorMap + 3*c, 3);
                                     if (x>=srcX+width-1) {

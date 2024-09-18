@@ -67,86 +67,86 @@ The handler provides the following options:
 
 [list_begin definitions]
 
-[lst_item "[option -verbose] [arg bool]"]
+[def "[option -verbose] [arg bool]"]
 
 This option is supported for reading and writing.
-[nl]
+[para]
 If set to [const true], additional information about the loaded/stored image
 is printed to stdout. Default is [const false].
 
-[lst_item "[option -useheader] [arg bool]"]
+[def "[option -useheader] [arg bool]"]
 
 This option is supported for reading and writing.
-[nl]
+[para]
 If set to [const true], use the file header information for reading and writing.
 Default is [const true].
 
-[lst_item "[option -nchan] [arg int]"]
+[def "[option -nchan] [arg int]"]
 
 This option is supported for reading and writing image data without header.
-[nl]
+[para]
 Specify the number of channels of the input image.
 Default is [const 1].
 
-[lst_item "[option -width] [arg int]"]
+[def "[option -width] [arg int]"]
 
 This option is supported for reading image data without header only.
-[nl]
+[para]
 Specify the width of the input image.
 Default is [const 128].
 
-[lst_item "[option -height] [arg int]"]
+[def "[option -height] [arg int]"]
 
 This option is supported for reading image data without header only.
-[nl]
+[para]
 Specify the height of the input image.
 Default is [const 128].
 
-[lst_item "[option -byteorder] [arg string]"]
+[def "[option -byteorder] [arg string]"]
 
 This option is supported for reading image data without header only.
-[nl]
+[para]
 Specify the byteorder of the input image data.
 Possible values: [const Intel] or [const Motorola].
 Default is assuming the same byteorder as that of the host computer.
 
-[lst_item "[option -uuencode] [arg bool]"]
+[def "[option -uuencode] [arg bool]"]
 This option is supported for reading image data without header only.
-[nl]
+[para]
 If set to [const false], do not assume, that the image data stored in a
 Tcl variable is uuencoded. Default is [const true], i.e. the image data in
 a Tcl variable is assumed to be uuencoded.
 
-[lst_item "[option -scanorder] [arg string]"]
+[def "[option -scanorder] [arg string]"]
 
 This option is supported for reading and writing image data without header.
-[nl]
+[para]
 Specify the scanline order of the input image.
 Possible values: [const TopDown] or [const BottomUp].
 Default is assuming the same byteorder as that of the host computer.
 
-[lst_item "[option -pixeltype] [arg string]"]
+[def "[option -pixeltype] [arg string]"]
 
 This option is supported for reading image data without header only.
-[nl]
+[para]
 Specify the type of the pixel values.
 Possible values: [const double] or [const float] or [const int] or [const short] or [const byte].
 Default is [const byte].
-[nl]
+[para]
 RAW files are always written in [const byte] pixel format.
 
-[lst_item "[option -gamma] [arg float]"]
+[def "[option -gamma] [arg float]"]
 
 This option is supported for reading only.
-[nl]
+[para]
 Specify a gamma correction to be applied when mapping
 the input data to 8-bit image values.
 Default is [const 1.0].
 
-[lst_item "[option -nomap] [arg bool]"]
+[def "[option -nomap] [arg bool]"]
 
 This option is supported for reading only.
-[nl]
+[para]
 If set to [const true], no mapping of input values is done.
 Use this option, if your image already contains RGB
 values in the range of [const 0] .. [const 255].
@@ -157,18 +157,18 @@ On the other hand reading the image is faster.
 
 Default is [const false].
 
-[lst_item "[option -min] [arg float]"]
+[def "[option -min] [arg float]"]
 
 This option is supported for reading only.
-[nl]
+[para]
 Specify the minimum pixel value to be used for mapping
 the input data to 8-bit image values.
 Default is the minimum value found in the image data.
 
-[lst_item "[option -max] [arg float]"]
+[def "[option -max] [arg float]"]
 
 This option is supported for reading only.
-[nl]
+[para]
 Specify the maximum pixel value to be used for mapping
 the input data to 8-bit image values.
 Default is the maximum value found in the image data.

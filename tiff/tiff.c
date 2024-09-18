@@ -141,9 +141,9 @@ getint(
             result = (buf[order]<<8) + buf[1-order]; break;
         case TIFF_LONG:
             if (order) {
-                result = (buf[3]<<24) + (buf[2]<<16) + (buf[1]<<8) + buf[0];
+                result = ((unsigned int)buf[3]<<24) + (buf[2]<<16) + (buf[1]<<8) + buf[0];
             } else {
-                result = (buf[0]<<24) + (buf[1]<<16) + (buf[2]<<8) + buf[3];
+                result = ((unsigned int)buf[0]<<24) + (buf[1]<<16) + (buf[2]<<8) + buf[3];
             }; break;
         default:
             result = -1;
@@ -165,7 +165,7 @@ _TIFFerr(
         cp += strlen(module) + 2;
     }
 
-    vsprintf(cp, fmt, ap);
+    tkimg_vsnprintf(cp, 2048 - (cp - buf), fmt, ap);
     if (errorMessage) {
         ckfree(errorMessage);
         errorMessage = NULL;
@@ -261,7 +261,12 @@ readString(
     tkimg_MFile *handle = (tkimg_MFile *) fd;
 
     if (((size_t)size + handle->state) > handle->length) {
-        size = handle->length - handle->state;
+        /* Avoid unsigned underflow. */
+        if (handle->state > handle->length) {
+            size = 0;
+        } else {
+            size = handle->length - handle->state;
+        }
     }
     if (size) {
         memcpy((char *) data, handle->data + handle->state, (size_t) size);
@@ -520,9 +525,11 @@ ObjRead(
         unlink(tempFileName);
     }
     if (result == TCL_ERROR) {
-        Tcl_AppendResult(interp, errorMessage, (char *) NULL);
-        ckfree(errorMessage);
-        errorMessage = NULL;
+        if (strlen (Tcl_GetStringResult(interp)) == 0 && errorMessage) {
+            Tcl_AppendResult(interp, errorMessage, (char *) NULL);
+            ckfree(errorMessage);
+            errorMessage = NULL;
+        }
     }
     if (dataPtr) {
         ckfree(dataPtr);
@@ -544,10 +551,10 @@ ChnRead(
     TIFF *tif;
     char *dir, *tempFileName = NULL, tempFileNameBuffer[1024];
     int count, result;
+    tkimg_MFile handle;
     char buffer[4096];
 
     if (TIFFClientOpen) {
-        tkimg_MFile handle;
         handle.data = (char *) chan;
         handle.state = IMG_CHAN;
         tif = TIFFClientOpen(fileName, "r", (thandle_t) &handle,
@@ -617,9 +624,11 @@ ChnRead(
         unlink(tempFileName);
     }
     if (result == TCL_ERROR) {
-        Tcl_AppendResult(interp, errorMessage, (char *) NULL);
-        ckfree(errorMessage);
-        errorMessage = NULL;
+        if (strlen (Tcl_GetStringResult(interp)) == 0 && errorMessage) {
+            Tcl_AppendResult(interp, errorMessage, (char *) NULL);
+            ckfree(errorMessage);
+            errorMessage = NULL;
+        }
     }
     return result;
 }
@@ -678,11 +687,15 @@ CommonRead(
 
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH,  &w);
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
-    npixels = w * h;
+    npixels = (size_t)w * (size_t)h;
 
+    if (npixels * sizeof (uint32_t) >= UINT_MAX) {
+        Tcl_AppendResult(interp, "Image size too large", (char *) NULL);
+        return TCL_ERROR;
+    }
     raster = (uint32_t*) TkimgTIFFmalloc(npixels * sizeof (uint32_t));
     if (raster == NULL) {
-        Tcl_AppendResult(interp,"Cannot allocate raster memory", (char *) NULL);
+        Tcl_AppendResult(interp, "Cannot allocate raster memory", (char *) NULL);
         return TCL_ERROR;
     }
     block.width = w;

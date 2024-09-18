@@ -273,7 +273,7 @@ CommonRead(
     }
 
     if (!ReadGIFHeader(gifConfPtr, &fileWidth, &fileHeight)) {
-        Tcl_AppendResult(interp, "Could not read GIF header from file \"", fileName, "\"", NULL);
+        Tcl_AppendResult(interp, "Could not read GIF header from file \"", fileName, "\"", (char *)NULL);
         return TCL_ERROR;
     }
     if ((fileWidth <= 0) || (fileHeight <= 0)) {

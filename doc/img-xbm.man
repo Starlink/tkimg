@@ -4,7 +4,34 @@
 
 [include format-header.inc]
 
-This handler does not provide additional configuration options.
+[include format-package.inc]
+
+This handler provides new additional configuration options. See
+section [sectref {XBM OPTIONS}] for more detailed explanations.
 
 [include format-middle.inc]
+
+In addition the value for the option is treated as list and may
+contain any of the special options listed in section
+
+[sectref {XBM OPTIONS}].
+
+[list_end]
+
+[section {XBM OPTIONS}]
+
+The handler provides the following options:
+
+[list_begin definitions]
+
+[def "[option -foreground] [arg string]"]
+
+Set the foreground color of the bitmap. Default value is black.
+The color string may be given in a format as accepted by [cmd Tk_GetColor].
+
+[def "[option -background] [arg string]"]
+
+Set the background color of the bitmap. Default value is transparent.
+The color string may be given in a format as accepted by [cmd Tk_GetColor].
+
 [include format-footer.inc]

@@ -57,8 +57,7 @@ extern DLLEXPORT int Tifftcl_SafeInit(Tcl_Interp *interp);
  */
 
 int
-Tifftcl_Init (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
+Tifftcl_Init (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
   extern const TifftclStubs tifftclStubs;
 
@@ -90,8 +89,7 @@ Tifftcl_Init (interp)
  */
 
 int
-Tifftcl_SafeInit (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
+Tifftcl_SafeInit (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
     return Tifftcl_Init(interp);
 }

@@ -54,26 +54,24 @@ This format handler must be loaded explicitly with
 
 [section {PostScript OPTIONS}]
 
-The handler provides two options, both influencing the reading of
-PostScript or PDF images. The handler is [emph not] able to write
-images in PostScript or PDF.
-
+The handler is [emph not] able to write images in PostScript or PDF.
+The handler provides the following options:
 
 [list_begin definitions]
 
-[lst_item "[option -index] [arg n]"]
+[def "[option -index] [arg n]"]
 
 This option is for reading from PostScript/PDF data containing more
 than one page. When specified it will read the [arg n]'th page in the
 data. The first page is at index [const 0] and will be read by
 default, i.e. when the option is not specified.
 
-[nl]
+[para]
 
 [emph Note:] This option is not yet implemented.
 
 
-[lst_item "[option -zoom] [arg X] [arg Y]"]
+[def "[option -zoom] [arg X] [arg Y]"]
 
 Multiply image size by the given scale factors. If [arg Y] is missing,
 the default is the same as [arg X]. [arg X] and [arg Y] are allowed to
@@ -95,6 +93,6 @@ of PostScript (and PDF).
 
 If [syscmd gs] is not installed this format handler cannot be used.
 
-[see_also img-intro img-bmp img-gif img-ico img-jpeg img-pcx img-pixmap img-png img-ppm img-ps img-sgi img-sun img-tga img-tiff img-window img-xbm img-xpm]
+[see_also img-intro img-bmp img-dted img-flir img-gif img-ico img-jpeg img-pcx img-pixmap img-png img-ppm img-ps img-raw img-sgi img-sun img-tga img-tiff img-window img-xbm img-xpm]
 [keywords {image handling} tk [vset FORMATNAME] pdf postscript gs ghostscript]
 [manpage_end]

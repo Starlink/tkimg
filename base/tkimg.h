@@ -21,13 +21,16 @@
 #ifdef _MSC_VER
 #pragma warning(disable:4244) /* '=' : conversion from '__int64' to 'int', possible loss of data */
 #pragma warning(disable:4761) /* integral size mismatch in argument; conversion supplied */
-#if _MSC_VER <= 1800 /* VS 2013 and older do not have snprintf */
-#define tkimg_snprintf _snprintf
+#if _MSC_VER <= 1800 /* VS 2013 and older do not have snprintf/vsnprintf */
+#define tkimg_snprintf  _snprintf
+#define tkimg_vsnprintf _vsnprintf
 #else
-#define tkimg_snprintf snprintf
+#define tkimg_snprintf  snprintf
+#define tkimg_vsnprintf vsnprintf
 #endif
 #else
-#define tkimg_snprintf snprintf
+#define tkimg_snprintf  snprintf
+#define tkimg_vsnprintf vsnprintf
 #endif
 
 #if defined(__MINGW32__)

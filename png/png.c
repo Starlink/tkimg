@@ -309,6 +309,7 @@ CommonMatchPNG(
     int *widthPtr, int *heightPtr
 ) {
     unsigned char buf[8];
+    int width, height;
 
     if ((tkimg_Read2(handle, (char *) buf, 8) != 8)
             || (strncmp("\211\120\116\107\15\12\32\12", (char *) buf, 8) != 0)
@@ -317,8 +318,15 @@ CommonMatchPNG(
             || (tkimg_Read2(handle, (char *) buf, 8) != 8)) {
         return 0;
     }
-    *widthPtr = (buf[0]<<24) + (buf[1]<<16) + (buf[2]<<8) + buf[3];
-    *heightPtr = (buf[4]<<24) + (buf[5]<<16) + (buf[6]<<8) + buf[7];
+    width  = ((unsigned int)buf[0]<<24) + (buf[1]<<16) + (buf[2]<<8) + buf[3];
+    height = ((unsigned int)buf[4]<<24) + (buf[5]<<16) + (buf[6]<<8) + buf[7];
+
+    if (width <= 0 || height <= 0 ) {
+        return 0;
+    }
+
+    *widthPtr  = width;
+    *heightPtr = height;
     return 1;
 }
 

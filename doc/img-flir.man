@@ -1,11 +1,11 @@
 [comment {-*- tcl -*- doctools}]
-[vset FORMATNAME dted]
-[vset FORMATFULLNAME {Digital Terrain Elevation Data Format}]
+[vset FORMATNAME flir]
+[vset FORMATFULLNAME {FLIR FPF Public Image Format}]
 
 [include format-header.inc]
 
 This handler provides new additional configuration options. See
-section [sectref {DTED OPTIONS}] for more detailed explanations.
+section [sectref {FLIR OPTIONS}] for more detailed explanations.
 
 
 [include format-middle.inc]
@@ -13,7 +13,7 @@ section [sectref {DTED OPTIONS}] for more detailed explanations.
 In addition the value for the option is treated as list and may
 contain any of the special options listed in section
 
-[sectref {DTED OPTIONS}].
+[sectref {FLIR OPTIONS}].
 
 [list_end]
 
@@ -24,22 +24,25 @@ This format handler must be loaded explicitly with
 [cmd "package require img::[vset FORMATNAME]"].
 
 
-[section {SUPPORTED DTED TYPES}]
+[section {SUPPORTED FLIR TYPES}]
 
 [example_begin]
- Interpret DTED terrain elevation data as a grayscale image.
+ Interpret FLIR image files as a grayscale image.
 
  List of currently supported features:
 
  Type   |     Read      |     Write     |
         | -file | -data | -file | -data |
  ----------------------------------------
- Gray   | Yes   | Yes   | No    | No   |
+ Short  | Yes   | Yes   | No    | No   |
+ Int    | Yes   | Yes   | No    | No   |
+ Float  | Yes   | Yes   | No    | No   |
+ Double | Yes   | Yes   | No    | No   |
 
 [example_end]
 
 
-[section {DTED OPTIONS}]
+[section {FLIR OPTIONS}]
 
 The handler provides the following options:
 
@@ -50,37 +53,42 @@ The handler provides the following options:
 If set to [const true], additional information about the loaded image
 is printed to stdout. Default is [const false].
 
-[def "[option -nchan] [arg int]"]
+[def "[option -map] [arg string]"]
 
-Specify the number of channels of the generated image.
-Default is [const 1], i.e. generate a grayscale image.
+Specify the mode when mapping the 64, 32 or 16-bit values
+of the image to 8-bit gray scale values for displaying.
+Possible values: [const none], [const minmax], [const agc].
+Default mode is [const minmax].
 
 [def "[option -gamma] [arg float]"]
 
 Specify a gamma correction to be applied when mapping
 the input data to 8-bit image values.
+Valid for mapping modes: [const minmax] and [const agc].
 Default is [const 1.0].
 
-[def "[option -nomap] [arg bool]"]
-
-If set to [const true], no mapping of input values is done.
-Use this option, if your elevation file contains
-values in the range of [const 0] .. [const 255] only.
-Default is [const false].
-
-[def "[option -min] [arg short]"]
+[def "[option -min] [arg float]"]
 
 Specify the minimum pixel value to be used for mapping
 the input data to 8-bit image values.
-Default is the minimum value found in the elevation data.
+Default is the minimum value found in the image data.
 
-[def "[option -max] [arg short]"]
+[def "[option -max] [arg float]"]
 
-This option is supported for reading only.
-[para]
 Specify the maximum pixel value to be used for mapping
 the input data to 8-bit image values.
-Default is the maximum value found in the elevation data.
+Default is the maximum value found in the image data.
+
+[def "[option -saturation] [arg float]"]
+
+The supplied value specifies the saturation value, i.e. all
+pixel values greater than the saturation are mapped to white.
+Valid for mapping mode: [const agc]
+
+[def "[option -cutoff] [arg float]"]
+
+The supplied value specifies the cut-off value in percent.
+Valid for mapping mode: [const agc]
 
 [list_end]
 

@@ -1,4 +1,4 @@
-# This file is a Tcl script to test out XPM reading and writing.
+# This file is a Tcl script to test XPM reading and writing.
 # It is organized in the standard fashion for Tcl tests.
 
 package require Tk
@@ -18,7 +18,7 @@ namespace eval ::xpm::test {
     set ext  "xpm"
     set file "testimgs/img.$ext"
 
-    # Encoded image content.
+    # Encoded image content. Defines variable imgdata.
     source $file.base64
 
     test xpm-1.1 {} -setup {
@@ -59,6 +59,16 @@ namespace eval ::xpm::test {
         image delete i
     } -result $imgdata
 
+    test xpm-1.5 {} -setup {
+        catch {image delete i}
+    } -body {
+        image create photo i -file $file
+        image create photo j -data $imgdata
+        set cmp [::imgtest::imageCompare i j]
+    } -cleanup {
+        image delete i
+        image delete j
+    } -result 1
 
     test xpm-2.0 {Binary I/O with XPM images} -setup {
         catch {image delete i}

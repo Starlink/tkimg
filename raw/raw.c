@@ -325,7 +325,7 @@ static Boln readHeaderLine (Tcl_Interp *interp, tkimg_MFile *handle, char *buf)
         bufPtr++;
     }
     if (failure) {
-        Tcl_AppendResult (interp, "RAW handler: Error reading header line\n", NULL);
+        Tcl_AppendResult (interp, "RAW handler: Error reading header line\n", (char *)NULL);
         return FALSE;
     }
     return TRUE;
@@ -338,51 +338,51 @@ static Boln readHeader (Tcl_Interp *interp, tkimg_MFile *handle, RAWHEADER *th)
 
     if (!readHeaderLine (interp, handle, buf) ||
         (1 != sscanf (buf, strMagic, th->id))) {
-        Tcl_AppendResult (interp, "Unable to parse header field Magic\n", NULL);
+        Tcl_AppendResult (interp, "Unable to parse header field Magic\n", (char *)NULL);
         return FALSE;
     }
     if (strcmp (th->id, "RAW") != 0) {
         Tcl_AppendResult (interp, "Invalid value for header field Magic:",
-                                  "Must be \"RAW\"\n", NULL);
+                                  "Must be \"RAW\"\n", (char *)NULL);
         return FALSE;
     }
 
     if (!readHeaderLine (interp, handle, buf) ||
         (1 != sscanf (buf, strWidth, &th->width))) {
-        Tcl_AppendResult (interp, "Unable to parse header field Width\n", NULL);
+        Tcl_AppendResult (interp, "Unable to parse header field Width\n", (char *)NULL);
         return FALSE;
     }
     if (th->width < 1) {
         Tcl_AppendResult (interp, "Invalid value for header field Width:",
-                                  "Must be greater than zero\n", NULL);
+                                  "Must be greater than zero\n", (char *)NULL);
         return FALSE;
     }
 
     if (!readHeaderLine (interp, handle, buf) ||
         (1 != sscanf (buf, strHeight, &th->height))) {
-        Tcl_AppendResult (interp, "Unable to parse header field Height\n", NULL);
+        Tcl_AppendResult (interp, "Unable to parse header field Height\n", (char *)NULL);
         return FALSE;
     }
     if (th->height < 1) {
         Tcl_AppendResult (interp, "Invalid value for header field Height:",
-                                  "Must be greater than zero\n", NULL);
+                                  "Must be greater than zero\n", (char *)NULL);
         return FALSE;
     }
 
     if (!readHeaderLine (interp, handle, buf) ||
         (1 != sscanf (buf, strNumChan, &th->nChans))) {
-        Tcl_AppendResult (interp, "Unable to parse header field NumChan\n", NULL);
+        Tcl_AppendResult (interp, "Unable to parse header field NumChan\n", (char *)NULL);
         return FALSE;
     }
     if (th->nChans != 1 && th->nChans != 3) {
         Tcl_AppendResult (interp, "Invalid value for header field NumChan:",
-                                  "Must be 1 or 3\n", NULL);
+                                  "Must be 1 or 3\n", (char *)NULL);
         return FALSE;
     }
 
     if (!readHeaderLine (interp, handle, buf) ||
         (1 != sscanf (buf, strByteOrder, tmpStr))) {
-        Tcl_AppendResult (interp, "Unable to parse header field ByteOrder\n", NULL);
+        Tcl_AppendResult (interp, "Unable to parse header field ByteOrder\n", (char *)NULL);
         return FALSE;
     }
 
@@ -393,13 +393,13 @@ static Boln readHeader (Tcl_Interp *interp, tkimg_MFile *handle, RAWHEADER *th)
     } else {
         Tcl_AppendResult (interp, "Invalid value for header field ByteOrder:",
                                   "Must be ", strIntel, " or ", strMotorola,
-                                  "\n", NULL);
+                                  "\n", (char *)NULL);
         return FALSE;
     }
 
     if (!readHeaderLine (interp, handle, buf) ||
         (1 != sscanf (buf, strScanOrder, tmpStr))) {
-        Tcl_AppendResult (interp, "Unable to parse header field ScanOrder\n", NULL);
+        Tcl_AppendResult (interp, "Unable to parse header field ScanOrder\n", (char *)NULL);
         return FALSE;
     }
     if (strcmp (tmpStr, strTopDown) == 0) {
@@ -409,13 +409,13 @@ static Boln readHeader (Tcl_Interp *interp, tkimg_MFile *handle, RAWHEADER *th)
     } else {
         Tcl_AppendResult (interp, "Invalid value for header field ScanOrder:",
                                   "Must be ", strTopDown, " or ", strBottomUp,
-                                  "\n", NULL);
+                                  "\n", (char *)NULL);
         return FALSE;
     }
 
     if (!readHeaderLine (interp, handle, buf) ||
         (1 != sscanf (buf, strPixelType, tmpStr))) {
-        Tcl_AppendResult (interp, "Unable to parse header field PixelType\n", NULL);
+        Tcl_AppendResult (interp, "Unable to parse header field PixelType\n", (char *)NULL);
         return FALSE;
     }
     if (strcmp (tmpStr, strDouble) == 0) {
@@ -431,7 +431,7 @@ static Boln readHeader (Tcl_Interp *interp, tkimg_MFile *handle, RAWHEADER *th)
     } else {
         Tcl_AppendResult (interp, "Invalid value for header field PixelType:",
                                   "Must be ", strDouble, ", ", strFloat, ", ", strUInt, ", " strUShort, " or ", strUByte,
-                                  "\n", NULL);
+                                  "\n", (char *)NULL);
         return FALSE;
     }
 

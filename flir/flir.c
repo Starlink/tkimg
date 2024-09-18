@@ -58,14 +58,10 @@
  * -min <float>:        Specify the minimum pixel value to be used for mapping
  *                      the input data to 8-bit image values.
  *                      Default is the minimum value found in the image data.
- * -saturation <float>: If option is given, an Automatic Gain Control algorithmn is
- *                      applied to the input values. The supplied value specifies the
- *                      saturation value, i.e. all pixel values greater than the
- *                      saturation are mapped to white.
+ * -saturation <float>: The supplied value specifies the saturation value, i.e. all
+ *                      pixel values greater than the saturation are mapped to white.
  *                      Valid for mapping mode: agc
- * -cutoff <float>:     If option is given, an Automatic Gain Control algorithmn is
- *                      applied to the input values. The supplied value specifies the
- *                      cut-off value in percent.
+ * -cutoff <float>:     The supplied value specifies the cut-off value in percent.
  *                      Valid for mapping mode: agc
  * -printagc <bool>:    If set to true, additional information about the Automatic
  *                      Gain Control is printed to stdout. Default is false.
@@ -268,19 +264,19 @@ static Boln readHeader (Tcl_Interp *interp, tkimg_MFile *handle, FPF_HEADER *th)
 
     if (strncmp (th->imgData.fpfId, FPF_ID, strlen (FPF_ID)) != 0) {
         Tcl_AppendResult (interp, "Invalid value for header field FPF_ID:",
-                                  "Must be \"FPF Public Image Format\"\n", NULL);
+                                  "Must be \"FPF Public Image Format\"\n", (char *)NULL);
         return FALSE;
     }
 
     if (th->imgData.width < 1) {
         Tcl_AppendResult (interp, "Invalid value for header field Width:",
-                                  "Must be greater than zero\n", NULL);
+                                  "Must be greater than zero\n", (char *)NULL);
         return FALSE;
     }
 
     if (th->imgData.height < 1) {
         Tcl_AppendResult (interp, "Invalid value for header field Height:",
-                                  "Must be greater than zero\n", NULL);
+                                  "Must be greater than zero\n", (char *)NULL);
         return FALSE;
     }
 
@@ -289,7 +285,7 @@ static Boln readHeader (Tcl_Interp *interp, tkimg_MFile *handle, FPF_HEADER *th)
         th->imgData.pixelType != TYPE_FLOAT &&
         th->imgData.pixelType != TYPE_DOUBLE) {
         Tcl_AppendResult (interp, "Invalid value for header field PixelType:",
-                                  "Must be 0, 1, 2 or 3", "\n", NULL);
+                                  "Must be 0, 1, 2 or 3", "\n", (char *)NULL);
         return FALSE;
     }
     return TRUE;
@@ -684,7 +680,7 @@ static int CommonRead(
         }
         default: {
             Tcl_AppendResult (interp, "Invalid value for pixel type.",
-                              "Only short, int, float and double values supported.\n", NULL);
+                              "Only short, int, float and double values supported.\n", (char *)NULL);
             return TCL_ERROR;
         }
     }
@@ -829,7 +825,7 @@ static int ChnWrite(
     Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr
 ) {
-    Tcl_AppendResult (interp, "Writing not supported for format ", sImageFormat.name, NULL);
+    Tcl_AppendResult (interp, "Writing not supported for format ", sImageFormat.name, (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -838,6 +834,6 @@ static int StringWrite(
     Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr
 ) {
-    Tcl_AppendResult (interp, "Writing not supported for format ", sImageFormat.name, NULL);
+    Tcl_AppendResult (interp, "Writing not supported for format ", sImageFormat.name, (char *)NULL);
     return TCL_ERROR;
 }

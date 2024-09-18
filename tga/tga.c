@@ -161,11 +161,11 @@ static Boln readUByte (tkimg_MFile *handle, UByte *b)
 
 static Boln readShort (tkimg_MFile *handle, Short *s)
 {
-    char buf[2];
-    if (2 != tkimg_Read2(handle, buf, 2)) {
+    unsigned char buf[2];
+    if (2 != tkimg_Read2(handle, (char *)buf, 2)) {
         return FALSE;
     }
-    *s = (buf[0] & 0xFF) | (buf[1] << 8);
+    *s = buf[0] | (buf[1] << 8);
     return TRUE;
 }
 
@@ -600,10 +600,10 @@ static int CommonWrite(Tcl_Interp *interp,
         const char *filename, Tcl_Obj *format,
         tkimg_MFile *handle, Tk_PhotoImageBlock *blockPtr);
 
-static int ParseFormatOpts(interp, format, opts)
-    Tcl_Interp *interp;
-    Tcl_Obj *format;
-    FMTOPT *opts;
+static int ParseFormatOpts(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    FMTOPT *opts)
 {
     static const char *const tgaOptions[] = {
         "-compression", "-verbose", "-matte", NULL

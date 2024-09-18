@@ -128,19 +128,19 @@ static Boln readUByte (tkimg_MFile *handle, UByte *b)
    <LowByte, HighByte>, from a file and convert them into the current
    machine's format. */
 
-#if _MSC_VER <= 1600
+#if _MSC_VER &&_MSC_VER <= 1600
 /* Switch off optimization for the next 2 functions
    for Visual Studio versions <= 2010 */
 #pragma optimize("g", off)
 #endif
 static Boln readUShort (tkimg_MFile *handle, UShort *s)
 {
-    char buf[2];
+    unsigned char buf[2];
 
-    if (2 != tkimg_Read2(handle, buf, 2)) {
+    if (2 != tkimg_Read2(handle, (char *)buf, 2)) {
         return FALSE;
     }
-    *s = (buf[0] & 0xFF) | (buf[1] << 8);
+    *s = buf[0] | (buf[1] << 8);
     return TRUE;
 }
 
@@ -150,15 +150,15 @@ static Boln readUShort (tkimg_MFile *handle, UShort *s)
 
 static Boln readUInt (tkimg_MFile *handle, UInt *i)
 {
-    char buf[4];
+    unsigned char buf[4];
 
-    if (4 != tkimg_Read2(handle, buf, 4)) {
+    if (4 != tkimg_Read2(handle, (char *)buf, 4)) {
         return FALSE;
     }
-    *i = (buf[0] & 0xFF) | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24);
+    *i = buf[0] | (buf[1] << 8) | (buf[2] << 16) | ((unsigned int)buf[3] << 24);
     return TRUE;
 }
-#if _MSC_VER <= 1600
+#if _MSC_VER &&_MSC_VER <= 1600
 #pragma optimize("g", on)
 #endif
 

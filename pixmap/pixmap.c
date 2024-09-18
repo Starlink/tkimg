@@ -36,26 +36,25 @@
  */
 
 static int TkimgXpmCreate(Tcl_Interp *interp,
-	const char *name, int argc, Tcl_Obj *objv[],
+	const char *name, int objc, Tcl_Obj *const objv[],
 	const Tk_ImageType *typePtr, Tk_ImageMaster master,
-	ClientData *clientDataPtr);
-static ClientData TkimgXpmGet(Tk_Window tkwin,
-	ClientData clientData);
-static void TkimgXpmDisplay(ClientData clientData,
+	void **clientDataPtr);
+static void *TkimgXpmGet(Tk_Window tkwin,
+	void *clientData);
+static void TkimgXpmDisplay(void *clientData,
 	Display *display, Drawable drawable,
 	int imageX, int imageY, int width, int height,
 	int drawableX, int drawableY);
-static void TkimgXpmFree(ClientData clientData,
+static void TkimgXpmFree(void *clientData,
 	Display *display);
-static void TkimgXpmDelete(ClientData clientData);
-static int TkimgXpmCmd(ClientData clientData,
-	Tcl_Interp *interp, int argc, const char **argv);
+static void TkimgXpmDelete(void *clientData);
+static Tcl_ObjCmdProc TkimgXpmObjCmd;
 static void TkimgXpmCmdDeletedProc(
-	ClientData clientData);
+	void *clientData);
 static void TkimgXpmConfigureInstance(
 	PixmapInstance *instancePtr);
 static int TkimgXpmConfigureMaster(
-	PixmapMaster *masterPtr, int argc, const char **argv,
+	PixmapMaster *masterPtr, int objc, Tcl_Obj *const *objv,
 	int flags);
 static int TkimgXpmGetData(Tcl_Interp *interp,
 	PixmapMaster *masterPtr);
@@ -87,10 +86,10 @@ static Tk_ConfigSpec configSpecs[] = {
 
 Tk_ImageType imgPixmapImageType = {
     "pixmap",				/* name */
-    (Tk_ImageCreateProc *) TkimgXpmCreate,/* createProc */
-    TkimgXpmGet,				/* getProc */
+    TkimgXpmCreate, 			/* createProc */
+    TkimgXpmGet,			/* getProc */
     TkimgXpmDisplay,			/* displayProc */
-    TkimgXpmFree,				/* freeProc */
+    TkimgXpmFree,			/* freeProc */
     TkimgXpmDelete,			/* deleteProc */
 #ifdef TK_CONFIG_OBJS
     (Tk_ImagePostscriptProc *) NULL,	/* postscriptProc */
@@ -119,35 +118,30 @@ static int
 TkimgXpmCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing
 				 * image. */
-    const char *name,			/* Name to use for image. */
-    int argc,			/* Number of arguments. */
-    Tcl_Obj *objv[],		/* Argument strings for options (doesn't
+    const char *name,		/* Name to use for image. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[],	/* Argument strings for options (doesn't
 				 * include image name or type). */
     const Tk_ImageType *typePtr,/* Pointer to our type record (not used). */
     Tk_ImageMaster master,	/* Token for image, to be used by us in
 				 * later callbacks. */
-    ClientData *clientDataPtr	/* Store manager's token for image here;
+    void **clientDataPtr	/* Store manager's token for image here;
 				 * it will be returned in later callbacks. */
 ) {
     PixmapMaster *masterPtr;
-    int i;
-    char *argvbuf[10];
-    const char **args = (const char **) argvbuf;
 
     /*
      * Convert the objc/objv arguments into string equivalent.
      */
-    if (argc > 10) {
-	args = (const char **) ckalloc(argc * sizeof(char *));
-    }
-    for (i = 0; i < argc; i++) {
-	args[i] = tkimg_GetStringFromObj2(objv[i], NULL);
-    }
 
-    masterPtr = (PixmapMaster *) ckalloc(sizeof(PixmapMaster));
+    masterPtr = (PixmapMaster *) attemptckalloc(sizeof(PixmapMaster));
+    if (masterPtr == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for PixmapMaster.", (char *) NULL);
+	return TCL_ERROR;
+    }
     masterPtr->tkMaster = master;
     masterPtr->interp = interp;
-    masterPtr->imageCmd = Tcl_CreateCommand(interp, name, TkimgXpmCmd,
+    masterPtr->imageCmd = Tcl_CreateObjCommand(interp, name, TkimgXpmObjCmd,
 	    (ClientData) masterPtr, TkimgXpmCmdDeletedProc);
 
     masterPtr->fileString = NULL;
@@ -156,17 +150,11 @@ TkimgXpmCreate(
     masterPtr->isDataAlloced = 0;
     masterPtr->instancePtr = NULL;
 
-    if (TkimgXpmConfigureMaster(masterPtr, argc, args, 0) != TCL_OK) {
+    if (TkimgXpmConfigureMaster(masterPtr, objc, objv, 0) != TCL_OK) {
 	TkimgXpmDelete((ClientData) masterPtr);
-	if (args != ((const char **) argvbuf)) {
-	    ckfree((char *) args);
-	}
 	return TCL_ERROR;
     }
     *clientDataPtr = (ClientData) masterPtr;
-    if (args != ((const char **) argvbuf)) {
-	ckfree((char *) args);
-    }
     return TCL_OK;
 }
 
@@ -197,8 +185,8 @@ static int
 TkimgXpmConfigureMaster(
     PixmapMaster *masterPtr,	/* Pointer to data structure describing
 				 * overall pixmap image to (reconfigure). */
-    int argc,			/* Number of entries in argv. */
-    const char **argv,		/* Pairs of configuration options for image. */
+    int objc,			/* Number of entries in argv. */
+    Tcl_Obj *const *objv,	/* Pairs of configuration options for image. */
     int flags			/* Flags to pass to Tk_ConfigureWidget,
 				 * such as TK_CONFIG_ARGV_ONLY. */
 ) {
@@ -209,7 +197,7 @@ TkimgXpmConfigureMaster(
     oldFile = masterPtr->fileString;
 
     if (Tk_ConfigureWidget(masterPtr->interp, Tk_MainWindow(masterPtr->interp),
-	    configSpecs, argc, argv, (char *) masterPtr, flags)
+	    configSpecs, objc, (void *)objv, (char *) masterPtr, flags|TK_CONFIG_OBJS)
 	    != TCL_OK) {
 	return TCL_ERROR;
     }
@@ -221,7 +209,7 @@ TkimgXpmConfigureMaster(
 	}
     } else {
 	Tcl_AppendResult(masterPtr->interp,
-	    "must specify one of -data or -file", NULL);
+	    "must specify one of -data or -file", (char *)NULL);
 	goto error;
     }
 
@@ -363,7 +351,7 @@ TkimgXpmGetData(
 	}
 
 	Tcl_ResetResult(interp);
-	Tcl_AppendResult(interp, "File format error", NULL);
+	Tcl_AppendResult(interp, "File format error", (char *)NULL);
     }
 
     if (listArgv) {
@@ -499,7 +487,7 @@ TkimgXpmGetDataFromString(
     }
 
   error:
-    Tcl_AppendResult(interp, "File format error", NULL);
+    Tcl_AppendResult(interp, "File format error", (char *)NULL);
     return (const char**) NULL;
 }
 
@@ -522,7 +510,11 @@ TkimgXpmGetDataFromFile(
     size = Tcl_Seek(chan, 0, SEEK_END);
     if (size > 0) {
 	Tcl_Seek(chan, 0, SEEK_SET);
-	cmdBuffer = (char *) ckalloc(size+1);
+	cmdBuffer = (char *) attemptckalloc(size+1);
+        if (cmdBuffer == NULL) {
+            Tcl_AppendResult (interp, "Unable to allocate memory for command buffer.", (char *) NULL);
+            goto error;
+        }
 	size = Tcl_Read(chan, cmdBuffer, size);
     }
     if (Tcl_Close(interp, chan) != TCL_OK) {
@@ -689,7 +681,11 @@ TkimgXpmGetPixmapFromData(
      * Parse the colors
      */
     lOffset = 1;
-    colors = (ColorStruct*)ckalloc(sizeof(ColorStruct)*masterPtr->ncolors);
+    colors = (ColorStruct*)attemptckalloc(sizeof(ColorStruct)*masterPtr->ncolors);
+    if (colors == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for ColorStruct.", (char *) NULL);
+        return;
+    }
 
     /*
      * Initialize the color structures
@@ -699,7 +695,11 @@ TkimgXpmGetPixmapFromData(
 	if (masterPtr->cpp == 1) {
 	    colors[i].c = 0;
 	} else {
-	    colors[i].cstring = (char*)ckalloc(masterPtr->cpp);
+	    colors[i].cstring = (char*)attemptckalloc(masterPtr->cpp);
+            if (colors[i].cstring == NULL) {
+                Tcl_AppendResult (interp, "Unable to allocate memory for color string.", (char *) NULL);
+                return;
+            }
 	    colors[i].cstring[0] = 0;
 	}
     }
@@ -716,9 +716,17 @@ TkimgXpmGetPixmapFromData(
 	int found;
 
 	colorDefn = masterPtr->data[i+lOffset]+masterPtr->cpp;
-	colorName = (char*)ckalloc(strlen(colorDefn));
-	useName   = (char*)ckalloc(strlen(colorDefn));
-	found     = 0;
+	colorName = (char*)attemptckalloc(strlen(colorDefn));
+	useName   = (char*)attemptckalloc(strlen(colorDefn));
+        if (colorName == NULL) {
+            Tcl_AppendResult (interp, "Unable to allocate memory for color name.", (char *) NULL);
+            return;
+        }
+        if (useName == NULL) {
+            Tcl_AppendResult (interp, "Unable to allocate memory for color name.", (char *) NULL);
+            return;
+        }
+	found = 0;
 
 	while (colorDefn && *colorDefn) {
 	    int type;
@@ -881,7 +889,7 @@ TkimgXpmConfigureInstance(
     }
 
     /*
-     * Assumption: masterPtr->data is always non NULL (enfored by
+     * Assumption: masterPtr->data is always non NULL (enforced by
      * TkimgXpmConfigureMaster()). Also, the data must be in a valid
      * format (partially enforced by TkimgXpmConfigureMaster(), see comments
      * inside that function).
@@ -892,7 +900,7 @@ TkimgXpmConfigureInstance(
 /*
  *--------------------------------------------------------------
  *
- * TkimgXpmCmd --
+ * TkimgXpmObjCmd --
  *
  *	This procedure is invoked to process the Tcl command
  *	that corresponds to an image managed by this module.
@@ -908,49 +916,49 @@ TkimgXpmConfigureInstance(
  */
 
 static int
-TkimgXpmCmd(
-    ClientData clientData,	/* Information about button widget. */
+TkimgXpmObjCmd(
+    void *clientData,	/* Information about button widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv		/* Argument strings. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const *objv		/* Arguments. */
 ) {
     PixmapMaster *masterPtr = (PixmapMaster *) clientData;
     int c, code;
     size_t length;
 
-    if (argc < 2) {
+    if (objc < 2) {
 	Tcl_AppendResult(interp, "wrong # args: should be \"",
-		argv[0], " option ?arg arg ...?\"",
+		Tcl_GetString(objv[0]), " option ?arg arg ...?\"",
 		(char *) NULL);
 	return TCL_ERROR;
     }
-    c = argv[1][0];
-    length = strlen(argv[1]);
+    c = Tcl_GetString(objv[1])[0];
+    length = strlen(Tcl_GetString(objv[1]));
 
-    if ((c == 'c') && (strncmp(argv[1], "cget", length) == 0)
+    if ((c == 'c') && (strncmp(Tcl_GetString(objv[1]), "cget", length) == 0)
 	    && (length >= 2)) {
-	if (argc != 3) {
+	if (objc != 3) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], " cget option\"",
+		    Tcl_GetString(objv[0]), " cget option\"",
 		    (char *) NULL);
 	    return TCL_ERROR;
 	}
 	return Tk_ConfigureValue(interp, Tk_MainWindow(interp), configSpecs,
-		(char *) masterPtr, argv[2], 0);
-    } else if ((c == 'c') && (strncmp(argv[1], "configure", length) == 0)
+		(char *) masterPtr, Tcl_GetString(objv[2]), 0);
+    } else if ((c == 'c') && (strncmp(Tcl_GetString(objv[1]), "configure", length) == 0)
 	    && (length >= 2)) {
-	if (argc == 2) {
+	if (objc == 2) {
 	    code = Tk_ConfigureInfo(interp, Tk_MainWindow(interp),
 		    configSpecs, (char *) masterPtr, (char *) NULL, 0);
-	} else if (argc == 3) {
+	} else if (objc == 3) {
 	    code = Tk_ConfigureInfo(interp, Tk_MainWindow(interp),
-		    configSpecs, (char *) masterPtr, argv[2], 0);
+		    configSpecs, (char *) masterPtr, Tcl_GetString(objv[2]), 0);
 	} else {
-	    code = TkimgXpmConfigureMaster(masterPtr, argc-2, argv+2,
+	    code = TkimgXpmConfigureMaster(masterPtr, objc-2, objv+2,
 		    TK_CONFIG_ARGV_ONLY);
 	}
 	return code;
-    } else if ((c == 'r') && (strncmp(argv[1], "refcount", length) == 0)) {
+    } else if ((c == 'r') && (strncmp(Tcl_GetString(objv[1]), "refcount", length) == 0)) {
 	/*
 	 * The "refcount" command is for debugging only
 	 */
@@ -958,9 +966,9 @@ TkimgXpmCmd(
 	int count = 0;
 	char buff[30];
 
-	if (argc != 1) {
+	if (objc != 1) {
 	    Tcl_AppendResult(interp, "wrong # args: should be \"",
-		    argv[0], "\"", (char *) NULL);
+		    Tcl_GetString(objv[0]), "\"", (char *) NULL);
 	    return TCL_ERROR;
 	}
 	for (instancePtr=masterPtr->instancePtr; instancePtr;
@@ -971,7 +979,7 @@ TkimgXpmCmd(
 	Tcl_AppendResult(interp, buff, (char *) NULL);
 	return TCL_OK;
     } else {
-	Tcl_AppendResult(interp, "bad option \"", argv[1],
+	Tcl_AppendResult(interp, "bad option \"", Tcl_GetString(objv[1]),
 	    "\": must be cget, configure or refcount", (char *) NULL);
 	return TCL_ERROR;
     }
@@ -1000,7 +1008,7 @@ static ClientData
 TkimgXpmGet(
     Tk_Window tkwin,		/* Window in which the instance will be
 				 * used. */
-    ClientData masterData	/* Pointer to our master structure for the
+    void *masterData	/* Pointer to our master structure for the
 				 * image. */
 ) {
     PixmapMaster *masterPtr = (PixmapMaster *) masterData;
@@ -1023,7 +1031,11 @@ TkimgXpmGet(
      * The image isn't already in use in this window.  Make a new
      * instance of the image.
      */
-    instancePtr = (PixmapInstance *) ckalloc(sizeof(PixmapInstance));
+    instancePtr = (PixmapInstance *) attemptckalloc(sizeof(PixmapInstance));
+    if (instancePtr == NULL) {
+        Tcl_AppendResult (masterPtr->interp, "Unable to allocate memory for PixmapInstance.", (char *) NULL);
+        return NULL;
+    }
     instancePtr->refCount = 1;
     instancePtr->masterPtr = masterPtr;
     instancePtr->tkwin = tkwin;
@@ -1069,7 +1081,7 @@ TkimgXpmGet(
 
 static void
 TkimgXpmDisplay(
-    ClientData clientData,	/* Pointer to PixmapInstance structure for
+    void *clientData,	/* Pointer to PixmapInstance structure for
 				 * for instance to be displayed. */
     Display *display,		/* Display on which to draw image. */
     Drawable drawable,		/* Pixmap or window in which to draw image. */
@@ -1102,7 +1114,7 @@ TkimgXpmDisplay(
 
 static void
 TkimgXpmFree(
-    ClientData clientData,	/* Pointer to PixmapInstance structure for
+    void *clientData,	/* Pointer to PixmapInstance structure for
 				 * for instance to be displayed. */
     Display *display		/* Display containing window that used image.*/
 ) {
@@ -1167,7 +1179,7 @@ TkimgXpmFree(
 
 static void
 TkimgXpmDelete(
-    ClientData masterData	/* Pointer to PixmapMaster structure for
+    void *masterData	/* Pointer to PixmapMaster structure for
 				 * image.  Must not have any more instances. */
 ) {
     PixmapMaster *masterPtr = (PixmapMaster *) masterData;
@@ -1208,7 +1220,7 @@ TkimgXpmDelete(
 
 static void
 TkimgXpmCmdDeletedProc(
-    ClientData clientData	/* Pointer to PixmapMaster structure for
+    void *clientData	/* Pointer to PixmapMaster structure for
 				 * image. */
 ) {
     PixmapMaster *masterPtr = (PixmapMaster *) clientData;

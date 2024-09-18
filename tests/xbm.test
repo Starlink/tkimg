@@ -1,4 +1,4 @@
-# This file is a Tcl script to test out XBM reading and writing.
+# This file is a Tcl script to test XBM reading and writing.
 # It is organized in the standard fashion for Tcl tests.
 
 package require Tk
@@ -18,7 +18,7 @@ namespace eval ::xbm::test {
     set ext  "xbm"
     set file "testimgs/img.$ext"
 
-    # Encoded image content.
+    # Encoded image content. Defines variable imgdata.
     source $file.base64
 
     test xbm-1.1 {} -setup {
@@ -58,6 +58,17 @@ namespace eval ::xbm::test {
     } -cleanup {
         image delete i
     } -result $imgdata
+
+    test xbm-1.5 {} -setup {
+        catch {image delete i}
+    } -body {
+        image create photo i -file $file
+        image create photo j -data $imgdata
+        set cmp [::imgtest::imageCompare i j]
+    } -cleanup {
+        image delete i
+        image delete j
+    } -result 1
 
 
     test xbm-2.0 {Binary I/O with XBM images} -setup {

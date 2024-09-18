@@ -4,6 +4,8 @@
 
 [include format-header.inc]
 
+[include format-package.inc]
+
 This handler provides new additional configuration options. See
 section [sectref {TIFF OPTIONS}] for more detailed explanations.
 
@@ -22,28 +24,26 @@ contain any of the special options listed in section
 
 [section {TIFF OPTIONS}]
 
-The handler provides three options, one for reading from a TIFF image,
-the other two influencing the writing of such.
-
+The handler provides the following options:
 
 [list_begin definitions]
 
-[lst_item "[option -index] [arg n]"]
+[def "[option -index] [arg n]"]
 
 This option is for reading from TIFF files containing more than one
-image ([term {multi-page TIFF}]. When specified it
+image ([term {multi-page TIFF}]). When specified it
 will read the [arg n]'th image in the data. The first image is at
 index [const 0] and will be read by default, i.e. when the option is
 not specified.
 
-[lst_item "[option -compression] [arg type]"]
+[def "[option -compression] [arg string]"]
 
 This option specifies the type of compression to use when writing TIFF
 data. It has to be one of [const none], [const jpeg],
 [const packbits], or [const deflate]. The default is [const none].
 
 
-[lst_item "[option -byteorder] [arg type]"]
+[def "[option -byteorder] [arg string]"]
 
 This option specifies the byteorder to use when writing TIFF data. It
 has to be one of [const bigendian], [const littleendian],
@@ -51,7 +51,7 @@ has to be one of [const bigendian], [const littleendian],
 [const network], [const smallendian], or the empty string. The default
 is the empty string.
 
-[nl]
+[para]
 
 The values [const bigendian] and [const network] are aliases of each
 other, as are [const littleendian] and [const smallendian].

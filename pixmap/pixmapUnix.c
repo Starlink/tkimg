@@ -16,10 +16,6 @@
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
 
-#ifdef MAC_OSX_TK
-#define XPutImage
-#endif
-
 typedef struct PixmapData {
     Pixmap mask;		/* Mask: only display pixmap pixels where
 				 * there are 1's here. */

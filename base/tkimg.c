@@ -214,7 +214,7 @@ int tob64(
 	if ((Tcl_Close(interp, chan) == TCL_ERROR) || (len < 0)) {
 		Tcl_DStringFree(&dstring);
 		Tcl_AppendResult(interp, Tcl_GetStringFromObj(objv[1], &len),
-			": ", Tcl_PosixError(interp), NULL);
+			": ", Tcl_PosixError(interp), (char *)NULL);
 		return TCL_ERROR;
 	}
 	tkimg_Putc(IMG_DONE, &handle);
@@ -279,7 +279,7 @@ int fromb64(
 
 writeerror:
 	Tcl_AppendResult(interp, Tcl_GetStringFromObj(objv[1], &len), ": ",
-		Tcl_PosixError(interp), NULL);
+		Tcl_PosixError(interp), (char *)NULL);
 	return TCL_ERROR;
 }
 #endif

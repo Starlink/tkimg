@@ -68,10 +68,10 @@ static int ReadXBMFileHeader(ParseInfo *parseInfo,
 	int *widthPtr, int *heightPtr);
 static int NextBitmapWord(ParseInfo *parseInfoPtr);
 
-static int ParseFormatOpts(interp, format, opts)
-    Tcl_Interp *interp;
-    Tcl_Obj *format;
-    FMTOPT *opts;
+static int ParseFormatOpts(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    FMTOPT *opts)
 {
     static const char *const xbmOptions[] = {
         "-background", "-foreground", NULL

@@ -1,4 +1,4 @@
-# This file is a Tcl script to test out DTED reading.
+# This file is a Tcl script to test DTED reading.
 # Writing is currently not supported.
 # It is organized in the standard fashion for Tcl tests.
 
@@ -20,7 +20,7 @@ namespace eval ::dted::test {
     set ext  "dt0"
     set file "testimgs/img.$ext"
 
-    # Encoded image content.
+    # Encoded image content. Defines variable imgdata.
     source $file.base64
 
     test dted-1.1 {} -setup {
@@ -66,6 +66,17 @@ namespace eval ::dted::test {
     } -cleanup {
         image delete i
     } -result {121 121}
+
+    test dted-1.5 {} -setup {
+        catch {image delete i}
+    } -body {
+        image create photo i -file $file
+        image create photo j -data $imgdata
+        set cmp [::imgtest::imageCompare i j]
+    } -cleanup {
+        image delete i
+        image delete j
+    } -result 1
 
 
     test dted-2.0 {Binary I/O with DTED files} -setup {

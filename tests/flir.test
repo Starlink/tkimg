@@ -1,4 +1,4 @@
-# This file is a Tcl script to test out FLIR reading.
+# This file is a Tcl script to test FLIR reading.
 # Writing is currently not supported.
 # It is organized in the standard fashion for Tcl tests.
 
@@ -20,7 +20,7 @@ namespace eval ::flir::test {
     set ext  "fpf"
     set file "testimgs/img.$ext"
 
-    # Encoded image content.
+    # Encoded image content. Defines variable imgdata.
     source $file.base64
 
     test flir-1.1 {} -setup {
@@ -67,8 +67,18 @@ namespace eval ::flir::test {
         image delete i
     } -result {320 240}
 
+    test flir-1.5 {} -setup {
+        catch {image delete i}
+    } -body {
+        image create photo i -file $file
+        image create photo j -data $imgdata
+        set cmp [::imgtest::imageCompare i j]
+    } -cleanup {
+        image delete i
+        image delete j
+    } -result 1
 
-    test flir-2.0 {Binary I/O with DTED files} -setup {
+    test flir-2.0 {Binary I/O with FLIR files} -setup {
         catch {image delete i}
     } -body {
         image create photo i

@@ -197,32 +197,25 @@ static void dtedClose (DTEDFILE *tf)
     return;
 }
 
-/* Read 2 bytes, representing a signed 16 bit integer in the form
-   <LowByte, HighByte>, from a file and convert them into the current
-   machine's format. */
+/*  Read 2 bytes representing a signed 16-bit integer stored in big-endian order. */
 
 static Boln readShort (tkimg_MFile *handle, Short *s)
 {
-    char buf[2];
-    if (2 != tkimg_Read2(handle, buf, 2))
+    unsigned char buf[2];
+    if (2 != tkimg_Read2(handle, (char *)buf, 2))
         return FALSE;
-    *s = (buf[0] & 0xFF) | (buf[1] << 8);
+    *s = (buf[0] << 8) | buf[1];
     return TRUE;
 }
 
-/* Read 4 bytes, representing a signed 32 bit integer in the form
-   <LowByte, HighByte>, from a file and convert them into the current
-   machine's format. */
+/* Read 4 bytes representing a signed 32-bit integer stored in big-endian order. */
 
 static Boln readInt (tkimg_MFile *handle, Int *i)
 {
-    char buf[4];
-    if (4 != tkimg_Read2(handle, buf, 4))
+    unsigned char buf[4];
+    if (4 != tkimg_Read2(handle, (char *)buf, 4))
         return FALSE;
-    *i = ((((Int)buf[0] & 0x000000FFU) << 24) | \
-          (((Int)buf[1] & 0x0000FF00U) <<  8) | \
-          (((Int)buf[2] & 0x00FF0000U) >>  8) | \
-          (((Int)buf[3] & 0x0000FF00U) >> 24));
+    *i = ((unsigned int)buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
     return TRUE;
 }
 
@@ -270,14 +263,15 @@ static Boln readHeader (tkimg_MFile *handle, DTEDHEADER *th)
     return TRUE;
 }
 
-static Boln readDtedColumn (tkimg_MFile *handle, Short *pixels, Int nRows,
-                            Int nCols, Int curCol, char *buf, Boln hostIsIntel)
+static Boln readDtedColumn (Tcl_Interp *interp, tkimg_MFile *handle, Short *pixels,
+                            Int nRows, Int nCols, Int curCol, char *buf, Boln hostIsIntel)
 {
     Int   i, nBytes;
     Short *mPtr;
     char  *bufPtr = buf;
     Short meridian, parallel;
     Int   block_count;
+    UByte recognition_sentinel;
     UByte *cp;
     Int  checksum, checksum1 = 0;
 
@@ -285,7 +279,7 @@ static Boln readDtedColumn (tkimg_MFile *handle, Short *pixels, Int nRows,
     if (!readInt   (handle, &block_count) ||
         !readShort (handle, &meridian) ||
         !readShort (handle, &parallel)) {
-        printf ("Error reading column header\n");
+        Tcl_AppendResult (interp, "Error reading column header.", (char *) NULL);
         return FALSE;
     }
 
@@ -297,52 +291,55 @@ static Boln readDtedColumn (tkimg_MFile *handle, Short *pixels, Int nRows,
     cp = (UByte *) &parallel;
     checksum1 += cp[0] + cp[1];
 
-    if (hostIsIntel) {
-        block_count = block_count & 0x00ffffff;
-    } else {
-        block_count = (block_count & 0xffffff00) >> 8;
+    recognition_sentinel = (unsigned int)block_count >> 24;
+    block_count &= 0x00ffffff;
+
+    if (recognition_sentinel != 170) {
+        char msg[100];
+        tkimg_snprintf(msg, sizeof(msg),
+                       "Invalid column recognition sentinel 0x%02hhX.",
+                       recognition_sentinel);
+        Tcl_AppendResult (interp, msg, (char *) NULL);
+        return FALSE;
     }
 
     /* Read the elevation data into the supplied column buffer "buf". */
     nBytes = sizeof (Short) * nRows;
     if ((size_t)nBytes != tkimg_Read2(handle, buf, nBytes)) {
-        printf ("Error reading elevation data\n");
+        Tcl_AppendResult (interp, "Error reading elevation data.", (char *) NULL);
         return FALSE;
     }
 
     /* Copy (and swap bytes, if needed) from the column buffer into the
-       pixel array (shorts) . */
+       pixel array (shorts). Simultaneously calculate checksum, part 2. */
     if (hostIsIntel) {
         for (i=0; i<nRows; i++) {
             mPtr = pixels + (i * nCols) + curCol;
-            ((char *)mPtr)[0] = bufPtr[1];
-            ((char *)mPtr)[1] = bufPtr[0];
+            checksum1 += ((unsigned char *)mPtr)[0] = bufPtr[1];
+            checksum1 += ((unsigned char *)mPtr)[1] = bufPtr[0];
             bufPtr += sizeof (Short);
         }
     } else {
         for (i=0; i<nRows; i++) {
             mPtr = pixels + (i * nCols) + curCol;
-            ((char *)mPtr)[0] = bufPtr[0];
-            ((char *)mPtr)[1] = bufPtr[1];
+            checksum1 += ((unsigned char *)mPtr)[0] = bufPtr[0];
+            checksum1 += ((unsigned char *)mPtr)[1] = bufPtr[1];
             bufPtr += sizeof (Short);
         }
     }
 
     /* Read the checksum */
     if (!readInt (handle, &checksum)) {
-        printf ("Error reading checksum\n");
+        Tcl_AppendResult (interp, "Error reading checksum.", (char *) NULL);
         return FALSE;
     }
 
-    /* Calculate checksum, part 2. OPA TODO Incorrect  */
-    cp = (UByte *) pixels;
-    for (i=0; i<nRows*2; i++, cp++) {
-        checksum1 += *cp;
-    }
-
     if (checksum != checksum1) {
-        /* printf ("DTED Checksum Error (%d vs. %d).\n", checksum, checksum1); */
-        /* return FALSE; */
+        char msg[100];
+        tkimg_snprintf(msg, sizeof(msg),
+            "DTED Checksum Error (0x%08x vs. 0x%08x).", checksum, checksum1);
+        Tcl_AppendResult (interp, msg, (char *) NULL);
+        return FALSE;
     }
     return TRUE;
 }
@@ -372,8 +369,8 @@ static Boln readDtedFile (Tcl_Interp *interp, tkimg_MFile *handle,
 
     /* Read the elevation data column by column. */
     for (x=0; x<width; x++) {
-        if (!readDtedColumn (handle, buf, height, width,
-                             x, colBuf, hostIsIntel)) {
+        if (! readDtedColumn (interp, handle, buf, height, width,
+                              x, colBuf, hostIsIntel)) {
             return FALSE;
         }
     }
@@ -587,7 +584,8 @@ static int CommonMatch(
     DTEDHEADER th;
     FMTOPT opts;
     Int nRows, nCols;
-    Byte buf[4];
+    Byte buf[5];
+    buf[4] = '\0';
 
     if (ParseFormatOpts (interp, format, &opts) == TCL_ERROR) {
         return FALSE;
@@ -710,8 +708,10 @@ static int CommonRead(
         Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
         return TCL_ERROR;
     }
-    readDtedFile (interp, handle, tf.rawbuf, fileWidth, fileHeight, nchan,
-                  hostIsIntel, opts.verbose, minVals, maxVals);
+    if (!readDtedFile (interp, handle, tf.rawbuf, fileWidth, fileHeight, nchan,
+                       hostIsIntel, opts.verbose, minVals, maxVals)) {
+        return TCL_ERROR;
+    }
     if (opts.minVal != 0 || opts.maxVal != 0) {
         for (c=0; c<nchan; c++) {
             minVals[c] = opts.minVal;
@@ -769,7 +769,7 @@ static int ChnWrite(
     TCL_UNUSED(Tcl_Obj *),
     TCL_UNUSED(Tk_PhotoImageBlock *)
 ) {
-    Tcl_AppendResult (interp, "Writing not supported for format ", sImageFormat.name, NULL);
+    Tcl_AppendResult (interp, "Writing not supported for format ", sImageFormat.name, (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -778,6 +778,6 @@ static int StringWrite(
     TCL_UNUSED(Tcl_Obj *),
     TCL_UNUSED(Tk_PhotoImageBlock *)
 ) {
-    Tcl_AppendResult (interp, "Writing not supported for format ", sImageFormat.name, NULL);
+    Tcl_AppendResult (interp, "Writing not supported for format ", sImageFormat.name, (char *)NULL);
     return TCL_ERROR;
 }

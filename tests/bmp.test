@@ -1,4 +1,4 @@
-# This file is a Tcl script to test out BMP reading and writing.
+# This file is a Tcl script to test BMP reading and writing.
 # It is organized in the standard fashion for Tcl tests.
 
 package require Tk
@@ -19,7 +19,7 @@ namespace eval ::bmp::test {
     set file "testimgs/img.$ext"
     set out  "testimgs/img_out.$ext"
 
-    # Encoded image content.
+    # Encoded image content. Defines variable imgdata.
     source $file.base64
 
     test bmp-1.1 {} -setup {
@@ -59,6 +59,17 @@ namespace eval ::bmp::test {
     } -cleanup {
         image delete i
     } -result $imgdata
+
+    test bmp-1.5 {} -setup {
+        catch {image delete i}
+    } -body {
+        image create photo i -file $file
+        image create photo j -data $imgdata
+        set cmp [::imgtest::imageCompare i j]
+    } -cleanup {
+        image delete i
+        image delete j
+    } -result 1
 
 
     test bmp-2.0 {Binary I/O with BMP images} -setup {

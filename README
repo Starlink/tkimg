@@ -1,6 +1,6 @@
 
         Tcl/Tk Image formats (TkImg)
-        (Version 1.4.15 / August 2023)
+        (Version 1.4.16 / November 2023)
 
         Jan Nijtmans, Andreas Kupries, Paul Obermeier
 
@@ -34,8 +34,8 @@ to configure are the same for all the packages.
 All packages save for the supporting ones (see below) have names
 starting with 'img'. For compatibility with older scripts the
 package index file of the utility package 'img::base' declares
-pseudo-packages 'img' and 'Img' which load all packages provided
-by this extension with the exception of formats raw, flir and dted.
+pseudo-package 'Img', which loads all packages provided by this
+extension with the exception of formats dted, filr, ps and raw.
 See below for details on these packages.
 
 BUILDING - The convenient way
@@ -69,7 +69,7 @@ build directory. Instead run
     make install
 
 in the sub directories of the build directory which contain the
-requested packages, and their dependencies!
+requested packages, and their dependencies.
 
 Note, that target install also builds the documentation based on
 Tcl script dtplite. To build and install without documentation, use
@@ -148,11 +148,12 @@ supporting packages, as noted below. Their names and directories are
     -------------------------------------------------
 
 The packages img::dted, img::flir, img::raw and img::ps are special, because
-they are not included when doing a "package require Img". These must be 
+they are not included when doing a "package require Img". They must be 
 explicitely loaded via a "package require img::FMT".
-img::ps reads Postscript files and transforms the first page into a photo
-image using external program "gs". As the current implementation might hang
-using larger PostScript files, it is not automatically loaded.
+img::ps reads Postscript or PDF files and transforms the first page into a
+photo image using external program "gs".
+As the current implementation might hang using larger PostScript files, 
+it is not automatically loaded.
 img::dted reads Digital Terrain Elevation Data and transforms the elevation
 data into photo images.
 img::flir reads FLIR files and transforms the temperature information
@@ -193,7 +194,7 @@ Some possible options:
 
 MAKE & INSTALL
 
-    'make', or 'make all' will build any package.
+    'make' or 'make all' will build any package.
 
     'make install' will install its headers and libraries in the
     directories specified via --prefix/include and --exec-prefix/lib.
@@ -215,7 +216,7 @@ The line
     package require Img
 
 is still legal and will load all format handlers provided by this
-extension except dted, flir and raw.
+extension except dted, flir, ps and raw.
 
 As an example, have a look at the file "demo.tcl"
 
@@ -231,6 +232,7 @@ PLATFORMS
     Tested:
         Linux           (gcc)
         Raspberry Pi OS (gcc)
+        RiscV Debian    (gcc)
         Windows         (MSys/MinGW, Visual Studio C++)
         Darwin          (gcc)
 

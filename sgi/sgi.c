@@ -82,29 +82,29 @@
 
     static int MyWrite(Tcl_Channel chan, char *buf, int size)
     {
-	if (1 == fwrite(buf, size, 1, (FILE *)chan)) {
-	    return size;
-	} else {
-	    return -1;
-	}
+        if (1 == fwrite(buf, size, 1, (FILE *)chan)) {
+            return size;
+        } else {
+            return -1;
+        }
     }
 
     static int MyClose(Tcl_Interp *interp, Tcl_Channel chan)
     {
-	if (0 == fclose((FILE *)chan)) {
-	    return TCL_OK;
-	} else {
-	    return TCL_ERROR;
-	}
+        if (0 == fclose((FILE *)chan)) {
+            return TCL_OK;
+        } else {
+            return TCL_ERROR;
+        }
     }
 
     static int MySeek(Tcl_Channel chan, int offset, int seekMode)
     {
-	if (ioMode == 0) { /* Read mode */
-	    return Tcl_Seek(chan, offset, seekMode);
-	} else {
-	    return fseek((FILE *)chan, offset, seekMode);
-	}
+        if (ioMode == 0) { /* Read mode */
+            return Tcl_Seek(chan, offset, seekMode);
+        } else {
+            return fseek((FILE *)chan, offset, seekMode);
+        }
     }
 
 #   define MYCHANNEL Tcl_Channel
@@ -996,6 +996,7 @@ static void sgiClose (SGIFILE *tf)
     if (tf->matteScan) ckfree ((char *)tf->matteScan);
     if (tf->pixbuf)    ckfree ((char *)tf->pixbuf);
     if (tf->scanline)  ckfree ((char *)tf->scanline);
+    iclose (&tf->th);
     return;
 }
 
@@ -1247,7 +1248,8 @@ static int ObjMatch(
 ) {
     tkimg_MFile handle;
 
-    if (!tkimg_ReadInit(data, '\001', &handle)) {
+    if (! tkimg_ReadInit(data, '\xDA', &handle) &&
+        ! tkimg_ReadInit(data, '\001', &handle)) {
         return 0;
     }
     return CommonMatch(&handle, widthPtr, heightPtr, NULL);
@@ -1326,7 +1328,10 @@ static int ObjRead(
     Tcl_Channel inchan;
     int count, retVal;
 
-    tkimg_ReadInit(data, '\001', &handle);
+    if (! tkimg_ReadInit(data, '\xDA', &handle) &&
+        ! tkimg_ReadInit(data, '\001', &handle)) {
+        return TCL_ERROR;
+    }
 
     tempFileName = tempFileNameBuffer;
 #ifdef WIN32
@@ -1336,41 +1341,41 @@ static int ObjRead(
     tempFileName[0] = '\0';
     GetTempFileNameA(dir, "tki", 0, tempFileName);
     h = CreateFileA(tempFileName, GENERIC_READ|GENERIC_WRITE, 0, NULL,
-	    CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
+            CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
     if (h != INVALID_HANDLE_VALUE) {
-	CloseHandle(h);
+        CloseHandle(h);
     }
 #else
     dir = getenv("TMPDIR");
     if (dir) {
-	strcpy(tempFileName, dir);
+        strcpy(tempFileName, dir);
     } else {
 #ifdef P_tmpdir
-	strcpy(tempFileName, P_tmpdir);
+        strcpy(tempFileName, P_tmpdir);
 #else
-	strcpy(tempFilename, "/tmp");
+        strcpy(tempFilename, "/tmp");
 #endif
     }
     strcat(tempFileName, "/tkimgXXXXXX");
     retVal = mkstemp(tempFileName);
     if (retVal >= 0) {
-	close(retVal);
+        close(retVal);
     }
 #endif
 
     outfile = fopen(tempFileName, "wb");
     if (outfile == NULL) {
-	Tcl_AppendResult(interp, "error open output file", (char *) NULL);
-	return TCL_ERROR;
+        Tcl_AppendResult(interp, "error open output file", (char *) NULL);
+        return TCL_ERROR;
     }
 
     count = tkimg_Read2(&handle, buffer, BUFLEN);
     while (count == BUFLEN) {
-	fwrite(buffer, 1, count, outfile);
-	count = tkimg_Read2(&handle, buffer, BUFLEN);
+        fwrite(buffer, 1, count, outfile);
+        count = tkimg_Read2(&handle, buffer, BUFLEN);
     }
     if (count>0) {
-	fwrite(buffer, 1, count, outfile);
+        fwrite(buffer, 1, count, outfile);
     }
     fclose(outfile);
 
@@ -1417,6 +1422,7 @@ static int CommonRead(
     SGIFILE tf;
     FMTOPT opts;
     int result = TCL_OK;
+    char msgStr[1024];
 
     memset(&tf, 0, sizeof (SGIFILE));
     if (ParseFormatOpts(interp, format, &opts) != TCL_OK) {
@@ -1482,7 +1488,8 @@ static int CommonRead(
             block.offset[3] = opts.matte? 3: 0;
             break;
         default:
-            printf("Invalid number of channels: %d\n", (int) nchan);
+            tkimg_snprintf(msgStr, 1024, "Invalid number of channels: %d", nchan);
+            Tcl_AppendResult(interp, msgStr, (char *)NULL);
             return TCL_ERROR;
             break;
     }
@@ -1526,7 +1533,7 @@ static int ChnWrite(
     chan = tkimg_OpenFileChannel(interp, filename, 0644);
 #endif
     if (!chan) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
 
     handle.data = (char *) chan;
@@ -1566,25 +1573,25 @@ static int StringWrite(
     tempFileName[0] = '\0';
     GetTempFileNameA(dir, "tki", 0, tempFileName);
     h = CreateFileA(tempFileName, GENERIC_READ|GENERIC_WRITE, 0, NULL,
-	    CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
+            CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
     if (h != INVALID_HANDLE_VALUE) {
-	CloseHandle(h);
+        CloseHandle(h);
     }
 #else
     dir = getenv("TMPDIR");
     if (dir) {
-	strcpy(tempFileName, dir);
+        strcpy(tempFileName, dir);
     } else {
 #ifdef P_tmpdir
-	strcpy(tempFileName, P_tmpdir);
+        strcpy(tempFileName, P_tmpdir);
 #else
-	strcpy(tempFilename, "/tmp");
+        strcpy(tempFilename, "/tmp");
 #endif
     }
     strcat(tempFileName, "/tkimgXXXXXX");
     result = mkstemp(tempFileName);
     if (result >= 0) {
-	close(result);
+        close(result);
     }
 #endif
     Tcl_ExternalToUtfDString(NULL, tempFileName, -1, &ds);
@@ -1594,18 +1601,18 @@ static int StringWrite(
     outchan = tkimg_OpenFileChannel(interp, Tcl_DStringValue(&ds), 0644);
 #endif
     if (!outchan) {
-	Tcl_DStringFree(&ds);
-	return TCL_ERROR;
+        Tcl_DStringFree(&ds);
+        return TCL_ERROR;
     }
 
     handle.data = (char *) outchan;
     handle.state = IMG_CHAN;
 
     result =
-	CommonWrite(interp, Tcl_DStringValue(&ds), format, &handle, blockPtr);
+        CommonWrite(interp, Tcl_DStringValue(&ds), format, &handle, blockPtr);
     Tcl_DStringFree(&ds);
     if (MYCLOSE(interp, outchan) == TCL_ERROR) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
 
     tkimg_WriteInit(&data, &handle);
@@ -1614,7 +1621,7 @@ static int StringWrite(
     inchan = tkimg_OpenFileChannel(interp, Tcl_DStringValue(&ds), 0);
     Tcl_DStringFree(&ds);
     if (!inchan) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
 
     count = Tcl_Read(inchan, buffer, BUFLEN);
@@ -1725,7 +1732,6 @@ static int CommonWrite(
         printImgInfo (&tf.th, filename, "Saving image:");
     }
 
-    iclose (&tf.th);
     sgiClose (&tf);
     return TCL_OK;
 }
