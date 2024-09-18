@@ -16,6 +16,16 @@
  *
  */
 
+/*
+ * Macros PACKAGE_NAME and PACKAGE_VERSION are correctly supplied on
+ * the command line, but are overwritten by settings in tif_config.h
+ * when using libtiff version 4.X.
+ * So we save the supplied macro values before including any header
+ * file and use these values in (Tcl_PkgProvideEx.
+*/
+static const char * MY_PACKAGE_NAME    = { PACKAGE_NAME };
+static const char * MY_PACKAGE_VERSION = { PACKAGE_VERSION };
+
 #include "tifftcl.h"
 
 /*
@@ -55,11 +65,10 @@ Tifftcl_Init (interp)
   if (Tcl_InitStubs(interp, "8.3", 0) == NULL) {
     return TCL_ERROR;
   }
-  if (Tcl_PkgProvideEx(interp, PACKAGE_NAME, PACKAGE_VERSION,
+  if (Tcl_PkgProvideEx(interp, MY_PACKAGE_NAME, MY_PACKAGE_VERSION,
 		       (ClientData) &tifftclStubs) != TCL_OK) {
     return TCL_ERROR;
   }
-
   return TCL_OK;
 }
 

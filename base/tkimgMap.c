@@ -417,7 +417,7 @@ int tkimg_ReadFloatFile (tkimg_MFile *handle, float *buf, int width, int height,
              width, height, nchan, swapBytes? "yes": "no", findMinMax? "yes": "no"); fflush (stdout);
 #endif
     if (saturation <= 0.0f) {
-        saturation = 1.0E30;
+        saturation = (float) 1.0E30;
     }
     for (c=0; c<nchan; c++) {
         minVals[c] = (float) 1.0E30;

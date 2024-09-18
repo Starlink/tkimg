@@ -1,5 +1,3 @@
-/* $Id: tiff-grayscale.c 389 2015-07-06 11:56:49Z nijtmans $ */
-
 /*
  * tiff-grayscale.c -- create a Class G (grayscale) TIFF file
  *      with a gray response curve in linear optical density
@@ -86,6 +84,7 @@ int main(int argc, char **argv)
 
     if ((tif = TIFFOpen(argv[3], "w")) == NULL) {
         fprintf(stderr, "can't open %s as a TIFF file\n", argv[3]);
+		free(gray);
         return 0;
     }
 

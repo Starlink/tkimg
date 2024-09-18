@@ -1,4 +1,4 @@
-LIBTIFFXX_3.9 {
+LIBTIFFXX_4.0 {
   global:
     *;
 };

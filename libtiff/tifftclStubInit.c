@@ -70,7 +70,7 @@ const TifftclStubs tifftclStubs = {
     TIFFSetField, /* 47 */
     TIFFVSetField, /* 48 */
     TIFFWriteDirectory, /* 49 */
-    TIFFReassignTagToIgnore, /* 50 */
+    0, /* 50 */
     TIFFPrintDirectory, /* 51 */
     TIFFReadScanline, /* 52 */
     TIFFWriteScanline, /* 53 */
@@ -114,14 +114,14 @@ const TifftclStubs tifftclStubs = {
     TIFFSwabArrayOfDouble, /* 91 */
     TIFFReverseBits, /* 92 */
     TIFFGetBitRevTable, /* 93 */
-    0, /* 94 */
-    0, /* 95 */
-    0, /* 96 */
+    TIFFErrorExt, /* 94 */
+    TIFFGetStrileByteCount, /* 95 */
+    TIFFGetStrileOffset, /* 96 */
     0, /* 97 */
     0, /* 98 */
     0, /* 99 */
     TIFFPredictorInit, /* 100 */
-    0, /* 101 */
+    TIFFPredictorCleanup, /* 101 */
     0, /* 102 */
     0, /* 103 */
     0, /* 104 */
@@ -130,12 +130,12 @@ const TifftclStubs tifftclStubs = {
     0, /* 107 */
     0, /* 108 */
     0, /* 109 */
-    _TIFFSetupFieldInfo, /* 110 */
-    _TIFFMergeFieldInfo, /* 111 */
+    0, /* 110 */
+    TIFFMergeFieldInfo, /* 111 */
     _TIFFPrintFieldInfo, /* 112 */
-    TIFFFindFieldInfo, /* 113 */
+    0, /* 113 */
     TIFFFieldWithTag, /* 114 */
-    _TIFFSampleToTagType, /* 115 */
+    _TIFFMergeFields, /* 115 */
     0, /* 116 */
     0, /* 117 */
     0, /* 118 */
@@ -239,6 +239,7 @@ const TifftclStubs tifftclStubs = {
 #else  /* !LOGLUV_SUPPORT */
     TIFFInitSGILog, /* 162 */
 #endif /* !LOGLUV_SUPPORT */
+    _TIFFMultiplySSize, /* 163 */
 };
 
 /* !END!: Do not edit above this line. */

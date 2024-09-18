@@ -44,10 +44,10 @@ declare 6 {
     void _TIFFmemset(tdata_t a, int b, tsize_t c)
 }
 declare 7 {
-    void _TIFFmemcpy(tdata_t a, const tdata_t b, tsize_t c)
+    void _TIFFmemcpy(void *d, const void *s, tmsize_t c)
 }
 declare 8 {
-    int _TIFFmemcmp(const tdata_t a, const tdata_t b, tsize_t c)
+    int _TIFFmemcmp(const void *p1, const void *p2, tmsize_t c)
 }
 declare 9 {
     void _TIFFfree(tdata_t a)
@@ -131,7 +131,7 @@ declare 35 {
     tdir_t TIFFNumberOfDirectories(TIFF *tiffptr)
 }
 declare 36 {
-    uint32 TIFFCurrentDirOffset(TIFF *tiffptr)
+    uint64 TIFFCurrentDirOffset(TIFF *tiffptr)
 }
 declare 37 {
     tstrip_t TIFFCurrentStrip(TIFF *tiffptr)
@@ -158,7 +158,7 @@ declare 44 {
     int TIFFSetDirectory(TIFF *tiffptr, tdir_t a)
 }
 declare 45 {
-    int TIFFSetSubDirectory(TIFF *tiffptr, uint32 a)
+    int TIFFSetSubDirectory(TIFF *tiffptr, uint64 a)
 }
 declare 46 {
     int TIFFUnlinkDirectory(TIFF *tiffptr, tdir_t a)
@@ -171,9 +171,6 @@ declare 48 {
 }
 declare 49 {
     int TIFFWriteDirectory(TIFF *tiffptr)
-}
-declare 50 {
-    int TIFFReassignTagToIgnore(enum TIFFIgnoreSense a, int b)
 }
 declare 51 {
     void TIFFPrintDirectory(TIFF *tiffptr, FILE *a, long b)
@@ -297,44 +294,50 @@ declare 88 {
     void TIFFSwabDouble(double *a)
 }
 declare 89 {
-    void TIFFSwabArrayOfShort(uint16 *a, unsigned long b)
+    void TIFFSwabArrayOfShort(uint16 *a, tmsize_t b)
 }
 declare 90 {
-    void TIFFSwabArrayOfLong(uint32 *b, unsigned long a)
+    void TIFFSwabArrayOfLong(uint32 *b, tmsize_t a)
 }
 declare 91 {
-    void TIFFSwabArrayOfDouble(double *a, unsigned long b)
+    void TIFFSwabArrayOfDouble(double *a, tmsize_t b)
 }
 declare 92 {
-    void TIFFReverseBits(unsigned char *a, unsigned long b)
+    void TIFFReverseBits(unsigned char *a, tmsize_t b)
 }
 declare 93 {
     const unsigned char *TIFFGetBitRevTable(int a)
+}
+declare 94 {
+    void TIFFErrorExt(thandle_t h, const char *a, const char *b, ...)
+}
+declare 95 {
+    uint64 TIFFGetStrileByteCount(TIFF *tif, uint32 strile)
+}
+declare 96 {
+    uint64 TIFFGetStrileOffset(TIFF *tif, uint32 strile)
 }
 
 # Source: tif_predict.h ...
 declare 100 {
     int TIFFPredictorInit(TIFF *tiffptr)
 }
+declare 101 {
+    int TIFFPredictorCleanup(TIFF *tiffptr)
+}
 
 # Source: tif_dir.h ...
-declare 110 {
-    void _TIFFSetupFieldInfo(TIFF *tiffptr, const TIFFFieldInfo a[], size_t b)
-}
 declare 111 {
-    int _TIFFMergeFieldInfo(TIFF *tiffptr, const TIFFFieldInfo *a, int b)
+    int TIFFMergeFieldInfo(TIFF *tiffptr, const TIFFFieldInfo *a, uint32 b)
 }
 declare 112 {
     void _TIFFPrintFieldInfo(TIFF *tiffptr, FILE *a)
 }
-declare 113 {
-    const TIFFFieldInfo *TIFFFindFieldInfo(TIFF *tiffptr, ttag_t a, TIFFDataType b)
-}
 declare 114 {
-    const TIFFFieldInfo *TIFFFieldWithTag(TIFF *tiffptr, ttag_t a)
+    const TIFFField *TIFFFieldWithTag(TIFF *tiffptr, uint32 a)
 }
 declare 115 {
-    TIFFDataType _TIFFSampleToTagType(TIFF *tiffptr)
+    int _TIFFMergeFields(TIFF *tiffptr, const TIFFField *a, uint32 b)
 }
 
 
@@ -468,6 +471,9 @@ declare 161 generic {!PIXARLOG_SUPPORT} {
 }
 declare 162 generic {!LOGLUV_SUPPORT} {
     int TIFFInitSGILog(TIFF *tiffptr, int a)
+}
+declare 163 {
+    tmsize_t _TIFFMultiplySSize(TIFF *tiffptr, tmsize_t a, tmsize_t b, const char * c)
 }
 
 #########################################################################

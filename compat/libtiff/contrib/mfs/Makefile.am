@@ -23,6 +23,7 @@
 
 # Process this file with automake to produce Makefile.in.
 
-EXTRA_DIST = README mfs_file.c
-
-AM_CPPFLAGS = -I../../libtiff -I$(top_srcdir)/libtiff
+EXTRA_DIST = \
+	CMakeLists.txt \
+	README \
+	mfs_file.c

@@ -153,7 +153,7 @@ int
 	 * At last provide the package ...
 	 */
 
-	if (Tcl_PkgProvide(interp, PACKAGE_TCLNAME, PACKAGE_VERSION) != TCL_OK) {
+	if (Tcl_PkgProvide(interp, PACKAGE_TCLNAME, TKIMG_VERSION) != TCL_OK) {
 		return TCL_ERROR;
 	}
 	return TCL_OK;

@@ -79,7 +79,6 @@ xerrorhandler(clientData, e)
 }
 #endif
 
-/* OPA TODO: Must be a better way to specify non-existing format functions. */
 static int
 ChnRead(
     Tcl_Interp *interp,
@@ -198,25 +197,33 @@ static int ObjMatch(
     static BOOL CaptureWindow (BITMAPCAPTURE *bmpCapture, Tk_Window tkwin)
     {
         BOOL bResult = FALSE;
+        HWND hWnd;
+        HDC hdcScreen;
+        HDC hdcCapture;
+        int nWidth;
+        int nHeight;
+        LPBYTE lpCapture;
+        BITMAPINFO bmiCapture = {
+            { sizeof(BITMAPINFOHEADER), 0, 0, 1, 32, BI_RGB, 0, 0, 0, 0, 0 }
+        };
+
         if (!bmpCapture) {
             return bResult;
         }
          
         ZeroMemory (bmpCapture, sizeof(BITMAPCAPTURE));
          
-        HWND hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
+        hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
         if( ! hWnd ) {
             return bResult;
         }
-        HDC hdcScreen  = GetDC(hWnd);
-        HDC hdcCapture = CreateCompatibleDC(NULL);
-        int nWidth  = Tk_Width(tkwin);
-        int nHeight = Tk_Height(tkwin);
+        hdcScreen  = GetDC(hWnd);
+        hdcCapture = CreateCompatibleDC(NULL);
+        nWidth  = Tk_Width(tkwin);
+        nHeight = Tk_Height(tkwin);
 
-        LPBYTE lpCapture;
-        BITMAPINFO bmiCapture = { {
-            sizeof(BITMAPINFOHEADER), nWidth, -nHeight, 1, 32, BI_RGB, 0, 0, 0, 0, 0,
-        } };
+        bmiCapture.bmiHeader.biWidth  = nWidth;
+        bmiCapture.bmiHeader.biHeight = -nHeight;
 
         bmpCapture->hbm = CreateDIBSection (hdcScreen, &bmiCapture,
             DIB_RGB_COLORS, (LPVOID *)&lpCapture, NULL, 0);
@@ -265,7 +272,6 @@ static int ObjRead(
     Tk_PhotoImageBlock block;
     Tk_Window tkwin;
     int fileWidth, fileHeight, nBytes, x, y;
-    int rootX = 0, rootY = 0;
     const char *name;
 #if !defined(__WIN32__)
     XImage *ximage;
@@ -301,9 +307,7 @@ static int ObjRead(
 	return TCL_ERROR;
     }
 
-    Tk_GetRootCoords(tkwin, &rootX, &rootY);
-
-    fileWidth = Tk_Width(tkwin);
+    fileWidth  = Tk_Width(tkwin);
     fileHeight = Tk_Height(tkwin);
 
     if ((srcX + width) > fileWidth) {

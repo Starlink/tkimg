@@ -1,7 +1,13 @@
-We are happy to announce version 1.4.11 of the "tkImg" package
+We are happy to announce version 1.4.12 of the "tkImg" package
 (formerly known as "Img").
 
 This package enhances Tk, adding support for many image formats.
+
+Changes compared to version 1.4.11:
+  - Corrected bug in BMP and XBM parser.
+  - Updated external libraries: JPEG 9d, PNG 1.6.37, TIFF 4.1.0.
+  - Updated to latest TEA files.
+  - Corrected nmake builds.
 
 Changes compared to version 1.4.10:
   - Fixed "-format window" on Windows.
@@ -60,8 +66,7 @@ Changes compared to version 1.4.1:
     wrong format option.
 
 Changes compared to version 1.4:
-  - Will build correctly on more platforms (TEA upgraded
-    to version 3.9)
+  - Will build correctly on more platforms (TEA upgraded to version 3.9)
   - Upgrade to zlib 1.2.7, libpng-1.4.12, libtiff-3.9.4, libjpeg-8c
 
 

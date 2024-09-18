@@ -23,12 +23,12 @@
 #include <stdio.h>
 
 #define JPEGTCL_MAJOR_VERSION	9
-#define JPEGTCL_MINOR_VERSION	2
+#define JPEGTCL_MINOR_VERSION	4
 #define JPEGTCL_RELEASE_LEVEL	TCL_RELEASE
 #define JPEGTCL_RELEASE_SERIAL	0
 
-#define JPEGTCL_VERSION		"9.2"
-#define JPEGTCL_PATCH_LEVEL	"9.2"
+#define JPEGTCL_VERSION		"9.4"
+#define JPEGTCL_PATCH_LEVEL	"9.4"
 
 /*
  * Used to block the rest of this header file from resource compilers so

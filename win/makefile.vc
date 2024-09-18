@@ -53,7 +53,7 @@
 !include versions.vc
 TKIMG_INSTALL_SUBDIR = Img$(TKIMG_VERSION)
 
-ALLMODULES = bmp dted gif ico jpeg libjpeg libpng libtiff pcx pixmap png ppm \
+ALLMODULES = bmp dted flir gif ico jpeg libjpeg libpng libtiff pcx pixmap png ppm \
 	  ps raw sgi sun tga tiff window xbm xpm zlib
 !if "$(MODULES)" == ""
 MODULES = $(ALLMODULES)

@@ -1,5 +1,3 @@
-/* "$Id: mkg3states.c 389 2015-07-06 11:56:49Z nijtmans $ */
-
 /*
  * Copyright (c) 1991-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
@@ -42,7 +40,7 @@
 #include "tif_fax3.h"
 
 #ifndef HAVE_GETOPT
-extern int getopt(int, char**, char*);
+extern int getopt(int argc, char * const argv[], const char *optstring);
 #endif
 
 #define	streq(a,b)	(strcmp(a,b) == 0)
@@ -383,8 +381,11 @@ main(int argc, char* argv[])
     FILE* fd;
     char* outputfile;
     int c;
+
+#if !HAVE_DECL_OPTARG
     extern int optind;
     extern char* optarg;
+#endif
 
     while ((c = getopt(argc, argv, "c:s:bp")) != -1)
 	switch (c) {

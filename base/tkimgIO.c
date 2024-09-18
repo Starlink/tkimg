@@ -141,7 +141,7 @@ int tkimg_Read(
 
     switch (handle->state) {
       case IMG_STRING:
-	if (count > handle->length) {
+	if ((unsigned int)count > handle->length) {
 	    count = handle->length;
 	}
 	if (count) {
@@ -223,7 +223,8 @@ size_t tkimg_Read2(
 	char *dst /* where to put the result */,
 	size_t count /* number of bytes */
 ) {
-    int i, c;
+    size_t i;
+    int c;
     size_t bytesRead, bytesToRead;
     char *dstPtr;
 
@@ -261,7 +262,7 @@ size_t tkimg_Read2(
 	   	if (bufEnd < 0)
 		    return bufEnd;
 	    }
-	    if (bufStart + bytesToRead <= bufEnd +1) {
+	    if (bufStart + (int)bytesToRead <= bufEnd + 1) {
 #ifdef DEBUG_LOCAL
 		    printf("All in buffer: memcpy %d bytes\n", bytesToRead);
 #endif
@@ -432,7 +433,7 @@ size_t tkimg_Write2(
     bufcount = curcount + count + count/3 + count/52 + 1024;
 
     /* make sure that the DString contains enough space */
-    if (bufcount >= (handle->buffer->spaceAvl)) {
+    if (bufcount >= (size_t)(handle->buffer->spaceAvl)) {
 	Tcl_DStringSetLength(handle->buffer, bufcount + 4096);
 	handle->data = Tcl_DStringValue(handle->buffer) + curcount;
     }

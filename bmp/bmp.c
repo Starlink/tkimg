@@ -273,10 +273,14 @@ CommonMatch(
         return 0;
 
     if (colorMap) {
-        if (c > 36) tkimg_Read2(handle, (char *) buf, c - 36);
+        if (c > 36) {
+            if (tkimg_Read2(handle, (char *) buf, c - 36) != c - 36 )
+                return 0;
+        }
         if (compression == BI_BITFIELDS) {
             /* Read the channel masks. */
-            tkimg_Read2(handle, (char *) buf, 3*4);
+            if (tkimg_Read2(handle, (char *) buf, 3*4) != 3*4 )
+                return 0;
             if (mask) {
                 mask[0] = getUInt32((unsigned char *) &buf[0]);
                 mask[1] = getUInt32((unsigned char *) &buf[4]);
@@ -292,16 +296,21 @@ CommonMatch(
             offBits -= (3+(c!=12)) * clrUsed;
             *colorMap = ptr = (unsigned char *) ckalloc(3*clrUsed);
             for (i = 0; i < clrUsed; i++) {
-                tkimg_Read2(handle, (char *) colbuf, 3+(c!=12));
+                if (tkimg_Read2(handle, (char *) colbuf, 3+(c!=12)) != 3+(c!=12))
+                    return 0;
                 *ptr++ = colbuf[0]; *ptr++ = colbuf[1]; *ptr++ = colbuf[2];
                 /*printf("color %d: %d %d %d\n", i, colbuf[2], colbuf[1], colbuf[0]);*/
             }
         }
         while (offBits>28) {
             offBits -= 28;
-            tkimg_Read2(handle, (char *) buf, 28);
+            if (tkimg_Read2(handle, (char *) buf, 28) != 28)
+                return 0;
         }
-        if (offBits) tkimg_Read2(handle, (char *) buf, offBits);
+        if (offBits > 0) {
+            if (tkimg_Read2(handle, (char *) buf, offBits) != offBits)
+                return 0;
+        }
         if (numCols) {
             *numCols = clrUsed;
         }

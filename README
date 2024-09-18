@@ -1,16 +1,16 @@
 
         Tcl/Tk Image formats (TkImg)
-        (Version 1.4.11 / May 2020)
+        (Version 1.4.12 / January 2021)
 
         Jan Nijtmans, Andreas Kupries, Paul Obermeier
 
 This file contains a collection of format handlers for the Tk photo
-image type, and a new image type, pixmaps.  It can be used in
+image type, and a new image type, pixmaps. It can be used in
 combination with Tcl/Tk 8.3 or later but 8.6 or newer are highly
 recommended.
 
 Included in this distribution are the most recent versions (as of
-March 2019) of the libz, libpng, libjpeg, and libtiff libraries.
+January 2021) of the libz, libpng, libjpeg, and libtiff libraries.
 These are not required, unless you need support for the PNG, JPEG,
 or TIFF format. Note that you have to build these libraries to
 support the named formats, even if your system already has shared
@@ -40,7 +40,7 @@ See below for details on these packages.
 
 BUILDING - The convenient way
 
-The toplevel directory of tkImg contains a configure and Makefile for
+The toplevel directory of tkImg contains a configure file for
 convenient configuration and building of all packages in the
 extension.
 
@@ -69,7 +69,7 @@ build directory. Instead run
     make install
 
 in the sub directories of the build directory which contain the
-requested packages, and their dependencies !
+requested packages, and their dependencies!
 
 Note, that target install also builds the documentation based on 
 Tcl script dtplite. To build and install without documentation, use
@@ -122,21 +122,21 @@ Beyond that are the packages providing the various format
 handlers. They can be built in any order. Some of them depend on
 supporting packages, as noted below. Their names and directories are
 
-    Name        Directory   Dependency
+    Name        Directory     Dependency
     -------------------------------------------------
     img::bmp    tkimg/bmp
     img::gif    tkimg/gif
     img::ico    tkimg/ico
-    img::jpeg   tkimg/jpeg  jpegtcl
+    img::jpeg   tkimg/jpeg    jpegtcl
     img::pcx    tkimg/pcx
     img::pixmap tkimg/pixmap
-    img::png    tkimg/png   pngtcl, zlibtcl
+    img::png    tkimg/png     pngtcl, zlibtcl
     img::ppm    tkimg/ppm
     img::ps     tkimg/ps
     img::sgi    tkimg/sgi
     img::sun    tkimg/sun
     img::tga    tkimg/tga
-    img::tiff   tkimg/tiff  tifftcl, zlibtcl, jpegtcl
+    img::tiff   tkimg/tiff    tifftcl, zlibtcl, jpegtcl
     img::window tkimg/window
     img::xbm    tkimg/xbm
     img::xpm    tkimg/xpm
@@ -155,9 +155,9 @@ img::flir reads FLIR files and transforms the temperature information
 into photo images.
 img::raw can transform any form of binary matrix data
 (8-bit and 16-bit integer, 32-bit float) into a photo image.
-As DTED and RAW files do not have a magic key or other identifier at the beginning
-of the file, it is not possible to automatically detect the format by reading
-some file header.
+As DTED and RAW files do not have a magic key or other identifier at the
+beginning of the file, it is not possible to automatically detect the 
+format by reading some file header.
  
 CONFIGURE
 

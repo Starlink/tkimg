@@ -23,6 +23,10 @@
 
 # Process this file with automake to produce Makefile.in.
 
-EXTRA_DIST = README tif_imageiter.c tif_imageiter.h tif_pdsdirread.c tif_pdsdirwrite.c
-
-AM_CPPFLAGS = -I../../libtiff -I$(top_srcdir)/libtiff
+EXTRA_DIST = \
+	CMakeLists.txt \
+	README \
+	tif_imageiter.c \
+	tif_imageiter.h \
+	tif_pdsdirread.c \
+	tif_pdsdirwrite.c

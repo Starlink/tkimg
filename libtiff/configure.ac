@@ -7,7 +7,7 @@ dnl
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tifftcl],[3.9.7])
+AC_INIT([tifftcl],[4.1.0])
 
 TEA_INIT([3.9])
 
@@ -66,7 +66,8 @@ then
 else
     TIFFHOST="$host"
 fi
-${srcdir}/../compat/libtiff/configure --disable-zlib --disable-pixarlog --disable-jpeg --disable-jbig \
+${srcdir}/../compat/libtiff/configure --disable-zlib --disable-lzma \
+	--disable-pixarlog --disable-jpeg --disable-jbig --disable-webp \
 	"--with-CC=$TIFFCC" $TIFFHOST
 mv -f tifftcl_confdefs.h confdefs.h
 

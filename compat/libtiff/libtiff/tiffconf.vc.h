@@ -7,20 +7,32 @@
 #ifndef _TIFFCONF_
 #define _TIFFCONF_
 
-/* Define to 1 if the system has the type `int16'. */
-/* #undef HAVE_INT16 */
-
-/* Define to 1 if the system has the type `int32'. */
-/* #undef HAVE_INT32 */
-
-/* Define to 1 if the system has the type `int8'. */
-/* #undef HAVE_INT8 */
-
 /* The size of a `int', as computed by sizeof. */
 #define SIZEOF_INT 4
 
-/* The size of a `long', as computed by sizeof. */
-#define SIZEOF_LONG 4
+/* Signed 8-bit type */
+#define TIFF_INT8_T signed char
+
+/* Unsigned 8-bit type */
+#define TIFF_UINT8_T unsigned char
+
+/* Signed 16-bit type */
+#define TIFF_INT16_T signed short
+
+/* Unsigned 16-bit type */
+#define TIFF_UINT16_T unsigned short
+
+/* Signed 32-bit type formatter */
+#define TIFF_INT32_FORMAT "%d"
+
+/* Signed 32-bit type */
+#define TIFF_INT32_T signed int
+
+/* Unsigned 32-bit type formatter */
+#define TIFF_UINT32_FORMAT "%u"
+
+/* Unsigned 32-bit type */
+#define TIFF_UINT32_T unsigned int
 
 /* Signed 64-bit type formatter */
 #define TIFF_INT64_FORMAT "%I64d"
@@ -33,6 +45,24 @@
 
 /* Unsigned 64-bit type */
 #define TIFF_UINT64_T unsigned __int64
+
+#if _WIN64
+/*
+  Windows 64-bit build
+*/
+
+/* Signed size type */
+#  define TIFF_SSIZE_T TIFF_INT64_T
+
+#else
+/*
+  Windows 32-bit build
+*/
+
+/* Signed size type */
+#  define TIFF_SSIZE_T signed int
+
+#endif
 
 /* Compatibility stuff. */
 
@@ -52,6 +82,9 @@
 
 /* Support JPEG compression (requires IJG JPEG library) */
 /* #undef JPEG_SUPPORT */
+
+/* Support JBIG compression (requires JBIG-KIT library) */
+/* #undef JBIG_SUPPORT */
 
 /* Support LogLuv high dynamic range encoding */
 #define LOGLUV_SUPPORT 1
@@ -93,6 +126,9 @@
 /* Pick up YCbCr subsampling info from the JPEG data stream to support files
    lacking the tag (default enabled). */
 #define CHECK_JPEG_YCBCR_SUBSAMPLING 1
+
+/* Support MS MDI magic number files as TIFF */
+/* #undef MDI_SUPPORT */
 
 /*
  * Feature support definitions.

@@ -2,7 +2,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 
-AC_INIT([Img],[1.4.11])
+AC_INIT([Img],[1.4.12])
 
 TEA_INIT([3.9])
 

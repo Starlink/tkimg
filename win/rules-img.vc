@@ -86,9 +86,10 @@ pkgindex: default-pkgindex
 $(PRJ_OBJS): $(TMP_DIR)\init.c
 $(TMP_DIR)\init.c:
 	nmakehlp -s << ..\..\init.c > $(TMP_DIR)\init.c
-@CPACKAGE@    $(CPACKAGE)
-%PACKAGE%     $(PACKAGE_NAME)
-%PHIMGTYPE%   $(PHIMGTYPE)
+@CPACKAGE@       $(CPACKAGE)
+%PACKAGE%        $(PACKAGE_NAME)
+%PHIMGTYPE%      $(PHIMGTYPE)
+%PHIMGTYPE_BETA% $(PHIMGTYPE_BETA)
 <<
 
 # Special install targets to install all DLL's into the main img directory

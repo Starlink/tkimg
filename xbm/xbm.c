@@ -412,7 +412,6 @@ ReadXBMFileHeader(
      * important to check for "char" in the last line, in order to
      * reject old X10-style bitmaps that used shorts.
      */
-
     width = 0;
     height = 0;
     while (1) {
@@ -471,6 +470,9 @@ ReadXBMFileHeader(
     }
 
 getData:
+    if (width == 0 || height == 0) {
+        return 0;
+    }
     *widthPtr = width;
     *heightPtr = height;
     return 1;
