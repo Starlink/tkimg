@@ -55,7 +55,11 @@ CLEANFILES = test_packbits.tif o-*
 if HAVE_JPEG
 JPEG_DEPENDENT_CHECK_PROG=raw_decode
 JPEG_DEPENDENT_TESTSCRIPTS=\
-	tiff2rgba-quad-tile.jpg.sh
+	tiff2rgba-quad-tile.jpg.sh \
+	tiff2rgba-ojpeg_zackthecat_subsamp22_single_strip.sh \
+	tiff2rgba-ojpeg_chewey_subsamp21_multi_strip.sh \
+	tiff2rgba-ojpeg_single_strip_no_rowsperstrip.sh
+
 else
 JPEG_DEPENDENT_CHECK_PROG=
 JPEG_DEPENDENT_TESTSCRIPTS=
@@ -63,9 +67,9 @@ endif
 
 # Executable programs which need to be built in order to support tests
 check_PROGRAMS = \
-	ascii_tag long_tag short_tag strip_rw rewrite custom_dir \
-	defer_strile_loading defer_strile_writing testtypes \
-	$(JPEG_DEPENDENT_CHECK_PROG)
+	ascii_tag long_tag short_tag strip_rw rewrite custom_dir custom_dir_EXIF_231 \
+	rational_precision2double defer_strile_loading defer_strile_writing test_directory \
+	testtypes test_signed_tags $(JPEG_DEPENDENT_CHECK_PROG)
 
 # Test scripts to execute
 TESTSCRIPTS = \
@@ -145,6 +149,8 @@ TESTSCRIPTS = \
 	tiff2rgba-palette-1c-8b.sh \
 	tiff2rgba-rgb-3c-16b.sh \
 	tiff2rgba-rgb-3c-8b.sh \
+	testfax4.sh \
+	testdeflatelaststripextradata.sh \
 	$(JPEG_DEPENDENT_TESTSCRIPTS)
 
 # This list should contain the references files
@@ -153,7 +159,9 @@ REFFILES = \
 	refs/o-tiff2ps-EPS1.ps \
 	refs/o-tiff2ps-PS1.ps \
 	refs/o-tiff2ps-PS2.ps \
-	refs/o-tiff2ps-PS3.ps
+	refs/o-tiff2ps-PS3.ps \
+	refs/o-testfax4.tiff \
+	refs/o-deflate-last-strip-extra-data.tiff
 
 # This list should contain all of the TIFF files in the 'images'
 # subdirectory which are intended to be used as input images for
@@ -171,11 +179,18 @@ TIFFIMAGES = \
 	images/rgb-3c-8b.tiff \
 	images/quad-tile.jpg.tiff \
 	images/quad-lzw-compat.tiff \
-	images/lzw-single-strip.tiff
+	images/lzw-single-strip.tiff \
+	images/ojpeg_zackthecat_subsamp22_single_strip.tiff \
+	images/ojpeg_chewey_subsamp21_multi_strip.tiff \
+	images/ojpeg_single_strip_no_rowsperstrip.tiff \
+	images/testfax4.tiff \
+	images/deflate-last-strip-extra-data.tiff \
+	images/custom_dir_EXIF_GPS.tiff
 
 PNMIMAGES = \
 	images/minisblack-1c-8b.pgm \
 	images/miniswhite-1c-1b.pbm \
+	images/rgb-3c-16b.ppm \
 	images/rgb-3c-8b.ppm
 
 # This list should include all of the files in the 'images'
@@ -184,11 +199,15 @@ PNMIMAGES = \
 IMAGES_EXTRA_DIST = \
 	images/README.txt \
 	images/miniswhite-1c-1b.g3 \
+	images/test_float64_predictor2_le_lzw.tif \
+	images/test_float64_predictor2_be_lzw.tif \
 	$(PNMIMAGES) \
 	$(TIFFIMAGES)
 
 noinst_HEADERS = tifftest.h
 
+test_signed_tags_SOURCES = test_signed_tags.c
+test_signed_tags_LDADD = $(LIBTIFF)
 ascii_tag_SOURCES = ascii_tag.c
 ascii_tag_LDADD = $(LIBTIFF)
 long_tag_SOURCES = long_tag.c check_tag.c
@@ -203,10 +222,16 @@ raw_decode_SOURCES = raw_decode.c
 raw_decode_LDADD = $(LIBTIFF)
 custom_dir_SOURCES = custom_dir.c
 custom_dir_LDADD = $(LIBTIFF)
+rational_precision2double_SOURCES = rational_precision2double.c
+rational_precision2double_LDADD = $(LIBTIFF)
+custom_dir_EXIF_231_SOURCES = custom_dir_EXIF_231.c
+custom_dir_EXIF_231_LDADD = $(LIBTIFF)
 defer_strile_loading_SOURCES = defer_strile_loading.c
 defer_strile_loading_LDADD = $(LIBTIFF)
 defer_strile_writing_SOURCES = defer_strile_writing.c
 defer_strile_writing_LDADD = $(LIBTIFF)
+test_directory_SOURCES = test_directory.c
+test_directory_LDADD = $(LIBTIFF)
 
 AM_CPPFLAGS = -I$(top_srcdir)/libtiff
 

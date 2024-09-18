@@ -17,7 +17,7 @@
 # include <fcntl.h>
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #define STRNICMP strnicmp
 #else 
 #define STRNICMP strncasecmp
@@ -236,10 +236,10 @@ int formatIPTC(FILE *ifile, FILE *ofile)
 
       /* we found the 0x1c tag and now grab the dataset and record number tags */
       dataset = getc(ifile);
-      if ((char) dataset == EOF)
+      if (dataset == EOF)
         return -1;
       recnum = getc(ifile);
-      if ((char) recnum == EOF)
+      if (recnum == EOF)
         return -1;
       /* try to match this record to one of the ones in our named table */
       for (i=0; i< tagcount; i++)
@@ -414,14 +414,14 @@ int main(int argc, char *argv[])
             {
             case 't':
               mode = 1;
-#ifdef WIN32
+#ifdef _WIN32
               /* Set "stdout" to binary mode: */
               _setmode( _fileno( ofile ), _O_BINARY );
 #endif
               break;
             case 'b':
               mode = 0;
-#ifdef WIN32
+#ifdef _WIN32
               /* Set "stdin" to binary mode: */
               _setmode( _fileno( ifile ), _O_BINARY );
 #endif

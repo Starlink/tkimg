@@ -161,7 +161,7 @@ const TifftclStubs tifftclStubs = {
     _TIFFDefaultStripSize, /* 138 */
     _TIFFDefaultTileSize, /* 139 */
     _TIFFsetByteArray, /* 140 */
-    _TIFFsetString, /* 141 */
+    0, /* 141 */
     _TIFFsetShortArray, /* 142 */
     _TIFFsetLongArray, /* 143 */
     _TIFFsetFloatArray, /* 144 */

@@ -7,7 +7,7 @@ dnl
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tifftcl],[4.1.0])
+AC_INIT([tifftcl],[4.4.0])
 
 TEA_INIT([3.9])
 
@@ -219,6 +219,7 @@ TEA_EXPORT_CONFIG(tifftcl)
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-AC_OUTPUT([Makefile tifftclConfig.sh])
+AC_CONFIG_FILES([Makefile tifftclConfig.sh])
+AC_OUTPUT
 
 #--------------------------------------------------------------------

@@ -7,7 +7,7 @@ dnl
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimg],[1.4.13])
+AC_INIT([tkimg],[1.4.14])
 
 TEA_INIT([3.9])
 
@@ -170,6 +170,7 @@ TEA_EXPORT_CONFIG(tkimg)
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-AC_OUTPUT([Makefile pkgIndex.tcl tkimgConfig.sh])
+AC_CONFIG_FILES([Makefile pkgIndex.tcl tkimgConfig.sh])
+AC_OUTPUT
 
 #--------------------------------------------------------------------

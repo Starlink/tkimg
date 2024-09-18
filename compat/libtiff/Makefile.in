@@ -126,8 +126,10 @@ DIST_COMMON = $(srcdir)/Makefile.am $(top_srcdir)/configure \
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
-CONFIG_HEADER = $(top_builddir)/libtiff/tif_config.h \
-	$(top_builddir)/libtiff/tiffconf.h
+CONFIG_HEADER = $(top_builddir)/config/config.h \
+	$(top_builddir)/libtiff/tif_config.h \
+	$(top_builddir)/libtiff/tiffconf.h \
+	$(top_builddir)/port/libport_config.h
 CONFIG_CLEAN_FILES = libtiff-4.pc
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_P = $(am__v_P_@AM_V@)
@@ -217,11 +219,12 @@ CSCOPE = cscope
 DIST_SUBDIRS = $(SUBDIRS)
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/libtiff-4.pc.in \
 	$(top_srcdir)/config/compile $(top_srcdir)/config/config.guess \
+	$(top_srcdir)/config/config.h.in \
 	$(top_srcdir)/config/config.sub \
 	$(top_srcdir)/config/install-sh $(top_srcdir)/config/ltmain.sh \
 	$(top_srcdir)/config/missing ChangeLog TODO config/compile \
-	config/config.guess config/config.sub config/depcomp \
-	config/install-sh config/ltmain.sh config/missing
+	config/config.guess config/config.sub config/install-sh \
+	config/ltmain.sh config/missing
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -257,9 +260,9 @@ am__relativize = \
     dir1=`echo "$$dir1" | sed -e "$$sed_rest"`; \
   done; \
   reldir="$$dir2"
-DIST_ARCHIVES = $(distdir).tar.gz $(distdir).zip
+DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.xz $(distdir).zip
 GZIP_ENV = --best
-DIST_TARGETS = dist-gzip dist-zip
+DIST_TARGETS = dist-xz dist-gzip dist-zip
 distuninstallcheck_listfiles = find . -type f -print
 am__distuninstallcheck_listfiles = $(distuninstallcheck_listfiles) \
   | sed 's|^\./|$(prefix)/|' | grep -v '$(infodir)/dir$$'
@@ -403,12 +406,14 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
 sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 tiff_libs_private = @tiff_libs_private@
+tiff_requires_private = @tiff_requires_private@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
@@ -423,14 +428,12 @@ docfiles = \
 	VERSION
 
 EXTRA_DIST = \
+	placeholder.h \
+	cmake \
 	CMakeLists.txt \
 	HOWTO-RELEASE \
-	Makefile.vc \
-	SConstruct \
 	autogen.sh \
-	configure.com \
-	libtiff-4.pc.in \
-	nmake.opt
+	libtiff-4.pc.in
 
 dist_doc_DATA = $(docfiles)
 SUBDIRS = port libtiff tools build contrib test man html
@@ -479,6 +482,21 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 $(am__aclocal_m4_deps):
+
+config/config.h: config/stamp-h1
+	@test -f $@ || rm -f config/stamp-h1
+	@test -f $@ || $(MAKE) $(AM_MAKEFLAGS) config/stamp-h1
+
+config/stamp-h1: $(top_srcdir)/config/config.h.in $(top_builddir)/config.status
+	@rm -f config/stamp-h1
+	cd $(top_builddir) && $(SHELL) ./config.status config/config.h
+$(top_srcdir)/config/config.h.in: @MAINTAINER_MODE_TRUE@ $(am__configure_deps) 
+	($(am__cd) $(top_srcdir) && $(AUTOHEADER))
+	rm -f config/stamp-h1
+	touch $@
+
+distclean-hdr:
+	-rm -f config/config.h config/stamp-h1
 libtiff-4.pc: $(top_builddir)/config.status $(srcdir)/libtiff-4.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
@@ -717,7 +735,6 @@ dist-bzip2: distdir
 dist-lzip: distdir
 	tardir=$(distdir) && $(am__tar) | lzip -c $${LZIP_OPT--9} >$(distdir).tar.lz
 	$(am__post_remove_distdir)
-
 dist-xz: distdir
 	tardir=$(distdir) && $(am__tar) | XZ_OPT=$${XZ_OPT--e} xz -c >$(distdir).tar.xz
 	$(am__post_remove_distdir)
@@ -875,8 +892,8 @@ clean-am: clean-generic clean-libtool mostlyclean-am
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic distclean-libtool \
-	distclean-tags
+distclean-am: clean-am distclean-generic distclean-hdr \
+	distclean-libtool distclean-tags
 
 dvi: dvi-recursive
 
@@ -945,9 +962,9 @@ uninstall-am: uninstall-dist_docDATA uninstall-pkgconfigDATA
 	clean-libtool cscope cscopelist-am ctags ctags-am dist \
 	dist-all dist-bzip2 dist-gzip dist-lzip dist-shar dist-tarZ \
 	dist-xz dist-zip distcheck distclean distclean-generic \
-	distclean-libtool distclean-tags distcleancheck distdir \
-	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-am install-data install-data-am \
+	distclean-hdr distclean-libtool distclean-tags distcleancheck \
+	distdir distuninstallcheck dvi dvi-am html html-am info \
+	info-am install install-am install-data install-data-am \
 	install-dist_docDATA install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am install-info \
 	install-info-am install-man install-pdf install-pdf-am \

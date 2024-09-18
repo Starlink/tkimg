@@ -7,7 +7,7 @@ dnl
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([pngtcl],[1.6.37])
+AC_INIT([pngtcl],[1.6.38])
 
 TEA_INIT([3.9])
 
@@ -65,7 +65,8 @@ IMG_SRCPATH(zlibtcl)
 TEA_ADD_SOURCES([pngtcl.c pngtclStubInit.c])
 
 TEA_ADD_SOURCES([
-	../compat/libpng/png.c	../compat/libpng/pngerror.c	../compat/libpng/pngmem.c
+         ../compat/libpng/arm/arm_init.c ../compat/libpng/arm/filter_neon_intrinsics.c ../compat/libpng/arm/palette_neon_intrinsics.c
+	../compat/libpng/png.c	        ../compat/libpng/pngerror.c	../compat/libpng/pngmem.c
 	../compat/libpng/pngpread.c	../compat/libpng/pngread.c	../compat/libpng/pngrio.c
 	../compat/libpng/pngrtran.c	../compat/libpng/pngrutil.c	../compat/libpng/pngset.c
 	../compat/libpng/pngtrans.c	../compat/libpng/pngwio.c	../compat/libpng/pngwrite.c
@@ -195,6 +196,7 @@ TEA_EXPORT_CONFIG(pngtcl)
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-AC_OUTPUT([Makefile pngtclConfig.sh])
+AC_CONFIG_FILES([Makefile pngtclConfig.sh])
+AC_OUTPUT
 
 #--------------------------------------------------------------------

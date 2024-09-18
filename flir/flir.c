@@ -13,7 +13,7 @@
  * A photo image handler for the FLIR FPF Public Image Format.
  *
  * The following image types are currently supported:
- * FPF images with short and floating point values.
+ * FPF images with short, int, float and double values.
  *
  * The following format options are available:
  * Read  FLIR image: "flir -verbose <bool> -map <enum>
@@ -26,14 +26,14 @@
  * -verbose <bool>:     If set to true, additional information about the file
  *                      format is printed to stdout. Default is false.
  *
- * -map <enum>:         Specify the mode when mapping the 32 or 16-bit values
+ * -map <enum>:         Specify the mode when mapping the 64, 32 or 16-bit values
  *                      of the image to 8-bit gray scale values for displaying.
  *                      Valid mapping mode strings are: none, minmax, agc.
  *                      Default mode is minmax.
  *
  *                      Mode "none":
  *                      If mapping mode is set to "none", no mapping of input
- *                      values is done. Use this mode, if the image already 
+ *                      values is done. Use this mode, if the image already
  *                      contains RGB values in the range of 0 ..255.
  *                      When using mode "none", no information about the
  *                      minimum and maximum pixel values is gathered during
@@ -46,7 +46,7 @@
  *
  *                      Mode "agc":
  *                      "agc" applies an automatic gain control algorithmn to the
- *                      image data. 
+ *                      image data.
  *                      Currently implemented for 1-channel 32-bit float images only.
  * -gamma <float>:      Specify a gamma correction to be applied when mapping
  *                      the input data to 8-bit image values.
@@ -60,7 +60,7 @@
  *                      Default is the minimum value found in the image data.
  * -saturation <float>: If option is given, an Automatic Gain Control algorithmn is
  *                      applied to the input values. The supplied value specifies the
- *                      saturation value, i.e. all pixel values greater than the 
+ *                      saturation value, i.e. all pixel values greater than the
  *                      saturation are mapped to white.
  *                      Valid for mapping mode: agc
  * -cutoff <float>:     If option is given, an Automatic Gain Control algorithmn is
@@ -110,7 +110,7 @@ typedef unsigned char UByte;    /* Unsigned  8 bit integer */
 typedef char  Byte;             /* Signed    8 bit integer */
 typedef unsigned short UShort;  /* Unsigned 16 bit integer */
 typedef short Short;            /* Signed   16 bit integer */
-typedef int UInt;               /* Unsigned 32 bit integer */
+typedef unsigned int UInt;      /* Unsigned 32 bit integer */
 typedef int Int;                /* Signed   32 bit integer */
 typedef float Float;            /* IEEE     32 bit floating point */
 typedef double Double;          /* IEEE     64 bit floating point */
@@ -187,7 +187,7 @@ typedef struct {
     FPF_OBJECT_PARAM objParam;
     FPF_DATETIME     datetime;
     FPF_SCALING      scaling;
-    UInt             spare[32]; 
+    UInt             spare[32];
 } FPF_HEADER;
 
 /* Format options structure for use with ParseFormatOpts */
@@ -209,6 +209,7 @@ typedef struct {
     UByte  *pixbuf;
     Double *doubleBuf;
     Float  *floatBuf;
+    UInt   *uintBuf;
     UShort *ushortBuf;
     UByte  *ubyteBuf;
 } FPF_FILE;
@@ -218,6 +219,7 @@ static void fpfClose (FPF_FILE *tf)
     if (tf->pixbuf)    ckfree ((char *)tf->pixbuf);
     if (tf->doubleBuf) ckfree ((char *)tf->doubleBuf);
     if (tf->floatBuf)  ckfree ((char *)tf->floatBuf);
+    if (tf->uintBuf)   ckfree ((char *)tf->uintBuf);
     if (tf->ushortBuf) ckfree ((char *)tf->ushortBuf);
     if (tf->ubyteBuf)  ckfree ((char *)tf->ubyteBuf);
     return;
@@ -236,9 +238,11 @@ static void printImgInfo (FPF_HEADER *th, FMTOPT *opts,
     }
     sprintf (str, "%s %s\n", msg, filename);                                                       OUT;
     sprintf (str, "\tSize in pixel    : %d x %d\n", th->imgData.width, th->imgData.height);        OUT;
-    sprintf (str, "\tPixel type       : %s\n",      (th->imgData.pixelType == TYPE_FLOAT? strFloat:
-                                                    (th->imgData.pixelType == TYPE_SHORT? strShort:
-                                                                                  strUnknown)));   OUT;
+    sprintf (str, "\tPixel type       : %s\n",      (th->imgData.pixelType == TYPE_DOUBLE? strDouble:
+                                                    (th->imgData.pixelType == TYPE_FLOAT?  strFloat:
+                                                    (th->imgData.pixelType == TYPE_INT?    strInt:
+                                                    (th->imgData.pixelType == TYPE_SHORT?  strShort:
+                                                                                  strUnknown))))); OUT;
     sprintf (str, "\tMapping mode     : %s\n",      (opts->mapMode == IMG_MAP_NONE?   IMG_MAP_NONE_STR:
                                                     (opts->mapMode == IMG_MAP_MINMAX? IMG_MAP_MINMAX_STR:
                                                     (opts->mapMode == IMG_MAP_AGC?    IMG_MAP_AGC_STR:
@@ -316,7 +320,7 @@ static int ParseFormatOpts(
     FMTOPT *opts
 ) {
     static const char *const fpfOptions[] = {
-         "-verbose", "-min", "-max", "-gamma", "-map", 
+         "-verbose", "-min", "-max", "-gamma", "-map",
          "-uuencode", "-saturation", "-cutoff", "-printagc", NULL
     };
     int objc, i, index;
@@ -588,15 +592,17 @@ static int CommonRead(
     Tk_PhotoImageBlock block;
     Int y, c;
     Int fileWidth = 0, fileHeight = 0;
-    Float minVals[IMG_MAX_CHANNELS], maxVals[IMG_MAX_CHANNELS];
+    Double minVals[IMG_MAX_CHANNELS], maxVals[IMG_MAX_CHANNELS];
     int stopY, outY, outWidth, outHeight;
     FPF_FILE tf;
     FMTOPT opts;
     Int matte = 0;
     UByte  *pixbufPtr;
+    Double *doubleBufPtr;
     Float  *floatBufPtr;
+    UInt   *uintBufPtr;
     UShort *ushortBufPtr;
-    Float  gtable[IMG_GAMMA_TABLE_SIZE];
+    Double gtable[IMG_GAMMA_TABLE_SIZE];
     int result = TCL_OK;
     int nChans = 1;
     Boln swapBytes = FALSE;
@@ -633,22 +639,37 @@ static int CommonRead(
     tkimg_CreateGammaTable (opts.gamma, gtable);
 
     switch (tf.th.imgData.pixelType) {
+        case TYPE_DOUBLE: {
+            tf.doubleBuf = (Double *)ckalloc (fileWidth*fileHeight*nChans*sizeof (Double));
+            tkimg_ReadDoubleFile (handle, tf.doubleBuf, fileWidth, fileHeight, nChans,
+                                  swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
+                                  minVals, maxVals, opts.saturation);
+            break;
+        }
         case TYPE_FLOAT: {
             tf.floatBuf = (Float *)ckalloc (fileWidth*fileHeight*nChans*sizeof (Float));
             tkimg_ReadFloatFile (handle, tf.floatBuf, fileWidth, fileHeight, nChans,
-                                 swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE, 
+                                 swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
                                  minVals, maxVals, opts.saturation);
+            break;
+        }
+        case TYPE_INT: {
+            tf.uintBuf = (UInt *)ckalloc (fileWidth*fileHeight*nChans*sizeof (UInt));
+            tkimg_ReadUIntFile (handle, tf.uintBuf, fileWidth, fileHeight, nChans,
+                                swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
+                                minVals, maxVals, opts.saturation);
             break;
         }
         case TYPE_SHORT: {
             tf.ushortBuf = (UShort *)ckalloc (fileWidth*fileHeight*nChans*sizeof (UShort));
             tkimg_ReadUShortFile (handle, tf.ushortBuf, fileWidth, fileHeight, nChans,
-                                  swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE, minVals, maxVals);
+                                  swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
+                                  minVals, maxVals, opts.saturation);
             break;
         }
         default: {
             Tcl_AppendResult (interp, "Invalid value for pixel type.",
-                              "Only short and float values supported.\n", NULL);
+                              "Only short, int, float and double values supported.\n", NULL);
             return TCL_ERROR;
         }
     }
@@ -680,6 +701,14 @@ static int CommonRead(
     }
 
     switch (tf.th.imgData.pixelType) {
+        case TYPE_DOUBLE: {
+            tkimg_RemapDoubleValues (
+                tf.doubleBuf, fileWidth, fileHeight, nChans,
+                minVals, maxVals, opts.mapMode == IMG_MAP_AGC? opts.cutOff: -1.0,
+                opts.printAgc
+            );
+            break;
+        }
         case TYPE_FLOAT: {
             tkimg_RemapFloatValues (
                 tf.floatBuf, fileWidth, fileHeight, nChans,
@@ -688,10 +717,19 @@ static int CommonRead(
             );
             break;
         }
+        case TYPE_INT: {
+            tkimg_RemapUIntValues (
+                tf.uintBuf, fileWidth, fileHeight, nChans,
+                minVals, maxVals, opts.mapMode == IMG_MAP_AGC? opts.cutOff: -1.0,
+                opts.printAgc
+            );
+            break;
+        }
         case TYPE_SHORT: {
             tkimg_RemapUShortValues (
                 tf.ushortBuf, fileWidth, fileHeight, nChans,
-                minVals, maxVals
+                minVals, maxVals, opts.mapMode == IMG_MAP_AGC? opts.cutOff: -1.0,
+                opts.printAgc
             );
             break;
         }
@@ -720,11 +758,25 @@ static int CommonRead(
     for (y=0; y<stopY; y++) {
         pixbufPtr = tf.pixbuf;
         switch (tf.th.imgData.pixelType) {
+            case TYPE_DOUBLE: {
+                doubleBufPtr = tf.doubleBuf + y * fileWidth * nChans;
+                tkimg_DoubleToUByte (fileWidth * nChans, doubleBufPtr,
+                                     opts.gamma != 1.0? gtable: NULL, pixbufPtr);
+                doubleBufPtr += fileWidth * nChans;
+                break;
+            }
             case TYPE_FLOAT: {
                 floatBufPtr = tf.floatBuf + y * fileWidth * nChans;
                 tkimg_FloatToUByte (fileWidth * nChans, floatBufPtr,
                                     opts.gamma != 1.0? gtable: NULL, pixbufPtr);
                 floatBufPtr += fileWidth * nChans;
+                break;
+            }
+            case TYPE_INT: {
+                uintBufPtr = tf.uintBuf + y * fileWidth * nChans;
+                tkimg_UIntToUByte (fileWidth * nChans, uintBufPtr,
+                                   opts.gamma != 1.0? gtable: NULL, pixbufPtr);
+                uintBufPtr += fileWidth * nChans;
                 break;
             }
             case TYPE_SHORT: {

@@ -7,7 +7,7 @@
 #
 
 # Declare each of the functions in the public tkimg interface.
-# Note that an index should never be reused for a different 
+# Note that an index should never be reused for a different
 # function in order to preserve backwards compatibility.
 
 library tkimg
@@ -89,28 +89,29 @@ declare 34 {
 }
 
 #########################################################################
-###  Specialized functions for handling images containing short or float values.
+###  Specialized functions for handling images containing 
+###  short, int, float or double values.
 
 declare 50 {
     int tkimg_IsIntel (void)
 }
 declare 51 {
-    void tkimg_CreateGammaTable(float gammaVal, float *gammaTable)
+    void tkimg_CreateGammaTable(double gammaVal, double *gammaTable)
 }
 declare 52 {
-    float tkimg_LookupGammaTable(float val, const float *gammaTable)
+    double tkimg_LookupGammaTable(double val, const double *gammaTable)
 }
 declare 53 {
     void tkimg_UShortToUByte (int n, const unsigned short *shortIn,
-         const float *gammaTable, unsigned char *ubOut)
+         const double *gammaTable, unsigned char *ubOut)
 }
 declare 54 {
     void tkimg_ShortToUByte (int n, const short *shortIn,
-         const float *gammaTable, unsigned char *ubOut)
+         const double *gammaTable, unsigned char *ubOut)
 }
 declare 55 {
     void tkimg_FloatToUByte (int n, const float *floatIn,
-         const float *gammaTable, unsigned char *ubOut)
+         const double *gammaTable, unsigned char *ubOut)
 }
 declare 56 {
     int tkimg_ReadUByteRow (tkimg_MFile *handle, unsigned char *pixels, int nBytes)
@@ -128,30 +129,74 @@ declare 59 {
         int nFloats, char *buf, int swapBytes)
 }
 declare 60 {
-    int tkimg_ReadUByteFile (tkimg_MFile *handle, unsigned char *buf, 
+    int tkimg_ReadUByteFile (tkimg_MFile *handle, unsigned char *buf,
         int width, int height,
         int nchan, int verbose, int findMinMax,
-        float *minVals, float *maxVals)
+        double *minVals, double *maxVals)
 }
 declare 61 {
     int tkimg_ReadUShortFile (tkimg_MFile *handle, unsigned short *buf,
         int width, int height,
         int nchan, int swapBytes, int verbose, int findMinMax,
-        float *minVals, float *maxVals)
+        double *minVals, double *maxVals, double saturation)
 }
 declare 62 {
     int tkimg_ReadFloatFile (tkimg_MFile *handle, float *buf,
         int width, int height,
         int nchan, int swapBytes, int verbose, int findMinMax,
-        float *minVals, float *maxVals, float saturation)
+        double *minVals, double *maxVals, double saturation)
 }
 declare 63 {
     void tkimg_RemapUShortValues (unsigned short *buf, int width, int height,
-         int nchan, float *minVals, float *maxVals)
+         int nchan, double *minVals, double *maxVals, double agcCutOffPercent, int printAgc)
 }
 declare 64 {
     void tkimg_RemapFloatValues (float *buf, int width, int height, int nchan,
-         float *minVals, float *maxVals, float agcCutOffPercent, int printAgc)
+         double *minVals, double *maxVals, double agcCutOffPercent, int printAgc)
+}
+declare 65 {
+    void tkimg_UIntToUByte (int n, const unsigned int *intIn,
+         const double *gammaTable, unsigned char *ubOut)
+}
+declare 66 {
+    void tkimg_IntToUByte (int n, const int *intIn,
+         const double *gammaTable, unsigned char *ubOut)
+}
+declare 67 {
+    int tkimg_ReadUIntRow (tkimg_MFile *handle, unsigned int *pixels,
+        int nInts, char *buf, int swapBytes)
+}
+declare 68 {
+    int tkimg_ReadIntRow (tkimg_MFile *handle, int *pixels,
+        int nInts, char *buf, int swapBytes)
+}
+declare 69 {
+    int tkimg_ReadUIntFile (tkimg_MFile *handle, unsigned int *buf,
+        int width, int height,
+        int nchan, int swapBytes, int verbose, int findMinMax,
+        double *minVals, double *maxVals, double saturation)
+}
+declare 70 {
+    void tkimg_RemapUIntValues (unsigned int *buf, int width, int height,
+         int nchan, double *minVals, double *maxVals, double agcCutOffPercent, int printAgc)
+}
+declare 71 {
+    void tkimg_DoubleToUByte (int n, const double *doubleIn,
+         const double *gammaTable, unsigned char *ubOut)
+}
+declare 72 {
+    int tkimg_ReadDoubleRow (tkimg_MFile *handle, double *pixels,
+        int nDoubles, char *buf, int swapBytes)
+}
+declare 73 {
+    int tkimg_ReadDoubleFile (tkimg_MFile *handle, double *buf,
+        int width, int height,
+        int nchan, int swapBytes, int verbose, int findMinMax,
+        double *minVals, double *maxVals, double saturation)
+}
+declare 74 {
+    void tkimg_RemapDoubleValues (double *buf, int width, int height, int nchan,
+         double *minVals, double *maxVals, double agcCutOffPercent, int printAgc)
 }
 
 #########################################################################

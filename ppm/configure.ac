@@ -7,7 +7,7 @@ dnl
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimgppm],[1.4.13])
+AC_INIT([tkimgppm],[1.4.14])
 
 TEA_INIT([3.9])
 
@@ -64,7 +64,7 @@ TEA_ADD_SOURCES([ppm.c])
 TEA_ADD_HEADERS([])
 TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${tkimg_SRC_PATH}`\"])
 TEA_ADD_INCLUDES([-I.])
-TEA_ADD_LIBS([${MATH_LIBS}]) 
+TEA_ADD_LIBS([${MATH_LIBS}])
 TEA_ADD_CFLAGS([])
 TEA_ADD_CFLAGS([-DTKIMG_VERSION=\\\"\${tkimg_VERSION}\\\"])
 TEA_ADD_STUB_SOURCES([])
@@ -192,6 +192,7 @@ TEA_PROG_WISH
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT
 
 #--------------------------------------------------------------------

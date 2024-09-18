@@ -26,10 +26,10 @@ declare 0 {
     const char *TIFFGetVersion(void)
 }
 declare 1 {
-    const TIFFCodec *TIFFFindCODEC(uint16 a)
+    const TIFFCodec *TIFFFindCODEC(uint16_t a)
 }
 declare 2 {
-    TIFFCodec *TIFFRegisterCODEC(uint16 a, const char *b, TIFFInitMethod c)
+    TIFFCodec *TIFFRegisterCODEC(uint16_t a, const char *b, TIFFInitMethod c)
 }
 declare 3 {
     void TIFFUnRegisterCODEC(TIFFCodec *a)
@@ -86,7 +86,7 @@ declare 20 {
     tsize_t TIFFStripSize(TIFF *tiffptr)
 }
 declare 21 {
-    tsize_t TIFFVStripSize(TIFF *tiffptr, uint32 a)
+    tsize_t TIFFVStripSize(TIFF *tiffptr, uint32_t a)
 }
 declare 22 {
     tsize_t TIFFTileRowSize(TIFF *tiffptr)
@@ -95,13 +95,13 @@ declare 23 {
     tsize_t TIFFTileSize(TIFF *tiffptr)
 }
 declare 24 {
-    tsize_t TIFFVTileSize(TIFF *tiffptr, uint32 a)
+    tsize_t TIFFVTileSize(TIFF *tiffptr, uint32_t a)
 }
 declare 25 {
-    uint32 TIFFDefaultStripSize(TIFF *tiffptr, uint32 a)
+    uint32_t TIFFDefaultStripSize(TIFF *tiffptr, uint32_t a)
 }
 declare 26 {
-    void TIFFDefaultTileSize(TIFF *tiffptr, uint32 *a, uint32 *b)
+    void TIFFDefaultTileSize(TIFF *tiffptr, uint32_t *a, uint32_t *b)
 }
 declare 27 {
     int TIFFFileno(TIFF *tiffptr)
@@ -122,7 +122,7 @@ declare 32 {
     int TIFFIsMSB2LSB(TIFF *tiffptr)
 }
 declare 33 {
-    uint32 TIFFCurrentRow(TIFF *tiffptr)
+    uint32_t TIFFCurrentRow(TIFF *tiffptr)
 }
 declare 34 {
     tdir_t TIFFCurrentDirectory(TIFF *tiffptr)
@@ -131,7 +131,7 @@ declare 35 {
     tdir_t TIFFNumberOfDirectories(TIFF *tiffptr)
 }
 declare 36 {
-    uint64 TIFFCurrentDirOffset(TIFF *tiffptr)
+    uint64_t TIFFCurrentDirOffset(TIFF *tiffptr)
 }
 declare 37 {
     tstrip_t TIFFCurrentStrip(TIFF *tiffptr)
@@ -158,7 +158,7 @@ declare 44 {
     int TIFFSetDirectory(TIFF *tiffptr, tdir_t a)
 }
 declare 45 {
-    int TIFFSetSubDirectory(TIFF *tiffptr, uint64 a)
+    int TIFFSetSubDirectory(TIFF *tiffptr, uint64_t a)
 }
 declare 46 {
     int TIFFUnlinkDirectory(TIFF *tiffptr, tdir_t a)
@@ -176,19 +176,19 @@ declare 51 {
     void TIFFPrintDirectory(TIFF *tiffptr, FILE *a, long b)
 }
 declare 52 {
-    int TIFFReadScanline(TIFF *tiffptr, tdata_t a, uint32 b, tsample_t c)
+    int TIFFReadScanline(TIFF *tiffptr, tdata_t a, uint32_t b, tsample_t c)
 }
 declare 53 {
-    int TIFFWriteScanline(TIFF *tiffptr, tdata_t a, uint32 b, tsample_t c)
+    int TIFFWriteScanline(TIFF *tiffptr, tdata_t a, uint32_t b, tsample_t c)
 }
 declare 54 {
-    int TIFFReadRGBAImage(TIFF *tiffptr, uint32 a, uint32 b, uint32 *c, int d)
+    int TIFFReadRGBAImage(TIFF *tiffptr, uint32_t a, uint32_t b, uint32_t *c, int d)
 }
 declare 55 {
-    int TIFFReadRGBAStrip(TIFF *tiffptr, tstrip_t a, uint32 *b)
+    int TIFFReadRGBAStrip(TIFF *tiffptr, tstrip_t a, uint32_t *b)
 }
 declare 56 {
-    int TIFFReadRGBATile(TIFF *tiffptr, uint32 a, uint32 b, uint32 *c)
+    int TIFFReadRGBATile(TIFF *tiffptr, uint32_t a, uint32_t b, uint32_t *c)
 }
 declare 57 {
     int TIFFRGBAImageOK(TIFF *tiffptr, char *a)
@@ -197,7 +197,7 @@ declare 58 {
     int TIFFRGBAImageBegin(TIFFRGBAImage *a, TIFF *tiffptr, int b, char *c)
 }
 declare 59 {
-    int TIFFRGBAImageGet(TIFFRGBAImage *d, uint32 *c, uint32 b, uint32 a)
+    int TIFFRGBAImageGet(TIFFRGBAImage *d, uint32_t *c, uint32_t b, uint32_t a)
 }
 declare 60 {
     void TIFFRGBAImageEnd(TIFFRGBAImage *a)
@@ -235,24 +235,24 @@ declare 69 {
     TIFFExtendProc TIFFSetTagExtender(TIFFExtendProc a)
 }
 declare 70 {
-    ttile_t TIFFComputeTile(TIFF *tiffptr, uint32 a, uint32 b, uint32 c, tsample_t d)
+    ttile_t TIFFComputeTile(TIFF *tiffptr, uint32_t a, uint32_t b, uint32_t c, tsample_t d)
 }
 declare 71 {
-    int TIFFCheckTile(TIFF *tiffptr, uint32 d, uint32 c, uint32 b, tsample_t a)
+    int TIFFCheckTile(TIFF *tiffptr, uint32_t d, uint32_t c, uint32_t b, tsample_t a)
 }
 declare 72 {
     ttile_t TIFFNumberOfTiles(TIFF *tiffptr)
 }
 declare 73 {
     tsize_t TIFFReadTile(TIFF *tiffptr,
-	    tdata_t a, uint32 b, uint32 c, uint32 d, tsample_t e)
+	    tdata_t a, uint32_t b, uint32_t c, uint32_t d, tsample_t e)
 }
 declare 74 {
     tsize_t TIFFWriteTile(TIFF *tiffptr,
-	    tdata_t e, uint32 d, uint32 c, uint32 b, tsample_t a)
+	    tdata_t e, uint32_t d, uint32_t c, uint32_t b, tsample_t a)
 }
 declare 75 {
-    tstrip_t TIFFComputeStrip(TIFF *tiffptr, uint32 a, tsample_t b)
+    tstrip_t TIFFComputeStrip(TIFF *tiffptr, uint32_t a, tsample_t b)
 }
 declare 76 {
     tstrip_t TIFFNumberOfStrips(TIFF *tiffptr)
@@ -285,19 +285,19 @@ declare 85 {
     void TIFFSetWriteOffset(TIFF *tiffptr, toff_t a)
 }
 declare 86 {
-    void TIFFSwabShort(uint16 *a)
+    void TIFFSwabShort(uint16_t *a)
 }
 declare 87 {
-    void TIFFSwabLong(uint32 *a)
+    void TIFFSwabLong(uint32_t *a)
 }
 declare 88 {
     void TIFFSwabDouble(double *a)
 }
 declare 89 {
-    void TIFFSwabArrayOfShort(uint16 *a, tmsize_t b)
+    void TIFFSwabArrayOfShort(uint16_t *a, tmsize_t b)
 }
 declare 90 {
-    void TIFFSwabArrayOfLong(uint32 *b, tmsize_t a)
+    void TIFFSwabArrayOfLong(uint32_t *b, tmsize_t a)
 }
 declare 91 {
     void TIFFSwabArrayOfDouble(double *a, tmsize_t b)
@@ -312,10 +312,10 @@ declare 94 {
     void TIFFErrorExt(thandle_t h, const char *a, const char *b, ...)
 }
 declare 95 {
-    uint64 TIFFGetStrileByteCount(TIFF *tif, uint32 strile)
+    uint64_t TIFFGetStrileByteCount(TIFF *tif, uint32_t strile)
 }
 declare 96 {
-    uint64 TIFFGetStrileOffset(TIFF *tif, uint32 strile)
+    uint64_t TIFFGetStrileOffset(TIFF *tif, uint32_t strile)
 }
 
 # Source: tif_predict.h ...
@@ -328,16 +328,16 @@ declare 101 {
 
 # Source: tif_dir.h ...
 declare 111 {
-    int TIFFMergeFieldInfo(TIFF *tiffptr, const TIFFFieldInfo *a, uint32 b)
+    int TIFFMergeFieldInfo(TIFF *tiffptr, const TIFFFieldInfo *a, uint32_t b)
 }
 declare 112 {
     void _TIFFPrintFieldInfo(TIFF *tiffptr, FILE *a)
 }
 declare 114 {
-    const TIFFField *TIFFFieldWithTag(TIFF *tiffptr, uint32 a)
+    const TIFFField *TIFFFieldWithTag(TIFF *tiffptr, uint32_t a)
 }
 declare 115 {
-    int _TIFFMergeFields(TIFF *tiffptr, const TIFFField *a, uint32 b)
+    int _TIFFMergeFields(TIFF *tiffptr, const TIFFField *a, uint32_t b)
 }
 
 
@@ -371,7 +371,7 @@ declare 128 {
     int _TIFFNoPreCode(TIFF *tiffptr, tsample_t a)
 }
 declare 129 {
-    int _TIFFNoSeek(TIFF *tiffptr, uint32 a)
+    int _TIFFNoSeek(TIFF *tiffptr, uint32_t a)
 }
 declare 130 {
     void _TIFFSwab16BitData(TIFF *tiffptr, tidata_t a, tsize_t b)
@@ -398,28 +398,25 @@ declare 137 {
     void _TIFFSetDefaultCompressionState(TIFF *tiffptr)
 }
 declare 138 {
-    uint32 _TIFFDefaultStripSize(TIFF *tiffptr, uint32 a)
+    uint32_t _TIFFDefaultStripSize(TIFF *tiffptr, uint32_t a)
 }
 declare 139 {
-    void _TIFFDefaultTileSize(TIFF *tiffptr, uint32 *a, uint32 *b)
+    void _TIFFDefaultTileSize(TIFF *tiffptr, uint32_t *a, uint32_t *b)
 }
 declare 140 {
-    void _TIFFsetByteArray(void **a, void *b, uint32 c)
-}
-declare 141 {
-    void _TIFFsetString(char **a, char *b)
+    void _TIFFsetByteArray(void **a, const void *b, uint32_t c)
 }
 declare 142 {
-    void _TIFFsetShortArray(uint16 **a, uint16 *b, uint32 c)
+    void _TIFFsetShortArray(uint16_t **a, const uint16_t *b, uint32_t c)
 }
 declare 143 {
-    void _TIFFsetLongArray(uint32 **a, uint32 *b, uint32 c)
+    void _TIFFsetLongArray(uint32_t **a, const uint32_t *b, uint32_t c)
 }
 declare 144 {
-    void _TIFFsetFloatArray(float **a, float *b, uint32 c)
+    void _TIFFsetFloatArray(float **a, const float *b, uint32_t c)
 }
 declare 145 {
-    void _TIFFsetDoubleArray(double **a, double *b, uint32 c)
+    void _TIFFsetDoubleArray(double **a, const double *b, uint32_t c)
 }
 declare 146 {
     void _TIFFprintAscii(FILE *a, const char *b)

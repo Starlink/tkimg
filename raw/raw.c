@@ -14,10 +14,14 @@
  *
  * The following image types are currently supported:
  *
- * Grayscale image:  1 channel  of 32-bit floating point   values.
+ * Grayscale image:  1 channel  of 64-bit floating point   values.
+ *                   1 channel  of 32-bit floating point   values.
+ *                   1 channel  of 32-bit unsigned integer values.
  *                   1 channel  of 16-bit unsigned integer values.
  *                   1 channel  of  8-bit unsigned integer values.
- * True-color image: 3 channels of 32-bit floating point   values.
+ * True-color image: 3 channels of 64-bit floating point   values.
+ *                   3 channels of 32-bit floating point   values.
+ *                   3 channels of 32-bit unsigned integer values.
  *                   3 channels of 16-bit unsigned integer values.
  *                   3 channels of  8-bit unsigned integer values.
  *
@@ -39,7 +43,7 @@
  *     NumChan=1\n              Possible values: 1 or 3.
  *     ByteOrder=Intel\n        Possible values: "Intel" or "Motorola".
  *     ScanOrder=TopDown\n      Possible values: "TopDown" or "BottomUp".
- *     PixelType=byte\n         Possible values: "float", "short" or "byte".
+ *     PixelType=byte\n         Possible values: "double", "float", "int", "short", "byte".
  *
  * The following format options are available:
  *
@@ -55,7 +59,7 @@
  *                       -gamma <float> -min <float> -max <float>
  *                       -cutoff <float> -saturation <float> -printagc <bool>
  *                       -nchan <int> -scanorder <string> -byteorder <string>
- *                       -width <int> -height <int> 
+ *                       -width <int> -height <int> -skipbytes <int>
  *                       -pixeltype <string> -uuencode <bool>"
  * Write RAW image: "raw -useheader false -verbose <bool> -nchan <int>
  *                       -scanorder <string>"
@@ -72,7 +76,7 @@
  *
  *                      Mode "none":
  *                      If mapping mode is set to "none", no mapping of input
- *                      values is done. Use this mode, if the image already 
+ *                      values is done. Use this mode, if the image already
  *                      contains RGB values in the range of 0 ..255.
  *                      When using mode "none", no information about the
  *                      minimum and maximum pixel values is gathered during
@@ -85,7 +89,7 @@
  *
  *                      Mode "agc":
  *                      "agc" applies an automatic gain control algorithmn to the
- *                      image data. 
+ *                      image data.
  *                      Currently implemented for 1-channel 32-bit float images only.
  * -gamma <float>:      Specify a gamma correction to be applied when mapping
  *                      the input data to 8-bit image values.
@@ -99,7 +103,7 @@
  *                      Default is the minimum value found in the image data.
  * -saturation <float>: If option is given, an Automatic Gain Control algorithmn is
  *                      applied to the input values. The supplied value specifies the
- *                      saturation value, i.e. all pixel values greater than the 
+ *                      saturation value, i.e. all pixel values greater than the
  *                      saturation are mapped to white.
  *                      Valid for mapping mode: agc
  * -cutoff <float>:     If option is given, an Automatic Gain Control algorithmn is
@@ -117,6 +121,8 @@
  *                      reading image data without header. Default is 128.
  * -height <int>:       Specify the height of the input image. Only valid, if
  *                      reading image data without header. Default is 128.
+ * -skipbytes <int>:    Specify the number of bytes to skip before reading image data.
+ *                      Only valid, if reading image data without header. Default is 0.
  * -byteorder <string>: Specify the byteorder of the input image. Only valid, if
  *                      reading image data without header.
  *                      Possible values: "Intel" or "Motorola".
@@ -128,7 +134,7 @@
  *                      Default is "TopDown".
  * -pixeltype <string>: Specify the type of the pixel values.
  *                      Only valid, if reading image data without header.
- *                      Possible values: "float", "short" or "byte".
+ *                      Possible values: "double", "float", "int", "short", "byte".
  *                      Default is "byte".
  * -uuencode <bool>:    If set to false, do not assume, that the image data stored in a
  *                      variable is uuencoded. Default is true, i.e. the image data is
@@ -167,7 +173,9 @@
 #define strMotorola "Motorola"
 #define strTopDown  "TopDown"
 #define strBottomUp "BottomUp"
+#define strDouble   "double"
 #define strFloat    "float"
+#define strUInt     "int"
 #define strUShort   "short"
 #define strUByte    "byte"
 
@@ -177,9 +185,11 @@
 #define TOP_DOWN    1
 #define INTEL       0
 #define MOTOROLA    1
-#define TYPE_FLOAT  0
-#define TYPE_USHORT 1
-#define TYPE_UBYTE  2
+#define TYPE_DOUBLE 0
+#define TYPE_FLOAT  1
+#define TYPE_UINT   2
+#define TYPE_USHORT 3
+#define TYPE_UBYTE  4
 
 /* Some general defines and typedefs. */
 #define TRUE  1
@@ -190,7 +200,7 @@ typedef unsigned char UByte;    /* Unsigned  8 bit integer */
 typedef char  Byte;             /* Signed    8 bit integer */
 typedef unsigned short UShort;  /* Unsigned 16 bit integer */
 typedef short Short;            /* Signed   16 bit integer */
-typedef int UInt;               /* Unsigned 32 bit integer */
+typedef unsigned int UInt;      /* Unsigned 32 bit integer */
 typedef int Int;                /* Signed   32 bit integer */
 typedef float Float;            /* IEEE     32 bit floating point */
 typedef double Double;          /* IEEE     64 bit floating point */
@@ -208,29 +218,32 @@ typedef struct {
 
 /* Format options structure for use with ParseFormatOpts */
 typedef struct {
-    Int   width;
-    Int   height;
-    Int   nchan;
-    Int   scanOrder;
-    Int   byteOrder;
-    Int   pixelType;
-    Int   mapMode;
-    Float gamma;        /* IMG_MAP_MINMAX and IMG_MAP_AGC */
-    Float minVal;       /* IMG_MAP_MINMAX */
-    Float maxVal;       /* IMG_MAP_MINMAX */
-    Float saturation;   /* IMG_MAP_AGC */
-    Float cutOff;       /* IMG_MAP_AGC */
-    Boln  verbose;
-    Boln  printAgc;
-    Boln  uuencode;
-    Boln  useHeader;
+    Int    width;
+    Int    height;
+    Int    skipBytes;
+    Int    nchan;
+    Int    scanOrder;
+    Int    byteOrder;
+    Int    pixelType;
+    Int    mapMode;
+    Double gamma;        /* IMG_MAP_MINMAX and IMG_MAP_AGC */
+    Double minVal;       /* IMG_MAP_MINMAX */
+    Double maxVal;       /* IMG_MAP_MINMAX */
+    Double saturation;   /* IMG_MAP_AGC */
+    Double cutOff;       /* IMG_MAP_AGC */
+    Boln   verbose;
+    Boln   printAgc;
+    Boln   uuencode;
+    Boln   useHeader;
 } FMTOPT;
 
 /* Structure to hold information about the image file being processed. */
 typedef struct {
     RAWHEADER th;
     UByte  *pixbuf;
+    Double *doubleBuf;
     Float  *floatBuf;
+    UInt   *uintBuf;
     UShort *ushortBuf;
     UByte  *ubyteBuf;
 } RAWFILE;
@@ -240,7 +253,9 @@ static void rawClose (RAWFILE *tf, Boln fastMode)
     if (!fastMode) {
         if (tf->pixbuf) ckfree ((char *)tf->pixbuf);
     }
+    if (tf->doubleBuf) ckfree ((char *)tf->doubleBuf);
     if (tf->floatBuf)  ckfree ((char *)tf->floatBuf);
+    if (tf->uintBuf)   ckfree ((char *)tf->uintBuf);
     if (tf->ushortBuf) ckfree ((char *)tf->ushortBuf);
     if (tf->ubyteBuf)  ckfree ((char *)tf->ubyteBuf);
     return;
@@ -257,31 +272,33 @@ static void printImgInfo (RAWHEADER *th, FMTOPT *opts,
     if (!outChan) {
         return;
     }
-    sprintf (str, "%s %s\n", msg, filename);                                                       OUT;
-    sprintf (str, "\tSize in pixel    : %d x %d\n", th->width, th->height);                        OUT;
-    sprintf (str, "\tNo. of channels  : %d\n",      th->nChans);                                   OUT;
-    sprintf (str, "\tPixel type       : %s\n",      (th->pixelType == TYPE_FLOAT?  strFloat:
+    sprintf (str, "%s %s\n", msg, filename);                                                         OUT;
+    sprintf (str, "\tSize in pixel    : %d x %d\n", th->width, th->height);                          OUT;
+    sprintf (str, "\tNo. of channels  : %d\n",      th->nChans);                                     OUT;
+    sprintf (str, "\tPixel type       : %s\n",      (th->pixelType == TYPE_DOUBLE? strDouble:
+                                                    (th->pixelType == TYPE_FLOAT?  strFloat:
+                                                    (th->pixelType == TYPE_UINT?   strUInt:
                                                     (th->pixelType == TYPE_USHORT? strUShort:
                                                     (th->pixelType == TYPE_UBYTE?  strUByte:
-                                                                                   strUnknown)))); OUT;
+                                                                                   strUnknown)))))); OUT;
     sprintf (str, "\tVertical encoding: %s\n",      th->scanOrder == TOP_DOWN?
-                                                    strTopDown: strBottomUp);                      OUT;
-    sprintf (str, "\tHost byte order  : %s\n",      tkimg_IsIntel ()?  strIntel: strMotorola);     OUT;
+                                                    strTopDown: strBottomUp);                        OUT;
+    sprintf (str, "\tHost byte order  : %s\n",      tkimg_IsIntel ()?  strIntel: strMotorola);       OUT;
     sprintf (str, "\tFile byte order  : %s\n",      th->byteOrder == INTEL?
-                                                    strIntel: strMotorola);                        OUT;
+                                                    strIntel: strMotorola);                          OUT;
     sprintf (str, "\tMapping mode     : %s\n",      (opts->mapMode == IMG_MAP_NONE?   IMG_MAP_NONE_STR:
                                                     (opts->mapMode == IMG_MAP_MINMAX? IMG_MAP_MINMAX_STR:
                                                     (opts->mapMode == IMG_MAP_AGC?    IMG_MAP_AGC_STR:
-                                                                                  strUnknown))));  OUT;
+                                                                                  strUnknown))));    OUT;
     if (opts->mapMode != IMG_MAP_NONE) {
-        sprintf (str, "\tGamma correction : %f\n",       opts->gamma);                             OUT;
+        sprintf (str, "\tGamma correction : %lf\n",       opts->gamma);                              OUT;
         if (opts->mapMode == IMG_MAP_MINMAX) {
-            sprintf (str, "\tMinimum map value: %f\n",   opts->minVal);                            OUT;
-            sprintf (str, "\tMaximum map value: %f\n",   opts->maxVal);                            OUT;
+            sprintf (str, "\tMinimum map value: %lf\n",   opts->minVal);                             OUT;
+            sprintf (str, "\tMaximum map value: %lf\n",   opts->maxVal);                             OUT;
         }
         if (opts->mapMode == IMG_MAP_AGC) {
-            sprintf (str, "\tSaturation       : %f\n",   opts->saturation);                        OUT;
-            sprintf (str, "\tCutOff           : %f%%\n", opts->cutOff);                            OUT;
+            sprintf (str, "\tSaturation       : %lf\n",   opts->saturation);                         OUT;
+            sprintf (str, "\tCutOff           : %lf%%\n", opts->cutOff);                             OUT;
         }
     }
     Tcl_Flush (outChan);
@@ -401,15 +418,19 @@ static Boln readHeader (Tcl_Interp *interp, tkimg_MFile *handle, RAWHEADER *th)
         Tcl_AppendResult (interp, "Unable to parse header field PixelType\n", NULL);
         return FALSE;
     }
-    if (strcmp (tmpStr, strFloat) == 0) {
+    if (strcmp (tmpStr, strDouble) == 0) {
+        th->pixelType = TYPE_DOUBLE;
+    } else if (strcmp (tmpStr, strFloat) == 0) {
         th->pixelType = TYPE_FLOAT;
+    } else if (strcmp (tmpStr, strUInt) == 0) {
+        th->pixelType = TYPE_UINT;
     } else if (strcmp (tmpStr, strUShort) == 0) {
         th->pixelType = TYPE_USHORT;
     } else if (strcmp (tmpStr, strUByte) == 0) {
         th->pixelType = TYPE_UBYTE;
     } else {
         Tcl_AppendResult (interp, "Invalid value for header field PixelType:",
-                                  "Must be ", strFloat, ",", strUShort, " or ", strUByte,
+                                  "Must be ", strDouble, ", ", strFloat, ", ", strUInt, ", " strUShort, " or ", strUByte,
                                   "\n", NULL);
         return FALSE;
     }
@@ -434,10 +455,12 @@ static Boln writeHeader (tkimg_MFile *handle, RAWHEADER *th)
     sprintf (buf, strScanOrder, th->scanOrder == TOP_DOWN?
                                 strTopDown: strBottomUp);
     tkimg_Write2(handle, buf, strlen (buf));
-    sprintf (buf, strPixelType, (th->pixelType == TYPE_FLOAT?  strFloat:
+    sprintf (buf, strPixelType, (th->pixelType == TYPE_DOUBLE? strDouble:
+                                (th->pixelType == TYPE_FLOAT?  strFloat:
+                                (th->pixelType == TYPE_UINT?   strUInt:
                                 (th->pixelType == TYPE_USHORT? strUShort:
                                 (th->pixelType == TYPE_UBYTE?  strUByte:
-                                                               strUnknown))));
+                                                               strUnknown))))));
     tkimg_Write2(handle, buf, strlen (buf));
     return TRUE;
 }
@@ -485,8 +508,8 @@ static int ParseFormatOpts(
     static const char *const rawOptions[] = {
          "-verbose", "-width", "-height", "-nchan", "-byteorder",
          "-scanorder", "-pixeltype", "-min", "-max", "-gamma",
-         "-useheader", "-map", "-uuencode", "-saturation", "-cutoff", 
-         "-nomap", "-printagc", NULL
+         "-useheader", "-map", "-uuencode", "-saturation", "-cutoff",
+         "-nomap", "-printagc", "-skipbytes", NULL
     };
     int objc, i, index;
     char *optionStr;
@@ -512,6 +535,7 @@ static int ParseFormatOpts(
     opts->saturation = -1.0;
     opts->cutOff     = 3.0;
     opts->printAgc   = 0;
+    opts->skipBytes  = 0;
 
     if (tkimg_ListObjGetElements (interp, format, &objc, &objv) != TCL_OK)
         return TCL_ERROR;
@@ -589,15 +613,19 @@ static int ParseFormatOpts(
                     }
                     break;
                 case 6:
-                    if (!strncmp (optionStr, strFloat, strlen (strFloat))) {
+                    if (!strncmp (optionStr, strDouble, strlen (strDouble))) {
+                        opts->pixelType = TYPE_DOUBLE;
+                    } else if (!strncmp (optionStr, strFloat, strlen (strFloat))) {
                         opts->pixelType = TYPE_FLOAT;
+                    } else if (!strncmp (optionStr, strUInt, strlen (strUInt))) {
+                        opts->pixelType = TYPE_UINT;
                     } else if (!strncmp (optionStr, strUShort, strlen (strUShort))) {
                         opts->pixelType = TYPE_USHORT;
                     } else if (!strncmp (optionStr, strUByte, strlen (strUByte))) {
                         opts->pixelType = TYPE_UBYTE;
                     } else {
                         Tcl_AppendResult (interp, "Invalid pixel type \"", optionStr,
-                                          "\": should be float, short or byte",
+                                          "\": should be double, float, int, short or byte",
                                           (char *) NULL);
                         return TCL_ERROR;
                     }
@@ -705,6 +733,14 @@ static int ParseFormatOpts(
                     }
                     opts->printAgc = boolVal;
                     break;
+                case 17:
+                    if (Tcl_GetInt(interp, optionStr, &intVal) == TCL_ERROR || intVal < 0) {
+                        Tcl_AppendResult (interp, "Invalid byte skip value \"", optionStr,
+                                          "\": Must be equal to or greater than zero.", (char *) NULL);
+                        return TCL_ERROR;
+                    }
+                    opts->skipBytes = intVal;
+                    break;
             }
         }
     }
@@ -767,6 +803,7 @@ static int CommonMatch(
 ) {
     RAWHEADER th;
     FMTOPT opts;
+    char * buf;
 
     initHeader (&th);
 
@@ -784,6 +821,13 @@ static int CommonMatch(
         th.pixelType = opts.pixelType;
         th.scanOrder = opts.scanOrder;
         th.byteOrder = opts.byteOrder;
+        if (opts.skipBytes > 0) {
+            buf = (char *)ckalloc (opts.skipBytes);
+            if (opts.skipBytes != tkimg_Read2(handle, buf, opts.skipBytes)) {
+                return 0;
+            }
+            ckfree (buf);
+        }
     }
     *widthPtr  = th.width;
     *heightPtr = th.height;
@@ -859,7 +903,7 @@ static int CommonRead(
     Tk_PhotoImageBlock block;
     Int x, y, c;
     Int fileWidth = 0, fileHeight = 0;
-    Float minVals[IMG_MAX_CHANNELS], maxVals[IMG_MAX_CHANNELS];
+    Double minVals[IMG_MAX_CHANNELS], maxVals[IMG_MAX_CHANNELS];
     int stopY, outY, outWidth, outHeight;
     RAWFILE tf;
     FMTOPT opts;
@@ -870,10 +914,12 @@ static int CommonRead(
     Int  pixelType;
     Int  matte = 0;
     UByte  *pixbufPtr;
+    Double *doubleBufPtr;
     Float  *floatBufPtr;
+    UInt   *uintBufPtr;
     UShort *ushortBufPtr;
     UByte  *ubyteBufPtr;
-    Float  gtable[IMG_GAMMA_TABLE_SIZE];
+    Double gtable[IMG_GAMMA_TABLE_SIZE];
     int result = TCL_OK;
 
     memset (&tf, 0, sizeof (RAWFILE));
@@ -920,17 +966,32 @@ static int CommonRead(
     }
 
     switch (pixelType) {
+        case TYPE_DOUBLE: {
+            tf.doubleBuf = (Double *)ckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (Double));
+            tkimg_ReadDoubleFile (handle, tf.doubleBuf, fileWidth, fileHeight, tf.th.nChans,
+                                  swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
+                                  minVals, maxVals, opts.saturation);
+            break;
+        }
         case TYPE_FLOAT: {
             tf.floatBuf = (Float *)ckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (Float));
             tkimg_ReadFloatFile (handle, tf.floatBuf, fileWidth, fileHeight, tf.th.nChans,
-                                 swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE, 
+                                 swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
                                  minVals, maxVals, opts.saturation);
+            break;
+        }
+        case TYPE_UINT: {
+            tf.uintBuf = (UInt *)ckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (UInt));
+            tkimg_ReadUIntFile (handle, tf.uintBuf, fileWidth, fileHeight, tf.th.nChans,
+                                swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
+                                minVals, maxVals, opts.saturation);
             break;
         }
         case TYPE_USHORT: {
             tf.ushortBuf = (UShort *)ckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (UShort));
             tkimg_ReadUShortFile (handle, tf.ushortBuf, fileWidth, fileHeight, tf.th.nChans,
-                                  swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE, minVals, maxVals);
+                                  swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
+                                  minVals, maxVals, opts.saturation);
             break;
         }
         case TYPE_UBYTE: {
@@ -962,12 +1023,20 @@ static int CommonRead(
             break;
         }
         case IMG_MAP_AGC: {
-            /* Nothing to do. Saturation is considered on tkimg_ReadFloatFile. */
+            /* Nothing to do. Saturation is considered in tkimg_ReadFloatFile. */
             break;
         }
     }
 
     switch (pixelType) {
+        case TYPE_DOUBLE: {
+            tkimg_RemapDoubleValues (
+                tf.doubleBuf, fileWidth, fileHeight, tf.th.nChans,
+                minVals, maxVals, opts.mapMode == IMG_MAP_AGC? opts.cutOff: -1.0,
+                opts.printAgc
+            );
+            break;
+        }
         case TYPE_FLOAT: {
             tkimg_RemapFloatValues (
                 tf.floatBuf, fileWidth, fileHeight, tf.th.nChans,
@@ -976,10 +1045,19 @@ static int CommonRead(
             );
             break;
         }
+        case TYPE_UINT: {
+            tkimg_RemapUIntValues (
+                tf.uintBuf, fileWidth, fileHeight, tf.th.nChans,
+                minVals, maxVals, opts.mapMode == IMG_MAP_AGC? opts.cutOff: -1.0,
+                opts.printAgc
+            );
+            break;
+        }
         case TYPE_USHORT: {
             tkimg_RemapUShortValues (
                 tf.ushortBuf, fileWidth, fileHeight, tf.th.nChans,
-                minVals, maxVals
+                minVals, maxVals, opts.mapMode == IMG_MAP_AGC? opts.cutOff: -1.0,
+                opts.printAgc
             );
             break;
         }
@@ -1021,6 +1099,17 @@ static int CommonRead(
         for (y=0; y<stopY; y++) {
             pixbufPtr = tf.pixbuf;
             switch (pixelType) {
+                case TYPE_DOUBLE: {
+                    if (scanOrder == BOTTOM_UP) {
+                        doubleBufPtr = tf.doubleBuf + (fileHeight -1 - y) * fileWidth * tf.th.nChans;
+                    } else {
+                        doubleBufPtr = tf.doubleBuf + y * fileWidth * tf.th.nChans;
+                    }
+                    tkimg_DoubleToUByte (fileWidth * tf.th.nChans, doubleBufPtr,
+                                         opts.gamma != 1.0? gtable: NULL, pixbufPtr);
+                    doubleBufPtr += fileWidth * tf.th.nChans;
+                    break;
+                }
                 case TYPE_FLOAT: {
                     if (scanOrder == BOTTOM_UP) {
                         floatBufPtr = tf.floatBuf + (fileHeight -1 - y) * fileWidth * tf.th.nChans;
@@ -1030,6 +1119,17 @@ static int CommonRead(
                     tkimg_FloatToUByte (fileWidth * tf.th.nChans, floatBufPtr,
                                         opts.gamma != 1.0? gtable: NULL, pixbufPtr);
                     floatBufPtr += fileWidth * tf.th.nChans;
+                    break;
+                }
+                case TYPE_UINT: {
+                    if (scanOrder == BOTTOM_UP) {
+                        uintBufPtr = tf.uintBuf + (fileHeight -1 - y) * fileWidth * tf.th.nChans;
+                    } else {
+                        uintBufPtr = tf.uintBuf + y * fileWidth * tf.th.nChans;
+                    }
+                    tkimg_UIntToUByte (fileWidth * tf.th.nChans, uintBufPtr,
+                                       opts.gamma != 1.0? gtable: NULL, pixbufPtr);
+                    uintBufPtr += fileWidth * tf.th.nChans;
                     break;
                 }
                 case TYPE_USHORT: {

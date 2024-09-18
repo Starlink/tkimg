@@ -1,7 +1,12 @@
-We are happy to announce version 1.4.13 of the "tkImg" package
+We are happy to announce version 1.4.14 of the "tkImg" package
 (formerly known as "Img").
 
 This package enhances Tk, adding support for many image formats.
+
+Changes compared to version 1.4.13:
+  - Added support for reading RAW images with 32-bit integer and 64-bit double pixel values.
+  - Fixed compilation of libpng for ARM Neon.
+  - Updated external libraries: JPEG 9e, PNG 1.6.38, TIFF 4.4.0, ZLIB 1.2.13.
 
 Changes compared to version 1.4.12:
   - Disable support of zstd in libtiff.

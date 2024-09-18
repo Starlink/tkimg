@@ -429,8 +429,8 @@ ObjRead(
     Tcl_Obj *data,                      /* object containing the image */
     Tcl_Obj *format,
     Tk_PhotoHandle imageHandle,
-    int destX, int destY, 
-    int width, int height, 
+    int destX, int destY,
+    int width, int height,
     int srcX, int srcY
 ) {
     TIFF *tif;
@@ -631,9 +631,9 @@ CommonRead(
     int srcX, int srcY
 ) {
     Tk_PhotoImageBlock block;
-    uint32 w, h;
+    uint32_t w, h;
     size_t npixels;
-    uint32 *raster;
+    uint32_t *raster;
     int result = TCL_OK;
     int nBytes, index = 0, objc = 0;
     Tcl_Obj **objv = NULL;
@@ -671,13 +671,13 @@ CommonRead(
     block.offset[2] = 2;
     block.offset[3] = 3;
 #endif
-    block.pixelSize = sizeof (uint32);
+    block.pixelSize = sizeof (uint32_t);
 
     TIFFGetField(tif, TIFFTAG_IMAGEWIDTH,  &w);
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
     npixels = w * h;
 
-    raster = (uint32*) TkimgTIFFmalloc(npixels * sizeof (uint32));
+    raster = (uint32_t*) TkimgTIFFmalloc(npixels * sizeof (uint32_t));
     block.width = w;
     block.height = h;
     block.pitch = - (block.pixelSize * (int) w);

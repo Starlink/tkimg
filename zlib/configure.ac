@@ -7,7 +7,7 @@ dnl
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([zlibtcl],[1.2.11])
+AC_INIT([zlibtcl],[1.2.13])
 
 TEA_INIT([3.9])
 
@@ -175,6 +175,7 @@ TEA_EXPORT_CONFIG(zlibtcl)
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-AC_OUTPUT([Makefile zlibtclConfig.sh])
+AC_CONFIG_FILES([Makefile zlibtclConfig.sh])
+AC_OUTPUT
 
 #--------------------------------------------------------------------

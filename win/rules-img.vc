@@ -9,7 +9,7 @@
 PROJECT = tkimg$(PHIMGTYPE)
 !endif
 
-!ifndef PACKAGE_TCLNAME
+!ifndef PRJ_PACKAGE_TCLNAME
 PRJ_PACKAGE_TCLNAME = img::$(PHIMGTYPE)
 !endif
 
@@ -33,7 +33,7 @@ PRJ_OBJS = $(TMP_DIR)\$(PHIMGTYPE).obj
 !include versions.vc
 
 PRJ_INCLUDES = $(PRJ_INCLUDES) -I"$(TMP_DIR)" -I"..\..\base"
-PRJ_DEFINES  = $(PRJ_DEFINES) -DPACKAGE_TCLNAME="\"$(PACKAGE_TCLNAME)\"" -DTKIMG_VERSION="\"$(TKIMG_VERSION)"\"
+PRJ_DEFINES  = $(PRJ_DEFINES) -DPACKAGE_TCLNAME="\"$(PRJ_PACKAGE_TCLNAME)\"" -DTKIMG_VERSION="\"$(TKIMG_VERSION)"\"
 PRJ_LIBS = $(PRJ_LIBS) "..\..\base\win\$(BUILDDIRTOP)\tkimgstub$(TKIMG_VERSION:.=).lib"
 
 !ifdef REQUIRE_LIBJPEG
@@ -81,7 +81,24 @@ PRJ_LIBS = $(PRJ_LIBS) "..\..\libtiff\win\$(BUILDDIRTOP)\tifftclstub$(LIBTIFF_VE
 DISABLE_TARGET_install = 1
 !include "$(_RULESDIR)\targets.vc"
 
-pkgindex: default-pkgindex
+# Do not use the default-pkgindex target from Tcl, but include a copy here.
+# This target has changed on 2020/12/09 (and was part of Tcl 8.6.11)
+# to include a "string totitle", which breaks the naming convention of
+# the Img package.
+# The "string totitle" was rollbacked in 2021/01/04, so this workaround
+# is practically only needed for Tcl 8.6.11.
+# See https://core.tcl-lang.org/tcl/info/4dfa9000e1e2db8c
+
+!if $(MULTIPLATFORM_INSTALL)
+img-pkgindex:
+	@echo package ifneeded $(PRJ_PACKAGE_TCLNAME) $(DOTVERSION) \
+	    [list load [file join $$dir $(PLATFORM_IDENTIFY) $(PRJLIBNAME)]] > $(OUT_DIR)\pkgIndex.tcl
+!else
+img-pkgindex:
+	@echo package ifneeded $(PRJ_PACKAGE_TCLNAME) $(DOTVERSION) \
+	    [list load [file join $$dir $(PRJLIBNAME)]] > $(OUT_DIR)\pkgIndex.tcl
+!endif
+pkgindex: img-pkgindex
 
 $(PRJ_OBJS): $(TMP_DIR)\init.c
 $(TMP_DIR)\init.c:

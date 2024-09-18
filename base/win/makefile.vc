@@ -11,7 +11,7 @@
 # For other build options (debug, static etc.),
 # See TIP 477 (https://core.tcl.tk/tips/doc/trunk/tip/477.md) for
 # detailed documentation.
-# 
+#
 #------------------------------------------------------------------------------
 
 
@@ -35,6 +35,7 @@ PRJ_OBJS = \
 PRJ_STUBOBJS = $(TMP_DIR)\tkimgStubLib.obj
 
 PRJ_DEFINES = -DTKIMGAPI=MODULE_SCOPE
+PRJ_DEFINES = $(PRJ_DEFINES) -I$(TMP_DIR)
 
 DISABLE_TARGET_install = 1
 !include "$(_RULESDIR)\targets.vc"
@@ -49,6 +50,17 @@ IMG_INSTALL_DIR = $(_INSTALLDIR)\$(TKIMG_INSTALL_SUBDIR)
 !else
 IMG_INSTALL_DIR = $(SCRIPT_INSTALL_DIR)
 !endif
+
+$(TMP_DIR)\manifest.uuid:
+	copy svnmanifest.in $(TMP_DIR)\manifest.uuid
+        @if exist "manifest.uuid" copy manifest.uuid $(TMP_DIR)\manifest.uuid
+        @if not exist "manifest.uuid" svn info --show-item last-changed-revision >>$(TMP_DIR)\manifest.uuid
+
+$(TMP_DIR)\tkimgUuid.h:	$(TMP_DIR)\manifest.uuid
+	copy tkimgUuid.h.in+$(TMP_DIR)\manifest.uuid $(TMP_DIR)\tkimgUuid.h
+
+$(TMP_DIR)\tkimg.obj: $(TMP_DIR)\tkimgUuid.h
+
 install:
 	@echo Installing binaries to '$(IMG_INSTALL_DIR)'
 	@if not exist "$(IMG_INSTALL_DIR)" mkdir "$(IMG_INSTALL_DIR)"

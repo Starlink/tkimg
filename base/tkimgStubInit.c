@@ -82,6 +82,16 @@ const TkimgStubs tkimgStubs = {
     tkimg_ReadFloatFile, /* 62 */
     tkimg_RemapUShortValues, /* 63 */
     tkimg_RemapFloatValues, /* 64 */
+    tkimg_UIntToUByte, /* 65 */
+    tkimg_IntToUByte, /* 66 */
+    tkimg_ReadUIntRow, /* 67 */
+    tkimg_ReadIntRow, /* 68 */
+    tkimg_ReadUIntFile, /* 69 */
+    tkimg_RemapUIntValues, /* 70 */
+    tkimg_DoubleToUByte, /* 71 */
+    tkimg_ReadDoubleRow, /* 72 */
+    tkimg_ReadDoubleFile, /* 73 */
+    tkimg_RemapDoubleValues, /* 74 */
 };
 
 /* !END!: Do not edit above this line. */

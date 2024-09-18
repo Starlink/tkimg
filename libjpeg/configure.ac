@@ -7,7 +7,7 @@ dnl
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([jpegtcl],[9.4.0])
+AC_INIT([jpegtcl],[9.5.0])
 
 TEA_INIT([3.9])
 
@@ -213,6 +213,7 @@ cd ..
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-AC_OUTPUT([Makefile jpegtclConfig.sh])
+AC_CONFIG_FILES([Makefile jpegtclConfig.sh])
+AC_OUTPUT
 
 #--------------------------------------------------------------------

@@ -22,12 +22,12 @@
 #include <tcl.h>
 
 #define TIFFTCL_MAJOR_VERSION	4
-#define TIFFTCL_MINOR_VERSION	1
+#define TIFFTCL_MINOR_VERSION	4
 #define TIFFTCL_RELEASE_LEVEL	TCL_RELEASE
 #define TIFFTCL_RELEASE_SERIAL	0
 
-#define TIFFTCL_VERSION		"4.1.0"
-#define TIFFTCL_PATCH_LEVEL	"4.1.0"
+#define TIFFTCL_VERSION		"4.4.0"
+#define TIFFTCL_PATCH_LEVEL	"4.4.0"
 
 /*
  * Used to block the rest of this header file from resource compilers so
