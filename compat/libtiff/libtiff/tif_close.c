@@ -1,4 +1,4 @@
-/* $Id: tif_close.c 285 2010-07-07 11:02:56Z nijtmans $ */
+/* $Id: tif_close.c 389 2015-07-06 11:56:49Z nijtmans $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -82,7 +82,7 @@ TIFFCleanup(TIFF* tif)
 		if (fld->field_bit == FIELD_CUSTOM && 
 		    strncmp("Tag ", fld->field_name, 4) == 0) 
 		{
-		    _TIFFfree((char *)fld->field_name);
+		    _TIFFfree(fld->field_name);
 		    _TIFFfree(fld);
 		}
 	    }   

@@ -1,4 +1,4 @@
-/* $Id: tif_dirinfo.c 285 2010-07-07 11:02:56Z nijtmans $ */
+/* $Id: tif_dirinfo.c 389 2015-07-06 11:56:49Z nijtmans $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -537,7 +537,7 @@ _TIFFSetupFieldInfo(TIFF* tif, const TIFFFieldInfo info[], size_t n)
 			TIFFFieldInfo *fld = tif->tif_fieldinfo[i];
 			if (fld->field_bit == FIELD_CUSTOM && 
 				strncmp("Tag ", fld->field_name, 4) == 0) {
-					_TIFFfree((char *)fld->field_name);
+					_TIFFfree(fld->field_name);
 					_TIFFfree(fld);
 				}
 		}   
@@ -808,8 +808,6 @@ _TIFFFieldWithTag(TIFF* tif, ttag_t tag)
 		TIFFErrorExt(tif->tif_clientdata, "TIFFFieldWithTag",
 			     "Internal error, unknown tag 0x%x",
 			     (unsigned int) tag);
-		assert(fip != NULL);
-		/*NOTREACHED*/
 	}
 	return (fip);
 }
@@ -822,8 +820,6 @@ _TIFFFieldWithName(TIFF* tif, const char *field_name)
 	if (!fip) {
 		TIFFErrorExt(tif->tif_clientdata, "TIFFFieldWithName",
 			     "Internal error, unknown tag %s", field_name);
-		assert(fip != NULL);
-		/*NOTREACHED*/
 	}
 	return (fip);
 }
@@ -873,7 +869,7 @@ _TIFFCreateAnonFieldInfo(TIFF *tif, ttag_t tag, TIFFDataType field_type)
 	 * note that this name is a special sign to TIFFClose() and
 	 * _TIFFSetupFieldInfo() to free the field
 	 */
-	sprintf((char *)fld->field_name, "Tag %d", (int) tag);
+	sprintf(fld->field_name, "Tag %d", (int) tag);
 
 	return fld;    
 }

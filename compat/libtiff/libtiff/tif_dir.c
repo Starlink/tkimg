@@ -1,4 +1,4 @@
-/* $Id: tif_dir.c 276 2010-06-30 12:18:30Z nijtmans $ */
+/* $Id: tif_dir.c 389 2015-07-06 11:56:49Z nijtmans $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -163,7 +163,9 @@ _TIFFVSetField(TIFF* tif, ttag_t tag, va_list ap)
 		 * work in with its normal work.
 		 */
 		if (tif->tif_flags & TIFF_SWAB) {
-			if (td->td_bitspersample == 16)
+			if (td->td_bitspersample == 8)
+				tif->tif_postdecode = _TIFFNoPostDecode;
+			else if (td->td_bitspersample == 16)
 				tif->tif_postdecode = _TIFFSwab16BitData;
 			else if (td->td_bitspersample == 24)
 				tif->tif_postdecode = _TIFFSwab24BitData;
@@ -500,7 +502,8 @@ _TIFFVSetField(TIFF* tif, ttag_t tag, va_list ap)
 		    && fip->field_tag != TIFFTAG_PAGENUMBER
 		    && fip->field_tag != TIFFTAG_HALFTONEHINTS
 		    && fip->field_tag != TIFFTAG_YCBCRSUBSAMPLING
-		    && fip->field_tag != TIFFTAG_DOTRANGE) {
+		    && fip->field_tag != TIFFTAG_DOTRANGE
+		    && fip->field_tag != TIFFTAG_WHITELEVEL) {
                     _TIFFmemcpy(tv->value, va_arg(ap, void *),
 				tv->count * tv_size);
 		} else {

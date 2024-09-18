@@ -1,4 +1,4 @@
-/* $Id: sgi2tiff.c 276 2010-06-30 12:18:30Z nijtmans $ */
+/* $Id: sgi2tiff.c 389 2015-07-06 11:56:49Z nijtmans $ */
 
 /*
  * Copyright (c) 1991-1997 Sam Leffler

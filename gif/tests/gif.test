@@ -5,7 +5,7 @@
 puts "img::gif [package require img::gif]"
 
 set gifdata \
-{R0lGODlhEAAMAJEAANnZ2QAAAPD/gP///yH5BAEAAAAALAAAAAAQAAwAAAIghINhyycvVFsB
+{R0lGODlhEAAMAJEAANnZ2f///wAAAPD/gCH5BAEAAAAALAAAAAAQAAwAAAIghIViyzc/VFsC
 QtmS3rjaH1Hg141WaT5ouprt2HHcUgAAOw==}
 
 test gif-1.1 {} {

@@ -1,4 +1,4 @@
-/* $Id: raw2tiff.c 276 2010-06-30 12:18:30Z nijtmans $
+/* $Id: raw2tiff.c 389 2015-07-06 11:56:49Z nijtmans $
  *
  * Project:  libtiff tools
  * Purpose:  Convert raw byte sequences in TIFF images

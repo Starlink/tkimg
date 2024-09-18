@@ -2,7 +2,7 @@
 		Tcl/Tk Image formats (TkImg)
 		(Version 1.4 / September 2010)
 
-		Jan Nijtmans, Andreas Kupries, Paul Obermeijer
+		Jan Nijtmans, Andreas Kupries, Paul Obermeier
 
 This file contains a collection of format handlers for the Tk photo
 image type, and a new image type, pixmaps.  It can be used in
@@ -70,6 +70,11 @@ build directory. Instead run
 in the sub directories of the build directory which contain the
 requested packages, and their dependencies !
 
+Note, that target install also builds the documentation based on 
+Tcl script dtplite. To build and install without documentation, use
+
+	make install-libraries
+
 PACKAGES AND THEIR DEPENDENCIES
 
 This section is for people who want to bypass the master
@@ -124,7 +129,7 @@ supporting packages, as noted below. Their names and directories are
 	img::pixmap	tkimg/pixmap
 	img::png	tkimg/png	pngtcl, zlibtcl
 	img::ppm	tkimg/ppm
-	img::ps	tkimg/ps
+	img::ps		tkimg/ps
 	img::raw	tkimg/raw
 	img::sgi	tkimg/sgi
 	img::sun	tkimg/sun

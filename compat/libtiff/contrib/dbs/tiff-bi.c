@@ -1,4 +1,4 @@
-/* $Id: tiff-bi.c 276 2010-06-30 12:18:30Z nijtmans $ */
+/* $Id: tiff-bi.c 389 2015-07-06 11:56:49Z nijtmans $ */
 
 /*
  * tiff-bi.c -- create a Class B (bilevel) TIFF file

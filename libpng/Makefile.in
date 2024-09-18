@@ -12,7 +12,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# RCS: @(#) $Id: Makefile.in 367 2013-11-19 12:32:34Z nijtmans $
+# RCS: @(#) $Id: Makefile.in 391 2015-07-07 21:08:03Z obermeier $
 
 #========================================================================
 # Add additional lines to handle any additional AC_SUBST cases that
@@ -140,7 +140,7 @@ TCLSH_PROG	= @TCLSH_PROG@
 TCLSH		= $(TCLSH_ENV) $(TCLSH_PROG)
 SHARED_BUILD	= @SHARED_BUILD@
 
-INCLUDES	= @PKG_INCLUDES@ @TCL_INCLUDES@
+INCLUDES	= -I. @PKG_INCLUDES@ @TCL_INCLUDES@
 
 PKG_CFLAGS	= @PKG_CFLAGS@
 
@@ -181,7 +181,7 @@ all: binaries libraries doc
 # of the Makefile, in the "BINARIES" variable.
 #========================================================================
 
-binaries: $(BINARIES) pkgIndex.tcl
+binaries:	pnglibconf.h $(BINARIES) pkgIndex.tcl
 
 libraries:
 
@@ -277,6 +277,9 @@ VPATH = $(srcdir):$(srcdir)/../compat/libpng
 .c.@OBJEXT@:
 	$(COMPILE) -c `@CYGPATH@ $<` -o $@
 
+pnglibconf.h:	$(srcdir)/../compat/libpng/scripts/pnglibconf.h.prebuilt
+	cp $(srcdir)/../compat/libpng/scripts/pnglibconf.h.prebuilt pnglibconf.h
+
 #========================================================================
 # Create the pkgIndex.tcl file.
 # It is usually easiest to let Tcl do this for you with pkg_mkIndex, but
@@ -365,7 +368,7 @@ clean:
 	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean: clean
-	-rm -f *.tab.c
+	-rm -f *.tab.c pnglibconf.h
 	-rm -f $(CONFIG_CLEAN_FILES)
 	-rm -f config.cache config.log config.status
 

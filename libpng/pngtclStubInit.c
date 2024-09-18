@@ -23,7 +23,7 @@ const PngtclStubs pngtclStubs = {
     png_create_write_struct, /* 5 */
     png_get_compression_buffer_size, /* 6 */
     png_set_compression_buffer_size, /* 7 */
-    png_reset_zstream, /* 8 */
+    0, /* 8 */
 #if !defined(PNG_USER_MEM_SUPPORTED)
     0, /* 9 */
 #else  /* !PNG_USER_MEM_SUPPORTED */
@@ -43,11 +43,7 @@ const PngtclStubs pngtclStubs = {
     png_write_info_before_PLTE, /* 17 */
     png_write_info, /* 18 */
     png_read_info, /* 19 */
-#if !defined(PNG_TIME_RFC1123_SUPPORTED)
     0, /* 20 */
-#else  /* !PNG_TIME_RFC1123_SUPPORTED */
-    png_convert_to_rfc1123, /* 20 */
-#endif /* !PNG_TIME_RFC1123_SUPPORTED */
 #if defined(_WIN32_WCE) || !defined(PNG_WRITE_tIME_SUPPORTED)
     0, /* 21 */
 #else  /* _WIN32_WCE !PNG_WRITE_tIME_SUPPORTED */
@@ -288,21 +284,9 @@ const PngtclStubs pngtclStubs = {
     png_malloc, /* 94 */
     png_free, /* 95 */
     png_free_data, /* 96 */
-#if !defined(PNG_FREE_ME_SUPPORTED)
     0, /* 97 */
-#else  /* !PNG_FREE_ME_SUPPORTED */
-    png_data_freer, /* 97 */
-#endif /* !PNG_FREE_ME_SUPPORTED */
-#if !defined(PNG_USER_MEM_SUPPORTED)
     0, /* 98 */
-#else  /* !PNG_USER_MEM_SUPPORTED */
-    png_malloc_default, /* 98 */
-#endif /* !PNG_USER_MEM_SUPPORTED */
-#if !defined(PNG_USER_MEM_SUPPORTED)
     0, /* 99 */
-#else  /* !PNG_USER_MEM_SUPPORTED */
-    png_free_default, /* 99 */
-#endif /* !PNG_USER_MEM_SUPPORTED */
     0, /* 100 */
     0, /* 101 */
 #if !defined(USE_FAR_KEYWORD)
@@ -1289,7 +1273,7 @@ const PngtclStubs pngtclStubs = {
 #else  /* !PNG_INTERNAL !PNG_PROGRESSIVE_READ_SUPPORTED !PNG_iTXt_SUPPORTED */
     png_push_read_iTXt, /* 317 */
 #endif /* !PNG_INTERNAL !PNG_PROGRESSIVE_READ_SUPPORTED !PNG_iTXt_SUPPORTED */
-    png_info_init_3, /* 318 */
+    0, /* 318 */
 #if !defined(PNG_READ_FILLER_SUPPORTED) && !defined(PNG_WRITE_FILLER_SUPPORTED)
     0, /* 319 */
 #else  /* !PNG_READ_FILLER_SUPPORTED !PNG_WRITE_FILLER_SUPPORTED */

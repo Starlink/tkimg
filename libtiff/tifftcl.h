@@ -14,7 +14,7 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: tifftcl.h 279 2010-06-30 15:03:06Z nijtmans $
+ * $Id: tifftcl.h 389 2015-07-06 11:56:49Z nijtmans $
  *
  */
 
@@ -26,10 +26,10 @@
 #define TIFFTCL_MAJOR_VERSION	3
 #define TIFFTCL_MINOR_VERSION	9
 #define TIFFTCL_RELEASE_LEVEL	TCL_RELEASE
-#define TIFFTCL_RELEASE_SERIAL	4
+#define TIFFTCL_RELEASE_SERIAL	7
 
-#define TIFFTCL_VERSION		"3.9.4"
-#define TIFFTCL_PATCH_LEVEL	"3.9.4"
+#define TIFFTCL_VERSION		"3.9.7"
+#define TIFFTCL_PATCH_LEVEL	"3.9.7"
 
 /*
  * Used to block the rest of this header file from resource compilers so

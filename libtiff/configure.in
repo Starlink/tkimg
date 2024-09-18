@@ -1,14 +1,14 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Id: configure.in 311 2010-11-23 15:44:36Z nijtmans $)
+AC_REVISION($Id: configure.in 389 2015-07-06 11:56:49Z nijtmans $)
 
 #--------------------------------------------------------------------
 # Configure script for package 'tifftcl', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tifftcl],[3.9.4])
+AC_INIT([tifftcl],[3.9.7])
 
 TEA_INIT([3.9])
 
@@ -67,7 +67,7 @@ then
 else
     TIFFHOST="$host"
 fi
-${srcdir}/../compat/libtiff/configure --disable-zlib --disable-pixarlog --disable-jpeg \
+${srcdir}/../compat/libtiff/configure --disable-zlib --disable-pixarlog --disable-jpeg --disable-jbig \
 	"--with-CC=$TIFFCC" $TIFFHOST
 mv -f tifftcl_confdefs.h confdefs.h
 

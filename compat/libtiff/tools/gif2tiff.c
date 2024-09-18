@@ -1,4 +1,4 @@
-/* $Id: gif2tiff.c 276 2010-06-30 12:18:30Z nijtmans $ */
+/* $Id: gif2tiff.c 389 2015-07-06 11:56:49Z nijtmans $ */
 
 /*
  * Copyright (c) 1990-1997 Sam Leffler
@@ -503,6 +503,10 @@ rasterize(int interleaved, char* mode)
     strip = 0;
     stripsize = TIFFStripSize(tif);
     for (row=0; row<height; row += rowsperstrip) {
+	if (rowsperstrip > height-row) {
+	    rowsperstrip = height-row;
+	    stripsize = TIFFVStripSize(tif, rowsperstrip);
+	}
 	if (TIFFWriteEncodedStrip(tif, strip, newras+row*width, stripsize) < 0)
 	    break;
 	strip++;

@@ -1,4 +1,4 @@
-/* $Id: sgisv.c 276 2010-06-30 12:18:30Z nijtmans $ */
+/* $Id: sgisv.c 389 2015-07-06 11:56:49Z nijtmans $ */
 
 /*
  * Copyright (c) 1990-1997 Sam Leffler

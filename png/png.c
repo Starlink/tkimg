@@ -28,7 +28,7 @@
  *                 i.e. reading a file which has no alpha channel (Greyscale, RGB) will
  *                 add an alpha channel to the image independent of the matte flag setting.
  *
- * $Id: png.c 361 2013-10-02 18:12:59Z obermeier $
+ * $Id: png.c 381 2015-06-23 14:19:37Z nijtmans $
  */
 
 /*
@@ -350,7 +350,7 @@ CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
     png_infop end_info;
     char **png_data = NULL;
     Tk_PhotoImageBlock block;
-    unsigned int I;
+    unsigned int i;
     png_uint_32 info_width, info_height;
     int bit_depth, color_type, interlace_type;
     int intent;
@@ -420,6 +420,21 @@ CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
         png_set_expand(png_ptr);
     }
 
+    if (png_get_sRGB && png_get_sRGB(png_ptr, info_ptr, &intent)) {
+        png_set_sRGB(png_ptr, info_ptr, intent);
+    } else if (png_get_gAMA) {
+        double gamma;
+        if (!png_get_gAMA(png_ptr, info_ptr, &gamma)) {
+            gamma = 0.45455;
+        }
+        png_set_gamma(png_ptr, 1.0, gamma);
+    }
+
+    /* Note: png_read_update_info may only be called once per info_ptr !! */
+    png_read_update_info(png_ptr, info_ptr);
+    block.pixelSize = png_get_channels(png_ptr, info_ptr);
+    block.pitch = png_get_rowbytes(png_ptr, info_ptr);
+
     if ((color_type & PNG_COLOR_MASK_COLOR) == 0) {
         /* grayscale image */
         block.offset[1] = 0;
@@ -456,30 +471,14 @@ CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
         }
     }
 
-    /* Note: png_read_update_info may only be called once per info_ptr !! */
-    png_read_update_info(png_ptr,info_ptr);
-    block.pixelSize = png_get_channels(png_ptr, info_ptr);
-    block.pitch = png_get_rowbytes(png_ptr, info_ptr);
     if (addAlpha) {
         block.offset[3] = block.pixelSize - 1;
     }
 
-    if (png_get_sRGB && png_get_sRGB(png_ptr, info_ptr, &intent)) {
-        png_set_sRGB(png_ptr, info_ptr, intent);
-    } else if (png_get_gAMA) {
-        double gamma;
-        if (!png_get_gAMA(png_ptr, info_ptr, &gamma)) {
-            gamma = 0.45455;
-        }
-        png_set_gamma(png_ptr, 1.0, gamma);
-    }
+    png_data= (char **) ckalloc(sizeof(char *) * info_height + info_height * block.pitch);
 
-    png_data= (char **) ckalloc(sizeof(char *) * info_height +
-            info_height * block.pitch);
-
-    for(I=0;I<info_height;I++) {
-        png_data[I]= ((char *) png_data) + (sizeof(char *) * info_height +
-                I * block.pitch);
+    for(i=0;i<info_height;i++) {
+        png_data[i]= ((char *) png_data) + (sizeof(char *) * info_height + i * block.pitch);
     }
 
     png_read_image(png_ptr,(png_bytepp) png_data);
@@ -488,14 +487,16 @@ CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
 
     if (useAlpha) {
         unsigned char * alphaPtr = block.pixelPtr + block.offset[3];
-        for(I=0;I<height*width;I++) {
+        for(i=0; i<height*width; i++) {
             *alphaPtr = alpha * *alphaPtr;
             alphaPtr += block.offset[3] + 1 ;
         }
     }
 
-    if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, destY, width, height,
-            block.offset[3]? TK_PHOTO_COMPOSITE_OVERLAY: TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
+    if (tkimg_PhotoPutBlock(
+        interp, imageHandle, &block, 
+        destX, destY, width, height,
+        block.offset[3]? TK_PHOTO_COMPOSITE_OVERLAY: TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
         result = TCL_ERROR;
     }
 

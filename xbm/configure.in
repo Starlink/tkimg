@@ -1,14 +1,14 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Id: configure.in 352 2013-09-16 10:47:40Z nijtmans $)
+AC_REVISION($Id: configure.in 396 2016-04-02 20:32:44Z obermeier $)
 
 #--------------------------------------------------------------------
 # Configure script for package 'tkimgxbm', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimgxbm],[1.4.2])
+AC_INIT([tkimgxbm],[1.4.5])
 
 TEA_INIT([3.9])
 

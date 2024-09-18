@@ -14,7 +14,7 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: jpegtcl.h 346 2013-09-10 12:11:43Z nijtmans $
+ * $Id: jpegtcl.h 395 2016-04-02 19:47:57Z obermeier $
  *
  */
 
@@ -24,13 +24,13 @@
 #include <tcl.h>
 #include <stdio.h>
 
-#define JPEGTCL_MAJOR_VERSION	8
-#define JPEGTCL_MINOR_VERSION	4
+#define JPEGTCL_MAJOR_VERSION	9
+#define JPEGTCL_MINOR_VERSION	2
 #define JPEGTCL_RELEASE_LEVEL	TCL_RELEASE
 #define JPEGTCL_RELEASE_SERIAL	0
 
-#define JPEGTCL_VERSION		"8.4"
-#define JPEGTCL_PATCH_LEVEL	"8.4"
+#define JPEGTCL_VERSION		"9.2"
+#define JPEGTCL_PATCH_LEVEL	"9.2"
 
 /*
  * Used to block the rest of this header file from resource compilers so

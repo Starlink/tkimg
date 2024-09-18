@@ -1,4 +1,4 @@
-/* $Id: tiffsplit.c 276 2010-06-30 12:18:30Z nijtmans $ */
+/* $Id: tiffsplit.c 389 2015-07-06 11:56:49Z nijtmans $ */
 
 /*
  * Copyright (c) 1992-1997 Sam Leffler
@@ -172,7 +172,7 @@ tiffcp(TIFF* in, TIFF* out)
 	CopyField(TIFFTAG_SAMPLESPERPIXEL, samplesperpixel);
 	CopyField(TIFFTAG_COMPRESSION, compression);
 	if (compression == COMPRESSION_JPEG) {
-		uint16 count = 0;
+		uint32 count = 0;
 		void *table = NULL;
 		if (TIFFGetField(in, TIFFTAG_JPEGTABLES, &count, &table)
 		    && count > 0 && table) {
@@ -237,7 +237,10 @@ cpStrips(TIFF* in, TIFF* out)
 		tstrip_t s, ns = TIFFNumberOfStrips(in);
 		uint32 *bytecounts;
 
-		TIFFGetField(in, TIFFTAG_STRIPBYTECOUNTS, &bytecounts);
+		if (!TIFFGetField(in, TIFFTAG_STRIPBYTECOUNTS, &bytecounts)) {
+			fprintf(stderr, "tiffsplit: strip byte counts are missing\n");
+			return (0);
+		}
 		for (s = 0; s < ns; s++) {
 			if (bytecounts[s] > (uint32)bufsize) {
 				buf = (unsigned char *)_TIFFrealloc(buf, bytecounts[s]);
@@ -267,7 +270,10 @@ cpTiles(TIFF* in, TIFF* out)
 		ttile_t t, nt = TIFFNumberOfTiles(in);
 		uint32 *bytecounts;
 
-		TIFFGetField(in, TIFFTAG_TILEBYTECOUNTS, &bytecounts);
+		if (!TIFFGetField(in, TIFFTAG_TILEBYTECOUNTS, &bytecounts)) {
+			fprintf(stderr, "tiffsplit: tile byte counts are missing\n");
+			return (0);
+		}
 		for (t = 0; t < nt; t++) {
 			if (bytecounts[t] > (uint32) bufsize) {
 				buf = (unsigned char *)_TIFFrealloc(buf, bytecounts[t]);

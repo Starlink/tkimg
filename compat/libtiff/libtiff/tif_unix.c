@@ -1,4 +1,4 @@
-/* $Id: tif_unix.c 276 2010-06-30 12:18:30Z nijtmans $ */
+/* $Id: tif_unix.c 389 2015-07-06 11:56:49Z nijtmans $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler

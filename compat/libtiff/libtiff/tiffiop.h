@@ -1,4 +1,4 @@
-/* $Id: tiffiop.h 290 2010-07-08 08:53:05Z nijtmans $ */
+/* $Id: tiffiop.h 389 2015-07-06 11:56:49Z nijtmans $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -57,11 +57,12 @@ extern void *lfind(const void *, const void *, size_t *, size_t,
 		   int (*)(const void *, const void *));
 #endif
 
-#if 0
 /*
   Libtiff itself does not require a 64-bit type, but bundled TIFF
-  utilities may use it.
+  utilities may use it.  
 */
+
+#if !defined(__xlC__) && !defined(__xlc__) // Already defined there (#2301)
 typedef TIFF_INT64_T  int64;
 typedef TIFF_UINT64_T uint64;
 #endif
@@ -245,7 +246,7 @@ struct tiff {
 #define	TIFFroundup(x, y) (TIFFhowmany(x,y)*(y))
 
 /* Safe multiply which returns zero if there is an integer overflow */
-#define TIFFSafeMultiply(t,v,m) ((((t)m != (t)0) && (((t)((v*m)/m)) == (t)v)) ? (t)(v*m) : (t)0)
+#define TIFFSafeMultiply(t,v,m) ((((t)(m) != (t)0) && (((t)(((v)*(m))/(m))) == (t)(v))) ? (t)((v)*(m)) : (t)0)
 
 #define TIFFmax(A,B) ((A)>(B)?(A):(B))
 #define TIFFmin(A,B) ((A)<(B)?(A):(B))
@@ -334,7 +335,7 @@ extern	int TIFFInitSGILog(TIFF*, int);
 #ifdef VMS
 extern	const TIFFCodec _TIFFBuiltinCODECS[];
 #else
-extern	TIFFCodec _TIFFBuiltinCODECS[];
+extern	const TIFFCodec _TIFFBuiltinCODECS[];
 #endif
 
 #if defined(__cplusplus)

@@ -1,4 +1,4 @@
-/* $Id: fax2ps.c 276 2010-06-30 12:18:30Z nijtmans $" */
+/* $Id: fax2ps.c 389 2015-07-06 11:56:49Z nijtmans $" */
 
 /*
  * Copyright (c) 1991-1997 Sam Leffler
@@ -273,9 +273,9 @@ findPage(TIFF* tif, uint16 pageNumber)
     uint16 pn = (uint16) -1;
     uint16 ptotal = (uint16) -1;
     if (GetPageNumber(tif)) {
-	while (pn != pageNumber && TIFFReadDirectory(tif) && GetPageNumber(tif))
+	while (pn != (pageNumber-1) && TIFFReadDirectory(tif) && GetPageNumber(tif))
 	    ;
-	return (pn == pageNumber);
+	return (pn == (pageNumber-1));
     } else
 	return (TIFFSetDirectory(tif, (tdir_t)(pageNumber-1)));
 }
@@ -380,8 +380,7 @@ main(int argc, char** argv)
 
 	fd = tmpfile();
 	if (fd == NULL) {
-	    fprintf(stderr, "Could not create temporary file, exiting.\n");
-	    fclose(fd);
+	    fprintf(stderr, "Could not obtain temporary file.\n");
 	    exit(-2);
 	}
 #if defined(HAVE_SETMODE) && defined(O_BINARY)

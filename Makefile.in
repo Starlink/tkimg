@@ -149,7 +149,7 @@ collate: all
 			$$p > $$p.1 && mv -f $$p.1 $$p ; \
 	done
 
-install: collate install-man
+install-libraries: collate
 	mkdir -p    $(INSTALL_ROOT)$(LIB_RUNTIME_DIR)
 	for p in Img/exec_prefix/lib/Img/* ; do \
 		$(INSTALL_PROGRAM) $$p $(INSTALL_ROOT)$(LIB_RUNTIME_DIR)/`basename $$p` ; \
@@ -164,6 +164,7 @@ install: collate install-man
 		$(INSTALL_DATA) $$p $(INSTALL_ROOT)$(includedir)/`basename $$p` ; \
 	done; fi
 
+install: install-libraries install-man
 
 bindist:
 

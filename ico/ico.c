@@ -46,7 +46,7 @@
  *
  * ENDHEADER
  *
- * $Id: ico.c 345 2013-09-09 20:29:59Z obermeier $
+ * $Id: ico.c 380 2015-04-11 13:15:29Z obermeier $
  *
  */
 
@@ -62,13 +62,13 @@
 /* Some defines and typedefs. */
 #define TRUE  1
 #define FALSE 0
-typedef unsigned char Boln;	/* Boolean value: TRUE or FALSE */
-typedef unsigned char UByte;	/* Unsigned  8 bit integer */
-typedef char  Byte;		/* Signed    8 bit integer */
-typedef unsigned short UShort;	/* Unsigned 16 bit integer */
-typedef short Short;		/* Signed   16 bit integer */
-typedef unsigned int UInt;	/* Unsigned 32 bit integer */
-typedef int Int;		/* Signed   32 bit integer */
+typedef unsigned char Boln;     /* Boolean value: TRUE or FALSE */
+typedef unsigned char UByte;    /* Unsigned  8 bit integer */
+typedef char  Byte;             /* Signed    8 bit integer */
+typedef unsigned short UShort;  /* Unsigned 16 bit integer */
+typedef short Short;            /* Signed   16 bit integer */
+typedef unsigned int UInt;      /* Unsigned 32 bit integer */
+typedef int Int;                /* Signed   32 bit integer */
 
 #define BI_RGB 0
 
@@ -238,52 +238,52 @@ static Boln readIcoHeader (tkimg_MFile *handle, ICOHEADER *th)
     UShort reserved, type, nIcons;
 
     if (!readUShort (handle, &reserved)) {
-	return FALSE;
+        return FALSE;
     }
     if (reserved != 0) {
-	return FALSE;
+        return FALSE;
     }
 
     if (!readUShort (handle, &type)) {
-	return FALSE;
+        return FALSE;
     }
     if (type != 1) {
-	return FALSE;
+        return FALSE;
     }
     if (!readUShort (handle, &nIcons)) {
-	return FALSE;
+        return FALSE;
     }
     if (nIcons <= 0) {
-	return FALSE;
+        return FALSE;
     }
 
     th->nIcons = nIcons;
     if (!(th->entries = (ICOENTRY *)ckalloc (sizeof (ICOENTRY) * nIcons))) {
-	return FALSE;
+        return FALSE;
     }
 
     for (i=0; i<nIcons; i++) {
-	if (!readUByte  (handle, &th->entries[i].width)  ||
-	    !readUByte  (handle, &th->entries[i].height) ||
-	    !readUByte  (handle, &nColors) ||
-	    !readUByte  (handle, &th->entries[i].reserved) ||
-	    !readUShort (handle, &th->entries[i].nPlanes) ||
-	    !readUShort (handle, &th->entries[i].bitCount) ||
-	    !readUInt   (handle, &th->entries[i].sizeInBytes) ||
-	    !readUInt   (handle, &th->entries[i].fileOffset)) {
+        if (!readUByte  (handle, &th->entries[i].width)  ||
+            !readUByte  (handle, &th->entries[i].height) ||
+            !readUByte  (handle, &nColors) ||
+            !readUByte  (handle, &th->entries[i].reserved) ||
+            !readUShort (handle, &th->entries[i].nPlanes) ||
+            !readUShort (handle, &th->entries[i].bitCount) ||
+            !readUInt   (handle, &th->entries[i].sizeInBytes) ||
+            !readUInt   (handle, &th->entries[i].fileOffset)) {
             ckfree ((char *)th->entries);
-	    return FALSE;
-	}
+            return FALSE;
+        }
         th->entries[i].nColors = (nColors == 0? 256: nColors);
 #ifdef DEBUG_LOCAL
-            printf ("Icon %d:\n", i);
-            printf ("  Width     : %d\n", th->entries[i].width);
-            printf ("  Height    : %d\n", th->entries[i].height);
-            printf ("  Colors    : %d\n", th->entries[i].nColors);
-            printf ("  Planes    : %d\n", th->entries[i].nPlanes);
-            printf ("  BitCount  : %d\n", th->entries[i].bitCount);
-            printf ("  Size      : %d\n", th->entries[i].sizeInBytes);
-            printf ("  FileOffset: %d\n", th->entries[i].fileOffset);
+        printf ("Icon %d:\n", i);
+        printf ("  Width     : %d\n", th->entries[i].width);
+        printf ("  Height    : %d\n", th->entries[i].height);
+        printf ("  Colors    : %d\n", th->entries[i].nColors);
+        printf ("  Planes    : %d\n", th->entries[i].nPlanes);
+        printf ("  BitCount  : %d\n", th->entries[i].bitCount);
+        printf ("  Size      : %d\n", th->entries[i].sizeInBytes);
+        printf ("  FileOffset: %d\n", th->entries[i].fileOffset);
 #endif
     }
     return TRUE;
@@ -297,26 +297,26 @@ static Boln writeIcoHeader (tkimg_MFile *handle, ICOHEADER *th)
            type = 1;
 
     if (!writeUShort (handle, reserved)) {
-	return FALSE;
+        return FALSE;
     }
     if (!writeUShort (handle, type)) {
-	return FALSE;
+        return FALSE;
     }
     if (!writeUShort (handle, th->nIcons)) {
-	return FALSE;
+        return FALSE;
     }
     for (i=0; i<th->nIcons; i++) {
         nColors = (th->entries[i].nColors == 256? 0: th->entries[i].nColors);
-	if (!writeUByte  (handle, th->entries[i].width)  ||
-	    !writeUByte  (handle, th->entries[i].height) ||
-	    !writeUByte  (handle, nColors) ||
-	    !writeUByte  (handle, th->entries[i].reserved) ||
-	    !writeUShort (handle, th->entries[i].nPlanes) ||
-	    !writeUShort (handle, th->entries[i].bitCount) ||
-	    !writeUInt   (handle, th->entries[i].sizeInBytes) ||
-	    !writeUInt   (handle, th->entries[i].fileOffset)) {
-	    return FALSE;
-	}
+        if (!writeUByte  (handle, th->entries[i].width)  ||
+            !writeUByte  (handle, th->entries[i].height) ||
+            !writeUByte  (handle, nColors) ||
+            !writeUByte  (handle, th->entries[i].reserved) ||
+            !writeUShort (handle, th->entries[i].nPlanes) ||
+            !writeUShort (handle, th->entries[i].bitCount) ||
+            !writeUInt   (handle, th->entries[i].sizeInBytes) ||
+            !writeUInt   (handle, th->entries[i].fileOffset)) {
+            return FALSE;
+        }
     }
     return TRUE;
 }
@@ -324,31 +324,31 @@ static Boln writeIcoHeader (tkimg_MFile *handle, ICOHEADER *th)
 static Boln readInfoHeader (tkimg_MFile *handle, INFOHEADER *ih)
 {
     if (!readUInt   (handle, &ih->size) ||
-	!readUInt   (handle, &ih->width) ||
-	!readUInt   (handle, &ih->height) ||
-	!readUShort (handle, &ih->nPlanes) ||
-	!readUShort (handle, &ih->nBitsPerPixel) ||
-	!readUInt   (handle, &ih->compression) ||
-	!readUInt   (handle, &ih->imageSize) ||
-	!readUInt   (handle, &ih->xPixelsPerM) ||
-	!readUInt   (handle, &ih->yPixelsPerM) ||
-	!readUInt   (handle, &ih->nColorsUsed) ||
-	!readUInt   (handle, &ih->nColorsImportant)) {
-	return FALSE;
+        !readUInt   (handle, &ih->width) ||
+        !readUInt   (handle, &ih->height) ||
+        !readUShort (handle, &ih->nPlanes) ||
+        !readUShort (handle, &ih->nBitsPerPixel) ||
+        !readUInt   (handle, &ih->compression) ||
+        !readUInt   (handle, &ih->imageSize) ||
+        !readUInt   (handle, &ih->xPixelsPerM) ||
+        !readUInt   (handle, &ih->yPixelsPerM) ||
+        !readUInt   (handle, &ih->nColorsUsed) ||
+        !readUInt   (handle, &ih->nColorsImportant)) {
+        return FALSE;
     }
 #ifdef DEBUG_LOCAL
-	printf("Info header:\n");
-	printf("Size: %d\n", ih->size);
-	printf("Width: %d\n", ih->width);
-	printf("Height: %d\n", ih->height);
-	printf("Planes: %d\n", ih->nPlanes);
-	printf("BitsPerPixel: %d\n", ih->nBitsPerPixel);
-	printf("Compression: %d\n", ih->compression);
-	printf("Image size: %d\n", ih->imageSize);
-	printf("XPixelsPerM: %d\n", ih->xPixelsPerM);
-	printf("YPixelsPerM: %d\n", ih->yPixelsPerM);
-	printf("ColorsUsed: %d\n", ih->nColorsUsed);
-	printf("ColorsImportant: %d\n", ih->nColorsImportant);
+    printf("Info header:\n");
+    printf("Size: %d\n", ih->size);
+    printf("Width: %d\n", ih->width);
+    printf("Height: %d\n", ih->height);
+    printf("Planes: %d\n", ih->nPlanes);
+    printf("BitsPerPixel: %d\n", ih->nBitsPerPixel);
+    printf("Compression: %d\n", ih->compression);
+    printf("Image size: %d\n", ih->imageSize);
+    printf("XPixelsPerM: %d\n", ih->xPixelsPerM);
+    printf("YPixelsPerM: %d\n", ih->yPixelsPerM);
+    printf("ColorsUsed: %d\n", ih->nColorsUsed);
+    printf("ColorsImportant: %d\n", ih->nColorsImportant);
 #endif
     return TRUE;
 }
@@ -356,31 +356,31 @@ static Boln readInfoHeader (tkimg_MFile *handle, INFOHEADER *ih)
 static Boln writeInfoHeader (tkimg_MFile *handle, INFOHEADER *ih)
 {
     if (!writeUInt   (handle, ih->size) ||
-	!writeUInt   (handle, ih->width) ||
-	!writeUInt   (handle, ih->height) ||
-	!writeUShort (handle, ih->nPlanes) ||
-	!writeUShort (handle, ih->nBitsPerPixel) ||
-	!writeUInt   (handle, ih->compression) ||
-	!writeUInt   (handle, ih->imageSize) ||
-	!writeUInt   (handle, ih->xPixelsPerM) ||
-	!writeUInt   (handle, ih->yPixelsPerM) ||
-	!writeUInt   (handle, ih->nColorsUsed) ||
-	!writeUInt   (handle, ih->nColorsImportant)) {
-	return FALSE;
+        !writeUInt   (handle, ih->width) ||
+        !writeUInt   (handle, ih->height) ||
+        !writeUShort (handle, ih->nPlanes) ||
+        !writeUShort (handle, ih->nBitsPerPixel) ||
+        !writeUInt   (handle, ih->compression) ||
+        !writeUInt   (handle, ih->imageSize) ||
+        !writeUInt   (handle, ih->xPixelsPerM) ||
+        !writeUInt   (handle, ih->yPixelsPerM) ||
+        !writeUInt   (handle, ih->nColorsUsed) ||
+        !writeUInt   (handle, ih->nColorsImportant)) {
+        return FALSE;
     }
 #ifdef DEBUG_LOCAL
-	printf("Writing Info header:\n");
-	printf("Size        : %d\n", ih->size);
-	printf("Width       : %d\n", ih->width);
-	printf("Height      : %d\n", ih->height);
-	printf("Planes      : %d\n", ih->nPlanes);
-	printf("BitsPerPixel: %d\n", ih->nBitsPerPixel);
-	printf("Compression : %d\n", ih->compression);
-	printf("Image size  : %d\n", ih->imageSize);
-	printf("XPixelsPerM : %d\n", ih->xPixelsPerM);
-	printf("YPixelsPerM : %d\n", ih->yPixelsPerM);
-	printf("ColorsUsed  : %d\n", ih->nColorsUsed);
-	printf("ColorsImport: %d\n", ih->nColorsImportant);
+    printf("Writing Info header:\n");
+    printf("Size        : %d\n", ih->size);
+    printf("Width       : %d\n", ih->width);
+    printf("Height      : %d\n", ih->height);
+    printf("Planes      : %d\n", ih->nPlanes);
+    printf("BitsPerPixel: %d\n", ih->nBitsPerPixel);
+    printf("Compression : %d\n", ih->compression);
+    printf("Image size  : %d\n", ih->imageSize);
+    printf("XPixelsPerM : %d\n", ih->xPixelsPerM);
+    printf("YPixelsPerM : %d\n", ih->yPixelsPerM);
+    printf("ColorsUsed  : %d\n", ih->nColorsUsed);
+    printf("ColorsImport: %d\n", ih->nColorsImportant);
 #endif
     return TRUE;
 }
@@ -392,11 +392,11 @@ static Boln readColorMap (tkimg_MFile *handle, int mapSize, ICOCOLOR *colorMap)
 
     for (i=0; i<mapSize; i++) {
         if (!readUByte (handle, &color.blue) ||
-	    !readUByte (handle, &color.green) ||
-	    !readUByte (handle, &color.red) ||
-	    !readUByte (handle, &color.matte)) {
-	    return FALSE;
-	}
+            !readUByte (handle, &color.green) ||
+            !readUByte (handle, &color.red) ||
+            !readUByte (handle, &color.matte)) {
+            return FALSE;
+        }
         colorMap[i] = color;
     }
     return TRUE;
@@ -408,11 +408,11 @@ static Boln writeColorMap (tkimg_MFile *handle, int mapSize, ICOCOLOR *colorMap)
 
     for (i=0; i<mapSize; i++) {
         if (!writeUByte (handle, colorMap[i].blue) ||
-	    !writeUByte (handle, colorMap[i].green) ||
-	    !writeUByte (handle, colorMap[i].red) ||
-	    !writeUByte (handle, colorMap[i].matte)) {
-	    return FALSE;
-	}
+            !writeUByte (handle, colorMap[i].green) ||
+            !writeUByte (handle, colorMap[i].red) ||
+            !writeUByte (handle, colorMap[i].matte)) {
+            return FALSE;
+        }
     }
     return TRUE;
 }
@@ -422,15 +422,15 @@ static Boln writeColorMap (tkimg_MFile *handle, int mapSize, ICOCOLOR *colorMap)
  */
 
 static int ParseFormatOpts(Tcl_Interp *interp, Tcl_Obj *format,
-	FMTOPT *opts);
+        FMTOPT *opts);
 static int CommonMatch(tkimg_MFile *handle, int *widthPtr,
-	int *heightPtr, ICOHEADER *icoHeaderPtr);
+        int *heightPtr, int index, ICOHEADER *icoHeaderPtr);
 static int CommonRead(Tcl_Interp *interp, tkimg_MFile *handle,
-	const char *filename, Tcl_Obj *format,
-	Tk_PhotoHandle imageHandle, int destX, int destY,
-	int width, int height, int srcX, int srcY);
+        const char *filename, Tcl_Obj *format,
+        Tk_PhotoHandle imageHandle, int destX, int destY,
+        int width, int height, int srcX, int srcY);
 static int CommonWrite(Tcl_Interp *interp, tkimg_MFile *handle,
-	Tk_PhotoImageBlock *blockPtr);
+        Tk_PhotoImageBlock *blockPtr);
 
 static int ParseFormatOpts (interp, format, opts)
     Tcl_Interp *interp;
@@ -449,28 +449,28 @@ static int ParseFormatOpts (interp, format, opts)
     indexStr   = "0";
 
     if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK)
-	return TCL_ERROR;
+        return TCL_ERROR;
     if (objc) {
-	for (i=1; i<objc; i++) {
-	    if (Tcl_GetIndexFromObj(interp, objv[i], (CONST84 char *CONST86 *)icoOptions,
-		    "format option", 0, &index) != TCL_OK) {
-		return TCL_ERROR;
-	    }
-	    if (++i >= objc) {
-		Tcl_AppendResult(interp, "No value for option \"",
-			Tcl_GetStringFromObj (objv[--i], (int *) NULL),
-			"\"", (char *) NULL);
-		return TCL_ERROR;
-	    }
-	    switch(index) {
-		case 0:
-		    verboseStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
-		    break;
-		case 1:
-		    indexStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
-		    break;
-	    }
-	}
+        for (i=1; i<objc; i++) {
+            if (Tcl_GetIndexFromObj(interp, objv[i], (CONST84 char *CONST86 *)icoOptions,
+                    "format option", 0, &index) != TCL_OK) {
+                return TCL_ERROR;
+            }
+            if (++i >= objc) {
+                Tcl_AppendResult(interp, "No value for option \"",
+                        Tcl_GetStringFromObj (objv[--i], (int *) NULL),
+                        "\"", (char *) NULL);
+                return TCL_ERROR;
+            }
+            switch (index) {
+                case 0:
+                    verboseStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
+                    break;
+                case 1:
+                    indexStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
+                    break;
+            }
+        }
     }
 
     /* OPA TODO: Check for valid integer strings. */
@@ -478,18 +478,18 @@ static int ParseFormatOpts (interp, format, opts)
 
     length = strlen (verboseStr);
     if (!strncmp (verboseStr, "1", length) || \
-	!strncmp (verboseStr, "true", length) || \
-	!strncmp (verboseStr, "on", length)) {
-	opts->verbose = 1;
+        !strncmp (verboseStr, "true", length) || \
+        !strncmp (verboseStr, "on", length)) {
+        opts->verbose = 1;
     } else if (!strncmp (verboseStr, "0", length) || \
-	!strncmp (verboseStr, "false", length) || \
-	!strncmp (verboseStr, "off", length)) {
-	opts->verbose = 0;
+        !strncmp (verboseStr, "false", length) || \
+        !strncmp (verboseStr, "off", length)) {
+        opts->verbose = 0;
     } else {
-	Tcl_AppendResult(interp, "invalid verbose mode \"", verboseStr,
-			  "\": should be 1 or 0, on or off, true or false",
-			  (char *) NULL);
-	return TCL_ERROR;
+        Tcl_AppendResult(interp, "invalid verbose mode \"", verboseStr,
+                         "\": should be 1 or 0, on or off, true or false",
+                         (char *) NULL);
+        return TCL_ERROR;
     }
 
     return TCL_OK;
@@ -504,11 +504,16 @@ static int ChnMatch(
     Tcl_Interp *interp
 ) {
     tkimg_MFile handle;
+    FMTOPT opts;
 
     handle.data = (char *) chan;
     handle.state = IMG_CHAN;
 
-    return CommonMatch(&handle, widthPtr, heightPtr, NULL);
+    if (ParseFormatOpts(interp, format, &opts) != TCL_OK) {
+        return 0;
+    }
+
+    return CommonMatch(&handle, widthPtr, heightPtr, opts.index, NULL);
 }
 
 static int ObjMatch(
@@ -519,16 +524,21 @@ static int ObjMatch(
     Tcl_Interp *interp
 ) {
     tkimg_MFile handle;
+    FMTOPT opts;
 
-    if (!tkimg_ReadInit(data, '\000', &handle)) {
-	return 0;
+    if (ParseFormatOpts(interp, format, &opts) != TCL_OK) {
+        return 0;
     }
-    return CommonMatch(&handle, widthPtr, heightPtr, NULL);
+    if (!tkimg_ReadInit(data, '\000', &handle)) {
+        return 0;
+    }
+    return CommonMatch(&handle, widthPtr, heightPtr, opts.index, NULL);
 }
 
-static int CommonMatch(handle, widthPtr, heightPtr, icoHeaderPtr)
+static int CommonMatch(handle, widthPtr, heightPtr, index, icoHeaderPtr)
     tkimg_MFile *handle;
     int *widthPtr, *heightPtr;
+    int index;
     ICOHEADER *icoHeaderPtr;
 {
     ICOHEADER icoHeader, *headerPtr;
@@ -536,23 +546,23 @@ static int CommonMatch(handle, widthPtr, heightPtr, icoHeaderPtr)
     if (!icoHeaderPtr) {
         headerPtr = &icoHeader;
     } else {
-	headerPtr = icoHeaderPtr;
+        headerPtr = icoHeaderPtr;
     }
     if (!readIcoHeader (handle, headerPtr)) {
-	return 0;
+        return 0;
     }
 
-    *widthPtr  = headerPtr->entries[0].width;
-    *heightPtr = headerPtr->entries[0].height;
+    *widthPtr  = headerPtr->entries[index].width;
+    *heightPtr = headerPtr->entries[index].height;
 
     if (!icoHeaderPtr) {
-	ckfree ((char *) headerPtr->entries);
+        ckfree ((char *) headerPtr->entries);
     }
     return 1;
 }
 
 static int ChnRead(interp, chan, filename, format, imageHandle,
-                    destX, destY, width, height, srcX, srcY)
+                   destX, destY, width, height, srcX, srcY)
     Tcl_Interp *interp;
     Tcl_Channel chan;
     const char *filename;
@@ -569,11 +579,11 @@ static int ChnRead(interp, chan, filename, format, imageHandle,
 
     return CommonRead (interp, &handle, filename, format,
                        imageHandle, destX, destY,
-		       width, height, srcX, srcY);
+                       width, height, srcX, srcY);
 }
 
 static int ObjRead (interp, data, format, imageHandle,
-	            destX, destY, width, height, srcX, srcY)
+                    destX, destY, width, height, srcX, srcY)
     Tcl_Interp *interp;
     Tcl_Obj *data;
     Tcl_Obj *format;
@@ -593,18 +603,18 @@ static int ObjRead (interp, data, format, imageHandle,
 static int CommonRead (interp, handle, filename, format, imageHandle,
                        destX, destY, width, height, srcX, srcY)
     Tcl_Interp *interp;         /* Interpreter to use for reporting errors. */
-    tkimg_MFile *handle;              /* The image file, open for reading. */
+    tkimg_MFile *handle;        /* The image file, open for reading. */
     const char *filename;       /* The name of the image file. */
     Tcl_Obj *format;            /* User-specified format object, or NULL. */
     Tk_PhotoHandle imageHandle; /* The photo image to write into. */
     int destX, destY;           /* Coordinates of top-left pixel in
-				 * photo image to be written to. */
+                                 * photo image to be written to. */
     int width, height;          /* Dimensions of block of photo image to
-			         * be written to. */
+                                 * be written to. */
     int srcX, srcY;             /* Coordinates of top-left pixel to be used
-			         * in image being read. */
+                                 * in image being read. */
 {
-	Tk_PhotoImageBlock block;
+    Tk_PhotoImageBlock block;
     int x, y;
     int fileWidth, fileHeight;
     int icoHeaderWidth, icoHeaderHeight;
@@ -623,15 +633,15 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
         return TCL_ERROR;
     }
 
-    if (!CommonMatch(handle, &fileWidth, &fileHeight, &icoHeader)) {
-	Tcl_AppendResult(interp, "Error reading header", (char *)NULL);
+    if (!CommonMatch(handle, &fileWidth, &fileHeight, opts.index, &icoHeader)) {
+        Tcl_AppendResult(interp, "Error reading header", (char *)NULL);
         errorFlag = TCL_ERROR;
         goto error;
     }
 
     if (opts.index < 0 || opts.index >= icoHeader.nIcons) {
         sprintf(msgStr, "Invalid icon index: %d", opts.index);
-	Tcl_AppendResult(interp, msgStr, (char *)NULL);
+        Tcl_AppendResult(interp, msgStr, (char *)NULL);
         errorFlag = TCL_ERROR;
         goto error;
     }
@@ -643,31 +653,30 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
                    16 * icoHeader.nIcons;
     if (nBytesToSkip > 0) {
         char *dummy = ckalloc (nBytesToSkip);
-	tkimg_Read(handle, dummy, nBytesToSkip);
+        tkimg_Read(handle, dummy, nBytesToSkip);
         ckfree ((char *) dummy);
     }
 
     /* Read Info header and color map */
     if (!readInfoHeader (handle, &infoHeader)) {
-	Tcl_AppendResult(interp, "Error reading info header", (char *)NULL);
+        Tcl_AppendResult(interp, "Error reading info header", (char *)NULL);
         errorFlag = TCL_ERROR;
         goto error;
     }
 
     if (infoHeader.compression != BI_RGB) {
         sprintf(msgStr,"Unsupported compression type (%d)", infoHeader.compression);
-	Tcl_AppendResult(interp, msgStr, (char *)NULL);
+        Tcl_AppendResult(interp, msgStr, (char *)NULL);
         errorFlag = TCL_ERROR;
         goto error;
     }
 
     if (infoHeader.nBitsPerPixel != 24 && infoHeader.nBitsPerPixel != 32) {
-	if (!readColorMap (handle, icoHeader.entries[opts.index].nColors,
-			   colorMap)) {
-	    Tcl_AppendResult(interp, "Error reading color map", (char *)NULL);
-	    errorFlag = TCL_ERROR;
-	    goto error;
-	}
+        if (!readColorMap (handle, icoHeader.entries[opts.index].nColors, colorMap)) {
+            Tcl_AppendResult(interp, "Error reading color map", (char *)NULL);
+            errorFlag = TCL_ERROR;
+            goto error;
+        }
     }
 
     fileWidth  = infoHeader.width;
@@ -688,30 +697,30 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
         errorFlag = TCL_ERROR;
         goto error;
     }
-    outWidth   = fileWidth;
-    outHeight  = fileHeight;
+    outWidth  = fileWidth;
+    outHeight = fileHeight;
     if (fileWidth != width || fileHeight != height) {
         if (srcX != 0 || srcY != 0 || destX != 0 || destY != 0) {
-	    if ((srcX + width) > fileWidth) {
-		outWidth = fileWidth - srcX;
-	    } else {
-		outWidth = width;
-	    }
-	    if ((srcY + height) > fileHeight) {
-		outHeight = fileHeight - srcY;
-	    } else {
-		outHeight = height;
-	    }
-	}
+            if ((srcX + width) > fileWidth) {
+                outWidth = fileWidth - srcX;
+            } else {
+                outWidth = width;
+            }
+            if ((srcY + height) > fileHeight) {
+                outHeight = fileHeight - srcY;
+            } else {
+                outHeight = height;
+            }
+        }
     }
     if ((outWidth <= 0) || (outHeight <= 0)
-	|| (srcX >= fileWidth) || (srcY >= fileHeight)) {
-	return TCL_OK;
+        || (srcX >= fileWidth) || (srcY >= fileHeight)) {
+        return TCL_OK;
     }
 
     if (opts.verbose) {
         printImgInfo (&icoHeader, &infoHeader, &opts,
-		      filename, "Reading image:");
+                      filename, "Reading image:");
     }
 
     if (tkimg_PhotoExpand(interp, imageHandle, destX + outWidth, destY + outHeight) == TCL_ERROR) {
@@ -734,76 +743,76 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
 
     line = (unsigned char *) ckalloc(bytesPerLine);
     switch (infoHeader.nBitsPerPixel) {
-	case 32:
-	    for (y=0; y<fileHeight; y++) {
+        case 32:
+            for (y=0; y<fileHeight; y++) {
                 tkimg_Read(handle, (char *)line, bytesPerLine);
-		for (x = 0; x < fileWidth; x++) {
-		    expline[0] = line[x*4 + 2];
-		    expline[1] = line[x*4 + 1];
-		    expline[2] = line[x*4 + 0];
-		    expline[3] = line[x*4 + 3];
-		    expline += 4;
-		}
+                for (x = 0; x < fileWidth; x++) {
+                    expline[0] = line[x*4 + 2];
+                    expline[1] = line[x*4 + 1];
+                    expline[2] = line[x*4 + 0];
+                    expline[3] = line[x*4 + 3];
+                    expline += 4;
+                }
             }
             break;
-	case 24:
-	    for (y=0; y<fileHeight; y++) {
+        case 24:
+            for (y=0; y<fileHeight; y++) {
                 tkimg_Read(handle, (char *)line, bytesPerLine);
-		for (x = 0; x < fileWidth; x++) {
-		    expline[0] = line[x*3 + 2];
-		    expline[1] = line[x*3 + 1];
-		    expline[2] = line[x*3 + 0];
-		    expline += 4;
-		}
+                for (x = 0; x < fileWidth; x++) {
+                    expline[0] = line[x*3 + 2];
+                    expline[1] = line[x*3 + 1];
+                    expline[2] = line[x*3 + 0];
+                    expline += 4;
+                }
             }
             break;
-	case 8:
-	    for (y=0; y<fileHeight; y++) {
-		tkimg_Read(handle, (char *)line, bytesPerLine);
-		for (x = 0; x < fileWidth; x++) {
-		    expline[0] = colorMap[line[x]].red;
-		    expline[1] = colorMap[line[x]].green;
-		    expline[2] = colorMap[line[x]].blue;
-		    expline += 4;
-		}
-	    }
-	    break;
-	case 4:
-	    for (y=0; y<fileHeight; y++) {
-		int c;
-		tkimg_Read(handle, (char *)line, bytesPerLine);
-		for (x=0; x<fileWidth; x++) {
-		    if (x&1) {
-			c = line[x/2] & 0x0f;
-		    } else {
-			c = line[x/2] >> 4;
-		    }
-		    expline[0] = colorMap[c].red;
-		    expline[1] = colorMap[c].green;
-		    expline[2] = colorMap[c].blue;
-		    expline += 4;
-		}
-	    }
-	    break;
-	case 1:
-	    for (y=0; y<fileHeight; y++) {
-		int c;
-		tkimg_Read(handle, (char *)line, bytesPerLine);
-		for (x=0; x<fileWidth; x++) {
-		    c = (line[x/8] >> (7-(x%8))) & 1;
-		    expline[0] = colorMap[c].red;
-		    expline[1] = colorMap[c].green;
-		    expline[2] = colorMap[c].blue;
-		    expline += 4;
-		}
-	    }
-	    break;
-	default:
-	    sprintf(msgStr,"%d-bits ICO file not supported",
+        case 8:
+            for (y=0; y<fileHeight; y++) {
+                tkimg_Read(handle, (char *)line, bytesPerLine);
+                for (x = 0; x < fileWidth; x++) {
+                    expline[0] = colorMap[line[x]].red;
+                    expline[1] = colorMap[line[x]].green;
+                    expline[2] = colorMap[line[x]].blue;
+                    expline += 4;
+                }
+            }
+            break;
+        case 4:
+            for (y=0; y<fileHeight; y++) {
+                int c;
+                tkimg_Read(handle, (char *)line, bytesPerLine);
+                for (x=0; x<fileWidth; x++) {
+                    if (x&1) {
+                        c = line[x/2] & 0x0f;
+                    } else {
+                        c = line[x/2] >> 4;
+                    }
+                    expline[0] = colorMap[c].red;
+                    expline[1] = colorMap[c].green;
+                    expline[2] = colorMap[c].blue;
+                    expline += 4;
+                }
+            }
+            break;
+        case 1:
+            for (y=0; y<fileHeight; y++) {
+                int c;
+                tkimg_Read(handle, (char *)line, bytesPerLine);
+                for (x=0; x<fileWidth; x++) {
+                    c = (line[x/8] >> (7-(x%8))) & 1;
+                    expline[0] = colorMap[c].red;
+                    expline[1] = colorMap[c].green;
+                    expline[2] = colorMap[c].blue;
+                    expline += 4;
+                }
+            }
+            break;
+        default:
+            sprintf(msgStr,"%d-bits ICO file not supported",
                      infoHeader.nBitsPerPixel);
-	    Tcl_AppendResult(interp, msgStr, (char *)NULL);
-	    errorFlag = TCL_ERROR;
-	    goto error;
+            Tcl_AppendResult(interp, msgStr, (char *)NULL);
+            errorFlag = TCL_ERROR;
+            goto error;
     }
 
     if (infoHeader.nBitsPerPixel != 32) {
@@ -830,12 +839,12 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
     outY = destY + outHeight - 1;
     for (y=fileHeight-1; y>=0; y--) {
         if (y >= srcY && y < srcY + outHeight) {
-    	errorFlag = tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, outY,
-    		outWidth, 1, TK_PHOTO_COMPOSITE_SET);
-    	if (errorFlag == TCL_ERROR) {
-    	    break;
-    	}
-    	outY--;
+            errorFlag = tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, outY,
+                                            outWidth, 1, TK_PHOTO_COMPOSITE_SET);
+            if (errorFlag == TCL_ERROR) {
+                break;
+            }
+            outY--;
         }
         block.pixelPtr += 4 * fileWidth;
     }
@@ -843,13 +852,13 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
 
 error:
     if (icoHeader.entries) {
-	ckfree((char *) icoHeader.entries);
+        ckfree((char *) icoHeader.entries);
     }
     if (line) {
-	ckfree((char *) line);
+        ckfree((char *) line);
     }
     if (expline) {
-	ckfree((char *) block.pixelPtr);
+        ckfree((char *) block.pixelPtr);
     }
     return errorFlag;
 }
@@ -866,7 +875,7 @@ static int ChnWrite (interp, filename, format, blockPtr)
 
     chan = tkimg_OpenFileChannel(interp, filename, 0644);
     if (!chan) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
 
     handle.data = (char *) chan;
@@ -874,7 +883,7 @@ static int ChnWrite (interp, filename, format, blockPtr)
 
     result = CommonWrite(interp, &handle, blockPtr);
     if (Tcl_Close(interp, chan) == TCL_ERROR) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
     return result;
 }
@@ -894,9 +903,9 @@ static int StringWrite(
     tkimg_Putc(IMG_DONE, &handle);
 
     if (result == TCL_OK) {
-	Tcl_DStringResult(interp, &data);
+        Tcl_DStringResult(interp, &data);
     } else {
-	Tcl_DStringFree(&data);
+        Tcl_DStringFree(&data);
     }
     return result;
 }
@@ -917,9 +926,9 @@ static int CommonWrite (interp, handle, blockPtr)
     ICOCOLOR   pixel;
 
     if (blockPtr->width > 255 || blockPtr->height > 255) {
-	Tcl_AppendResult(interp, "ICO images must be less than 256 pixels.",
-		          (char *) NULL);
-	return TCL_ERROR;
+        Tcl_AppendResult(interp, "ICO images must be less than 256 pixels.",
+                          (char *) NULL);
+        return TCL_ERROR;
     }
 
     redOffset   = 0;
@@ -927,54 +936,54 @@ static int CommonWrite (interp, handle, blockPtr)
     blueOffset  = blockPtr->offset[2] - blockPtr->offset[0];
     alphaOffset = blockPtr->offset[0];
     if (alphaOffset < blockPtr->offset[2]) {
-	alphaOffset = blockPtr->offset[2];
+        alphaOffset = blockPtr->offset[2];
     }
     if (++alphaOffset < blockPtr->pixelSize) {
-	alphaOffset -= blockPtr->offset[0];
+        alphaOffset -= blockPtr->offset[0];
     } else {
-	alphaOffset = 0;
+        alphaOffset = 0;
     }
     ncolors = 0;
     if (greenOffset || blueOffset) {
-	for (y = 0; ncolors <= 256 && y < blockPtr->height; y++) {
-	    pixelPtr = blockPtr->pixelPtr + y*blockPtr->pitch + blockPtr->offset[0];
-	    for (x=0; ncolors <= 256 && x<blockPtr->width; x++) {
-		pixel.red   = pixelPtr[redOffset];
-		pixel.green = pixelPtr[greenOffset];
-		pixel.blue  = pixelPtr[blueOffset];
-		if (alphaOffset && (pixelPtr[alphaOffset] == 0)) {
-		    pixel.matte = 0;
-		} else {
-		    pixel.matte = 1;
-		}
-		foundColor = 0;
-		for (i=0; i<ncolors; i++) {
-		    if (pixel.red   == colorMap[i].red &&
+        for (y = 0; ncolors <= 256 && y < blockPtr->height; y++) {
+            pixelPtr = blockPtr->pixelPtr + y*blockPtr->pitch + blockPtr->offset[0];
+            for (x=0; ncolors <= 256 && x<blockPtr->width; x++) {
+                pixel.red   = pixelPtr[redOffset];
+                pixel.green = pixelPtr[greenOffset];
+                pixel.blue  = pixelPtr[blueOffset];
+                if (alphaOffset && (pixelPtr[alphaOffset] == 0)) {
+                    pixel.matte = 0;
+                } else {
+                    pixel.matte = 1;
+                }
+                foundColor = 0;
+                for (i=0; i<ncolors; i++) {
+                    if (pixel.red   == colorMap[i].red &&
                         pixel.green == colorMap[i].green &&
                         pixel.blue  == colorMap[i].blue) {
-			foundColor = 1;
-			break;
-		    }
-		}
-		if (!foundColor) {
-		    if (ncolors < 256) {
-			colorMap[ncolors] = pixel;
-		    }
-		    ncolors++;
-		}
-		pixelPtr += blockPtr->pixelSize;
-	    }
-	}
-	if (ncolors <= 256) {
-	    pixel.red = pixel.green = pixel.blue = pixel.matte = 0;
+                        foundColor = 1;
+                        break;
+                    }
+                }
+                if (!foundColor) {
+                    if (ncolors < 256) {
+                        colorMap[ncolors] = pixel;
+                    }
+                    ncolors++;
+                }
+                pixelPtr += blockPtr->pixelSize;
+            }
+        }
+        if (ncolors <= 256) {
+            pixel.red = pixel.green = pixel.blue = pixel.matte = 0;
             while (ncolors < 256) {
-		colorMap[ncolors++] = pixel;
-	    }
-	    nbytes = 1;
-	} else {
-	    nbytes = 3;
-	    ncolors = 0;
-	}
+                colorMap[ncolors++] = pixel;
+            }
+            nbytes = 1;
+        } else {
+            nbytes = 3;
+            ncolors = 0;
+        }
     } else {
         nbytes = 1;
     }
@@ -984,7 +993,7 @@ static int CommonWrite (interp, handle, blockPtr)
 
     icoHeader.nIcons = 1;
     if (!(icoHeader.entries = (ICOENTRY *) ckalloc (sizeof (ICOENTRY)))) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
     icoHeader.entries[0].width       = blockPtr->width;
     icoHeader.entries[0].height      = blockPtr->height;
@@ -993,13 +1002,13 @@ static int CommonWrite (interp, handle, blockPtr)
     icoHeader.entries[0].nPlanes     = 1;
     icoHeader.entries[0].bitCount    = (ncolors > 0? 8: 24);
     icoHeader.entries[0].sizeInBytes = sizeof (INFOHEADER) +
-				       ncolors * sizeof (ICOCOLOR) +
+                                       ncolors * sizeof (ICOCOLOR) +
                                        bytesPerLineXOR * blockPtr->height +
                                        bytesPerLineAND * blockPtr->height;
     icoHeader.entries[0].fileOffset  = 6 + icoHeader.nIcons * 16;
 
     if (!writeIcoHeader (handle, &icoHeader)) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
 
     infoHeader.size = sizeof (INFOHEADER);
@@ -1015,12 +1024,12 @@ static int CommonWrite (interp, handle, blockPtr)
     infoHeader.nColorsImportant = 0;
 
     if (!writeInfoHeader (handle, &infoHeader)) {
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
 
     if (ncolors > 0) {
-	if (!writeColorMap (handle, ncolors, colorMap)) {
-	    return TCL_ERROR;
+        if (!writeColorMap (handle, ncolors, colorMap)) {
+            return TCL_ERROR;
         }
     }
 
@@ -1029,27 +1038,27 @@ static int CommonWrite (interp, handle, blockPtr)
     imagePtr = blockPtr->pixelPtr + blockPtr->offset[0] +
                blockPtr->height * blockPtr->pitch;
     for (y = 0; y < blockPtr->height; y++) {
-	pixelPtr = imagePtr -= blockPtr->pitch;
-	for (x=0; x<blockPtr->width; x++) {
-	    if (ncolors) {
-		for (i=0; i<ncolors; i++) {
+        pixelPtr = imagePtr -= blockPtr->pitch;
+        for (x=0; x<blockPtr->width; x++) {
+            if (ncolors) {
+                for (i=0; i<ncolors; i++) {
                     if (pixelPtr[redOffset]   == colorMap[i].red &&
                         pixelPtr[greenOffset] == colorMap[i].green &&
                         pixelPtr[blueOffset]  == colorMap[i].blue) {
-			buf[0] = i;
-		    }
-		}
-	    } else {
-		buf[0] = pixelPtr[blueOffset];
-		buf[1] = pixelPtr[greenOffset];
-		buf[2] = pixelPtr[redOffset];
-	    }
-	    tkimg_Write(handle, (char *) buf, nbytes);
-	    pixelPtr += blockPtr->pixelSize;
-	}
-	if (bytesPerLineXOR) {
-	    tkimg_Write(handle, "\0\0\0", bytesPerLineXOR);
-	}
+                        buf[0] = i;
+                    }
+                }
+            } else {
+                buf[0] = pixelPtr[blueOffset];
+                buf[1] = pixelPtr[greenOffset];
+                buf[2] = pixelPtr[redOffset];
+            }
+            tkimg_Write(handle, (char *) buf, nbytes);
+            pixelPtr += blockPtr->pixelSize;
+        }
+        if (bytesPerLineXOR) {
+            tkimg_Write(handle, "\0\0\0", bytesPerLineXOR);
+        }
     }
 
     bytesPerLineAND -= blockPtr->width / 8;
@@ -1057,26 +1066,26 @@ static int CommonWrite (interp, handle, blockPtr)
     imagePtr = blockPtr->pixelPtr + blockPtr->offset[0] +
                blockPtr->height * blockPtr->pitch;
     for (y = 0; y < blockPtr->height; y++) {
-	int c;
-	pixelPtr = imagePtr -= blockPtr->pitch;
-	for (x=0; x<blockPtr->width; x++) {
-	    if (x % 8 == 0) {
-		buf[0] = 0;
-	    }
-	    if (alphaOffset) {
-		c = pixelPtr[alphaOffset];
-		if (c == 0) {
-		    buf[0] |= 1<<(7-x%8);
-		}
-	    }
-	    if (x % 8 == 7) {
-		tkimg_Write(handle, (char *) buf, 1);
-	    }
-	    pixelPtr += blockPtr->pixelSize;
-	}
-	if (bytesPerLineAND) {
-	    tkimg_Write(handle, "\0\0\0", bytesPerLineAND);
-	}
+        int c;
+        pixelPtr = imagePtr -= blockPtr->pitch;
+        for (x=0; x<blockPtr->width; x++) {
+            if (x % 8 == 0) {
+                buf[0] = 0;
+            }
+            if (alphaOffset) {
+                c = pixelPtr[alphaOffset];
+                if (c == 0) {
+                    buf[0] |= 1<<(7-x%8);
+                }
+            }
+            if (x % 8 == 7) {
+                tkimg_Write(handle, (char *) buf, 1);
+            }
+            pixelPtr += blockPtr->pixelSize;
+        }
+        if (bytesPerLineAND) {
+            tkimg_Write(handle, "\0\0\0", bytesPerLineAND);
+        }
     }
     return TCL_OK;
 }

@@ -1,4 +1,4 @@
-/* $Id: tif_compress.c 285 2010-07-07 11:02:56Z nijtmans $ */
+/* $Id: tif_compress.c 389 2015-07-06 11:56:49Z nijtmans $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -197,12 +197,10 @@ TIFFRegisterCODEC(uint16 scheme, const char* name, TIFFInitMethod init)
 	    _TIFFmalloc(sizeof (codec_t) + sizeof (TIFFCodec) + strlen(name)+1);
 
 	if (cd != NULL) {
-		char *temp;
 		cd->info = (TIFFCodec*) ((tidata_t) cd + sizeof (codec_t));
-		temp = (char*)
+		cd->info->name = (char*)
 		    ((tidata_t) cd->info + sizeof (TIFFCodec));
-		strcpy(temp, name);
-		cd->info->name = temp;
+		strcpy(cd->info->name, name);
 		cd->info->scheme = scheme;
 		cd->info->init = init;
 		cd->next = registeredCODECS;

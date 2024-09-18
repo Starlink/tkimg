@@ -1,5 +1,5 @@
 /*
- * $Id: xtiff.c 276 2010-06-30 12:18:30Z nijtmans $
+ * $Id: xtiff.c 389 2015-07-06 11:56:49Z nijtmans $
  *
  * xtiff - view a TIFF file in an X window
  *

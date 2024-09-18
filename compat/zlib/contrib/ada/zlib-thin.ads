@@ -6,7 +6,7 @@
 --  Open source license information is in the zlib.ads file.  --
 ----------------------------------------------------------------
 
---  $Id: zlib-thin.ads,v 1.11 2004/07/23 06:33:11 vagul Exp $
+--  $Id: zlib-thin.ads 66 2005-08-17 18:20:58Z andreas_kupries $
 
 with Interfaces.C.Strings;
 

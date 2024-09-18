@@ -14,7 +14,7 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: tifftcl.c 290 2010-07-08 08:53:05Z nijtmans $
+ * $Id: tifftcl.c 393 2015-07-13 13:17:12Z nijtmans $
  *
  */
 

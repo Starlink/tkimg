@@ -1,3 +1,342 @@
+2012-09-22  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* libtiff 3.9.7 released.
+
+	* automake: Update to use GNU automake 1.12.4
+
+2012-07-19  Tom Lane  <tgl@sss.pgh.pa.us>
+
+	* tools/tiff2pdf.c: Fix two places where t2p_error didn't get set
+	after a malloc failure.  No crash risk AFAICS, but the program
+	might not report exit code 1 as desired.  h/t mancha@mac.hush.com
+
+2012-07-18  Tom Lane  <tgl@sss.pgh.pa.us>
+
+	* tools/tiff2pdf.c: Fail when TIFFSetDirectory() fails.  This
+	prevents core dumps or perhaps even arbitrary code execution when
+	processing a corrupt input file (CVE-2012-3401).
+
+2012-06-15  Tom Lane  <tgl@sss.pgh.pa.us>
+
+	* libtiff/tif_strip.c, libtiff/tif_tile.c: Back-patch the 4.0
+	behavior of treating signed overflow as an error in TIFFVStripSize
+	and TIFFVTileSize.  This is needed since the result is declared as
+	tsize_t which is signed, and callers are likely to do the wrong
+	thing entirely when the returned value is negative (CVE-2012-2088).
+
+	* tools/tiff2pdf.c: Defend against integer overflows while
+	calculating required buffer sizes (CVE-2012-2113).
+
+2012-06-04  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_dirread.c: Avoid trusting samplesperpixel's default
+	of 1 for purposes of trimming tags.  This is to get some super
+	crappy OJPEG files to work again.  Grr. 
+	http://bugzilla.maptools.org/show_bug.cgi?id=2348
+
+2012-06-01  Frank Warmerdam  <warmerdam@google.com>
+
+	* libtiff/tif_dir.c: Avoid generic handling of TIFFTAG_WHITELEVEL.
+	http://bugzilla.maptools.org/show_bug.cgi?id=2321
+
+2012-05-19  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* man/TIFFGetField.3tiff: Correct the 'count' field type in the
+	example for how to retreive the value of unsupported tags.
+
+2012-03-30  Frank Warmerdam  <warmerdam@google.com>
+
+	* tif_getimage.c: Fix size overflow (zdi-can-1221,CVE-2012-1173)
+	care of Tom Lane @ Red Hat.
+
+
+2012-02-18  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* libtiff 3.9.6 released.
+
+	* libtiff/tiffio.h: Use double-underbar syntax in GCC printf
+	attribute specification to lessen the risk of accidental macro
+	substitution.  Patch from Vincent Torri.
+
+2012-01-23  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* configure.ac: Add support for using library symbol versioning on
+	ELF systems with the GNU linker.  Support is enabled via
+	--enable-ld-version-script and is disabled by default since it
+	completely changes the ABI.
+
+2011-10-22  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* Update GNU libtool to 2.4.2.
+
+	* tools/tiffsplit.c (tiffcp): TIFFGetField count field should be
+	uint32 type for TIFFTAG_JPEGTABLES.  Patch by Christophe
+	Deroulers.
+
+2011-06-08  Dwight Kelly  <dkelly@apago.com>
+
+	* tif_apple.c: fix for Bug 2247 - tif_apple.c _tiffSizeProc() did
+	  not pass correct number arguments to TIFFErrorExt()
+
+2011-04-09  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* libtiff 3.9.5 released.
+
+2011-04-09  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* configure.ac: Should use AC_CANONICAL_HOST since host specifies
+	the run-time target whereas target is used to specify the final
+	output target if the package is a build tool (like a compiler),
+	which libtiff is not.  Resolves libtiff bug 2307 "Use
+	AC_CANONICAL_HOST macro".
+
+2011-04-02  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* tools/fax2ps.c (main): Use tmpfile() rather than mkstemp() since
+	it is much more portable.  Tmpfile is included in ISO/IEC
+	9899:1990 and the WIN32 CRT.
+
+2011-03-21  Frank Warmerdam  <warmerdam@pobox.com>
+
+	* libtiff/tiffiop.h: avoid declaring int64/uint64 on AIX with XLC
+	where they are already available.  (#2301)
+
+	* libtiff/tif_thunder.c: Correct potential buffer overflow with 
+	thunder encoded files with wrong bitspersample set.  The libtiff 
+	development team would like to thank Marin Barbella and TippingPoint's
+	Zero Day Initiative for reporting this vulnerability (ZDI-CAN-1004,
+	CVE-2011-1167).
+	http://bugzilla.maptools.org/show_bug.cgi?id=2300
+
+2011-03-10  Frank Warmerdam  <warmerdam@pobox.com>
+
+	* libtiff/tif_fax3.h: Fix to last change allowing zero length 
+	runs at the start of a scanline - needed for legal cases.
+
+2011-03-02  Frank Warmerdam  <warmerdam@pobox.com>
+
+	* libtiff/tif_fax3.h: Protect against a fax VL(n) codeword commanding 
+	a move left.  Without this, a malicious input file can generate an 
+	indefinitely large series of runs without a0 ever reaching the right 
+	margin, thus overrunning our buffer of run lengths.  Per CVE-2011-0192.
+	This is a modified version of a patch proposed by Drew Yao of Apple 
+	Product Security.  It adds an unexpected() report, and disallows the 
+	equality case, since emitting a run without increasing a0 still allows 
+	buffer overrun.
+
+2011-02-25  Andrey Kiselev  <dron@ak4719.spb.edu>
+
+	* libtiff/tif_dirwrite.c: Avoid undefined behaviour when casting from
+	float to unsigned integer in TIFFWriteRationalArray() as reported by
+	Kareem Shehata.
+
+2011-01-03  Lee Howard <faxguy@howardsilvan.com>
+
+	* libtiff/tif_jpeg.c: Fix regressions with 2 and 3 band images
+	caused by commit on 2010-12-14.  Submitted by e-mail from 
+	Even Rouault <even.rouault@mines-paris.org>
+
+2010-12-31  Olivier Paquet  <olivier.paquet@gmail.com>
+
+	* libtiff/tif_dirread.c: Allow reading directories where
+	TIFFTAG_SMINSAMPLEVALUE and TIFFTAG_SMAXSAMPLEVALUE values differ for each
+	channel. The min/max of all channels is used as appropriate.
+
+2010-12-14  Lee Howard <faxguy@howardsilvan.com>
+
+	* libtiff/tif_dirread.c: tolerate some cases where
+	FIELD_COLORMAP is missing
+	http://bugzilla.maptools.org/show_bug.cgi?id=2189
+
+2010-12-14  Lee Howard <faxguy@howardsilvan.com>
+
+	* libtiff/tif_strip.c: use TIFFGetFieldDefaulted instead
+	of TIFFGetField when we assume that it will succeed
+	http://bugzilla.maptools.org/show_bug.cgi?id=2215
+
+2010-12-14  Lee Howard <faxguy@howardsilvan.com>
+
+	* tools/gif2tiff.c: fix buffer overrun
+	http://bugzilla.maptools.org/show_bug.cgi?id=2270
+
+2010-12-14  Lee Howard <faxguy@howardsilvan.com>
+
+	* libtiff/tif_jpeg.c: reduce usage of JCS_UNKNOWN in order
+	to improve compatibility with various viewers
+	submitted by e-mail from Dwight Kelly <dkelly@apago.com>
+
+2010-12-13  Lee Howard <faxguy@howardsilvan.com>
+
+	* tools/fax2ps.c: be consistent with page-numbering
+	http://bugzilla.maptools.org/show_bug.cgi?id=2225
+
+2010-12-13  Lee Howard <faxguy@howardsilvan.com>
+
+	* libtiff/tif_dirread.c: fix needless tag ordering warning
+	http://bugzilla.maptools.org/show_bug.cgi?id=2210
+
+2010-12-13  Lee Howard <faxguy@howardsilvan.com>
+
+	* libtiff/tif_color.c: prevent crash in handling bad TIFFs
+	resolves CVE-2010-2595
+	http://bugzilla.maptools.org/show_bug.cgi?id=2208
+
+2010-12-13  Lee Howard <faxguy@howardsilvan.com>
+
+	* tools/tiffcrop.c: new release by Richard Nolde
+	http://bugzilla.maptools.org/show_bug.cgi?id=2004
+
+2010-12-12  Lee Howard <faxguy@howardsilvan.com>
+
+	* tools/tiff2pdf.c: fix colors for images with RGBA 
+	interleaved data
+	http://bugzilla.maptools.org/show_bug.cgi?id=2250
+
+2010-12-11  Lee Howard <faxguy@howardsilvan.com>
+
+	* tools/tiff2pdf.c: remove invalid duplication for Lab 
+	http://bugzilla.maptools.org/show_bug.cgi?id=2162
+
+2010-12-11  Lee Howard <faxguy@howardsilvan.com>
+
+	* libtiff/tif_jpeg.c: fix use of clumplines calculation
+	http://bugzilla.maptools.org/show_bug.cgi?id=2149
+
+2010-12-11  Lee Howard <faxguy@howardsilvan.com>
+
+	* tools/fax2ps.c: replace unsafe tmpfile() with mkstemp()
+	http://bugzilla.maptools.org/show_bug.cgi?id=2118
+
+2010-12-11  Lee Howard <faxguy@howardsilvan.com>
+
+	* tools/tiff2pdf.c: add fill-page option
+	 http://bugzilla.maptools.org/show_bug.cgi?id=2051
+
+2010-12-11  Lee Howard <faxguy@howardsilvan.com>
+
+	* libtiff/tif_dirread.c: modify warnings
+	http://bugzilla.maptools.org/show_bug.cgi?id=2016
+
+2010-12-11  Lee Howard <faxguy@howardsilvan.com>
+
+	* libtiff/tif_ojpeg.c: fix buffer overflow on problem data
+	http://bugzilla.maptools.org/show_bug.cgi?id=1999
+
+2010-12-11  Lee Howard <faxguy@howardsilvan.com>
+
+	* libtiff/tif_ojpeg.c: fix crash when reading a TIFF with a zero
+	or missing byte-count tag
+	* tools/tiffsplit.c: abort when reading a TIFF without a byte-count
+	per http://bugzilla.maptools.org/show_bug.cgi?id=1996
+
+2010-12-08  Lee Howard <faxguy@howardsilvan.com>
+
+	* libtiff/tif_dirread.c: fix crash when reading a badly-constructed
+	TIFF per http://bugzilla.maptools.org/show_bug.cgi?id=1994
+
+2010-12-07  Lee Howard <faxguy@howardsilvan.com>
+
+	* libtiff/tif_jpeg.c, libtiff/tif_strip.c: apply patch for 
+	CVE-2010-3087 per bug
+	http://bugzilla.maptools.org/show_bug.cgi?id=2140
+
+2010-12-06  Lee Howard <faxguy@howardsilvan.com>
+
+	* libtiff/tif_open.c: Fix mode check before opening a file.
+	http://bugzilla.maptools.org/show_bug.cgi?id=1906
+
+2010-09-25  Lee Howard <faxguy@howardsilvan.com>
+
+	* tools/tiff2ps.c: improvements and enhancements from Richard Nolde
+	with additional command line options for Document Title, 
+	Document Creator, and Page Orientation
+
+2010-07-13  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* tools/tiffcrop.c: Patch from Richard Nolde to avoid a
+	potentially unterminated buffer due to using an exceptionally long
+	file name.
+
+2010-07-08  Andrey Kiselev  <dron@ak4719.spb.edu>
+
+	* tools/tiff2pdf.c: Fixed ID buffer filling in
+	t2p_write_pdf_trailer(), thanks to Dmitry V. Levin.
+
+2010-07-07  Andrey Kiselev  <dron@ak4719.spb.edu>
+
+	* libtiff/tif_dirread.c: Really reset the tag count in CheckDirCount()
+	to expected value as the warning message suggests. As per bug
+	http://bugzilla.maptools.org/show_bug.cgi?id=1963
+
+	* tools/tiffdump.c: Avoid integer overflows computing the buffer size
+	for large directories. As per bug
+	http://bugzilla.maptools.org/show_bug.cgi?id=2218
+
+2010-07-06  Andrey Kiselev  <dron@ak4719.spb.edu>
+
+	* tools/tiffset.c: Properly handle TIFFTAG_PAGENUMBER,
+	TIFFTAG_HALFTONEHINTS, TIFFTAG_YCBCRSUBSAMPLING, TIFFTAG_DOTRANGE
+	which should be set by value.
+
+	* libtiff/tif_dirinfo.c: Don't use assertions in _TIFFFieldWithTag()
+	and _TIFFFieldWithName() if the tag is not found in the tag table.
+	This should be normal situation and returned NULL value should be
+	properly handled by the caller.
+
+	* libtiff/{tif_dirwrite.c, tif_print.c}: Properly handle "DotRange"
+	tag as it can be either byte or short size and should be set and read
+	by value, not as an array. As per bug
+	http://bugzilla.maptools.org/show_bug.cgi?id=2116
+
+2010-07-02  Andrey Kiselev  <dron@ak4719.spb.edu>
+
+	* libtiff/tif_getimage.c: Avoid wrong math du to the signed/unsigned
+	integer type conversions. As per bug
+	http://bugzilla.maptools.org/show_bug.cgi?id=2207
+
+	* tools/{tiff2bw.c, thumbnail.c, pal2rgb.c}: Fix the count for
+	WhitePoint tag as per bug
+	http://bugzilla.maptools.org/show_bug.cgi?id=2042
+
+	* tools/tiffdump.c: Use PrintData() function instead of
+	PrintByte/Short/Long(). Should fix an issue reported at
+	http://bugzilla.maptools.org/show_bug.cgi?id=2116
+
+	* libtiff/tif_getimage.c: Check the number of samples per pixel when
+	working with YCbCr image in PickContigCase(). As per bug
+	http://bugzilla.maptools.org/show_bug.cgi?id=2216
+
+	* libtiff/tif_dir.c: Set the bogus post-decoding hook when processing
+	TIFFTAG_BITSPERSAMPLE in _TIFFVSetField() for the case of 8 bit when
+	we don't need any post-processing. That helps to reset the hook if we
+	previously set this field to some other value and the hook was
+	initialized accordingly. As per bug
+	http://bugzilla.maptools.org/show_bug.cgi?id=2035
+
+2010-06-30  Andrey Kiselev  <dron@ak4719.spb.edu>
+
+	* tools/tiff2pdf.c: Better generation of ID field in
+	t2p_write_pdf_trailer(). Get rid of GCC aliasing warnings.
+
+	* tools/tiff2pdf.c: Fixed computation of the tile buffer size when
+	converting JPEG encoded tiles.
+
+	* tools/tiff2pdf.c: Better handling of string fields, use static
+	string buffers instead of dynamically allocated, use strncpy() instead
+	of strcpy(), control the string lengths.
+
+2010-06-25  Andrey Kiselev  <dron@ak4719.spb.edu>
+
+	* tools/tiffcp.c: Initialize buffer arrays with zero to avoid
+	referencing to uninitialized memory in some cases (e.g. when tile size
+	set bigger than the image size).
+
+2010-06-15  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
+
+	* tools/tiffcrop.c: Patch from Richard Nolde. Reject YCbCr
+	subsampled data since tiffcrop currently doesn't support it.  Fix
+	JPEG support.
+
 2010-06-15  Bob Friesenhahn  <bfriesen@simple.dallas.tx.us>
 
 	* libtiff 3.9.4 released.

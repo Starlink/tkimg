@@ -45,7 +45,7 @@
  * Modified for dynamical loading, reading from channels and Tcl_Obj's by:
  *	Jan Nijtmans (nijtmans@users.sourceforge.net)
  *
- * $Id: jpeg.c 316 2010-12-11 21:25:54Z nijtmans $
+ * $Id: jpeg.c 395 2016-04-02 19:47:57Z obermeier $
  */
 
 /*
@@ -54,6 +54,14 @@
 #ifdef _WIN32
 #   define HAVE_BOOLEAN
 #endif
+
+#ifndef FALSE
+#define FALSE   0
+#endif
+#ifndef TRUE
+#define TRUE    1
+#endif
+
 #include "tkimg.h"
 #include "jpegtcl.h"
 

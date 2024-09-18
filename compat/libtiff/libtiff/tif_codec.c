@@ -1,4 +1,4 @@
-/* $Id: tif_codec.c 276 2010-06-30 12:18:30Z nijtmans $ */
+/* $Id: tif_codec.c 389 2015-07-06 11:56:49Z nijtmans $ */
 
 /*
  * Copyright (c) 1988-1997 Sam Leffler
@@ -76,7 +76,7 @@ static	int NotConfigured(TIFF*, int);
 #ifdef VMS
 const TIFFCodec _TIFFBuiltinCODECS[] = {
 #else
-TIFFCodec _TIFFBuiltinCODECS[] = {
+const TIFFCodec _TIFFBuiltinCODECS[] = {
 #endif
     { "None",		COMPRESSION_NONE,	TIFFInitDumpMode },
     { "LZW",		COMPRESSION_LZW,	TIFFInitLZW },

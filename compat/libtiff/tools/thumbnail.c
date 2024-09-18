@@ -1,4 +1,4 @@
-/* $Id: thumbnail.c 276 2010-06-30 12:18:30Z nijtmans $ */
+/* $Id: thumbnail.c 389 2015-07-06 11:56:49Z nijtmans $ */
 
 /*
  * Copyright (c) 1994-1997 Sam Leffler
@@ -230,7 +230,7 @@ static struct cpTag {
     { TIFFTAG_DATETIME,			1, TIFF_ASCII },
     { TIFFTAG_ARTIST,			1, TIFF_ASCII },
     { TIFFTAG_HOSTCOMPUTER,		1, TIFF_ASCII },
-    { TIFFTAG_WHITEPOINT,		1, TIFF_RATIONAL },
+    { TIFFTAG_WHITEPOINT,		2, TIFF_RATIONAL },
     { TIFFTAG_PRIMARYCHROMATICITIES,	(uint16) -1,TIFF_RATIONAL },
     { TIFFTAG_HALFTONEHINTS,		2, TIFF_SHORT },
     { TIFFTAG_BADFAXLINES,		1, TIFF_LONG },

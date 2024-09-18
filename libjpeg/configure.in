@@ -1,14 +1,14 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Id: configure.in 346 2013-09-10 12:11:43Z nijtmans $)
+AC_REVISION($Id: configure.in 395 2016-04-02 19:47:57Z obermeier $)
 
 #--------------------------------------------------------------------
 # Configure script for package 'jpegtcl', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([jpegtcl],[8.4])
+AC_INIT([jpegtcl],[9.2.0])
 
 TEA_INIT([3.9])
 
@@ -205,7 +205,7 @@ esac
 mkdir -p libjpeg
 sleep 2        ; # Wait two seconds for the directory to actually appear (Windows).
 cd    libjpeg
-env CC="$JPEG_CC" CFLAGS="$JPEG_CFLAGS" $jpegdir/configure
+env CC="$JPEG_CC" CFLAGS="$JPEG_CFLAGS" $jpegdir/configure --enable-maxmem=500
 cd ..
 
 #--------------------------------------------------------------------

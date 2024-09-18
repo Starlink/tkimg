@@ -106,6 +106,9 @@ declare 26 {
 declare 27 {
     int uncompress(Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen)
 }
+declare 28 {
+    int inflateReset2(z_streamp strm, int windowBits)
+}
 
 #########################################################################
 ## gz'ip layer
