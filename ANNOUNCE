@@ -1,7 +1,17 @@
-I'm happy to announce version 1.4.5 of the "tkImg" package
+I'm happy to announce version 1.4.6 of the "tkImg" package
 (formerly known as 'Img").
 
 This package enhances Tk, adding support for many other Image formats.
+
+Changes compared to version 1.4.5:
+- Fixed bug #85: Tk panic on exit when pixmap images have been created.
+- Fixed bug #87: png darker in 1.4.5.
+  Changed behaviour of gamma handling:
+    Read: If no gamma is stored in PNG file, no gamma is set.
+          Previous behaviour was to set it to 0.45.
+    Write: No gamma value is written to PNG file.
+           Previous behaviour was to set it to 1.0.
+  Added 2 new PNG format options "-verbose" and "-gamma".
 
 Changes compared to version 1.4.4:
 -  Upgrade to libjpeg-9.2.0, libpng-1.6.21

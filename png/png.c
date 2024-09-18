@@ -15,20 +15,26 @@
  *
  * The following format options are available:
  *
- * Read  PNG image: "png -matte <bool> -alpha <float>"
+ * Read  PNG image: "png -verbose <bool> -gamma <float> -matte <bool> -alpha <float>"
  * Write PNG image: None yet.
  *
- * -matte <bool>:  If set to false, a matte (alpha) channel is ignored
- *                 during reading. Default is true.
- * -alpha <float>: An additional alpha filtering for the overall image, which
- *                 allows the background on which the image is displayed to show through.
- *                 This usually also has the effect of desaturating the image.
- *                 The alphaValue must be between 0.0 and 1.0. 
- *                 Specifying an alpha value, overrides the setting of the matte flag,
- *                 i.e. reading a file which has no alpha channel (Greyscale, RGB) will
- *                 add an alpha channel to the image independent of the matte flag setting.
+ * -verbose <bool>: If set to true, additional information about the file
+ *                  format is printed to stdout. Default is "false".
+ * -gamma <float>:  Use the specified gamma value when reading an image.
+ *                  This option overwrites gamma values specified in the file.
+ *                  If this option is not specified and no gamma value is in the file, 
+ *                  a default value of 1.0 is used. 
+ * -matte <bool>:   If set to false, a matte (alpha) channel is ignored
+ *                  during reading. Default is true.
+ * -alpha <float>:  An additional alpha filtering for the overall image, which
+ *                  allows the background on which the image is displayed to show through.
+ *                  This usually also has the effect of desaturating the image.
+ *                  The alphaValue must be between 0.0 and 1.0. 
+ *                  Specifying an alpha value, overrides the setting of the matte flag,
+ *                  i.e. reading a file which has no alpha channel (Greyscale, RGB) will
+ *                  add an alpha channel to the image independent of the matte flag setting.
  *
- * $Id: png.c 381 2015-06-23 14:19:37Z nijtmans $
+ * $Id: png.c 404 2016-05-24 18:50:15Z obermeier $
  */
 
 /*
@@ -45,7 +51,6 @@ static int SetupPngLibrary(Tcl_Interp *interp);
     if (SetupPngLibrary (interp) != TCL_OK) { return TCL_ERROR; }
 
 #include "init.c"
-
 
 
 #define COMPRESS_THRESHOLD 1024
@@ -73,7 +78,7 @@ static int CommonMatchPNG(tkimg_MFile *handle, int *widthPtr,
         int *heightPtr);
 
 static int CommonReadPNG(png_structp png_ptr,
-        Tcl_Interp* interp, Tcl_Obj *format,
+        Tcl_Interp* interp, const char *fileName, Tcl_Obj *format,
         Tk_PhotoHandle imageHandle, int destX, int destY, int width,
         int height, int srcX, int srcY);
 
@@ -89,34 +94,65 @@ static void tk_png_warning(png_structp, png_const_charp);
  * These functions are used for all Input/Output.
  */
 
-static void     tk_png_read(png_structp, png_bytep,
-        png_size_t);
+static void tk_png_read(png_structp, png_bytep, png_size_t);
 
-static void     tk_png_write(png_structp, png_bytep,
-        png_size_t);
+static void tk_png_write(png_structp, png_bytep, png_size_t);
 
-static void     tk_png_flush(png_structp);
+static void tk_png_flush(png_structp);
 
-static int ParseFormatOpts (interp, format, matte, alpha)
+#define OUT Tcl_WriteChars (outChan, str, -1)
+static void PrintReadInfo (int width, int height, int nchans, int bits,
+                           double fileGamma, const char *filename, const char *msg)
+{
+    Tcl_Channel outChan;
+    char str[256];
+
+    outChan = Tcl_GetStdChannel (TCL_STDOUT);
+    if (!outChan) {
+        return;
+    }
+    sprintf(str, "%s %s\n", msg, filename);                        OUT;
+    sprintf(str, "\tSize in pixel   : %d x %d\n", width, height);  OUT;
+    sprintf(str, "\tNum channels    : %d\n", nchans);              OUT;
+    sprintf(str, "\tBits per channel: %d\n", bits);                OUT;
+    if (fileGamma < 0.0) {
+        sprintf(str, "\tFile gamma      : %s\n", "None");          OUT;
+    } else {
+        sprintf(str, "\tFile gamma      : %f\n", fileGamma);       OUT;
+    }
+    Tcl_Flush(outChan);
+}
+#undef OUT
+
+static int ParseFormatOpts (interp, format, matte, alpha, gamma, verbose)
     Tcl_Interp *interp;
     Tcl_Obj *format;
     int *matte;
     double *alpha;
+    double *gamma;
+    int *verbose;
 {
-    static const char *const pngOptions[] = {"-matte", "-alpha", NULL};
+    static const char *const pngOptions[] = 
+        {"-matte", "-alpha", "-gamma", "-verbose", NULL};
     int objc, length, i, index;
     Tcl_Obj **objv;
     const char *matteStr;
     const char *alphaStr;
+    const char *gammaStr;
+    const char *verboseStr;
 
-    *matte = 1;
-    *alpha = -1.0;
+    *matte   =  1;
+    *alpha   = -1.0;
+    *gamma   = -1.0;
+    *verbose =  0;
 
     if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK)
         return TCL_ERROR;
     if (objc) {
-        matteStr = "1";
-        alphaStr = "-1.0";
+        matteStr   = "1";
+        alphaStr   = "-1.0";
+        gammaStr   = "-1.0";
+        verboseStr = "0";
         for (i=1; i<objc; i++) {
             if (Tcl_GetIndexFromObj(interp, objv[i], (CONST84 char *CONST86 *)pngOptions,
                     "format option", 0, &index) != TCL_OK) {
@@ -134,6 +170,12 @@ static int ParseFormatOpts (interp, format, matte, alpha)
                     break;
                 case 1:
                     alphaStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
+                    break;
+                case 2:
+                    gammaStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
+                    break;
+                case 3:
+                    verboseStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
                     break;
             }
         }
@@ -153,10 +195,31 @@ static int ParseFormatOpts (interp, format, matte, alpha)
                               (char *) NULL);
             return TCL_ERROR;
         }
+
         if (strcmp (alphaStr, "-1.0")) {
             *alpha = atof (alphaStr);
             if (*alpha < 0.0 ) *alpha = 0.0;
             if (*alpha > 1.0 ) *alpha = 1.0;
+        }
+
+        if (strcmp (gammaStr, "-1.0")) {
+            *gamma = atof (gammaStr);
+        }
+
+        length = strlen (verboseStr);
+        if (!strncmp (verboseStr, "1", length) || \
+            !strncmp (verboseStr, "true", length) || \
+            !strncmp (verboseStr, "on", length)) {
+            *verbose = 1;
+        } else if (!strncmp (verboseStr, "0", length) || \
+            !strncmp (verboseStr, "false", length) || \
+            !strncmp (verboseStr, "off", length)) {
+            *verbose = 0;
+        } else {
+            Tcl_AppendResult(interp, "invalid verbose mode \"", verboseStr,
+                              "\": should be 1 or 0, on or off, true or false",
+                              (char *) NULL);
+            return TCL_ERROR;
         }
     }
     return TCL_OK;
@@ -302,7 +365,7 @@ ChnRead(interp, chan, fileName, format, imageHandle,
 
     png_set_read_fn(png_ptr, (png_voidp) &handle, tk_png_read);
 
-    return CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
+    return CommonReadPNG(png_ptr, interp, fileName, format, imageHandle, destX, destY,
             width, height, srcX, srcY);
 }
 
@@ -331,15 +394,16 @@ ObjRead (interp, dataObj, format, imageHandle,
 
     png_set_read_fn(png_ptr,(png_voidp) &handle, tk_png_read);
 
-    return CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
+    return CommonReadPNG(png_ptr, interp, "InlineData", format, imageHandle, destX, destY,
             width, height, srcX, srcY);
 }
 
 static int
-CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
+CommonReadPNG(png_ptr, interp, fileName, format, imageHandle, destX, destY,
         width, height, srcX, srcY)
     png_structp png_ptr;
     Tcl_Interp *interp;
+    const char *fileName;
     Tcl_Obj *format;
     Tk_PhotoHandle imageHandle;
     int destX, destY;
@@ -355,12 +419,16 @@ CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
     int bit_depth, color_type, interlace_type;
     int intent;
     int result = TCL_OK;
-    int matte;
-    double alpha;
+    double fileGamma = -1.0;
     int useAlpha = 0;
     int addAlpha = 0;
+    /* Format options */
+    int matte;
+    double alpha;
+    double gamma;
+    int verbose;
 
-    if (ParseFormatOpts(interp, format, &matte, &alpha) != TCL_OK) {
+    if (ParseFormatOpts(interp, format, &matte, &alpha, &gamma, &verbose) != TCL_OK) {
         return TCL_ERROR;
     }
 
@@ -409,29 +477,49 @@ CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
 
     Tk_PhotoGetImage(imageHandle, &block);
 
-    if (png_set_strip_16 != NULL) {
-        png_set_strip_16(png_ptr);
-    } else if (bit_depth == 16) {
-        block.offset[1] = 2;
-        block.offset[2] = 4;
-    }
+    png_set_scale_16(png_ptr);
 
-    if (png_set_expand != NULL) {
-        png_set_expand(png_ptr);
-    }
+    png_set_expand(png_ptr);
 
-    if (png_get_sRGB && png_get_sRGB(png_ptr, info_ptr, &intent)) {
+    if (png_get_sRGB(png_ptr, info_ptr, &intent)) {
         png_set_sRGB(png_ptr, info_ptr, intent);
-    } else if (png_get_gAMA) {
-        double gamma;
-        if (!png_get_gAMA(png_ptr, info_ptr, &gamma)) {
-            gamma = 0.45455;
+    } else {
+        if (gamma < 0.0) {
+            /* No gamma specified on the command line.
+             * Check, if a gamma value is specified in the file.
+             */
+            if (png_get_gAMA(png_ptr, info_ptr, &fileGamma)) {
+                png_set_gamma(png_ptr, 1.0, fileGamma);
+            }
+        } else {
+            png_set_gamma(png_ptr, 1.0, gamma);
         }
-        png_set_gamma(png_ptr, 1.0, gamma);
+    }
+
+    if ((color_type & PNG_COLOR_MASK_ALPHA)
+        || png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
+        /* Image has an alpha channel.
+           Check, if we don't want to use the alpha channel (matte == false) */
+        if (!matte) {
+            png_set_strip_alpha (png_ptr);
+        }
+    } else {
+        /* Image has no alpha channel.
+           If a valid alpha multiply has been specified, add an alpha channel to the image.
+           The matte flag is ignored. */
+        if (alpha >= 0.0) {
+            png_set_add_alpha(png_ptr, (unsigned int)(alpha*255), PNG_FILLER_AFTER);
+        }
+    }
+
+    if (verbose) {
+        PrintReadInfo (info_width, info_height, png_get_channels(png_ptr, info_ptr),
+                       bit_depth, fileGamma, fileName, "Reading image:");
     }
 
     /* Note: png_read_update_info may only be called once per info_ptr !! */
     png_read_update_info(png_ptr, info_ptr);
+
     block.pixelSize = png_get_channels(png_ptr, info_ptr);
     block.pitch = png_get_rowbytes(png_ptr, info_ptr);
 
@@ -446,12 +534,8 @@ CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
     if ((color_type & PNG_COLOR_MASK_ALPHA)
         || png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
         /* Image has an alpha channel.
-           Check, if we want to use the alpha channel at all (matte == true)
-           and then, if the alpha multiply value should be applied (alpha >= 0.0) */
+           Check, if we don't want to use the alpha channel (matte == false) */
         if (!matte) {
-            png_set_strip_alpha (png_ptr);
-            block.pixelSize--;
-            block.pitch = block.pixelSize * width;
             block.offset[3] = 0;
         } else {
             block.offset[3] = block.pixelSize - 1;
@@ -465,7 +549,6 @@ CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
            The matte flag is ignored. */
         if ( alpha >= 0.0) {
             addAlpha = 1;
-            png_set_add_alpha(png_ptr, (unsigned int)(alpha*255), PNG_FILLER_AFTER);
         } else {
             block.offset[3] = 0;
         }
@@ -475,10 +558,10 @@ CommonReadPNG(png_ptr, interp, format, imageHandle, destX, destY,
         block.offset[3] = block.pixelSize - 1;
     }
 
-    png_data= (char **) ckalloc(sizeof(char *) * info_height + info_height * block.pitch);
+    png_data = (char **) ckalloc(sizeof(char *) * info_height + info_height * block.pitch);
 
     for(i=0;i<info_height;i++) {
-        png_data[i]= ((char *) png_data) + (sizeof(char *) * info_height + i * block.pitch);
+        png_data[i] = ((char *) png_data) + (sizeof(char *) * info_height + i * block.pitch);
     }
 
     png_read_image(png_ptr,(png_bytepp) png_data);
@@ -658,10 +741,6 @@ CommonWritePNG(interp, png_ptr, info_ptr, format, blockPtr)
     png_set_IHDR(png_ptr, info_ptr, blockPtr->width, blockPtr->height, 8,
             color_type, PNG_INTERLACE_ADAM7, PNG_COMPRESSION_TYPE_BASE,
             PNG_FILTER_TYPE_BASE);
-
-    if (png_set_gAMA) {
-        png_set_gAMA(png_ptr, info_ptr, 1.0);
-    }
 
     if (tagcount > 0) {
         png_text_compat text;

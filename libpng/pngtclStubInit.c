@@ -42,7 +42,11 @@ const PngtclStubs pngtclStubs = {
     0, /* 16 */
     png_write_info_before_PLTE, /* 17 */
     png_write_info, /* 18 */
+#if !defined(PNG_SEQUENTIAL_READ_SUPPORTED)
+    0, /* 19 */
+#else  /* !PNG_SEQUENTIAL_READ_SUPPORTED */
     png_read_info, /* 19 */
+#endif /* !PNG_SEQUENTIAL_READ_SUPPORTED */
     0, /* 20 */
 #if defined(_WIN32_WCE) || !defined(PNG_WRITE_tIME_SUPPORTED)
     0, /* 21 */
@@ -80,11 +84,11 @@ const PngtclStubs pngtclStubs = {
 #else  /* !PNG_READ_GRAY_TO_RGB_SUPPORTED */
     png_set_gray_to_rgb, /* 28 */
 #endif /* !PNG_READ_GRAY_TO_RGB_SUPPORTED */
-#if !defined(PNG_READ_RGB_TO_GRAY_SUPPORTED) || !defined(PNG_FLOATING_POINT_SUPPORTED)
+#if !defined(PNG_READ_RGB_TO_GRAY_SUPPORTED)
     0, /* 29 */
-#else  /* !PNG_READ_RGB_TO_GRAY_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#else  /* !PNG_READ_RGB_TO_GRAY_SUPPORTED */
     png_set_rgb_to_gray, /* 29 */
-#endif /* !PNG_READ_RGB_TO_GRAY_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#endif /* !PNG_READ_RGB_TO_GRAY_SUPPORTED */
 #if !defined(PNG_READ_RGB_TO_GRAY_SUPPORTED)
     0, /* 30 */
 #else  /* !PNG_READ_RGB_TO_GRAY_SUPPORTED */
@@ -146,26 +150,26 @@ const PngtclStubs pngtclStubs = {
 #else  /* !PNG_READ_INVERT_SUPPORTED !PNG_WRITE_INVERT_SUPPORTED */
     png_set_invert_mono, /* 42 */
 #endif /* !PNG_READ_INVERT_SUPPORTED !PNG_WRITE_INVERT_SUPPORTED */
-#if !defined(PNG_READ_BACKGROUND_SUPPORTED) || !defined(PNG_FLOATING_POINT_SUPPORTED)
+#if !defined(PNG_READ_BACKGROUND_SUPPORTED)
     0, /* 43 */
-#else  /* !PNG_READ_BACKGROUND_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#else  /* !PNG_READ_BACKGROUND_SUPPORTED */
     png_set_background, /* 43 */
-#endif /* !PNG_READ_BACKGROUND_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
-#if !defined(PNG_READ_16_TO_8_SUPPORTED)
+#endif /* !PNG_READ_BACKGROUND_SUPPORTED */
+#if !defined(PNG_READ_STRIP_16_TO_8_SUPPORTED)
     0, /* 44 */
-#else  /* !PNG_READ_16_TO_8_SUPPORTED */
+#else  /* !PNG_READ_STRIP_16_TO_8_SUPPORTED */
     png_set_strip_16, /* 44 */
-#endif /* !PNG_READ_16_TO_8_SUPPORTED */
+#endif /* !PNG_READ_STRIP_16_TO_8_SUPPORTED */
 #if !defined(PNG_READ_DITHER_SUPPORTED)
     0, /* 45 */
 #else  /* !PNG_READ_DITHER_SUPPORTED */
     png_set_quantize, /* 45 */
 #endif /* !PNG_READ_DITHER_SUPPORTED */
-#if !defined(PNG_READ_GAMMA_SUPPORTED) || !defined(PNG_FLOATING_POINT_SUPPORTED)
+#if !defined(PNG_READ_GAMMA_SUPPORTED)
     0, /* 46 */
-#else  /* !PNG_READ_GAMMA_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#else  /* !PNG_READ_GAMMA_SUPPORTED */
     png_set_gamma, /* 46 */
-#endif /* !PNG_READ_GAMMA_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#endif /* !PNG_READ_GAMMA_SUPPORTED */
 #if !defined(PNG_READ_EMPTY_PLTE_SUPPORTED) && !defined(PNG_WRITE_EMPTY_PLTE_SUPPORTED)
     0, /* 47 */
 #else  /* !PNG_READ_EMPTY_PLTE_SUPPORTED !PNG_WRITE_EMPTY_PLTE_SUPPORTED */
@@ -185,7 +189,11 @@ const PngtclStubs pngtclStubs = {
     png_read_update_info, /* 51 */
     png_read_rows, /* 52 */
     png_read_row, /* 53 */
+#if !defined(PNG_SEQUENTIAL_READ_SUPPORTED)
+    0, /* 54 */
+#else  /* !PNG_SEQUENTIAL_READ_SUPPORTED */
     png_read_image, /* 54 */
+#endif /* !PNG_SEQUENTIAL_READ_SUPPORTED */
     png_write_row, /* 55 */
     png_write_rows, /* 56 */
     png_write_image, /* 57 */
@@ -199,11 +207,11 @@ const PngtclStubs pngtclStubs = {
     0, /* 65 */
     png_set_crc_action, /* 66 */
     png_set_filter, /* 67 */
-#if !defined(PNG_WRITE_WEIGHTED_FILTER_SUPPORTED) || !defined(PNG_FLOATING_POINT_SUPPORTED)
+#if !defined(PNG_WRITE_WEIGHTED_FILTER_SUPPORTED)
     0, /* 68 */
-#else  /* !PNG_WRITE_WEIGHTED_FILTER_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#else  /* !PNG_WRITE_WEIGHTED_FILTER_SUPPORTED */
     png_set_filter_heuristics, /* 68 */
-#endif /* !PNG_WRITE_WEIGHTED_FILTER_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#endif /* !PNG_WRITE_WEIGHTED_FILTER_SUPPORTED */
     png_set_compression_level, /* 69 */
     png_set_compression_mem_level, /* 70 */
     png_set_compression_strategy, /* 71 */
@@ -361,11 +369,11 @@ const PngtclStubs pngtclStubs = {
 #else  /* !PNG_EASY_ACCESS_SUPPORTED */
     png_get_y_pixels_per_meter, /* 121 */
 #endif /* !PNG_EASY_ACCESS_SUPPORTED */
-#if !defined(PNG_EASY_ACCESS_SUPPORTED) || !defined(PNG_FLOATING_POINT_SUPPORTED)
+#if !defined(PNG_EASY_ACCESS_SUPPORTED)
     0, /* 122 */
-#else  /* !PNG_EASY_ACCESS_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#else  /* !PNG_EASY_ACCESS_SUPPORTED */
     png_get_pixel_aspect_ratio, /* 122 */
-#endif /* !PNG_EASY_ACCESS_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#endif /* !PNG_EASY_ACCESS_SUPPORTED */
 #if !defined(PNG_EASY_ACCESS_SUPPORTED)
     0, /* 123 */
 #else  /* !PNG_EASY_ACCESS_SUPPORTED */
@@ -397,41 +405,41 @@ const PngtclStubs pngtclStubs = {
 #else  /* !PNG_bKGD_SUPPORTED */
     png_set_bKGD, /* 129 */
 #endif /* !PNG_bKGD_SUPPORTED */
-#if !defined(PNG_READ_cHRM_SUPPORTED) || !defined(PNG_FLOATING_POINT_SUPPORTED)
+#if !defined(PNG_READ_cHRM_SUPPORTED)
     0, /* 130 */
-#else  /* !PNG_READ_cHRM_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#else  /* !PNG_READ_cHRM_SUPPORTED */
     png_get_cHRM, /* 130 */
-#endif /* !PNG_READ_cHRM_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#endif /* !PNG_READ_cHRM_SUPPORTED */
 #if !defined(PNG_READ_cHRM_SUPPORTED) || !defined(PNG_FIXED_POINT_SUPPORTED)
     0, /* 131 */
 #else  /* !PNG_READ_cHRM_SUPPORTED !PNG_FIXED_POINT_SUPPORTED */
     png_get_cHRM_fixed, /* 131 */
 #endif /* !PNG_READ_cHRM_SUPPORTED !PNG_FIXED_POINT_SUPPORTED */
-#if !defined(PNG_cHRM_SUPPORTED) || !defined(PNG_FLOATING_POINT_SUPPORTED)
+#if !defined(PNG_cHRM_SUPPORTED)
     0, /* 132 */
-#else  /* !PNG_cHRM_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#else  /* !PNG_cHRM_SUPPORTED */
     png_set_cHRM, /* 132 */
-#endif /* !PNG_cHRM_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#endif /* !PNG_cHRM_SUPPORTED */
 #if !defined(PNG_cHRM_SUPPORTED) || !defined(PNG_FIXED_POINT_SUPPORTED)
     0, /* 133 */
 #else  /* !PNG_cHRM_SUPPORTED !PNG_FIXED_POINT_SUPPORTED */
     png_set_cHRM_fixed, /* 133 */
 #endif /* !PNG_cHRM_SUPPORTED !PNG_FIXED_POINT_SUPPORTED */
-#if !defined(PNG_READ_gAMA_SUPPORTED) || !defined(PNG_FLOATING_POINT_SUPPORTED)
+#if !defined(PNG_gAMA_SUPPORTED)
     0, /* 134 */
-#else  /* !PNG_READ_gAMA_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#else  /* !PNG_gAMA_SUPPORTED */
     png_get_gAMA, /* 134 */
-#endif /* !PNG_READ_gAMA_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
-#if !defined(PNG_READ_gAMA_SUPPORTED)
+#endif /* !PNG_gAMA_SUPPORTED */
+#if !defined(PNG_gAMA_SUPPORTED)
     0, /* 135 */
-#else  /* !PNG_READ_gAMA_SUPPORTED */
+#else  /* !PNG_gAMA_SUPPORTED */
     png_get_gAMA_fixed, /* 135 */
-#endif /* !PNG_READ_gAMA_SUPPORTED */
-#if !defined(PNG_gAMA_SUPPORTED) || !defined(PNG_FLOATING_POINT_SUPPORTED)
+#endif /* !PNG_gAMA_SUPPORTED */
+#if !defined(PNG_gAMA_SUPPORTED)
     0, /* 136 */
-#else  /* !PNG_gAMA_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#else  /* !PNG_gAMA_SUPPORTED */
     png_set_gAMA, /* 136 */
-#endif /* !PNG_gAMA_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#endif /* !PNG_gAMA_SUPPORTED */
 #if !defined(PNG_gAMA_SUPPORTED)
     0, /* 137 */
 #else  /* !PNG_gAMA_SUPPORTED */
@@ -491,11 +499,11 @@ const PngtclStubs pngtclStubs = {
 #else  /* !PNG_sBIT_SUPPORTED */
     png_set_sBIT, /* 151 */
 #endif /* !PNG_sBIT_SUPPORTED */
-#if !defined(PNG_READ_sRGB_SUPPORTED)
+#if !defined(PNG_sRGB_SUPPORTED)
     0, /* 152 */
-#else  /* !PNG_READ_sRGB_SUPPORTED */
+#else  /* !PNG_sRGB_SUPPORTED */
     png_get_sRGB, /* 152 */
-#endif /* !PNG_READ_sRGB_SUPPORTED */
+#endif /* !PNG_sRGB_SUPPORTED */
 #if !defined(PNG_sRGB_SUPPORTED)
     0, /* 153 */
 #else  /* !PNG_sRGB_SUPPORTED */
@@ -556,26 +564,26 @@ const PngtclStubs pngtclStubs = {
 #else  /* !PNG_tRNS_SUPPORTED */
     png_set_tRNS, /* 164 */
 #endif /* !PNG_tRNS_SUPPORTED */
-#if !defined(PNG_READ_sCAL_SUPPORTED) || !defined(PNG_FLOATING_POINT_SUPPORTED)
+#if !defined(PNG_READ_sCAL_SUPPORTED)
     0, /* 165 */
-#else  /* !PNG_READ_sCAL_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#else  /* !PNG_READ_sCAL_SUPPORTED */
     png_get_sCAL, /* 165 */
-#endif /* !PNG_READ_sCAL_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
-#if !defined(PNG_READ_sCAL_SUPPORTED) || defined(PNG_FLOATING_POINT_SUPPORTED) || !defined(PNG_FIXED_POINT_SUPPORTED)
+#endif /* !PNG_READ_sCAL_SUPPORTED */
+#if !defined(PNG_READ_sCAL_SUPPORTED) || !defined(PNG_FIXED_POINT_SUPPORTED)
     0, /* 166 */
-#else  /* !PNG_READ_sCAL_SUPPORTED PNG_FLOATING_POINT_SUPPORTED !PNG_FIXED_POINT_SUPPORTED */
+#else  /* !PNG_READ_sCAL_SUPPORTED !PNG_FIXED_POINT_SUPPORTED */
     png_get_sCAL_s, /* 166 */
-#endif /* !PNG_READ_sCAL_SUPPORTED PNG_FLOATING_POINT_SUPPORTED !PNG_FIXED_POINT_SUPPORTED */
-#if !defined(PNG_sCAL_SUPPORTED) || !defined(PNG_FLOATING_POINT_SUPPORTED)
+#endif /* !PNG_READ_sCAL_SUPPORTED !PNG_FIXED_POINT_SUPPORTED */
+#if !defined(PNG_sCAL_SUPPORTED)
     0, /* 167 */
-#else  /* !PNG_sCAL_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#else  /* !PNG_sCAL_SUPPORTED */
     png_set_sCAL, /* 167 */
-#endif /* !PNG_sCAL_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
-#if !defined(PNG_sCAL_SUPPORTED) || defined(PNG_FLOATING_POINT_SUPPORTED) || !defined(PNG_FIXED_POINT_SUPPORTED)
+#endif /* !PNG_sCAL_SUPPORTED */
+#if !defined(PNG_sCAL_SUPPORTED) || !defined(PNG_FIXED_POINT_SUPPORTED)
     0, /* 168 */
-#else  /* !PNG_sCAL_SUPPORTED PNG_FLOATING_POINT_SUPPORTED !PNG_FIXED_POINT_SUPPORTED */
+#else  /* !PNG_sCAL_SUPPORTED !PNG_FIXED_POINT_SUPPORTED */
     png_set_sCAL_s, /* 168 */
-#endif /* !PNG_sCAL_SUPPORTED PNG_FLOATING_POINT_SUPPORTED !PNG_FIXED_POINT_SUPPORTED */
+#endif /* !PNG_sCAL_SUPPORTED !PNG_FIXED_POINT_SUPPORTED */
 #if !defined(PNG_UNKNOWN_CHUNKS_SUPPORTED)
     0, /* 169 */
 #else  /* !PNG_UNKNOWN_CHUNKS_SUPPORTED */
@@ -743,11 +751,11 @@ const PngtclStubs pngtclStubs = {
 #else  /* !PNG_INTERNAL */
     png_write_IEND, /* 211 */
 #endif /* !PNG_INTERNAL */
-#if !defined(PNG_INTERNAL) || !defined(PNG_WRITE_gAMA_SUPPORTED) || !defined(PNG_FLOATING_POINT_SUPPORTED)
+#if !defined(PNG_INTERNAL) || !defined(PNG_WRITE_gAMA_SUPPORTED)
     0, /* 212 */
-#else  /* !PNG_INTERNAL !PNG_WRITE_gAMA_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#else  /* !PNG_INTERNAL !PNG_WRITE_gAMA_SUPPORTED */
     png_write_gAMA, /* 212 */
-#endif /* !PNG_INTERNAL !PNG_WRITE_gAMA_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#endif /* !PNG_INTERNAL !PNG_WRITE_gAMA_SUPPORTED */
 #if !defined(PNG_INTERNAL) || !defined(PNG_WRITE_gAMA_SUPPORTED) || !defined(PNG_FIXED_POINT_SUPPORTED)
     0, /* 213 */
 #else  /* !PNG_INTERNAL !PNG_WRITE_gAMA_SUPPORTED !PNG_FIXED_POINT_SUPPORTED */
@@ -758,11 +766,11 @@ const PngtclStubs pngtclStubs = {
 #else  /* !PNG_INTERNAL !PNG_WRITE_sBIT_SUPPORTED */
     png_write_sBIT, /* 214 */
 #endif /* !PNG_INTERNAL !PNG_WRITE_sBIT_SUPPORTED */
-#if !defined(PNG_INTERNAL) || !defined(PNG_WRITE_cHRM_SUPPORTED) || !defined(PNG_FLOATING_POINT_SUPPORTED)
+#if !defined(PNG_INTERNAL) || !defined(PNG_WRITE_cHRM_SUPPORTED)
     0, /* 215 */
-#else  /* !PNG_INTERNAL !PNG_WRITE_cHRM_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#else  /* !PNG_INTERNAL !PNG_WRITE_cHRM_SUPPORTED */
     png_write_cHRM, /* 215 */
-#endif /* !PNG_INTERNAL !PNG_WRITE_cHRM_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED */
+#endif /* !PNG_INTERNAL !PNG_WRITE_cHRM_SUPPORTED */
 #if !defined(PNG_INTERNAL) || !defined(PNG_WRITE_cHRM_SUPPORTED) || !defined(PNG_FIXED_POINT_SUPPORTED)
     0, /* 216 */
 #else  /* !PNG_INTERNAL !PNG_WRITE_cHRM_SUPPORTED !PNG_FIXED_POINT_SUPPORTED */
@@ -838,16 +846,16 @@ const PngtclStubs pngtclStubs = {
 #else  /* !PNG_INTERNAL !PNG_WRITE_tIME_SUPPORTED */
     png_write_tIME, /* 230 */
 #endif /* !PNG_INTERNAL !PNG_WRITE_tIME_SUPPORTED */
-#if !defined(PNG_INTERNAL) || !defined(PNG_WRITE_sCAL_SUPPORTED) || !defined(PNG_FLOATING_POINT_SUPPORTED) || defined(PNG_NO_STDIO)
+#if !defined(PNG_INTERNAL) || !defined(PNG_WRITE_sCAL_SUPPORTED) || defined(PNG_NO_STDIO)
     0, /* 231 */
-#else  /* !PNG_INTERNAL !PNG_WRITE_sCAL_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED PNG_NO_STDIO */
+#else  /* !PNG_INTERNAL !PNG_WRITE_sCAL_SUPPORTED PNG_NO_STDIO */
     png_write_sCAL, /* 231 */
-#endif /* !PNG_INTERNAL !PNG_WRITE_sCAL_SUPPORTED !PNG_FLOATING_POINT_SUPPORTED PNG_NO_STDIO */
-#if !defined(PNG_INTERNAL) || !defined(PNG_FIXED_POINT_SUPPORTED) || defined(PNG_WRITE_sCAL_SUPPORTED) && defined(PNG_FLOATING_POINT_SUPPORTED) && !defined(PNG_NO_STDIO)
+#endif /* !PNG_INTERNAL !PNG_WRITE_sCAL_SUPPORTED PNG_NO_STDIO */
+#if !defined(PNG_INTERNAL) || !defined(PNG_FIXED_POINT_SUPPORTED) || defined(PNG_WRITE_sCAL_SUPPORTED) && !defined(PNG_NO_STDIO)
     0, /* 232 */
-#else  /* !PNG_INTERNAL !PNG_FIXED_POINT_SUPPORTED PNG_WRITE_sCAL_SUPPORTED PNG_FLOATING_POINT_SUPPORTED !PNG_NO_STDIO */
+#else  /* !PNG_INTERNAL !PNG_FIXED_POINT_SUPPORTED PNG_WRITE_sCAL_SUPPORTED !PNG_NO_STDIO */
     png_write_sCAL_s, /* 232 */
-#endif /* !PNG_INTERNAL !PNG_FIXED_POINT_SUPPORTED PNG_WRITE_sCAL_SUPPORTED PNG_FLOATING_POINT_SUPPORTED !PNG_NO_STDIO */
+#endif /* !PNG_INTERNAL !PNG_FIXED_POINT_SUPPORTED PNG_WRITE_sCAL_SUPPORTED !PNG_NO_STDIO */
 #if !defined(PNG_INTERNAL)
     0, /* 233 */
 #else  /* !PNG_INTERNAL */
@@ -1279,6 +1287,11 @@ const PngtclStubs pngtclStubs = {
 #else  /* !PNG_READ_FILLER_SUPPORTED !PNG_WRITE_FILLER_SUPPORTED */
     png_set_add_alpha, /* 319 */
 #endif /* !PNG_READ_FILLER_SUPPORTED !PNG_WRITE_FILLER_SUPPORTED */
+#if !defined(PNG_READ_SCALE_16_TO_8_SUPPORTED)
+    0, /* 320 */
+#else  /* !PNG_READ_SCALE_16_TO_8_SUPPORTED */
+    png_set_scale_16, /* 320 */
+#endif /* !PNG_READ_SCALE_16_TO_8_SUPPORTED */
 };
 
 /* !END!: Do not edit above this line. */

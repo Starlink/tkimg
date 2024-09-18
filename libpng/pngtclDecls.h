@@ -1036,6 +1036,8 @@ PNG_IMPEXP void		png_push_read_iTXt(png_structp png_ptr,
 /* 319 */
 PNG_IMPEXP void		png_set_add_alpha(png_structp png_ptr,
 				png_uint_32 filler, int flags);
+/* 320 */
+PNG_IMPEXP void		png_set_scale_16(png_structrp png_ptr);
 
 typedef struct PngtclStubs {
     int magic;
@@ -1361,6 +1363,7 @@ typedef struct PngtclStubs {
     void (*png_push_read_iTXtPtr) (png_structp png_ptr, png_infop info_ptr, png_uint_32 length); /* 317 */
     void (*reserved318)(void);
     void (*png_set_add_alphaPtr) (png_structp png_ptr, png_uint_32 filler, int flags); /* 319 */
+    void (*png_set_scale_16Ptr) (png_structrp png_ptr); /* 320 */
 } PngtclStubs;
 
 #ifdef __cplusplus
@@ -1996,6 +1999,8 @@ PNG_IMPEXP const PngtclStubs *pngtclStubsPtr;
 /* Slot 318 is reserved */
 #define png_set_add_alpha \
 	(pngtclStubsPtr->png_set_add_alphaPtr) /* 319 */
+#define png_set_scale_16 \
+	(pngtclStubsPtr->png_set_scale_16Ptr) /* 320 */
 
 #endif /* defined(USE_PNGTCL_STUBS) */
 

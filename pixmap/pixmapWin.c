@@ -202,13 +202,13 @@ TkimgXpmRealizePixmap(masterPtr, instancePtr, image, mask, isTransp)
 	BitBlt(bitmapDC, 0, 0, w, h, maskDC, 0, 0, SRCAND);
 	BitBlt(maskDC,   0, 0, w, h, maskDC, 0, 0, NOTSRCCOPY);
 
-	TkWinReleaseDrawableDC(instancePtr->pixmap, dc, &dcState);
 	dataPtr->maskDC = maskDC;
 	dataPtr->maskBm = maskBm;
 	dataPtr->maskBmOld = maskBmOld;
     } else {
 	dataPtr->maskDC = NULL;
     }
+    TkWinReleaseDrawableDC(instancePtr->pixmap, dc, &dcState);
     dataPtr->bitmapDC = bitmapDC;
     dataPtr->bitmap = bitmap;
     dataPtr->bitmapOld = bitmapOld;

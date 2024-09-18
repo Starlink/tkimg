@@ -26,6 +26,22 @@ The handler provides the following options:
 
 [list_begin definitions]
 
+[lst_item "[option -verbose] [arg bool]"]
+
+This option is supported for reading only.
+[nl]
+If set to [const true], additional information about the file format
+is printed to stdout. Default is [const false].
+
+[lst_item "[option -gamma] [arg float]"]
+
+This option is supported for reading only.
+[nl]
+Use the specified gamma value when reading an image.
+This option overwrites gamma values specified in the file.
+If this option is not specified and no gamma value is in the file, 
+a default value of 1.0 is used.
+
 [lst_item "[option -matte] [arg bool]"]
 
 This option is supported for reading only.
