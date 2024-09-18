@@ -66,7 +66,7 @@ then
 else
     TIFFHOST="$host"
 fi
-${srcdir}/../compat/libtiff/configure --disable-zlib --disable-lzma \
+${srcdir}/../compat/libtiff/configure --disable-zlib --disable-zstd --disable-lzma \
 	--disable-pixarlog --disable-jpeg --disable-jbig --disable-webp \
 	"--with-CC=$TIFFCC" $TIFFHOST
 mv -f tifftcl_confdefs.h confdefs.h

@@ -1,6 +1,6 @@
 
         Tcl/Tk Image formats (TkImg)
-        (Version 1.4.12 / January 2021)
+        (Version 1.4.13 / January 2021)
 
         Jan Nijtmans, Andreas Kupries, Paul Obermeier
 
@@ -87,7 +87,7 @@ and JPEG in packages directly loadable by Tcl. They provide the
 functionality of their underlying libraries via stub-tables. The names
 of these packages are:
 
-    Name        Directory           Dependency
+    Name        Directory             Dependency
     -------------------------------------------------
     zlibtcl     tkimg/compat/libz
     pngtcl      tkimg/compat/libpng   zlibtcl
