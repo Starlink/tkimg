@@ -17,6 +17,16 @@ configure.lineno
 pkgIndex.tcl
 *Config.sh
 
-/libjpeg/libjpeg/jconfig.h
-/libjpeg/libjpeg/libtool
-/libtiff/libtiff/tif_config.h
+/base/tkimgUuid.h
+/compat/libtiff/doc/__pycache__
+/libjpeg/libjpeg
+/libpng/pnglibconf.h
+/libtiff/config
+/libtiff/contrib
+/libtiff/libtiff
+/libtiff/libtiff-4.pc
+/libtiff/mkg3states
+/libtiff/port
+/libtiff/test
+/libtiff/tif_fax3sm.c
+/libtiff/tools
