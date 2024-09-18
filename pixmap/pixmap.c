@@ -16,6 +16,10 @@
 #include "pixmapInt.h"
 #include "tkimg.h"
 
+#ifndef PACKAGE_TCLNAME
+#define PACKAGE_TCLNAME "img::pixmap"
+#endif
+
 #if defined(__WIN32__) && !defined (__GNUC__)
 #define strncasecmp _strnicmp
 #endif
@@ -74,9 +78,9 @@ static char *GetColor(char *colorDefn,
 
 static Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-data", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(PixmapMaster, dataString), TK_CONFIG_NULL_OK},
+	(char *) NULL, offsetof(PixmapMaster, dataString), TK_CONFIG_NULL_OK},
     {TK_CONFIG_STRING, "-file", (char *) NULL, (char *) NULL,
-	(char *) NULL, Tk_Offset(PixmapMaster, fileString), TK_CONFIG_NULL_OK},
+	(char *) NULL, offsetof(PixmapMaster, fileString), TK_CONFIG_NULL_OK},
     {TK_CONFIG_END, (char *) NULL, (char *) NULL, (char *) NULL,
 	(char *) NULL, 0, 0}
 };
@@ -112,19 +116,19 @@ Tk_ImageType imgPixmapImageType = {
  */
 
 static int
-TkimgXpmCreate(interp, name, argc, objv, typePtr, master, clientDataPtr)
-    Tcl_Interp *interp;		/* Interpreter for application containing
+TkimgXpmCreate(
+    Tcl_Interp *interp,		/* Interpreter for application containing
 				 * image. */
-    const char *name;			/* Name to use for image. */
-    int argc;			/* Number of arguments. */
-    Tcl_Obj *objv[];		/* Argument strings for options (doesn't
+    const char *name,			/* Name to use for image. */
+    int argc,			/* Number of arguments. */
+    Tcl_Obj *objv[],		/* Argument strings for options (doesn't
 				 * include image name or type). */
-    const Tk_ImageType *typePtr;	/* Pointer to our type record (not used). */
-    Tk_ImageMaster master;	/* Token for image, to be used by us in
+    const Tk_ImageType *typePtr,/* Pointer to our type record (not used). */
+    Tk_ImageMaster master,	/* Token for image, to be used by us in
 				 * later callbacks. */
-    ClientData *clientDataPtr;	/* Store manager's token for image here;
+    ClientData *clientDataPtr	/* Store manager's token for image here;
 				 * it will be returned in later callbacks. */
-{
+) {
     PixmapMaster *masterPtr;
     int i;
     char *argvbuf[10];
@@ -190,14 +194,14 @@ TkimgXpmCreate(interp, name, argc, objv, typePtr, master, clientDataPtr)
  */
 
 static int
-TkimgXpmConfigureMaster(masterPtr, argc, argv, flags)
-    PixmapMaster *masterPtr;	/* Pointer to data structure describing
+TkimgXpmConfigureMaster(
+    PixmapMaster *masterPtr,	/* Pointer to data structure describing
 				 * overall pixmap image to (reconfigure). */
-    int argc;			/* Number of entries in argv. */
-    const char **argv;	/* Pairs of configuration options for image. */
-    int flags;			/* Flags to pass to Tk_ConfigureWidget,
+    int argc,			/* Number of entries in argv. */
+    const char **argv,		/* Pairs of configuration options for image. */
+    int flags			/* Flags to pass to Tk_ConfigureWidget,
 				 * such as TK_CONFIG_ARGV_ONLY. */
-{
+) {
     PixmapInstance *instancePtr;
     char * oldData, * oldFile;
 
@@ -274,10 +278,10 @@ TkimgXpmConfigureMaster(masterPtr, argc, argv, flags)
  */
 
 static int
-TkimgXpmGetData(interp, masterPtr)
-    Tcl_Interp *interp;			/* For reporting errors. */
-    PixmapMaster *masterPtr;
-{
+TkimgXpmGetData(
+    Tcl_Interp *interp,			/* For reporting errors. */
+    PixmapMaster *masterPtr
+) {
     const char ** data = NULL;
     int  isAllocated = 0;		/* do we need to free "data"? */
     int listArgc;
@@ -370,11 +374,11 @@ TkimgXpmGetData(interp, masterPtr)
 }
 
 static const char **
-TkimgXpmGetDataFromString(interp, string, numLines_return)
-    Tcl_Interp * interp;
-    char * string;
-    int * numLines_return;
-{
+TkimgXpmGetDataFromString(
+    Tcl_Interp * interp,
+    char * string,
+    int * numLines_return
+) {
     int quoted;
     char * p, * list;
     int numLines;
@@ -500,11 +504,11 @@ TkimgXpmGetDataFromString(interp, string, numLines_return)
 }
 
 static const char **
-TkimgXpmGetDataFromFile(interp, fileName, numLines_return)
-    Tcl_Interp * interp;
-    char * fileName;
-    int * numLines_return;
-{
+TkimgXpmGetDataFromFile(
+    Tcl_Interp * interp,
+    char * fileName,
+    int * numLines_return
+) {
     Tcl_Channel chan;
     int size;
     const char ** data = (const char **) NULL;
@@ -541,10 +545,10 @@ TkimgXpmGetDataFromFile(interp, fileName, numLines_return)
 
 
 static char *
-GetType(colorDefn, type_ret)
-    char * colorDefn;
-    int  * type_ret;
-{
+GetType(
+    char * colorDefn,
+    int  * type_ret
+) {
     char * p = colorDefn;
 
     /* skip white spaces */
@@ -592,11 +596,11 @@ GetType(colorDefn, type_ret)
  */
 
 static char *
-GetColor(colorDefn, colorName, type_ret)
-    char * colorDefn;
-    char * colorName;		/* if found, name is copied to this array */
-    int  * type_ret;
-{
+GetColor(
+    char * colorDefn,
+    char * colorName,		/* if found, name is copied to this array */
+    int  * type_ret
+) {
     int type;
     char * p;
 
@@ -659,11 +663,11 @@ GetColor(colorDefn, colorName, type_ret)
  */
 
 static void
-TkimgXpmGetPixmapFromData(interp, masterPtr, instancePtr)
-    Tcl_Interp * interp;
-    PixmapMaster *masterPtr;
-    PixmapInstance *instancePtr;
-{
+TkimgXpmGetPixmapFromData(
+    Tcl_Interp * interp,
+    PixmapMaster *masterPtr,
+    PixmapInstance *instancePtr
+) {
     XImage * image = NULL, * mask = NULL;
     int depth, i, j, k, lOffset, isTransp = 0, isMono;
     ColorStruct * colors;
@@ -849,9 +853,9 @@ TkimgXpmGetPixmapFromData(interp, masterPtr, instancePtr)
  */
 
 static void
-TkimgXpmConfigureInstance(instancePtr)
-    PixmapInstance *instancePtr;	/* Instance to reconfigure. */
-{
+TkimgXpmConfigureInstance(
+    PixmapInstance *instancePtr		/* Instance to reconfigure. */
+) {
     PixmapMaster *masterPtr = instancePtr->masterPtr;
 
     if (instancePtr->pixmap != None) {
@@ -904,12 +908,12 @@ TkimgXpmConfigureInstance(instancePtr)
  */
 
 static int
-TkimgXpmCmd(clientData, interp, argc, argv)
-    ClientData clientData;	/* Information about button widget. */
-    Tcl_Interp *interp;		/* Current interpreter. */
-    int argc;			/* Number of arguments. */
-    const char **argv;	/* Argument strings. */
-{
+TkimgXpmCmd(
+    ClientData clientData,	/* Information about button widget. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int argc,			/* Number of arguments. */
+    const char **argv		/* Argument strings. */
+) {
     PixmapMaster *masterPtr = (PixmapMaster *) clientData;
     int c, code;
     size_t length;
@@ -993,12 +997,12 @@ TkimgXpmCmd(clientData, interp, argc, argv)
  */
 
 static ClientData
-TkimgXpmGet(tkwin, masterData)
-    Tk_Window tkwin;		/* Window in which the instance will be
+TkimgXpmGet(
+    Tk_Window tkwin,		/* Window in which the instance will be
 				 * used. */
-    ClientData masterData;	/* Pointer to our master structure for the
+    ClientData masterData	/* Pointer to our master structure for the
 				 * image. */
-{
+) {
     PixmapMaster *masterPtr = (PixmapMaster *) masterData;
     PixmapInstance *instancePtr;
 
@@ -1064,18 +1068,17 @@ TkimgXpmGet(tkwin, masterData)
  */
 
 static void
-TkimgXpmDisplay(clientData, display, drawable, imageX, imageY, width,
-	height, drawableX, drawableY)
-    ClientData clientData;	/* Pointer to PixmapInstance structure for
+TkimgXpmDisplay(
+    ClientData clientData,	/* Pointer to PixmapInstance structure for
 				 * for instance to be displayed. */
-    Display *display;		/* Display on which to draw image. */
-    Drawable drawable;		/* Pixmap or window in which to draw image. */
-    int imageX, imageY;		/* Upper-left corner of region within image
+    Display *display,		/* Display on which to draw image. */
+    Drawable drawable,		/* Pixmap or window in which to draw image. */
+    int imageX, int imageY,	/* Upper-left corner of region within image
 				 * to draw. */
-    int width, height;		/* Dimensions of region within image to draw.*/
-    int drawableX, drawableY;	/* Coordinates within drawable that
+    int width, int height,	/* Dimensions of region within image to draw.*/
+    int drawableX, int drawableY/* Coordinates within drawable that
 				 * correspond to imageX and imageY. */
-{
+) {
     TkimgpXpmDisplay(clientData, display, drawable, imageX, imageY, width,
 	height, drawableX, drawableY);
 }
@@ -1098,11 +1101,11 @@ TkimgXpmDisplay(clientData, display, drawable, imageX, imageY, width,
  */
 
 static void
-TkimgXpmFree(clientData, display)
-    ClientData clientData;	/* Pointer to PixmapInstance structure for
+TkimgXpmFree(
+    ClientData clientData,	/* Pointer to PixmapInstance structure for
 				 * for instance to be displayed. */
-    Display *display;		/* Display containing window that used image.*/
-{
+    Display *display		/* Display containing window that used image.*/
+) {
     PixmapInstance *instancePtr = (PixmapInstance *) clientData;
     PixmapInstance *prevPtr;
 
@@ -1163,10 +1166,10 @@ TkimgXpmFree(clientData, display)
  */
 
 static void
-TkimgXpmDelete(masterData)
-    ClientData masterData;	/* Pointer to PixmapMaster structure for
+TkimgXpmDelete(
+    ClientData masterData	/* Pointer to PixmapMaster structure for
 				 * image.  Must not have any more instances. */
-{
+) {
     PixmapMaster *masterPtr = (PixmapMaster *) masterData;
 
     if (masterPtr->instancePtr != NULL) {
@@ -1204,10 +1207,10 @@ TkimgXpmDelete(masterData)
  */
 
 static void
-TkimgXpmCmdDeletedProc(clientData)
-    ClientData clientData;	/* Pointer to PixmapMaster structure for
+TkimgXpmCmdDeletedProc(
+    ClientData clientData	/* Pointer to PixmapMaster structure for
 				 * image. */
-{
+) {
     PixmapMaster *masterPtr = (PixmapMaster *) clientData;
 
     masterPtr->imageCmd = NULL;
@@ -1237,9 +1240,9 @@ TkimgXpmCmdDeletedProc(clientData)
  */
 
 int
-Tkimgpixmap_Init (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
-{
+Tkimgpixmap_Init(
+      Tcl_Interp *interp	/* Interpreter to initialise. */
+) {
     static int initialized = 0;
 
     if (Tcl_InitStubs(interp, "8.3", 0) == NULL) {
@@ -1287,8 +1290,8 @@ Tkimgpixmap_Init (interp)
  */
 
 int
-Tkimgpixmap_SafeInit (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
-{
+Tkimgpixmap_SafeInit(
+      Tcl_Interp *interp	/* Interpreter to initialise. */
+) {
     return Tkimgpixmap_Init (interp);
 }

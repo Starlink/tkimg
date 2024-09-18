@@ -3,19 +3,20 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 
 #--------------------------------------------------------------------
-# Configure script for package 'tkimgpng', as distributed at November 20, 2001.
+# Configure script for package 'tkimgps', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimgpng],[1.4.9])
+AC_INIT([tkimgps],[1.4.10])
 
 TEA_INIT([3.9])
 
 AC_CONFIG_AUX_DIR(../tclconfig)
 
-PHIMGTYPE="png"
-CPACKAGE="Tkimgpng"
-PACKAGE_TCLNAME="img::png"
+PHIMGTYPE="ps"
+PHIMGTYPE_BETA="pdf"
+CPACKAGE="Tkimgps"
+PACKAGE_TCLNAME="img::ps"
 AC_SUBST(PHIMGTYPE)
 AC_SUBST(PACKAGE_TCLNAME)
 
@@ -49,17 +50,7 @@ TEA_SETUP_COMPILER
 TEA_PATH_CONFIG(tkimg)
 TEA_LOAD_CONFIG(tkimg)
 
-TEA_PATH_CONFIG(pngtcl)
-TEA_LOAD_CONFIG(pngtcl)
-AC_SUBST(pngtcl_VERSION)
-
-TEA_PATH_CONFIG(zlibtcl)
-TEA_LOAD_CONFIG(zlibtcl)
-AC_SUBST(zlibtcl_VERSION)
-
 IMG_SRCPATH(tkimg)
-IMG_SRCPATH(pngtcl)
-IMG_SRCPATH(zlibtcl)
 
 #-----------------------------------------------------------------------
 # Specify the C source files to compile in TEA_ADD_SOURCES,
@@ -70,18 +61,13 @@ IMG_SRCPATH(zlibtcl)
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([png.c])
+TEA_ADD_SOURCES([ps.c])
 TEA_ADD_HEADERS([])
 TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${tkimg_SRC_PATH}`\"])
-TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${pngtcl_SRC_PATH}`\"])
-TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${pngtcl_BUILD_PATH}`\"])
-TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${zlibtcl_SRC_PATH}`\"])
-TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${zlibtcl_BUILD_PATH}`\"])
 TEA_ADD_INCLUDES([-I.])
 TEA_ADD_LIBS([])
+TEA_ADD_CFLAGS([])
 TEA_ADD_CFLAGS([-DTKIMG_VERSION=\\\"\${tkimg_VERSION}\\\"])
-TEA_ADD_CFLAGS([-DPNGTCL_VERSION=\\\"\${pngtcl_VERSION}\\\"])
-TEA_ADD_CFLAGS([-DZLIBTCL_VERSION=\\\"\${zlibtcl_VERSION}\\\"])
 TEA_ADD_STUB_SOURCES([])
 TEA_ADD_TCL_SOURCES([])
 
@@ -91,7 +77,8 @@ sed < "`${CYGPATH} ${srcdir}/../init.c`" > "init.c"	\
 	-e	"s/@CPACKAGE@/${CPACKAGE}/"		\
 	-e	"s/%PACKAGE%/${PACKAGE_NAME}/"		\
 	-e	"s/%PACKAGE_UP%/${PUP}/"		\
-	-e	"s/%PHIMGTYPE%/${PHIMGTYPE}/"
+	-e	"s/%PHIMGTYPE%/${PHIMGTYPE}/"           \
+	-e	"s/%PHIMGTYPE_BETA%/${PHIMGTYPE_BETA}/"
 
 # init.c is an included source file, not a source by itself
 # FUTURE: Do this through AC_OUTPUT!!
@@ -121,9 +108,7 @@ TEA_PUBLIC_TK_HEADERS
 #--------------------------------------------------------------------
 
 if test "${TEA_PLATFORM}" = "windows" ; then
-    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch init.c"
-else
-    CLEANFILES="init.c"
+    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch"
 fi
 AC_SUBST(CLEANFILES)
 
@@ -187,10 +172,8 @@ TEA_MAKE_LIB
 
 if test "${TEA_PLATFORM}" = "windows" -a "$GCC" != "yes" ; then
     TEA_ADD_LIBS([\"`${CYGPATH} ${tkimg_STUB_LIB_PATH}`\"])
-    TEA_ADD_LIBS([\"`${CYGPATH} ${pngtcl_STUB_LIB_PATH}`\"])
 else
     TEA_ADD_LIBS([${tkimg_STUB_LIB_SPEC}])
-    TEA_ADD_LIBS([${pngtcl_STUB_LIB_SPEC}])
 fi
 
 #--------------------------------------------------------------------

@@ -3,19 +3,19 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 
 #--------------------------------------------------------------------
-# Configure script for package 'tkimgtga', as distributed at November 20, 2001.
+# Configure script for package 'tkimgico', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimgtga],[1.4.9])
+AC_INIT([tkimgico],[1.4.10])
 
 TEA_INIT([3.9])
 
 AC_CONFIG_AUX_DIR(../tclconfig)
 
-PHIMGTYPE="tga"
-CPACKAGE="Tkimgtga"
-PACKAGE_TCLNAME="img::tga"
+PHIMGTYPE="ico"
+CPACKAGE="Tkimgico"
+PACKAGE_TCLNAME="img::ico"
 AC_SUBST(PHIMGTYPE)
 AC_SUBST(PACKAGE_TCLNAME)
 
@@ -60,7 +60,7 @@ IMG_SRCPATH(tkimg)
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([tga.c])
+TEA_ADD_SOURCES([ico.c])
 TEA_ADD_HEADERS([])
 TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${tkimg_SRC_PATH}`\"])
 TEA_ADD_INCLUDES([-I.])
@@ -93,7 +93,6 @@ sed < "`${CYGPATH} ${srcdir}/../init.c`" > "init.c"	\
 TEA_PUBLIC_TCL_HEADERS
 TEA_PUBLIC_TK_HEADERS
 
-
 #--------------------------------------------------------------------
 # A few miscellaneous platform-specific items:
 #
@@ -107,9 +106,7 @@ TEA_PUBLIC_TK_HEADERS
 #--------------------------------------------------------------------
 
 if test "${TEA_PLATFORM}" = "windows" ; then
-    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch init.c"
-else
-    CLEANFILES="init.c"
+    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch"
 fi
 AC_SUBST(CLEANFILES)
 

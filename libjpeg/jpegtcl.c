@@ -44,7 +44,8 @@ Jpegtcl_Init (interp)
   if (Tcl_InitStubs(interp, "8.3", 0) == NULL) {
     return TCL_ERROR;
   }
-  if (Tcl_PkgProvideEx(interp, PACKAGE_NAME, PACKAGE_VERSION,
+  /* DO NOT USE PACKAGE_VERSION, USE INFO FROM jpegtcl.h INSTEAD */
+  if (Tcl_PkgProvideEx(interp, PACKAGE_NAME, JPEGTCL_VERSION,
 		       (ClientData) &jpegtclStubs) != TCL_OK) {
     return TCL_ERROR;
   }

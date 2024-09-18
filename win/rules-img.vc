@@ -27,7 +27,7 @@ PRJ_OBJS = $(TMP_DIR)\$(PHIMGTYPE).obj
 !include "..\..\win\rules-ext.vc"
 
 !if [echo TKIMG_VERSION = \> versions.vc] \
-   || [nmakehlp -V ..\..\base\configure.in ^[tkimg^] >> versions.vc]
+   || [nmakehlp -V ..\..\base\configure.ac ^[tkimg^] >> versions.vc]
 !error Could not determine tkimg base version.
 !endif
 !include versions.vc
@@ -38,7 +38,7 @@ PRJ_LIBS = $(PRJ_LIBS) "..\..\base\win\$(BUILDDIRTOP)\tkimgstub$(TKIMG_VERSION:.
 
 !ifdef REQUIRE_LIBJPEG
 !if [echo LIBJPEG_VERSION = \> versions.vc] \
-   || [nmakehlp -V ..\..\libjpeg\configure.in ^[jpegtcl^] >> versions.vc]
+   || [nmakehlp -V ..\..\libjpeg\configure.ac ^[jpegtcl^] >> versions.vc]
 !error Could not determine libjpeg base version.
 !endif
 !include versions.vc
@@ -48,7 +48,7 @@ PRJ_LIBS = $(PRJ_LIBS) "..\..\libjpeg\win\$(BUILDDIRTOP)\jpegtclstub$(LIBJPEG_VE
 
 !ifdef REQUIRE_ZLIB
 !if [echo ZLIB_VERSION = \> versions.vc] \
-   || [nmakehlp -V ..\..\zlib\configure.in ^[zlibtcl^] >> versions.vc]
+   || [nmakehlp -V ..\..\zlib\configure.ac ^[zlibtcl^] >> versions.vc]
 !error Could not determine zlib base version.
 !endif
 !include versions.vc
@@ -58,7 +58,7 @@ PRJ_LIBS = $(PRJ_LIBS) "..\..\zlib\win\$(BUILDDIRTOP)\zlibtclstub$(ZLIB_VERSION:
 
 !ifdef REQUIRE_LIBPNG
 !if [echo LIBPNG_VERSION = \> versions.vc] \
-   || [nmakehlp -V ..\..\libpng\configure.in ^[pngtcl^] >> versions.vc]
+   || [nmakehlp -V ..\..\libpng\configure.ac ^[pngtcl^] >> versions.vc]
 !error Could not determine libpng base version.
 !endif
 !include versions.vc
@@ -68,7 +68,7 @@ PRJ_LIBS = $(PRJ_LIBS) "..\..\libpng\win\$(BUILDDIRTOP)\pngtclstub$(LIBPNG_VERSI
 
 !ifdef REQUIRE_LIBTIFF
 !if [echo LIBTIFF_VERSION = \> versions.vc] \
-   || [nmakehlp -V ..\..\libtiff\configure.in ^[tifftcl^] >> versions.vc]
+   || [nmakehlp -V ..\..\libtiff\configure.ac ^[tifftcl^] >> versions.vc]
 !error Could not determine libtiff base version.
 !endif
 !include versions.vc

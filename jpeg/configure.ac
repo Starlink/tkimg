@@ -3,19 +3,19 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 
 #--------------------------------------------------------------------
-# Configure script for package 'tkimgwindow', as distributed at November 20, 2001.
+# Configure script for package 'tkimgjpeg', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimgwindow],[1.4.9])
+AC_INIT([tkimgjpeg],[1.4.10])
 
 TEA_INIT([3.9])
 
 AC_CONFIG_AUX_DIR(../tclconfig)
 
-PHIMGTYPE="window"
-CPACKAGE="Tkimgwindow"
-PACKAGE_TCLNAME="img::window"
+PHIMGTYPE="jpeg"
+CPACKAGE="Tkimgjpeg"
+PACKAGE_TCLNAME="img::jpeg"
 AC_SUBST(PHIMGTYPE)
 AC_SUBST(PACKAGE_TCLNAME)
 
@@ -49,7 +49,12 @@ TEA_SETUP_COMPILER
 TEA_PATH_CONFIG(tkimg)
 TEA_LOAD_CONFIG(tkimg)
 
+TEA_PATH_CONFIG(jpegtcl)
+TEA_LOAD_CONFIG(jpegtcl)
+AC_SUBST(jpegtcl_VERSION)
+
 IMG_SRCPATH(tkimg)
+IMG_SRCPATH(jpegtcl)
 
 #-----------------------------------------------------------------------
 # Specify the C source files to compile in TEA_ADD_SOURCES,
@@ -60,13 +65,15 @@ IMG_SRCPATH(tkimg)
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([window.c])
+TEA_ADD_SOURCES([jpeg.c])
 TEA_ADD_HEADERS([])
 TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${tkimg_SRC_PATH}`\"])
+TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${jpegtcl_SRC_PATH}`\"])
+TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${jpegtcl_BUILD_PATH}/libjpeg`\"])
 TEA_ADD_INCLUDES([-I.])
 TEA_ADD_LIBS([])
-TEA_ADD_CFLAGS([])
 TEA_ADD_CFLAGS([-DTKIMG_VERSION=\\\"\${tkimg_VERSION}\\\"])
+TEA_ADD_CFLAGS([-DJPEGTCL_VERSION=\\\"\${jpegtcl_VERSION}\\\"])
 TEA_ADD_STUB_SOURCES([])
 TEA_ADD_TCL_SOURCES([])
 
@@ -90,17 +97,8 @@ sed < "`${CYGPATH} ${srcdir}/../init.c`" > "init.c"	\
 # This MUST be called after TEA_LOAD_TCLCONFIG / TEA_LOAD_TKCONFIG
 #--------------------------------------------------------------------
 
-# This module is special. On windows it requires access to the
-# internal headers of Tk and thus tcl to implement its functionality
-# (TkWinReleaseDrawableDC).
-
-if test "${TEA_PLATFORM}" = "windows" ; then
-    TEA_PRIVATE_TCL_HEADERS
-    TEA_PRIVATE_TK_HEADERS
-else
-    TEA_PUBLIC_TCL_HEADERS
-    TEA_PUBLIC_TK_HEADERS
-fi
+TEA_PUBLIC_TCL_HEADERS
+TEA_PUBLIC_TK_HEADERS
 
 #--------------------------------------------------------------------
 # A few miscellaneous platform-specific items:
@@ -115,9 +113,7 @@ fi
 #--------------------------------------------------------------------
 
 if test "${TEA_PLATFORM}" = "windows" ; then
-    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch init.c"
-else
-    CLEANFILES="init.c"
+    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch"
 fi
 AC_SUBST(CLEANFILES)
 
@@ -181,9 +177,10 @@ TEA_MAKE_LIB
 
 if test "${TEA_PLATFORM}" = "windows" -a "$GCC" != "yes" ; then
     TEA_ADD_LIBS([\"`${CYGPATH} ${tkimg_STUB_LIB_PATH}`\"])
-    TEA_ADD_LIBS([gdi32.lib])
+    TEA_ADD_LIBS([\"`${CYGPATH} ${jpegtcl_STUB_LIB_PATH}`\"])
 else
     TEA_ADD_LIBS([${tkimg_STUB_LIB_SPEC}])
+    TEA_ADD_LIBS([${jpegtcl_STUB_LIB_SPEC}])
 fi
 
 #--------------------------------------------------------------------

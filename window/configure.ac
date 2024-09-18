@@ -3,19 +3,19 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 
 #--------------------------------------------------------------------
-# Configure script for package 'tkimgsgi', as distributed at November 20, 2001.
+# Configure script for package 'tkimgwindow', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimgsgi],[1.4.9])
+AC_INIT([tkimgwindow],[1.4.10])
 
 TEA_INIT([3.9])
 
 AC_CONFIG_AUX_DIR(../tclconfig)
 
-PHIMGTYPE="sgi"
-CPACKAGE="Tkimgsgi"
-PACKAGE_TCLNAME="img::sgi"
+PHIMGTYPE="window"
+CPACKAGE="Tkimgwindow"
+PACKAGE_TCLNAME="img::window"
 AC_SUBST(PHIMGTYPE)
 AC_SUBST(PACKAGE_TCLNAME)
 
@@ -60,7 +60,7 @@ IMG_SRCPATH(tkimg)
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([sgi.c])
+TEA_ADD_SOURCES([window.c])
 TEA_ADD_HEADERS([])
 TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${tkimg_SRC_PATH}`\"])
 TEA_ADD_INCLUDES([-I.])
@@ -90,8 +90,17 @@ sed < "`${CYGPATH} ${srcdir}/../init.c`" > "init.c"	\
 # This MUST be called after TEA_LOAD_TCLCONFIG / TEA_LOAD_TKCONFIG
 #--------------------------------------------------------------------
 
-TEA_PUBLIC_TCL_HEADERS
-TEA_PUBLIC_TK_HEADERS
+# This module is special. On windows it requires access to the
+# internal headers of Tk and thus tcl to implement its functionality
+# (TkWinReleaseDrawableDC).
+
+if test "${TEA_PLATFORM}" = "windows" ; then
+    TEA_PRIVATE_TCL_HEADERS
+    TEA_PRIVATE_TK_HEADERS
+else
+    TEA_PUBLIC_TCL_HEADERS
+    TEA_PUBLIC_TK_HEADERS
+fi
 
 #--------------------------------------------------------------------
 # A few miscellaneous platform-specific items:
@@ -106,9 +115,7 @@ TEA_PUBLIC_TK_HEADERS
 #--------------------------------------------------------------------
 
 if test "${TEA_PLATFORM}" = "windows" ; then
-    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch init.c"
-else
-    CLEANFILES="init.c"
+    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch"
 fi
 AC_SUBST(CLEANFILES)
 
@@ -172,6 +179,7 @@ TEA_MAKE_LIB
 
 if test "${TEA_PLATFORM}" = "windows" -a "$GCC" != "yes" ; then
     TEA_ADD_LIBS([\"`${CYGPATH} ${tkimg_STUB_LIB_PATH}`\"])
+    TEA_ADD_LIBS([gdi32.lib])
 else
     TEA_ADD_LIBS([${tkimg_STUB_LIB_SPEC}])
 fi

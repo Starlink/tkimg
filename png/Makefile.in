@@ -165,7 +165,7 @@ INCLUDES	= @PKG_INCLUDES@ \
 PKG_CFLAGS	= @PKG_CFLAGS@
 
 # TCL_DEFS is not strictly need here, but if you remove it, then you
-# must make sure that configure.in checks for the necessary components
+# must make sure that configure.ac checks for the necessary components
 # that your library may use.  TCL_DEFS can actually be a problem if
 # you do not compile with a similar machine setup as the Tcl core was
 # compiled with.
@@ -308,7 +308,7 @@ VPATH = $(srcdir):$(srcdir)/generic:$(srcdir)/unix:$(srcdir)/win
 # It is usually easiest to let Tcl do this for you with pkg_mkIndex, but
 # you may find that you need to customize the package.  If so, either
 # modify the -hand version, or create a pkgIndex.tcl.in file and have
-# the configure script output the pkgIndex.tcl by editing configure.in.
+# the configure script output the pkgIndex.tcl by editing configure.ac.
 #========================================================================
 
 pkgIndex.tcl:	$(PKG_LIB_FILE)
@@ -335,7 +335,7 @@ dist: dist-clean doc
 		$(srcdir)/aclocal.m4 $(srcdir)/configure $(srcdir)/*.in \
 		$(DIST_DIR)/
 	chmod 664 $(DIST_DIR)/Makefile.in $(DIST_DIR)/aclocal.m4
-	chmod 775 $(DIST_DIR)/configure $(DIST_DIR)/configure.in
+	chmod 775 $(DIST_DIR)/configure $(DIST_DIR)/configure.ac
 
 	mkdir $(DIST_DIR)/tclconfig
 	cp $(srcdir)/tclconfig/install-sh $(srcdir)/tclconfig/tcl.m4 \
@@ -382,7 +382,7 @@ dist_orig:
 
 #========================================================================
 # Don't modify the file to clean here.  Instead, set the "CLEANFILES"
-# variable in configure.in
+# variable in configure.ac
 #========================================================================
 
 clean:
@@ -391,7 +391,7 @@ clean:
 	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean: clean
-	-rm -f *.tab.c
+	-rm -f *.tab.c init.c
 	-rm -f $(CONFIG_CLEAN_FILES)
 	-rm -f config.cache config.log config.status
 

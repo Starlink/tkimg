@@ -26,6 +26,7 @@ NEED_TCL_SOURCE = 1
 PRJ_OBJS = \
 	$(TMP_DIR)\tkimg.obj \
 	$(TMP_DIR)\tkimgIO.obj \
+	$(TMP_DIR)\tkimgMap.obj \
 	$(TMP_DIR)\tkimgPPB.obj \
 	$(TMP_DIR)\tkimgUtils.obj \
 	$(TMP_DIR)\tkimgStubInit.obj \
@@ -41,7 +42,7 @@ DISABLE_TARGET_install = 1
 # We define our own install target because the built-in install target
 # will install to a directory named after the project (tkimg) while we
 # want it to be named Img. We cannot change the PROJECT=tkimg
-# definition above because the configure.in script above uses that
+# definition above because the configure.ac script above uses that
 # name and we extract versioning information from it.
 !ifdef TKIMG_INSTALL_SUBDIR
 IMG_INSTALL_DIR = $(_INSTALLDIR)\$(TKIMG_INSTALL_SUBDIR)

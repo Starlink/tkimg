@@ -3,20 +3,19 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 
 #--------------------------------------------------------------------
-# Configure script for package 'tkimgps', as distributed at November 20, 2001.
+# Configure script for package 'tkimgppm', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimgps],[1.4.9])
+AC_INIT([tkimgppm],[1.4.10])
 
 TEA_INIT([3.9])
 
 AC_CONFIG_AUX_DIR(../tclconfig)
 
-PHIMGTYPE="ps"
-PHIMGTYPE_BETA="pdf"
-CPACKAGE="Tkimgps"
-PACKAGE_TCLNAME="img::ps"
+PHIMGTYPE="ppm"
+CPACKAGE="Tkimgppm"
+PACKAGE_TCLNAME="img::ppm"
 AC_SUBST(PHIMGTYPE)
 AC_SUBST(PACKAGE_TCLNAME)
 
@@ -61,11 +60,11 @@ IMG_SRCPATH(tkimg)
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([ps.c])
+TEA_ADD_SOURCES([ppm.c])
 TEA_ADD_HEADERS([])
 TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${tkimg_SRC_PATH}`\"])
 TEA_ADD_INCLUDES([-I.])
-TEA_ADD_LIBS([])
+TEA_ADD_LIBS([${MATH_LIBS}]) 
 TEA_ADD_CFLAGS([])
 TEA_ADD_CFLAGS([-DTKIMG_VERSION=\\\"\${tkimg_VERSION}\\\"])
 TEA_ADD_STUB_SOURCES([])
@@ -77,8 +76,7 @@ sed < "`${CYGPATH} ${srcdir}/../init.c`" > "init.c"	\
 	-e	"s/@CPACKAGE@/${CPACKAGE}/"		\
 	-e	"s/%PACKAGE%/${PACKAGE_NAME}/"		\
 	-e	"s/%PACKAGE_UP%/${PUP}/"		\
-	-e	"s/%PHIMGTYPE%/${PHIMGTYPE}/"           \
-	-e	"s/%PHIMGTYPE_BETA%/${PHIMGTYPE_BETA}/"
+	-e	"s/%PHIMGTYPE%/${PHIMGTYPE}/"
 
 # init.c is an included source file, not a source by itself
 # FUTURE: Do this through AC_OUTPUT!!
@@ -108,9 +106,7 @@ TEA_PUBLIC_TK_HEADERS
 #--------------------------------------------------------------------
 
 if test "${TEA_PLATFORM}" = "windows" ; then
-    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch init.c"
-else
-    CLEANFILES="init.c"
+    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch"
 fi
 AC_SUBST(CLEANFILES)
 

@@ -103,17 +103,16 @@ ObjMatch(
 }
 
 static int
-ChnRead(interp, chan, fileName, format, imageHandle,
-        destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;
-    Tcl_Channel chan;
-    const char *fileName;
-    Tcl_Obj *format;
-    Tk_PhotoHandle imageHandle;
-    int destX, destY;
-    int width, height;
-    int srcX, srcY;
-{
+ChnRead(
+    Tcl_Interp *interp,
+    Tcl_Channel chan,
+    const char *fileName,
+    Tcl_Obj *format,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY
+) {
     tkimg_MFile handle;
 
     handle.data = (char *) chan;
@@ -124,16 +123,15 @@ ChnRead(interp, chan, fileName, format, imageHandle,
 }
 
 static int
-ObjRead(interp, data, format, imageHandle,
-        destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;
-    Tcl_Obj *data;
-    Tcl_Obj *format;
-    Tk_PhotoHandle imageHandle;
-    int destX, destY;
-    int width, height;
-    int srcX, srcY;
-{
+ObjRead(
+    Tcl_Interp *interp,
+    Tcl_Obj *data,
+    Tcl_Obj *format,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY
+) {
     tkimg_MFile handle;
 
     tkimg_ReadInit(data,'B',&handle);
@@ -142,12 +140,12 @@ ObjRead(interp, data, format, imageHandle,
 }
 
 static int
-ChnWrite(interp, filename, format, blockPtr)
-    Tcl_Interp *interp;
-    const char *filename;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
-{
+ChnWrite(
+    Tcl_Interp *interp,
+    const char *filename,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
     Tcl_Channel chan;
     tkimg_MFile handle;
     int result;
@@ -190,24 +188,22 @@ static int StringWrite(
 }
 
 static unsigned int
-getUInt32(buf)
-    unsigned char *buf;
+getUInt32(unsigned char *buf)
 {
     return (buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24);
 }
 
 static unsigned int
-getUInt16(buf)
-    unsigned char *buf;
+getUInt16(unsigned char *buf)
 {
     return (buf[0] | buf[1] << 8);
 }
 
 static void
-GetChannelMasks(intMask, masks)
-    unsigned int *intMask;
-    BitmapChannel *masks;
-{
+GetChannelMasks(
+    unsigned int *intMask,
+    BitmapChannel *masks
+) {
     unsigned int mask;
     int i, nbits, offset, bit;
 
@@ -235,13 +231,13 @@ GetChannelMasks(intMask, masks)
  */
 
 static int
-CommonMatch(handle, widthPtr, heightPtr, colorMap, numBits, numCols, comp, mask)
-    tkimg_MFile *handle;
-    int *widthPtr, *heightPtr;
-    unsigned char **colorMap;
-    int *numBits, *numCols, *comp;
-    unsigned int *mask;
-{
+CommonMatch(
+    tkimg_MFile *handle,
+    int *widthPtr, int *heightPtr,
+    unsigned char **colorMap,
+    int *numBits, int *numCols, int *comp,
+    unsigned int *mask
+) {
     unsigned char buf[28];
     int c,i, compression, nBits, clrUsed, offBits;
 
@@ -320,15 +316,14 @@ CommonMatch(handle, widthPtr, heightPtr, colorMap, numBits, numCols, comp, mask)
 }
 
 static int
-CommonRead(interp, handle, imageHandle, destX, destY,
-        width, height, srcX, srcY)
-    Tcl_Interp *interp;
-    tkimg_MFile *handle;
-    Tk_PhotoHandle imageHandle;
-    int destX, destY;
-    int width, height;
-    int srcX, srcY;
-{
+CommonRead(
+    Tcl_Interp *interp,
+    tkimg_MFile *handle,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY
+) {
     Tk_PhotoImageBlock block;
     int numBits, bytesPerLine, numCols, comp, x, y;
     int fileWidth, fileHeight;
@@ -643,12 +638,12 @@ error:
 }
 
 static int
-CommonWrite(interp, format, handle, blockPtr)
-    Tcl_Interp *interp;
-    Tcl_Obj *format;
-    tkimg_MFile *handle;
-    Tk_PhotoImageBlock *blockPtr;
-{
+CommonWrite(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    tkimg_MFile *handle,
+    Tk_PhotoImageBlock *blockPtr
+) {
     int bperline, nbytes, ncolors, i, x, y, greenOffset, blueOffset, alphaOffset;
     unsigned char *imagePtr, *pixelPtr;
     unsigned char buf[4];
@@ -844,10 +839,10 @@ CommonWrite(interp, format, handle, blockPtr)
 }
 
 static void
-putint(handle, i)
-    tkimg_MFile *handle;
-    int i;
-{
+putint(
+    tkimg_MFile *handle,
+    int i
+) {
     unsigned char buf[4];
     buf[0] = i;
     buf[1] = i>>8;

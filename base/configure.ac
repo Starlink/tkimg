@@ -3,20 +3,17 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 
 #--------------------------------------------------------------------
-# Configure script for package 'tkimgdted', as distributed at November 20, 2001.
+# Configure script for package 'tkimg', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimgdted],[1.4.9])
+AC_INIT([tkimg],[1.4.10])
 
 TEA_INIT([3.9])
 
 AC_CONFIG_AUX_DIR(../tclconfig)
 
-PHIMGTYPE="dted"
-CPACKAGE="Tkimgdted"
-PACKAGE_TCLNAME="img::dted"
-AC_SUBST(PHIMGTYPE)
+PACKAGE_TCLNAME="img::base"
 AC_SUBST(PACKAGE_TCLNAME)
 
 #--------------------------------------------------------------------
@@ -46,11 +43,6 @@ TEA_PREFIX
 
 TEA_SETUP_COMPILER
 
-TEA_PATH_CONFIG(tkimg)
-TEA_LOAD_CONFIG(tkimg)
-
-IMG_SRCPATH(tkimg)
-
 #-----------------------------------------------------------------------
 # Specify the C source files to compile in TEA_ADD_SOURCES,
 # public headers that need to be installed in TEA_ADD_HEADERS,
@@ -60,32 +52,14 @@ IMG_SRCPATH(tkimg)
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([dted.c])
-TEA_ADD_HEADERS([])
-TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${tkimg_SRC_PATH}`\"])
-TEA_ADD_INCLUDES([-I.])
-
-if test "${TEA_PLATFORM}" = "windows" ; then
-    TEA_ADD_LIBS([])
-else
-    TEA_ADD_LIBS([${MATH_LIBS}])
-fi
-
+TEA_ADD_SOURCES([tkimg.c tkimgIO.c tkimgPPB.c tkimgUtils.c tkimgMap.c tkimgStubInit.c])
+TEA_ADD_HEADERS([tkimg.h tkimgDecls.h])
+TEA_ADD_INCLUDES([])
+TEA_ADD_LIBS([])
 TEA_ADD_CFLAGS([])
-TEA_ADD_CFLAGS([-DTKIMG_VERSION=\\\"\${tkimg_VERSION}\\\"])
-TEA_ADD_STUB_SOURCES([])
+TEA_ADD_STUB_SOURCES([tkimgStubLib.c])
+TEA_ADD_SOURCES([tkimgStubLib.c])
 TEA_ADD_TCL_SOURCES([])
-
-PUP="`echo ${PACKAGE_NAME}| tr 'a-z' 'A-Z'`"
-
-sed < "`${CYGPATH} ${srcdir}/../init.c`" > "init.c"	\
-	-e	"s/@CPACKAGE@/${CPACKAGE}/"		\
-	-e	"s/%PACKAGE%/${PACKAGE_NAME}/"		\
-	-e	"s/%PACKAGE_UP%/${PUP}/"		\
-	-e	"s/%PHIMGTYPE%/${PHIMGTYPE}/"
-
-# init.c is an included source file, not a source by itself
-# FUTURE: Do this through AC_OUTPUT!!
 
 #--------------------------------------------------------------------
 # __CHANGE__
@@ -112,9 +86,9 @@ TEA_PUBLIC_TK_HEADERS
 #--------------------------------------------------------------------
 
 if test "${TEA_PLATFORM}" = "windows" ; then
-    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch init.c"
+    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch"
 else
-    CLEANFILES="init.c"
+    CLEANFILES=""
 fi
 AC_SUBST(CLEANFILES)
 
@@ -151,7 +125,8 @@ TEA_ENABLE_SYMBOLS
 # This must be called after TEA_CONFIG_CFLAGS as it adjusts LIBS.
 #--------------------------------------------------------------------
 
-TEA_PATH_X
+# See [Bug #82910]
+#TEA_PATH_X
 
 #--------------------------------------------------------------------
 # Everyone should be linking against the Tcl stub library.  If you
@@ -176,12 +151,6 @@ TEA_MAKE_LIB
 # Add platform libs to LIBS or SHLIB_LD_LIBS as necessary.
 #--------------------------------------------------------------------
 
-if test "${TEA_PLATFORM}" = "windows" -a "$GCC" != "yes" ; then
-    TEA_ADD_LIBS([\"`${CYGPATH} ${tkimg_STUB_LIB_PATH}`\"])
-else
-    TEA_ADD_LIBS([${tkimg_STUB_LIB_SPEC}])
-fi
-
 #--------------------------------------------------------------------
 # Find tclsh so that we can run pkg_mkIndex to generate the pkgIndex.tcl
 # file during the install process.  Don't run the TCLSH_PROG through
@@ -193,6 +162,7 @@ fi
 
 TEA_PROG_TCLSH
 TEA_PROG_WISH
+TEA_EXPORT_CONFIG(tkimg)
 
 #--------------------------------------------------------------------
 # Finally, substitute all of the various values into the Makefile.
@@ -200,6 +170,6 @@ TEA_PROG_WISH
 # which require substituting th AC variables in.  Include these here.
 #--------------------------------------------------------------------
 
-AC_OUTPUT([Makefile])
+AC_OUTPUT([Makefile pkgIndex.tcl tkimgConfig.sh])
 
 #--------------------------------------------------------------------

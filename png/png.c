@@ -129,11 +129,11 @@ static void PrintReadInfo (int width, int height, int nchans, int bits,
 }
 #undef OUT
 
-static int ParseFormatOpts (interp, format, opts)
-    Tcl_Interp *interp;
-    Tcl_Obj *format;
-    FMTOPT *opts;
-{
+static int ParseFormatOpts(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    FMTOPT *opts
+) {
     static const char *const pngOptions[] = {
         "-matte", "-alpha", "-gamma", "-verbose", NULL
     };
@@ -214,9 +214,9 @@ static int ParseFormatOpts (interp, format, opts)
  */
 
 static int
-SetupPngLibrary (interp)
-    Tcl_Interp *interp;
-{
+SetupPngLibrary(
+    Tcl_Interp *interp
+) {
     if (Pngtcl_InitStubs(interp, PNGTCL_VERSION, 0) == NULL) {
         return TCL_ERROR;
     }
@@ -224,29 +224,29 @@ SetupPngLibrary (interp)
 }
 
 static void
-tk_png_error(png_ptr, error_msg)
-    png_structp png_ptr;
-    png_const_charp error_msg;
-{
+tk_png_error(
+    png_structp png_ptr,
+    png_const_charp error_msg
+) {
     cleanup_info *info = (cleanup_info *) png_get_error_ptr(png_ptr);
     Tcl_AppendResult(info->interp, error_msg, (char *) NULL);
     longjmp(info->jmpbuf,1);
 }
 
 static void
-tk_png_warning(png_ptr, error_msg)
-    png_structp png_ptr;
-    png_const_charp error_msg;
-{
+tk_png_warning(
+    png_structp png_ptr,
+    png_const_charp error_msg
+) {
     return;
 }
 
 static void
-tk_png_read(png_ptr, data, length)
-    png_structp png_ptr;
-    png_bytep data;
-    png_size_t length;
-{
+tk_png_read(
+    png_structp png_ptr,
+    png_bytep data,
+    png_size_t length
+) {
     if (tkimg_Read2((tkimg_MFile *) png_get_progressive_ptr(png_ptr),
             (char *) data, (size_t) length) != (int) length) {
         png_error(png_ptr, "Read Error");
@@ -254,11 +254,11 @@ tk_png_read(png_ptr, data, length)
 }
 
 static void
-tk_png_write(png_ptr, data, length)
-    png_structp png_ptr;
-    png_bytep data;
-    png_size_t length;
-{
+tk_png_write(
+    png_structp png_ptr,
+    png_bytep data,
+    png_size_t length
+) {
     if (tkimg_Write2((tkimg_MFile *) png_get_progressive_ptr(png_ptr),
             (char *) data, (size_t) length) != (int) length) {
         png_error(png_ptr, "Write Error");
@@ -266,9 +266,9 @@ tk_png_write(png_ptr, data, length)
 }
 
 static void
-tk_png_flush(png_ptr)
-    png_structp png_ptr;
-{
+tk_png_flush(
+    png_structp png_ptr
+) {
 }
 
 static int ChnMatch(
@@ -304,10 +304,10 @@ ObjMatch(
 }
 
 static int
-CommonMatchPNG(handle, widthPtr, heightPtr)
-    tkimg_MFile *handle;
-    int *widthPtr, *heightPtr;
-{
+CommonMatchPNG(
+    tkimg_MFile *handle,
+    int *widthPtr, int *heightPtr
+) {
     unsigned char buf[8];
 
     if ((tkimg_Read2(handle, (char *) buf, 8) != 8)
@@ -323,17 +323,16 @@ CommonMatchPNG(handle, widthPtr, heightPtr)
 }
 
 static int
-ChnRead(interp, chan, fileName, format, imageHandle,
-        destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;
-    Tcl_Channel chan;
-    const char *fileName;
-    Tcl_Obj *format;
-    Tk_PhotoHandle imageHandle;
-    int destX, destY;
-    int width, height;
-    int srcX, srcY;
-{
+ChnRead(
+    Tcl_Interp *interp,
+    Tcl_Channel chan,
+    const char *fileName,
+    Tcl_Obj *format,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY
+) {
     png_structp png_ptr;
     tkimg_MFile handle;
     cleanup_info cleanup;
@@ -354,16 +353,15 @@ ChnRead(interp, chan, fileName, format, imageHandle,
 }
 
 static int
-ObjRead (interp, dataObj, format, imageHandle,
-        destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;
-    Tcl_Obj *dataObj;
-    Tcl_Obj *format;
-    Tk_PhotoHandle imageHandle;
-    int destX, destY;
-    int width, height;
-    int srcX, srcY;
-{
+ObjRead(
+    Tcl_Interp *interp,
+    Tcl_Obj *dataObj,
+    Tcl_Obj *format,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY
+) {
     png_structp png_ptr;
     tkimg_MFile handle;
     cleanup_info cleanup;
@@ -383,17 +381,16 @@ ObjRead (interp, dataObj, format, imageHandle,
 }
 
 static int
-CommonReadPNG(png_ptr, interp, fileName, format, imageHandle, destX, destY,
-        width, height, srcX, srcY)
-    png_structp png_ptr;
-    Tcl_Interp *interp;
-    const char *fileName;
-    Tcl_Obj *format;
-    Tk_PhotoHandle imageHandle;
-    int destX, destY;
-    int width, height;
-    int srcX, srcY;
-{
+CommonReadPNG(
+    png_structp png_ptr,
+    Tcl_Interp *interp,
+    const char *fileName,
+    Tcl_Obj *format,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY
+) {
     png_infop info_ptr;
     png_infop end_info;
     char **png_data = NULL;
@@ -457,7 +454,9 @@ CommonReadPNG(png_ptr, interp, fileName, format, imageHandle, destX, destY,
 
     Tk_PhotoGetImage(imageHandle, &block);
 
+#ifdef PNG_READ_SCALE_16_TO_8_SUPPORTED
     png_set_scale_16(png_ptr);
+#endif
 
     png_set_expand(png_ptr);
 
@@ -569,12 +568,12 @@ CommonReadPNG(png_ptr, interp, fileName, format, imageHandle, destX, destY,
 }
 
 static int
-ChnWrite (interp, filename, format, blockPtr)
-    Tcl_Interp *interp;
-    const char *filename;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
-{
+ChnWrite(
+    Tcl_Interp *interp,
+    const char *filename,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
     png_structp png_ptr;
     png_infop info_ptr;
     tkimg_MFile handle;
@@ -655,13 +654,13 @@ static int StringWrite(
 }
 
 static int
-CommonWritePNG(interp, png_ptr, info_ptr, format, blockPtr)
-    Tcl_Interp *interp;
-    png_structp png_ptr;
-    png_infop info_ptr;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
-{
+CommonWritePNG(
+    Tcl_Interp *interp,
+    png_structp png_ptr,
+    png_infop info_ptr,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
     int greenOffset, blueOffset, alphaOffset;
     int tagcount = 0;
     Tcl_Obj **tags = (Tcl_Obj **) NULL;

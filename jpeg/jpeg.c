@@ -50,6 +50,7 @@
  * Generic initialization code, parameterized via CPACKAGE and PACKAGE.
  */
 #ifdef _WIN32
+#   include <windows.h>
 #   define HAVE_BOOLEAN
 #endif
 
@@ -61,7 +62,12 @@
 #endif
 
 #include "tkimg.h"
+#ifdef USE_TCL_STUBS
 #include "jpegtcl.h"
+#else
+#include "jpeglib.h"
+#include "jerror.h"
+#endif
 
 static int SetupJPegLibrary(Tcl_Interp *interp);
 
@@ -144,16 +150,18 @@ static void	append_jpeg_message(Tcl_Interp *interp,
 
 
 static int
-SetupJPegLibrary (interp)
-    Tcl_Interp *interp;
-{
+SetupJPegLibrary(
+    Tcl_Interp *interp
+) {
     struct jpeg_compress_struct *cinfo; /* libjpeg's parameter structure */
     struct my_error_mgr jerror;	/* for controlling libjpeg error handling */
     int i;
 
+#ifdef USE_TCL_STUBS
     if (Jpegtcl_InitStubs(interp, JPEGTCL_VERSION, 0) == NULL) {
         return TCL_ERROR;
     }
+#endif
 
     /* The followin code tries to determine if the JPEG library is
        valid at all. The library might be configured differently,
@@ -247,8 +255,8 @@ static int ChnMatch(
     Tcl_Channel chan,		/* The image channel, open for reading. */
     const char *fileName,	/* The name of the image file. */
     Tcl_Obj *format,		/* User-specified format string, or NULL. */
-    int *widthPtr,			/* The dimensions of the image are */
-	int *heightPtr,			/* returned here if the file is a valid
+    int *widthPtr,		/* The dimensions of the image are */
+    int *heightPtr,		/* returned here if the file is a valid
 				 * JPEG file. */
     Tcl_Interp *interp
 ) {
@@ -282,7 +290,7 @@ static int ObjMatch(
     Tcl_Obj *data,		/* the object containing the image data */
     Tcl_Obj *format,		/* User-specified format object, or NULL. */
     int *widthPtr,		/* The dimensions of the image are */
-	int *heightPtr,		/* returned here if the string is a valid
+    int *heightPtr,		/* returned here if the string is a valid
 				 * JPEG image. */
     Tcl_Interp *interp
 ) {
@@ -312,12 +320,12 @@ static int ObjMatch(
  */
 
 static int
-CommonMatch(handle, widthPtr, heightPtr)
-    tkimg_MFile *handle;		/* the "file" handle */
-    int *widthPtr, *heightPtr;	/* The dimensions of the image are
-				 * returned here if the string is a valid
+CommonMatch(
+    tkimg_MFile *handle,	/* the "file" handle */
+    int *widthPtr,		/* The dimensions of the image are */
+    int *heightPtr		/* returned here if the string is a valid
 				 * JPEG image. */
-{
+) {
     char buf[256];
     int i;
 
@@ -391,20 +399,19 @@ CommonMatch(handle, widthPtr, heightPtr)
  */
 
 static int
-ChnRead(interp, chan, fileName, format, imageHandle, destX, destY,
-	width, height, srcX, srcY)
-    Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
-    Tcl_Channel chan;		/* The image channel, open for reading. */
-    const char *fileName;	/* The name of the image file. */
-    Tcl_Obj *format;		/* User-specified format string, or NULL. */
-    Tk_PhotoHandle imageHandle;	/* The photo image to write into. */
-    int destX, destY;		/* Coordinates of top-left pixel in
+ChnRead(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Channel chan,		/* The image channel, open for reading. */
+    const char *fileName,	/* The name of the image file. */
+    Tcl_Obj *format,		/* User-specified format string, or NULL. */
+    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
+    int destX, int destY,	/* Coordinates of top-left pixel in
 				 * photo image to be written to. */
-    int width, height;		/* Dimensions of block of photo image to
+    int width, int height,	/* Dimensions of block of photo image to
 				 * be written to. */
-    int srcX, srcY;		/* Coordinates of top-left pixel to be used
+    int srcX, int srcY		/* Coordinates of top-left pixel to be used
 				 * in image being read. */
-{
+) {
     struct jpeg_decompress_struct cinfo; /* libjpeg's parameter structure */
     struct my_error_mgr jerror;	/* for controlling libjpeg error handling */
     int result;
@@ -459,19 +466,18 @@ ChnRead(interp, chan, fileName, format, imageHandle, destX, destY,
  */
 
 static int
-ObjRead(interp, data, format, imageHandle, destX, destY,
-	width, height, srcX, srcY)
-    Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
-    Tcl_Obj *data;		/* Object containing the image data. */
-    Tcl_Obj *format;		/* User-specified format object, or NULL. */
-    Tk_PhotoHandle imageHandle;	/* The photo image to write into. */
-    int destX, destY;		/* Coordinates of top-left pixel in
+ObjRead(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Obj *data,		/* Object containing the image data. */
+    Tcl_Obj *format,		/* User-specified format object, or NULL. */
+    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
+    int destX, int destY,	/* Coordinates of top-left pixel in
 				 * photo image to be written to. */
-    int width, height;		/* Dimensions of block of photo image to
+    int width, int height,	/* Dimensions of block of photo image to
 				 * be written to. */
-    int srcX, srcY;		/* Coordinates of top-left pixel to be used
+    int srcX, int srcY		/* Coordinates of top-left pixel to be used
 				 * in image being read. */
-{
+) {
     struct jpeg_decompress_struct cinfo; /* libjpeg's parameter structure */
     struct my_error_mgr jerror;	/* for controlling libjpeg error handling */
     int result;
@@ -519,19 +525,18 @@ ObjRead(interp, data, format, imageHandle, destX, destY,
  *----------------------------------------------------------------------
  */
 static int
-CommonRead(interp, cinfo, format, imageHandle, destX, destY,
-	width, height, srcX, srcY)
-    Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
-    j_decompress_ptr cinfo;	/* Already-constructed decompress struct. */
-    Tcl_Obj *format;		/* User-specified format string, or NULL. */
-    Tk_PhotoHandle imageHandle;	/* The photo image to write into. */
-    int destX, destY;		/* Coordinates of top-left pixel in
+CommonRead(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    j_decompress_ptr cinfo,	/* Already-constructed decompress struct. */
+    Tcl_Obj *format,		/* User-specified format string, or NULL. */
+    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
+    int destX, int destY,	/* Coordinates of top-left pixel in
 				 * photo image to be written to. */
-    int width, height;		/* Dimensions of block of photo image to
+    int width, int height,	/* Dimensions of block of photo image to
 				 * be written to. */
-    int srcX, srcY;		/* Coordinates of top-left pixel to be used
+    int srcX, int srcY		/* Coordinates of top-left pixel to be used
 				 * in image being read. */
-{
+) {
     static const char *const jpegReadOptions[] = {"-fast", "-grayscale", NULL};
     int fileWidth, fileHeight, stopY, curY, outY, outWidth, outHeight;
     Tk_PhotoImageBlock block;
@@ -675,12 +680,12 @@ CommonRead(interp, cinfo, format, imageHandle, destX, destY,
  */
 
 static int
-ChnWrite(interp, fileName, format, blockPtr)
-    Tcl_Interp *interp;
-    const char *fileName;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
-{
+ChnWrite(
+    Tcl_Interp *interp,
+    const char *fileName,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
     struct jpeg_compress_struct cinfo; /* libjpeg's parameter structure */
     struct my_error_mgr jerror;	/* for controlling libjpeg error handling */
     Tcl_Channel chan;
@@ -801,12 +806,12 @@ writeend:
  */
 
 static int
-CommonWrite(interp, cinfo, format, blockPtr)
-    Tcl_Interp *interp;
-    j_compress_ptr cinfo;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
-{
+CommonWrite(
+    Tcl_Interp *interp,
+    j_compress_ptr cinfo,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
     static const char *const jpegWriteOptions[] = {"-grayscale", "-optimize",
 	"-progressive", "-quality", "-smooth", NULL};
     JSAMPROW row_pointer[1];	/* pointer to original data scanlines */
@@ -859,10 +864,14 @@ CommonWrite(interp, cinfo, format, blockPtr)
 		    break;
 		}
 		case 2: {
+#ifdef USE_JPEGTCL_STUBS
 		    if (jpeg_simple_progression != NULL) {
 			/* Select simple progressive mode. */
 			jpeg_simple_progression(cinfo);
 		    }
+#else
+		    jpeg_simple_progression(cinfo);
+#endif
 		    break;
 		}
 		case 3: {
@@ -898,7 +907,10 @@ CommonWrite(interp, cinfo, format, blockPtr)
     pixLinePtr = blockPtr->pixelPtr + blockPtr->offset[0];
     greenOffset = blockPtr->offset[1] - blockPtr->offset[0];
     blueOffset = blockPtr->offset[2] - blockPtr->offset[0];
-    if ((jpeg_set_colorspace != NULL) &&
+    if (
+#ifdef USE_JPEGTCL_STUBS
+	(jpeg_set_colorspace != NULL) &&
+#endif
 	    (grayscale || (!greenOffset && !blueOffset))) {
 	/* Generate monochrome JPEG file if source block is grayscale. */
 	jpeg_set_colorspace(cinfo, JCS_GRAYSCALE);
@@ -953,10 +965,10 @@ CommonWrite(interp, cinfo, format, blockPtr)
  */
 
 static void
-my_jpeg_obj_src (cinfo, dataObj)
-    j_decompress_ptr cinfo;
-    Tcl_Obj *dataObj;
-{
+my_jpeg_obj_src(
+    j_decompress_ptr cinfo,
+    Tcl_Obj *dataObj
+) {
   src_ptr src;
 
   src = (src_ptr)
@@ -977,9 +989,9 @@ my_jpeg_obj_src (cinfo, dataObj)
 }
 
 static boolean
-fill_input_buffer(cinfo)
-    j_decompress_ptr cinfo;
-{
+fill_input_buffer(
+    j_decompress_ptr cinfo
+) {
   src_ptr src = (src_ptr) cinfo->src;
   int nbytes;
 
@@ -999,10 +1011,10 @@ fill_input_buffer(cinfo)
 }
 
 static void
-skip_input_data(cinfo, num_bytes)
-    j_decompress_ptr cinfo;
-    long num_bytes;
-{
+skip_input_data(
+    j_decompress_ptr cinfo,
+    long num_bytes
+) {
   src_ptr src = (src_ptr) cinfo->src;
 
   if (num_bytes > 0) {
@@ -1016,9 +1028,9 @@ skip_input_data(cinfo, num_bytes)
 }
 
 static void
-dummy_source(cinfo)
-    j_decompress_ptr cinfo;
-{
+dummy_source(
+    j_decompress_ptr cinfo
+) {
   /* no work necessary here */
 }
 
@@ -1026,10 +1038,10 @@ dummy_source(cinfo)
  * libjpeg source manager for reading from channels.
  */
 static void
-my_jpeg_channel_src (cinfo, chan)
-    j_decompress_ptr cinfo;
-    Tcl_Channel chan;
-{
+my_jpeg_channel_src(
+    j_decompress_ptr cinfo,
+    Tcl_Channel chan
+) {
   src_ptr src;
 
   src = (src_ptr)
@@ -1057,10 +1069,10 @@ my_jpeg_channel_src (cinfo, chan)
  */
 
 static void
-my_jpeg_string_dest (cinfo, dstring)
-    j_compress_ptr cinfo;
-    Tcl_DString* dstring;
-{
+my_jpeg_string_dest(
+    j_compress_ptr cinfo,
+    Tcl_DString* dstring
+) {
   dest_ptr dest;
 
   if (cinfo->dest == NULL) {	/* first time for this JPEG object? */
@@ -1081,10 +1093,10 @@ my_jpeg_string_dest (cinfo, dstring)
 }
 
 static void
-my_jpeg_channel_dest (cinfo, chan)
-    j_compress_ptr cinfo;
-    Tcl_Channel chan;
-{
+my_jpeg_channel_dest(
+    j_compress_ptr cinfo,
+    Tcl_Channel chan
+) {
   dest_ptr dest;
 
   if (cinfo->dest == NULL) {	/* first time for this JPEG object? */
@@ -1102,18 +1114,18 @@ my_jpeg_channel_dest (cinfo, chan)
 }
 
 static void
-my_init_destination (cinfo)
-    j_compress_ptr cinfo;
-{
+my_init_destination(
+    j_compress_ptr cinfo
+) {
   dest_ptr dest = (dest_ptr) cinfo->dest;
   dest->pub.next_output_byte = dest->buffer;
   dest->pub.free_in_buffer = STRING_BUF_SIZE;
 }
 
 static boolean
-my_empty_output_buffer (cinfo)
-    j_compress_ptr cinfo;
-{
+my_empty_output_buffer(
+    j_compress_ptr cinfo
+) {
   dest_ptr dest = (dest_ptr) cinfo->dest;
   if (tkimg_Write2(&dest->handle, (char *) dest->buffer, STRING_BUF_SIZE)
   	!= STRING_BUF_SIZE)
@@ -1126,9 +1138,9 @@ my_empty_output_buffer (cinfo)
 }
 
 static void
-my_term_destination (cinfo)
-    j_compress_ptr cinfo;
-{
+my_term_destination(
+    j_compress_ptr cinfo
+) {
   dest_ptr dest = (dest_ptr) cinfo->dest;
   int datacount = STRING_BUF_SIZE - (int) dest->pub.free_in_buffer;
 
@@ -1148,19 +1160,19 @@ my_term_destination (cinfo)
  */
 
 static void
-my_error_exit (cinfo)
-    j_common_ptr cinfo;
-{
+my_error_exit(
+    j_common_ptr cinfo
+) {
   struct my_error_mgr *myerr = (struct my_error_mgr *) cinfo->err;
   /* Exit back to outer level */
   longjmp(myerr->setjmp_buffer, 1);
 }
 
 static void
-append_jpeg_message (interp, cinfo)
-    Tcl_Interp *interp;
-    j_common_ptr cinfo;
-{
+append_jpeg_message(
+    Tcl_Interp *interp,
+    j_common_ptr cinfo
+) {
   /* Append libjpeg error message to interp->result */
   char buffer[JMSG_LENGTH_MAX];
   (*cinfo->err->format_message) (cinfo, buffer);
@@ -1168,9 +1180,9 @@ append_jpeg_message (interp, cinfo)
 }
 
 static void
-my_output_message (cinfo)
-    j_common_ptr cinfo;
-{
+my_output_message(
+    j_common_ptr cinfo
+) {
   /* Override libjpeg's output_message to do nothing.
    * This ensures that warning messages will not appear on stderr,
    * even for a corrupted JPEG file.  Too bad there's no way

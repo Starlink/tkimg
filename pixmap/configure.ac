@@ -3,19 +3,19 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 
 #--------------------------------------------------------------------
-# Configure script for package 'tkimggif', as distributed at November 20, 2001.
+# Configure script for package 'tkimgpixmap', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimggif],[1.4.9])
+AC_INIT([tkimgpixmap],[1.4.10])
 
 TEA_INIT([3.9])
 
 AC_CONFIG_AUX_DIR(../tclconfig)
 
-PHIMGTYPE="gif"
-CPACKAGE="Tkimggif"
-PACKAGE_TCLNAME="img::gif"
+PHIMGTYPE="pixmap"
+CPACKAGE="Tkimgpixmap"
+PACKAGE_TCLNAME="img::pixmap"
 AC_SUBST(PHIMGTYPE)
 AC_SUBST(PACKAGE_TCLNAME)
 
@@ -60,26 +60,16 @@ IMG_SRCPATH(tkimg)
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([gif.c])
+TEA_ADD_SOURCES([pixmap.c])
 TEA_ADD_HEADERS([])
 TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${tkimg_SRC_PATH}`\"])
+TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${srcdir}`\"])
 TEA_ADD_INCLUDES([-I.])
 TEA_ADD_LIBS([])
 TEA_ADD_CFLAGS([])
 TEA_ADD_CFLAGS([-DTKIMG_VERSION=\\\"\${tkimg_VERSION}\\\"])
 TEA_ADD_STUB_SOURCES([])
 TEA_ADD_TCL_SOURCES([])
-
-PUP="`echo ${PACKAGE_NAME}| tr 'a-z' 'A-Z'`"
-
-sed < "`${CYGPATH} ${srcdir}/../init.c`" > "init.c"	\
-	-e	"s/@CPACKAGE@/${CPACKAGE}/"		\
-	-e	"s/%PACKAGE%/${PACKAGE_NAME}/"		\
-	-e	"s/%PACKAGE_UP%/${PUP}/"		\
-	-e	"s/%PHIMGTYPE%/${PHIMGTYPE}/"
-
-# init.c is an included source file, not a source by itself
-# FUTURE: Do this through AC_OUTPUT!!
 
 #--------------------------------------------------------------------
 # __CHANGE__
@@ -90,8 +80,17 @@ sed < "`${CYGPATH} ${srcdir}/../init.c`" > "init.c"	\
 # This MUST be called after TEA_LOAD_TCLCONFIG / TEA_LOAD_TKCONFIG
 #--------------------------------------------------------------------
 
-TEA_PUBLIC_TCL_HEADERS
-TEA_PUBLIC_TK_HEADERS
+# This module is special. On windows it requires access to the
+# internal headers of Tk and thus tcl to implement its functionality
+# (TkWinReleaseDrawableDC).
+
+if test "${TEA_PLATFORM}" = "windows" ; then
+    TEA_PRIVATE_TCL_HEADERS
+    TEA_PRIVATE_TK_HEADERS
+else
+    TEA_PUBLIC_TCL_HEADERS
+    TEA_PUBLIC_TK_HEADERS
+fi
 
 #--------------------------------------------------------------------
 # A few miscellaneous platform-specific items:
@@ -106,9 +105,10 @@ TEA_PUBLIC_TK_HEADERS
 #--------------------------------------------------------------------
 
 if test "${TEA_PLATFORM}" = "windows" ; then
-    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch init.c"
+    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch"
+    TEA_ADD_SOURCES([pixmapWin.c])
 else
-    CLEANFILES="init.c"
+    TEA_ADD_SOURCES([pixmapUnix.c])
 fi
 AC_SUBST(CLEANFILES)
 
@@ -172,6 +172,7 @@ TEA_MAKE_LIB
 
 if test "${TEA_PLATFORM}" = "windows" -a "$GCC" != "yes" ; then
     TEA_ADD_LIBS([\"`${CYGPATH} ${tkimg_STUB_LIB_PATH}`\"])
+    TEA_ADD_LIBS([gdi32.lib])
 else
     TEA_ADD_LIBS([${tkimg_STUB_LIB_SPEC}])
 fi

@@ -47,7 +47,7 @@
 
 # Find out the main TKIMG_VERSION as we need it for the install directory
 !if [echo TKIMG_VERSION = \> versions.vc] \
-   || [nmakehlp -V ..\base\configure.in ^[tkimg^] >> versions.vc]
+   || [nmakehlp -V ..\base\configure.ac ^[tkimg^] >> versions.vc]
 !error Could not determine tkimg base version.
 !endif
 !include versions.vc

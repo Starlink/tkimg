@@ -35,7 +35,7 @@ packages. I do _not_ propose to place each of these new packages into
 a separate source tree. The files stay in the existing tree, and this
 tree is augmented with additional directories containing the files
 relevant to configuring and building the new packages. Essentially
-configure.in and Makefile.in. All build systems will be based upon the
+configure.ac and Makefile.in. All build systems will be based upon the
 TEA 2 system introduced in the sampleextension (See Tcl SF project).
 
 Note: I created the new build systems for TclXML/DOM/XSLT and their

@@ -1,7 +1,11 @@
-We are happy to announce version 1.4.9 of the "tkImg" package
+We are happy to announce version 1.4.10 of the "tkImg" package
 (formerly known as "Img").
 
 This package enhances Tk, adding support for many image formats.
+
+Changes compared to version 1.4.9:
+  - Bug fix when reading 16-bit images (tkimg_RemapUShortValues).
+  - Updated TEA to latest version (use configure.ac instead of configure.in).
 
 Changes compared to version 1.4.8:
   - Added new format "flir" for reading FLIR infrared images.

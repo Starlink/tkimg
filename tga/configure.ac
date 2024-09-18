@@ -3,19 +3,19 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 
 #--------------------------------------------------------------------
-# Configure script for package 'tkimgtiff', as distributed at November 20, 2001.
+# Configure script for package 'tkimgtga', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimgtiff],[1.4.9])
+AC_INIT([tkimgtga],[1.4.10])
 
 TEA_INIT([3.9])
 
 AC_CONFIG_AUX_DIR(../tclconfig)
 
-PHIMGTYPE="tiff"
-CPACKAGE="Tkimgtiff"
-PACKAGE_TCLNAME="img::tiff"
+PHIMGTYPE="tga"
+CPACKAGE="Tkimgtga"
+PACKAGE_TCLNAME="img::tga"
 AC_SUBST(PHIMGTYPE)
 AC_SUBST(PACKAGE_TCLNAME)
 
@@ -49,22 +49,7 @@ TEA_SETUP_COMPILER
 TEA_PATH_CONFIG(tkimg)
 TEA_LOAD_CONFIG(tkimg)
 
-TEA_PATH_CONFIG(tifftcl)
-TEA_LOAD_CONFIG(tifftcl)
-AC_SUBST(tifftcl_VERSION)
-
-TEA_PATH_CONFIG(jpegtcl)
-TEA_LOAD_CONFIG(jpegtcl)
-AC_SUBST(jpegtcl_VERSION)
-
-TEA_PATH_CONFIG(zlibtcl)
-TEA_LOAD_CONFIG(zlibtcl)
-AC_SUBST(zlibtcl_VERSION)
-
 IMG_SRCPATH(tkimg)
-IMG_SRCPATH(tifftcl)
-IMG_SRCPATH(jpegtcl)
-IMG_SRCPATH(zlibtcl)
 
 #-----------------------------------------------------------------------
 # Specify the C source files to compile in TEA_ADD_SOURCES,
@@ -75,22 +60,13 @@ IMG_SRCPATH(zlibtcl)
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([tiff.c tiffJpeg.c tiffZip.c tiffPixar.c])
+TEA_ADD_SOURCES([tga.c])
 TEA_ADD_HEADERS([])
-TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${srcdir}`\"])
 TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${tkimg_SRC_PATH}`\"])
-TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${tifftcl_SRC_PATH}`\"])
-TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${tifftcl_BUILD_PATH}/libtiff`\"])
-TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${jpegtcl_SRC_PATH}`\"])
-TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${jpegtcl_BUILD_PATH}/libjpeg`\"])
-TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${zlibtcl_SRC_PATH}`\"])
-TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${zlibtcl_BUILD_PATH}`\"])
 TEA_ADD_INCLUDES([-I.])
-TEA_ADD_LIBS([-lm])
+TEA_ADD_LIBS([])
+TEA_ADD_CFLAGS([])
 TEA_ADD_CFLAGS([-DTKIMG_VERSION=\\\"\${tkimg_VERSION}\\\"])
-TEA_ADD_CFLAGS([-DTIFFTCL_VERSION=\\\"\${tifftcl_VERSION}\\\"])
-TEA_ADD_CFLAGS([-DJPEGTCL_VERSION=\\\"\${jpegtcl_VERSION}\\\"])
-TEA_ADD_CFLAGS([-DZLIBTCL_VERSION=\\\"\${zlibtcl_VERSION}\\\"])
 TEA_ADD_STUB_SOURCES([])
 TEA_ADD_TCL_SOURCES([])
 
@@ -117,6 +93,7 @@ sed < "`${CYGPATH} ${srcdir}/../init.c`" > "init.c"	\
 TEA_PUBLIC_TCL_HEADERS
 TEA_PUBLIC_TK_HEADERS
 
+
 #--------------------------------------------------------------------
 # A few miscellaneous platform-specific items:
 #
@@ -130,9 +107,7 @@ TEA_PUBLIC_TK_HEADERS
 #--------------------------------------------------------------------
 
 if test "${TEA_PLATFORM}" = "windows" ; then
-    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch init.c"
-else
-    CLEANFILES="init.c"
+    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch"
 fi
 AC_SUBST(CLEANFILES)
 
@@ -196,14 +171,8 @@ TEA_MAKE_LIB
 
 if test "${TEA_PLATFORM}" = "windows" -a "$GCC" != "yes" ; then
     TEA_ADD_LIBS([\"`${CYGPATH} ${tkimg_STUB_LIB_PATH}`\"])
-    TEA_ADD_LIBS([\"`${CYGPATH} ${tifftcl_STUB_LIB_PATH}`\"])
-    TEA_ADD_LIBS([\"`${CYGPATH} ${jpegtcl_STUB_LIB_PATH}`\"])
-    TEA_ADD_LIBS([\"`${CYGPATH} ${zlibtcl_STUB_LIB_PATH}`\"])
 else
     TEA_ADD_LIBS([${tkimg_STUB_LIB_SPEC}])
-    TEA_ADD_LIBS([${tifftcl_STUB_LIB_SPEC}])
-    TEA_ADD_LIBS([${jpegtcl_STUB_LIB_SPEC}])
-    TEA_ADD_LIBS([${zlibtcl_STUB_LIB_SPEC}])
 fi
 
 #--------------------------------------------------------------------

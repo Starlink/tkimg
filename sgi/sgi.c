@@ -69,62 +69,42 @@
 
 #include "init.c"
 
-#ifdef WIN32
-#   define TCLSEEK_WORKAROUND
-#endif
 
 #ifdef WIN32
-#include <Windows.h>
-static int TempFileName( char name[1024])
-{
-    const char *prefix = "SGI";
-    if (GetTempPath(1024, name) != 0) {
-        if (GetTempFileName(name, prefix, 0, name) != 0) {
-            return 1;
-        }
-    }
-    name[0] = '.';
-    name[1] = '\0';
-    return GetTempFileName(name, prefix, 0, name);
-}
+#   include <windows.h>
+#   define TCLSEEK_WORKAROUND
 #else
-static int TempFileName( char name[1024])
-{
-    if (! tmpnam(name)) {
-        return 0;
-    }
-    return 1;
-}
+#   include <unistd.h>
 #endif
 
 #ifdef TCLSEEK_WORKAROUND
     static int ioMode = 0; /* Needed for Windows patch */
 
-    static int MyWrite (Tcl_Channel chan, char *buf, int size)
+    static int MyWrite(Tcl_Channel chan, char *buf, int size)
     {
-        if (1 == fwrite(buf, size, 1, (FILE *)chan)) {
-            return size;
-        } else {
-            return -1;
-        }
+	if (1 == fwrite(buf, size, 1, (FILE *)chan)) {
+	    return size;
+	} else {
+	    return -1;
+	}
     }
 
-    static int MyClose (Tcl_Interp *interp, Tcl_Channel chan)
+    static int MyClose(Tcl_Interp *interp, Tcl_Channel chan)
     {
-        if (0 == fclose((FILE *)chan)) {
-            return TCL_OK;
-        } else {
-            return TCL_ERROR;
-        }
+	if (0 == fclose((FILE *)chan)) {
+	    return TCL_OK;
+	} else {
+	    return TCL_ERROR;
+	}
     }
 
-    static int MySeek (Tcl_Channel chan, int offset, int seekMode)
+    static int MySeek(Tcl_Channel chan, int offset, int seekMode)
     {
-        if (ioMode == 0) { /* Read mode */
-            return Tcl_Seek (chan, offset, seekMode);
-        } else {
-            return fseek((FILE *)chan, offset, seekMode);
-        }
+	if (ioMode == 0) { /* Read mode */
+	    return Tcl_Seek(chan, offset, seekMode);
+	} else {
+	    return fseek((FILE *)chan, offset, seekMode);
+	}
     }
 
 #   define MYCHANNEL Tcl_Channel
@@ -257,9 +237,7 @@ static void isetname(IMAGE *image, const char *name)
     strncpy(image->name,name,80);
 }
 
-static void cvtshorts( buffer, n)
-unsigned short buffer[];
-int n;
+static void cvtshorts(unsigned short buffer[], int n)
 {
     short i;
     int nshorts = n>>1;
@@ -271,9 +249,7 @@ int n;
     }
 }
 
-static void cvtlongs( buffer, n)
-int buffer[];
-int n;
+static void cvtlongs(int buffer[], int n)
 {
     short i;
     int nlongs = n>>2;
@@ -290,8 +266,7 @@ int n;
     }
 }
 
-static void cvtimage( buffer )
-int buffer[];
+static void cvtimage(int buffer[])
 {
     cvtshorts((unsigned short *)buffer,12);
     cvtlongs(buffer+3,12);
@@ -315,7 +290,7 @@ static int imgOpenWrite (MYCHANNEL file, IMAGE *image, const char *mode,
                      unsigned int xsize, unsigned int ysize, unsigned int zsize)
 {
 #ifdef TCLSEEK_WORKAROUND
-        ioMode = 1;
+    ioMode = 1;
 #endif
     return imgopen (0, file, image, mode, type, dim, xsize, ysize, zsize);
 }
@@ -406,7 +381,7 @@ static int imgopen(int f, MYCHANNEL file, IMAGE *image, const char *mode,
                 return 0;
             }
             if(image->dorev) {
-                cvtlongs(image->rowstart,tablesize);
+                cvtlongs((int *)image->rowstart,tablesize);
             }
             if ((size_t)Tcl_Read (file, (char *)image->rowsize, tablesize) != tablesize) {
                 i_errhdlr("iopen: error on read of rowsize\n");
@@ -452,7 +427,7 @@ static int iclose(IMAGE *image)
             img_optseek(image, 512L);
             tablesize = image->ysize*image->zsize*sizeof(int);
             if(image->dorev) {
-                cvtlongs(image->rowstart,tablesize);
+                cvtlongs((int *)image->rowstart,tablesize);
             }
             if ((size_t)img_write(image,(char *)(image->rowstart),tablesize) != tablesize) {
                 i_errhdlr("iclose: error on write of rowstart\n");
@@ -1023,7 +998,7 @@ static void sgiClose (SGIFILE *tf)
     return;
 }
 
-#define OUT Tcl_WriteChars (outChan, str, -1)
+#define OUTSTR Tcl_WriteChars (outChan, str, -1)
 static void printImgInfo (IMAGE *th, const char *filename, const char *msg)
 {
     Tcl_Channel outChan;
@@ -1033,14 +1008,14 @@ static void printImgInfo (IMAGE *th, const char *filename, const char *msg)
     if (!outChan) {
         return;
     }
-    sprintf(str, "%s %s\n", msg, filename);                                      OUT;
-    sprintf(str, "\tSize in pixel      : %d x %d\n", th->xsize, th->ysize);      OUT;
-    sprintf(str, "\tNo. of channels    : %d\n", (th->zsize));                    OUT;
-    sprintf(str, "\tBytes per pixel    : %d\n", BPP(th->type));                  OUT;
-    sprintf(str, "\tCompression        : %s\n", ISRLE(th->type)? "rle": "None"); OUT;
+    sprintf(str, "%s %s\n", msg, filename);                                      OUTSTR;
+    sprintf(str, "\tSize in pixel      : %d x %d\n", th->xsize, th->ysize);      OUTSTR;
+    sprintf(str, "\tNo. of channels    : %d\n", (th->zsize));                    OUTSTR;
+    sprintf(str, "\tBytes per pixel    : %d\n", BPP(th->type));                  OUTSTR;
+    sprintf(str, "\tCompression        : %s\n", ISRLE(th->type)? "rle": "None"); OUTSTR;
     Tcl_Flush(outChan);
 }
-#undef OUT
+#undef OUTSTR
 
 static Boln readHeader (tkimg_MFile *handle, IMAGE *th)
 {
@@ -1176,11 +1151,11 @@ static int CommonWrite(Tcl_Interp *interp,
         const char *filename, Tcl_Obj *format,
         tkimg_MFile *handle, Tk_PhotoImageBlock *blockPtr);
 
-static int ParseFormatOpts (interp, format, opts)
-    Tcl_Interp *interp;
-    Tcl_Obj *format;
-    FMTOPT *opts;
-{
+static int ParseFormatOpts(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    FMTOPT *opts
+) {
     static const char *const sgiOptions[] = {
         "-compression", "-verbose", "-matte", NULL
     };
@@ -1277,12 +1252,12 @@ static int ObjMatch(
     return CommonMatch(&handle, widthPtr, heightPtr, NULL);
 }
 
-static int CommonMatch(handle, widthPtr, heightPtr, sgiHeaderPtr)
-    tkimg_MFile *handle;
-    int *widthPtr;
-    int *heightPtr;
-    IMAGE *sgiHeaderPtr;
-{
+static int CommonMatch(
+    tkimg_MFile *handle,
+    int *widthPtr,
+    int *heightPtr,
+    IMAGE *sgiHeaderPtr
+) {
     IMAGE th;
 
     if (!sgiHeaderPtr) {
@@ -1307,17 +1282,16 @@ static int CommonMatch(handle, widthPtr, heightPtr, sgiHeaderPtr)
     return 1;
 }
 
-static int ChnRead(interp, chan, filename, format, imageHandle,
-                   destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;
-    Tcl_Channel chan;
-    const char *filename;
-    Tcl_Obj *format;
-    Tk_PhotoHandle imageHandle;
-    int destX, destY;
-    int width, height;
-    int srcX, srcY;
-{
+static int ChnRead(
+    Tcl_Interp *interp,
+    Tcl_Channel chan,
+    const char *filename,
+    Tcl_Obj *format,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY
+) {
     tkimg_MFile handle;
 
     handle.data = (char *) chan;
@@ -1330,50 +1304,78 @@ static int ChnRead(interp, chan, filename, format, imageHandle,
 
 #define BUFLEN 2048
 
-static int ObjRead (interp, data, format, imageHandle,
-                    destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;
-    Tcl_Obj *data;
-    Tcl_Obj *format;
-    Tk_PhotoHandle imageHandle;
-    int destX, destY;
-    int width, height;
-    int srcX, srcY;
-{
+static int ObjRead(
+    Tcl_Interp *interp,
+    Tcl_Obj *data,
+    Tcl_Obj *format,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY
+) {
     tkimg_MFile handle;
-    char tempFileNameBuffer[1024];
+    char *dir, *tempFileName, tempFileNameBuffer[1024];
+#ifdef WIN32
+    char tempPath[512];
+    HANDLE h;
+#endif
+    Tcl_DString ds;
     char buffer[BUFLEN];
-    MYCHANNEL outchan;
+    FILE *outfile;
     Tcl_Channel inchan;
     int count, retVal;
 
-    tkimg_ReadInit (data, '\001', &handle);
+    tkimg_ReadInit(data, '\001', &handle);
 
-    if (! TempFileName(tempFileNameBuffer)) {
-        return TCL_ERROR;
+    tempFileName = tempFileNameBuffer;
+#ifdef WIN32
+    strcpy(tempPath, ".");
+    GetTempPathA(sizeof (tempPath), tempPath);
+    dir = tempPath;
+    tempFileName[0] = '\0';
+    GetTempFileNameA(dir, "tki", 0, tempFileName);
+    h = CreateFileA(tempFileName, GENERIC_READ|GENERIC_WRITE, 0, NULL,
+	    CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+	CloseHandle(h);
     }
-#ifdef TCLSEEK_WORKAROUND
-    outchan = (Tcl_Channel)fopen (tempFileNameBuffer, "wb");
 #else
-    outchan = tkimg_OpenFileChannel (interp, tempFileNameBuffer, 0644);
+    dir = getenv("TMPDIR");
+    if (dir) {
+	strcpy(tempFileName, dir);
+    } else {
+#ifdef P_tmpdir
+	strcpy(tempFileName, P_tmpdir);
+#else
+	strcpy(tempFilename, "/tmp");
 #endif
-    if (!outchan) {
-        return TCL_ERROR;
+    }
+    strcat(tempFileName, "/tkimgXXXXXX");
+    retVal = mkstemp(tempFileName);
+    if (retVal >= 0) {
+	close(retVal);
+    }
+#endif
+
+    outfile = fopen(tempFileName, "wb");
+    if (outfile == NULL) {
+	Tcl_AppendResult(interp, "error open output file", (char *) NULL);
+	return TCL_ERROR;
     }
 
     count = tkimg_Read2(&handle, buffer, BUFLEN);
     while (count == BUFLEN) {
-        Tcl_Write (outchan, buffer, count);
-        count = tkimg_Read2(&handle, buffer, BUFLEN);
+	fwrite(buffer, 1, count, outfile);
+	count = tkimg_Read2(&handle, buffer, BUFLEN);
     }
     if (count>0) {
-        Tcl_Write (outchan, buffer, count);
+	fwrite(buffer, 1, count, outfile);
     }
-    if (MYCLOSE (interp, outchan) == TCL_ERROR) {
-        return TCL_ERROR;
-    }
+    fclose(outfile);
 
-    inchan = tkimg_OpenFileChannel (interp, tempFileNameBuffer, 0);
+    Tcl_ExternalToUtfDString(NULL, tempFileName, -1, &ds);
+    inchan = tkimg_OpenFileChannel(interp, Tcl_DStringValue(&ds), 0);
+    Tcl_DStringFree(&ds);
     if (!inchan) {
         return TCL_ERROR;
     }
@@ -1386,24 +1388,27 @@ static int ObjRead (interp, data, format, imageHandle,
     if (Tcl_Close (interp, inchan) == TCL_ERROR) {
         return TCL_ERROR;
     }
-    remove (tempFileNameBuffer);
+#ifdef WIN32
+    DeleteFileA(tempFileName);
+#else
+    remove(tempFileName);
+#endif
     return retVal;
 }
 
-static int CommonRead (interp, handle, filename, format, imageHandle,
-                       destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;         /* Interpreter to use for reporting errors. */
-    tkimg_MFile *handle;        /* The image file, open for reading. */
-    const char *filename;       /* The name of the image file. */
-    Tcl_Obj *format;            /* User-specified format object, or NULL. */
-    Tk_PhotoHandle imageHandle; /* The photo image to write into. */
-    int destX, destY;           /* Coordinates of top-left pixel in
+static int CommonRead(
+    Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
+    tkimg_MFile *handle,        /* The image file, open for reading. */
+    const char *filename,       /* The name of the image file. */
+    Tcl_Obj *format,            /* User-specified format object, or NULL. */
+    Tk_PhotoHandle imageHandle, /* The photo image to write into. */
+    int destX, int destY,       /* Coordinates of top-left pixel in
                                  * photo image to be written to. */
-    int width, height;          /* Dimensions of block of photo image to
+    int width, int height,      /* Dimensions of block of photo image to
                                  * be written to. */
-    int srcX, srcY;             /* Coordinates of top-left pixel to be used
+    int srcX, int srcY          /* Coordinates of top-left pixel to be used
                                  * in image being read. */
-{
+) {
     Tk_PhotoImageBlock block;
     Int y, nchan;
     int fileWidth, fileHeight;
@@ -1490,23 +1495,27 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
     return result;
 }
 
-static int ChnWrite (interp, filename, format, blockPtr)
-    Tcl_Interp *interp;
-    const char *filename;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
-{
+static int ChnWrite(
+    Tcl_Interp *interp,
+    const char *filename,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
     MYCHANNEL chan;
     tkimg_MFile handle;
     int result;
 
 #ifdef TCLSEEK_WORKAROUND
-    chan = (Tcl_Channel)fopen(filename, "wb");
+    Tcl_DString ds;
+
+    Tcl_UtfToExternalDString(NULL, filename, -1, &ds);
+    chan = (Tcl_Channel)fopen(Tcl_DStringValue(&ds), "wb");
+    Tcl_DStringFree(&ds);
 #else
-    chan = tkimg_OpenFileChannel (interp, filename, 0644);
+    chan = tkimg_OpenFileChannel(interp, filename, 0644);
 #endif
     if (!chan) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     handle.data = (char *) chan;
@@ -1526,39 +1535,75 @@ static int StringWrite(
 ) {
     tkimg_MFile handle;
     int result;
-    Tcl_DString data;
+    Tcl_DString data, ds;
     Tcl_Channel inchan;
     MYCHANNEL outchan;
-    char tempFileNameBuffer[1024];
+    char *dir, *tempFileName, tempFileNameBuffer[1024];
+#ifdef WIN32
+    char tempPath[512];
+    HANDLE h;
+#endif
     char buffer[BUFLEN];
     int count;
 
     Tcl_DStringInit(&data);
-    if (! TempFileName(tempFileNameBuffer)) {
-        return TCL_ERROR;
+    tempFileName = tempFileNameBuffer;
+#ifdef WIN32
+    strcpy(tempPath, ".");
+    GetTempPathA(sizeof (tempPath), tempPath);
+    dir = tempPath;
+    tempFileName[0] = '\0';
+    GetTempFileNameA(dir, "tki", 0, tempFileName);
+    h = CreateFileA(tempFileName, GENERIC_READ|GENERIC_WRITE, 0, NULL,
+	    CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+	CloseHandle(h);
     }
-#ifdef TCLSEEK_WORKAROUND
-    outchan = (Tcl_Channel)fopen(tempFileNameBuffer, "wb");
 #else
-    outchan = tkimg_OpenFileChannel (interp, tempFileNameBuffer, 0644);
+    dir = getenv("TMPDIR");
+    if (dir) {
+	strcpy(tempFileName, dir);
+    } else {
+#ifdef P_tmpdir
+	strcpy(tempFileName, P_tmpdir);
+#else
+	strcpy(tempFilename, "/tmp");
+#endif
+    }
+    strcat(tempFileName, "/tkimgXXXXXX");
+    result = mkstemp(tempFileName);
+    if (result >= 0) {
+	close(result);
+    }
+#endif
+    Tcl_ExternalToUtfDString(NULL, tempFileName, -1, &ds);
+#ifdef TCLSEEK_WORKAROUND
+    outchan = (Tcl_Channel)fopen(tempFileName, "wb");
+#else
+    outchan = tkimg_OpenFileChannel(interp, Tcl_DStringValue(&ds), 0644);
 #endif
     if (!outchan) {
-        return TCL_ERROR;
+	Tcl_DStringFree(&ds);
+	return TCL_ERROR;
     }
 
     handle.data = (char *) outchan;
     handle.state = IMG_CHAN;
 
-    result = CommonWrite(interp, tempFileNameBuffer, format, &handle, blockPtr);
+    result =
+	CommonWrite(interp, Tcl_DStringValue(&ds), format, &handle, blockPtr);
+    Tcl_DStringFree(&ds);
     if (MYCLOSE(interp, outchan) == TCL_ERROR) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     tkimg_WriteInit(&data, &handle);
 
-    inchan = tkimg_OpenFileChannel(interp, tempFileNameBuffer, 0);
+    Tcl_ExternalToUtfDString(NULL, tempFileName, -1, &ds);
+    inchan = tkimg_OpenFileChannel(interp, Tcl_DStringValue(&ds), 0);
+    Tcl_DStringFree(&ds);
     if (!inchan) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     count = Tcl_Read(inchan, buffer, BUFLEN);
@@ -1572,7 +1617,11 @@ static int StringWrite(
     if (Tcl_Close(interp, inchan) == TCL_ERROR) {
         return TCL_ERROR;
     }
-    remove (tempFileNameBuffer);
+#ifdef WIN32
+    DeleteFileA(tempFileName);
+#else
+    remove(tempFileName);
+#endif
     tkimg_Putc(IMG_DONE, &handle);
 
     if (result == TCL_OK) {
@@ -1583,13 +1632,13 @@ static int StringWrite(
     return result;
 }
 
-static int CommonWrite (interp, filename, format, handle, blockPtr)
-    Tcl_Interp *interp;
-    const char *filename;
-    Tcl_Obj *format;
-    tkimg_MFile *handle;
-    Tk_PhotoImageBlock *blockPtr;
-{
+static int CommonWrite(
+    Tcl_Interp *interp,
+    const char *filename,
+    Tcl_Obj *format,
+    tkimg_MFile *handle,
+    Tk_PhotoImageBlock *blockPtr
+) {
     Int     x, y, bpp, nchan;
     Int     redOffset, greenOffset, blueOffset, alphaOffset;
     UByte   *pixelPtr, *rowPixPtr;

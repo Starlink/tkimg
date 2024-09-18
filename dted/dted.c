@@ -463,11 +463,11 @@ static int CommonRead(Tcl_Interp *interp, tkimg_MFile *handle,
         Tk_PhotoHandle imageHandle, int destX, int destY,
         int width, int height, int srcX, int srcY);
 
-static int ParseFormatOpts (interp, format, opts)
-    Tcl_Interp *interp;
-    Tcl_Obj *format;
-    FMTOPT *opts;
-{
+static int ParseFormatOpts(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    FMTOPT *opts
+) {
     static const char *const dtedOptions[] = {
          "-verbose", "-min", "-max", "-gamma", NULL
     };
@@ -571,15 +571,14 @@ static int ObjMatch(
     return CommonMatch (interp, &handle, format, widthPtr, heightPtr, NULL);
 }
 
-static int CommonMatch (interp, handle, format,
-                        widthPtr, heightPtr, dtedHeaderPtr)
-    Tcl_Interp *interp;
-    tkimg_MFile *handle;
-    Tcl_Obj *format;
-    int *widthPtr;
-    int *heightPtr;
-    DTEDHEADER *dtedHeaderPtr;
-{
+static int CommonMatch(
+    Tcl_Interp *interp,
+    tkimg_MFile *handle,
+    Tcl_Obj *format,
+    int *widthPtr,
+    int *heightPtr,
+    DTEDHEADER *dtedHeaderPtr
+) {
     DTEDHEADER th;
     FMTOPT opts;
     Int nRows, nCols;
@@ -601,20 +600,19 @@ static int CommonMatch (interp, handle, format,
     return TRUE;
 }
 
-static int ChnRead (interp, chan, filename, format, imageHandle,
-                    destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;         /* Interpreter to use for reporting errors. */
-    Tcl_Channel chan;           /* The image channel, open for reading. */
-    const char *filename;       /* The name of the image file. */
-    Tcl_Obj *format;            /* User-specified format object, or NULL. */
-    Tk_PhotoHandle imageHandle; /* The photo image to write into. */
-    int destX, destY;           /* Coordinates of top-left pixel in
+static int ChnRead(
+    Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
+    Tcl_Channel chan,           /* The image channel, open for reading. */
+    const char *filename,       /* The name of the image file. */
+    Tcl_Obj *format,            /* User-specified format object, or NULL. */
+    Tk_PhotoHandle imageHandle, /* The photo image to write into. */
+    int destX, int destY,       /* Coordinates of top-left pixel in
                                  * photo image to be written to. */
-    int width, height;          /* Dimensions of block of photo image to
+    int width, int height,      /* Dimensions of block of photo image to
                                  * be written to. */
-    int srcX, srcY;             /* Coordinates of top-left pixel to be used
+    int srcX, int srcY          /* Coordinates of top-left pixel to be used
                                  * in image being read. */
-{
+) {
     tkimg_MFile handle;
 
     handle.data = (char *) chan;
@@ -624,16 +622,15 @@ static int ChnRead (interp, chan, filename, format, imageHandle,
                        destX, destY, width, height, srcX, srcY);
 }
 
-static int ObjRead (interp, data, format, imageHandle,
-                    destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;
-    Tcl_Obj *data;
-    Tcl_Obj *format;
-    Tk_PhotoHandle imageHandle;
-    int destX, destY;
-    int width, height;
-    int srcX, srcY;
-{
+static int ObjRead(
+    Tcl_Interp *interp,
+    Tcl_Obj *data,
+    Tcl_Obj *format,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY
+) {
     tkimg_MFile handle;
 
     tkimg_ReadInit (data, 'U', &handle);
@@ -641,20 +638,19 @@ static int ObjRead (interp, data, format, imageHandle,
                        destX, destY, width, height, srcX, srcY);
 }
 
-static int CommonRead (interp, handle, filename, format, imageHandle,
-                       destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;         /* Interpreter to use for reporting errors. */
-    tkimg_MFile *handle;              /* The image file, open for reading. */
-    const char *filename;       /* The name of the image file. */
-    Tcl_Obj *format;            /* User-specified format object, or NULL. */
-    Tk_PhotoHandle imageHandle; /* The photo image to write into. */
-    int destX, destY;           /* Coordinates of top-left pixel in
+static int CommonRead(
+    Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
+    tkimg_MFile *handle,              /* The image file, open for reading. */
+    const char *filename,       /* The name of the image file. */
+    Tcl_Obj *format,            /* User-specified format object, or NULL. */
+    Tk_PhotoHandle imageHandle, /* The photo image to write into. */
+    int destX, int destY,       /* Coordinates of top-left pixel in
                                  * photo image to be written to. */
-    int width, height;          /* Dimensions of block of photo image to
+    int width, int height,      /* Dimensions of block of photo image to
                                  * be written to. */
-    int srcX, srcY;             /* Coordinates of top-left pixel to be used
+    int srcX, int srcY          /* Coordinates of top-left pixel to be used
                                  * in image being read. */
-{
+) {
     Tk_PhotoImageBlock block;
     Int y, c;
     Int fileWidth, fileHeight;
@@ -750,12 +746,12 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
     return TCL_OK;
 }
 
-static int ChnWrite (interp, filename, format, blockPtr)
-    Tcl_Interp *interp;
-    const char *filename;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
-{
+static int ChnWrite(
+    Tcl_Interp *interp,
+    const char *filename,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
     Tcl_AppendResult (interp, "Writing not supported for format ", sImageFormat.name, NULL);
     return TCL_ERROR;
 }

@@ -135,7 +135,7 @@ int tkimg_Read(
 	char *dst /* where to put the result */,
 	int count /* number of bytes */
 ) {
-    register int i, c;
+    int i, c;
     int bytesRead, bytesToRead;
     char *dstPtr;
 
@@ -223,7 +223,7 @@ size_t tkimg_Read2(
 	char *dst /* where to put the result */,
 	size_t count /* number of bytes */
 ) {
-    register int i, c;
+    int i, c;
     size_t bytesRead, bytesToRead;
     char *dstPtr;
 
@@ -381,7 +381,7 @@ int tkimg_Write(
     const char *src /* where to get the data */,
     int count /* number of bytes */
 ) {
-    register int i;
+    int i;
     int curcount, bufcount;
 
     if (handle->state == IMG_CHAN) {
@@ -472,8 +472,8 @@ static char const base64_table[64] = {
 };
 
 int tkimg_Putc(
-    register int c /* character to be written */,
-    register tkimg_MFile *handle /* handle containing decoder data and state */
+    int c /* character to be written */,
+    tkimg_MFile *handle /* handle containing decoder data and state */
 ) {
     /* In fact, here should be checked first if the dynamic
      * string contains enough space for the next character.

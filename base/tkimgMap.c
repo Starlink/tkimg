@@ -464,6 +464,7 @@ void tkimg_RemapUShortValues (unsigned short *buf, int width, int height, int nc
 {
     int x, y, c;
     float m[IMG_MAX_CHANNELS], t[IMG_MAX_CHANNELS];
+    unsigned int scaledVal;
     unsigned short *bufPtr = buf;
 
     for (c=0; c<nchan; c++) {
@@ -473,7 +474,8 @@ void tkimg_RemapUShortValues (unsigned short *buf, int width, int height, int nc
     for (y=0; y<height; y++) {
         for (x=0; x<width; x++) {
             for (c=0; c<nchan; c++) {
-                *bufPtr = *bufPtr * m[c] + t[c];
+                scaledVal = *bufPtr * m[c] + t[c];
+                *bufPtr = IMG_CLAMP (scaledVal, 0, 65535);
                 bufPtr++;
             }
         }

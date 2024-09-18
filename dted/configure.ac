@@ -3,19 +3,19 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 
 #--------------------------------------------------------------------
-# Configure script for package 'tkimgico', as distributed at November 20, 2001.
+# Configure script for package 'tkimgdted', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimgico],[1.4.9])
+AC_INIT([tkimgdted],[1.4.10])
 
 TEA_INIT([3.9])
 
 AC_CONFIG_AUX_DIR(../tclconfig)
 
-PHIMGTYPE="ico"
-CPACKAGE="Tkimgico"
-PACKAGE_TCLNAME="img::ico"
+PHIMGTYPE="dted"
+CPACKAGE="Tkimgdted"
+PACKAGE_TCLNAME="img::dted"
 AC_SUBST(PHIMGTYPE)
 AC_SUBST(PACKAGE_TCLNAME)
 
@@ -60,11 +60,17 @@ IMG_SRCPATH(tkimg)
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([ico.c])
+TEA_ADD_SOURCES([dted.c])
 TEA_ADD_HEADERS([])
 TEA_ADD_INCLUDES([-I\"`\${CYGPATH} \${tkimg_SRC_PATH}`\"])
 TEA_ADD_INCLUDES([-I.])
-TEA_ADD_LIBS([])
+
+if test "${TEA_PLATFORM}" = "windows" ; then
+    TEA_ADD_LIBS([])
+else
+    TEA_ADD_LIBS([${MATH_LIBS}])
+fi
+
 TEA_ADD_CFLAGS([])
 TEA_ADD_CFLAGS([-DTKIMG_VERSION=\\\"\${tkimg_VERSION}\\\"])
 TEA_ADD_STUB_SOURCES([])
@@ -106,9 +112,7 @@ TEA_PUBLIC_TK_HEADERS
 #--------------------------------------------------------------------
 
 if test "${TEA_PLATFORM}" = "windows" ; then
-    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch init.c"
-else
-    CLEANFILES="init.c"
+    CLEANFILES="*.lib *.dll *.exp *.ilk *.pdb vc*.pch"
 fi
 AC_SUBST(CLEANFILES)
 

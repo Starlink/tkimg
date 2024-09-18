@@ -80,11 +80,11 @@ int TkimgInitUtilities(
  */
 
 const char *tkimg_GetStringFromObj(
-	register Tcl_Obj *objPtr, /* Object whose string rep byte pointer
-	 * should be returned, or NULL */
-	register int *lengthPtr /* If non-NULL, the location where the
-	 * string rep's byte array length should be
-	 * stored. If NULL, no length is stored. */
+	Tcl_Obj *objPtr, /* Object whose string rep byte pointer
+			  * should be returned, or NULL */
+	int *lengthPtr /* If non-NULL, the location where the
+			* string rep's byte array length should be
+			* stored. If NULL, no length is stored. */
 ) {
 	if (!objPtr) {
 		if (lengthPtr) {
@@ -136,11 +136,11 @@ const char *tkimg_GetStringFromObj(
  */
 
 const char *tkimg_GetStringFromObj2(
-	register Tcl_Obj *objPtr, /* Object whose string rep byte pointer
-	 * should be returned, or NULL */
-	register size_t *lengthPtr /* If non-NULL, the location where the
-	 * string rep's byte array length should be
-	 * stored. If NULL, no length is stored. */
+	Tcl_Obj *objPtr, /* Object whose string rep byte pointer
+			  * should be returned, or NULL */
+	size_t *lengthPtr /* If non-NULL, the location where the
+			   * string rep's byte array length should be
+			   * stored. If NULL, no length is stored. */
 ) {
 #ifndef _LANG
     const char *result;
@@ -191,11 +191,11 @@ const char *tkimg_GetStringFromObj2(
  *----------------------------------------------------------------------
  */
 unsigned char *tkimg_GetByteArrayFromObj(
-	register Tcl_Obj *objPtr, /**< Object whose string rep byte pointer
-	 * should be returned, or NULL */
-	register int *lengthPtr /**< If non-NULL, the location where the
-	 * string rep's byte array length should be
-	 * stored. If NULL, no length is stored. */
+	Tcl_Obj *objPtr, /**< Object whose string rep byte pointer
+			  * should be returned, or NULL */
+	int *lengthPtr /**< If non-NULL, the location where the
+		        * string rep's byte array length should be
+		        * stored. If NULL, no length is stored. */
 ) {
 #ifdef _LANG
 	char *string = LangString((Arg) objPtr);
@@ -232,11 +232,11 @@ unsigned char *tkimg_GetByteArrayFromObj(
  *----------------------------------------------------------------------
  */
 unsigned char *tkimg_GetByteArrayFromObj2(
-	register Tcl_Obj *objPtr, /**< Object whose string rep byte pointer
-	 * should be returned, or NULL */
-	register size_t *lengthPtr /**< If non-NULL, the location where the
-	 * string rep's byte array length should be
-	 * stored. If NULL, no length is stored. */
+	Tcl_Obj *objPtr, /**< Object whose string rep byte pointer
+			  * should be returned, or NULL */
+	size_t *lengthPtr /**< If non-NULL, the location where the
+			   * string rep's byte array length should be
+			   * stored. If NULL, no length is stored. */
 ) {
 #ifdef _LANG
 	char *string = LangString((Arg) objPtr);

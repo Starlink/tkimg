@@ -72,7 +72,7 @@ AC_DEFUN(TEA_CONFIG_SUBDIR, [
     # Check for guested configure; otherwise get Cygnus style configure.
     if test -f $tea_sub_srcdir/configure; then
       tea_sub_configure=$tea_sub_srcdir/configure
-    elif test -f $tea_sub_srcdir/configure.in; then
+    elif test -f $tea_sub_srcdir/configure.ac; then
       tea_sub_configure=$tea_configure
     else
       echo "configure: warning: no configuration information is in $tea_config_dir" 1>&2

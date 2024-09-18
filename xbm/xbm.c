@@ -147,20 +147,19 @@ static int ChnMatch(
  *----------------------------------------------------------------------
  */
 static int
-CommonRead(interp, parseInfo, format, imageHandle, destX, destY,
-	   width, height, srcX, srcY)
-    Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
-    ParseInfo *parseInfo;
-    Tcl_Obj *format;		/* User-specified format string, or NULL. */
-    Tk_PhotoHandle imageHandle;	/* The photo image to write into. */
-    int destX, destY;		/* Coordinates of top-left pixel in
+CommonRead(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    ParseInfo *parseInfo,
+    Tcl_Obj *format,		/* User-specified format string, or NULL. */
+    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
+    int destX, int destY,	/* Coordinates of top-left pixel in
 				 * photo image to be written to. */
-    int width, height;		/* Dimensions of block of photo image to
+    int width, int height,	/* Dimensions of block of photo image to
 				 * be written to. */
-    int srcX, srcY;		/* Coordinates of top-left pixel to be used
+    int srcX, int srcY		/* Coordinates of top-left pixel to be used
 				 * in image being read. */
-{
-	Tk_PhotoImageBlock block;
+) {
+    Tk_PhotoImageBlock block;
     int fileWidth, fileHeight;
     int numBytes, row, col, value, i;
     unsigned char *data, *pixelPtr;
@@ -247,20 +246,19 @@ CommonRead(interp, parseInfo, format, imageHandle, destX, destY,
  */
 
 static int
-ChnRead(interp, chan, fileName, format, imageHandle, destX, destY,
-	width, height, srcX, srcY)
-    Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
-    Tcl_Channel chan;		/* The image channel, open for reading. */
-    const char *fileName;	/* The name of the image file. */
-    Tcl_Obj *format;		/* User-specified format object, or NULL. */
-    Tk_PhotoHandle imageHandle;	/* The photo image to write into. */
-    int destX, destY;		/* Coordinates of top-left pixel in
+ChnRead(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Channel chan,		/* The image channel, open for reading. */
+    const char *fileName,	/* The name of the image file. */
+    Tcl_Obj *format,		/* User-specified format object, or NULL. */
+    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
+    int destX, int destY,	/* Coordinates of top-left pixel in
 				 * photo image to be written to. */
-    int width, height;		/* Dimensions of block of photo image to
+    int width, int height,	/* Dimensions of block of photo image to
 				 * be written to. */
-    int srcX, srcY;		/* Coordinates of top-left pixel to be used
+    int srcX, int srcY		/* Coordinates of top-left pixel to be used
 				 * in image being read. */
-{
+) {
     ParseInfo parseInfo;
 
     parseInfo.handle.data = (char *) chan;
@@ -290,19 +288,18 @@ ChnRead(interp, chan, fileName, format, imageHandle, destX, destY,
  */
 
 static int
-ObjRead(interp, data, format, imageHandle, destX, destY,
-	width, height, srcX, srcY)
-    Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
-    Tcl_Obj *data;
-    Tcl_Obj *format;		/* User-specified format string, or NULL. */
-    Tk_PhotoHandle imageHandle;	/* The photo image to write into. */
-    int destX, destY;		/* Coordinates of top-left pixel in
+ObjRead(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Obj *data,
+    Tcl_Obj *format,		/* User-specified format string, or NULL. */
+    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
+    int destX, int destY,	/* Coordinates of top-left pixel in
 				 * photo image to be written to. */
-    int width, height;		/* Dimensions of block of photo image to
+    int width, int height,	/* Dimensions of block of photo image to
 				 * be written to. */
-    int srcX, srcY;		/* Coordinates of top-left pixel to be used
+    int srcX, int srcY		/* Coordinates of top-left pixel to be used
 				 * in image being read. */
-{
+) {
     ParseInfo parseInfo;
     size_t length;
 
@@ -357,10 +354,10 @@ ObjRead(interp, data, format, imageHandle, destX, destY,
  */
 
 static int
-NextBitmapWord(parseInfoPtr)
-    ParseInfo *parseInfoPtr;		/* Describes what we're reading
+NextBitmapWord(
+    ParseInfo *parseInfoPtr		/* Describes what we're reading
 					 * and where we are in it. */
-{
+) {
     char *dst, buf;
     int num;
 
@@ -391,11 +388,11 @@ NextBitmapWord(parseInfoPtr)
 }
 
 static int
-ReadXBMFileHeader(pi, widthPtr, heightPtr)
-    ParseInfo *pi;
-    int *widthPtr, *heightPtr;	/* The dimensions of the image are
-				 * returned here. */
-{
+ReadXBMFileHeader(
+    ParseInfo *pi,
+    int *widthPtr, int *heightPtr	/* The dimensions of the image are
+					 * returned here. */
+) {
     int width, height;
     char *end;
 
@@ -497,12 +494,12 @@ getData:
  *----------------------------------------------------------------------
  */
 static int
-ChnWrite(interp, fileName, format, blockPtr)
-    Tcl_Interp *interp;
-    const char *fileName;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
-{
+ChnWrite(
+    Tcl_Interp *interp,
+    const char *fileName,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
     return CommonWrite(interp, fileName, (Tcl_DString *)NULL, format, blockPtr);
 }
 
@@ -565,13 +562,13 @@ static int StringWrite(
  *----------------------------------------------------------------------
  */
 static int
-CommonWrite(interp, fileName, dataPtr, format, blockPtr)
-    Tcl_Interp *interp;
-    const char *fileName;
-    Tcl_DString *dataPtr;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
-{
+CommonWrite(
+    Tcl_Interp *interp,
+    const char *fileName,
+    Tcl_DString *dataPtr,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
     Tcl_Channel chan = (Tcl_Channel) NULL;
     char buffer[256];
     unsigned char *pp;

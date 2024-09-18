@@ -47,7 +47,7 @@ PRJ_INCLUDES = $(PRJ_INCLUDES) -I"$(TMP_DIR)" -I..\..\zlib
 PRJ_DEFINES  = $(PRJ_DEFINES) -D_CRT_SECURE_NO_DEPRECATE -DPNG_IMPEXP=MODULE_SCOPE -DPNG_EXTERN=MODULE_SCOPE
 
 !if [echo ZLIB_VERSION = \> versions.vc] \
-   || [nmakehlp -V ..\..\zlib\configure.in ^[zlibtcl^] >> versions.vc]
+   || [nmakehlp -V ..\..\zlib\configure.ac ^[zlibtcl^] >> versions.vc]
 !error Could not determine zlib base version.
 !endif
 !include versions.vc
