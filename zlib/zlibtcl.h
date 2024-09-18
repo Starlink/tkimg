@@ -14,8 +14,6 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: zlibtcl.h 382 2015-07-03 10:16:19Z nijtmans $
- *
  */
 
 #ifndef __ZLIBTCL_H__
@@ -26,11 +24,11 @@
 #define ZLIBTCL_MAJOR_VERSION	1
 #define ZLIBTCL_MINOR_VERSION	2
 #define ZLIBTCL_RELEASE_LEVEL	TCL_RELEASE
-#define ZLIBTCL_RELEASE_SERIAL	8
+#define ZLIBTCL_RELEASE_SERIAL	11
 
 #ifndef ZLIBTCL_VERSION
-#define ZLIBTCL_VERSION		"1.2.8.1"
-#define ZLIBTCL_PATCH_LEVEL	"1.2.8.1"
+#define ZLIBTCL_VERSION		"1.2.11"
+#define ZLIBTCL_PATCH_LEVEL	"1.2.11"
 #endif
 
 /*

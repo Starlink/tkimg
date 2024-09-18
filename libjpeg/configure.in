@@ -1,7 +1,6 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Id: configure.in 395 2016-04-02 19:47:57Z obermeier $)
 
 #--------------------------------------------------------------------
 # Configure script for package 'jpegtcl', as distributed at November 20, 2001.

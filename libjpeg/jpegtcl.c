@@ -14,8 +14,6 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: jpegtcl.c 286 2010-07-07 11:08:08Z nijtmans $
- *
  */
 
 #include "jpegtcl.h"

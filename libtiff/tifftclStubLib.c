@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tifftclStubLib.c 279 2010-06-30 15:03:06Z nijtmans $
  */
 
 #ifndef USE_TCL_STUBS

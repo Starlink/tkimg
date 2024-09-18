@@ -9,8 +9,6 @@
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: genStubs.tcl 280 2010-07-06 09:04:10Z nijtmans $
 
 package require Tcl 8.4
 

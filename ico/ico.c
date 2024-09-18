@@ -46,8 +46,6 @@
  *
  * ENDHEADER
  *
- * $Id: ico.c 380 2015-04-11 13:15:29Z obermeier $
- *
  */
 
 /*

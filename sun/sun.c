@@ -57,8 +57,6 @@
  *
  * ENDHEADER
  *
- * $Id: sun.c 360 2013-10-01 14:47:01Z nijtmans $
- *
  */
 
 /*

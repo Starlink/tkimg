@@ -11,9 +11,6 @@
  * <paul@poSoft.de> Paul Obermeier
  * Feb 2001:
  *      - Bugfix  in CommonWrite: const char *fileName was overwritten.
- *
- * $Id: xbm.c 327 2011-07-27 09:06:39Z nijtmans $
- *
  */
 
 /*

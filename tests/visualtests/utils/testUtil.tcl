@@ -42,6 +42,7 @@ proc PrintMachineInfo {} {
     P  "osVersion   : $tcl_platform(osVersion)"
     P  "machine     : $tcl_platform(machine)"
     P  "byteOrder   : $tcl_platform(byteOrder)"
+    P  "pointerSize : $tcl_platform(pointerSize)"
     P  "wordSize    : $tcl_platform(wordSize)"
     P  "user        : $tcl_platform(user)"
     P  "hostname    : [info hostname]"

@@ -8,8 +8,6 @@
  *
  * Copyright (c) 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
  *
- * $Id: ps.c 251 2010-04-28 13:28:28Z nijtmans $
- *
  */
 
 /*

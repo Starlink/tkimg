@@ -33,8 +33,6 @@
  *                  Specifying an alpha value, overrides the setting of the matte flag,
  *                  i.e. reading a file which has no alpha channel (Greyscale, RGB) will
  *                  add an alpha channel to the image independent of the matte flag setting.
- *
- * $Id: png.c 404 2016-05-24 18:50:15Z obermeier $
  */
 
 /*
@@ -570,7 +568,7 @@ CommonReadPNG(png_ptr, interp, fileName, format, imageHandle, destX, destY,
 
     if (useAlpha) {
         unsigned char * alphaPtr = block.pixelPtr + block.offset[3];
-        for(i=0; i<height*width; i++) {
+        for(i=0; i<(unsigned int)(height*width); i++) {
             *alphaPtr = alpha * *alphaPtr;
             alphaPtr += block.offset[3] + 1 ;
         }

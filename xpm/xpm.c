@@ -26,7 +26,6 @@
  *                                   Win98 (i.e. FAT32) performance.
  *      - Improve in ChnRead: Better performance by using ReadBuffer.
  *
- * $Id: xpm.c 262 2010-05-31 15:03:33Z nijtmans $
  */
 
 /*
@@ -36,7 +35,7 @@
 #include "init.c"
 
 #if defined(__WIN32__) && !defined(__GNUC__)
-#define strncasecmp strnicmp
+#define strncasecmp _strnicmp
 #endif
 
 #ifndef MAC_TCL

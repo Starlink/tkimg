@@ -26,3 +26,5 @@ The following ways to write image data are tested:
 Write to file:             $ph write $fileName -format $fmt
 Write to uuencoded string: $ph data -format $fmt
 
+ImgPut.tcl: Create an image using the standard Tk method and using the
+            img::raw format handler.

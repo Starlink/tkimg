@@ -24,7 +24,7 @@ declare 0 {
     png_uint_32 png_access_version_number(void)
 }
 declare 1 {
-    void png_set_sig_bytes(png_structp png_ptr, int num_bytes)
+    void png_set_sig_bytes(png_structrp png_ptr, int num_bytes)
 }
 declare 2 {
     int png_sig_cmp(png_const_bytep sig, png_size_t start,
@@ -42,7 +42,7 @@ declare 6 {
     png_size_t png_get_compression_buffer_size(png_const_structrp png_ptr)
 }
 declare 7 {
-    void png_set_compression_buffer_size(png_structp png_ptr, png_size_t size)
+    void png_set_compression_buffer_size(png_structrp png_ptr, png_size_t size)
 }
 declare 9 generic {!PNG_USER_MEM_SUPPORTED} {
     png_structp png_create_read_struct_2(png_const_charp user_png_ver,
@@ -73,13 +73,13 @@ declare 15 {
     png_infop png_create_info_struct(png_const_structrp png_ptr)
 }
 declare 17 {
-    void png_write_info_before_PLTE(png_structrp png_ptr, png_const_infop info_ptr)
+    void png_write_info_before_PLTE(png_structrp png_ptr, png_const_inforp info_ptr)
 }
 declare 18 {
     void png_write_info(png_structrp png_ptr, png_const_inforp info_ptr)
 }
 declare 19 generic {!PNG_SEQUENTIAL_READ_SUPPORTED} {
-    void png_read_info(png_structp png_ptr, png_infop info_ptr)
+    void png_read_info(png_structrp png_ptr, png_inforp info_ptr)
 }
 declare 21 generic {_WIN32_WCE !PNG_WRITE_tIME_SUPPORTED} {
     void png_convert_from_struct_tm(png_timep ptime,
@@ -89,22 +89,22 @@ declare 22 generic {_WIN32_WCE !PNG_WRITE_tIME_SUPPORTED} {
     void png_convert_from_time_t(png_timep ptime, time_t ttime)
 }
 declare 23 generic {!PNG_READ_EXPAND_SUPPORTED} {
-    void png_set_expand(png_structp png_ptr)
+    void png_set_expand(png_structrp png_ptr)
 }
 declare 25 generic {!PNG_READ_EXPAND_SUPPORTED} {
-    void png_set_palette_to_rgb(png_structp png_ptr)
+    void png_set_palette_to_rgb(png_structrp png_ptr)
 }
 declare 26 generic {!PNG_READ_EXPAND_SUPPORTED} {
-    void png_set_tRNS_to_alpha(png_structp png_ptr)
+    void png_set_tRNS_to_alpha(png_structrp png_ptr)
 }
 declare 27 generic {{!PNG_READ_BGR_SUPPORTED !PNG_WRITE_BGR_SUPPORTED}} {
-    void png_set_bgr(png_structp png_ptr)
+    void png_set_bgr(png_structrp png_ptr)
 }
 declare 28 generic {!PNG_READ_GRAY_TO_RGB_SUPPORTED} {
-    void png_set_gray_to_rgb(png_structp png_ptr)
+    void png_set_gray_to_rgb(png_structrp png_ptr)
 }
 declare 29 generic {!PNG_READ_RGB_TO_GRAY_SUPPORTED} {
-    void png_set_rgb_to_gray(png_structp png_ptr, int error_action, double red, double green)
+    void png_set_rgb_to_gray(png_structrp png_ptr, int error_action, double red, double green)
 }
 declare 30 generic {!PNG_READ_RGB_TO_GRAY_SUPPORTED} {
     void png_set_rgb_to_gray_fixed(png_structrp png_ptr, int error_action,
@@ -176,7 +176,7 @@ declare 50 {
     void png_start_read_image(png_structrp png_ptr)
 }
 declare 51 {
-    void png_read_update_info(png_structrp png_ptr, png_infop info_ptr)
+    void png_read_update_info(png_structrp png_ptr, png_inforp info_ptr)
 }
 declare 52 {
     void png_read_rows(png_structrp png_ptr, png_bytepp row, png_bytepp display_row, png_uint_32 num_rows)
@@ -196,13 +196,13 @@ declare 56 {
     png_uint_32 num_rows)
 }
 declare 57 {
-    void png_write_image(png_structp png_ptr, png_bytepp image)
+    void png_write_image(png_structrp png_ptr, png_bytepp image)
 }
 declare 58 {
-    void png_write_end(png_structp png_ptr, png_infop info_ptr)
+    void png_write_end(png_structrp png_ptr, png_inforp info_ptr)
 }
 declare 59 {
-    void png_read_end(png_structp png_ptr, png_infop info_ptr)
+    void png_read_end(png_structrp png_ptr, png_inforp info_ptr)
 }
 declare 60 {
     void png_destroy_info_struct(png_const_structrp png_ptr,
@@ -216,10 +216,10 @@ declare 63 {
     void png_destroy_write_struct(png_structpp png_ptr_ptr, png_infopp info_ptr_ptr)
 }
 declare 66 {
-    void png_set_crc_action(png_structp png_ptr, int crit_action, int ancil_action)
+    void png_set_crc_action(png_structrp png_ptr, int crit_action, int ancil_action)
 }
 declare 67 {
-    void png_set_filter(png_structp png_ptr, int method, int filters)
+    void png_set_filter(png_structrp png_ptr, int method, int filters)
 }
 declare 68 generic {!PNG_WRITE_WEIGHTED_FILTER_SUPPORTED} {
     void png_set_filter_heuristics(png_structrp png_ptr,
@@ -227,25 +227,25 @@ declare 68 generic {!PNG_WRITE_WEIGHTED_FILTER_SUPPORTED} {
     png_const_doublep filter_costs)
 }
 declare 69 {
-    void png_set_compression_level(png_structp png_ptr, int level)
+    void png_set_compression_level(png_structrp png_ptr, int level)
 }
 declare 70 {
-    void png_set_compression_mem_level(png_structp png_ptr, int mem_level)
+    void png_set_compression_mem_level(png_structrp png_ptr, int mem_level)
 }
 declare 71 {
-    void png_set_compression_strategy(png_structp png_ptr, int strategy)
+    void png_set_compression_strategy(png_structrp png_ptr, int strategy)
 }
 declare 72 {
-    void png_set_compression_window_bits(png_structp png_ptr, int window_bits)
+    void png_set_compression_window_bits(png_structrp png_ptr, int window_bits)
 }
 declare 73 {
-    void png_set_compression_method(png_structp png_ptr, int method)
+    void png_set_compression_method(png_structrp png_ptr, int method)
 }
 declare 74 generic {PNG_NO_STDIO} {
-    void png_init_io(png_structp png_ptr, png_FILE_p fp)
+    void png_init_io(png_structrp png_ptr, png_FILE_p fp)
 }
 declare 75 {
-    void png_set_error_fn(png_structp png_ptr, png_voidp error_ptr,
+    void png_set_error_fn(png_structrp png_ptr, png_voidp error_ptr,
     	png_error_ptr error_fn, png_error_ptr warning_fn)
 }
 declare 76 {
@@ -263,42 +263,42 @@ declare 79 {
     png_voidp png_get_io_ptr(png_const_structrp png_ptr)
 }
 declare 80 {
-    void png_set_read_status_fn(png_structp png_ptr, png_read_status_ptr read_row_fn)
+    void png_set_read_status_fn(png_structrp png_ptr, png_read_status_ptr read_row_fn)
 }
 declare 81 {
-    void png_set_write_status_fn(png_structp png_ptr, png_write_status_ptr write_row_fn)
+    void png_set_write_status_fn(png_structrp png_ptr, png_write_status_ptr write_row_fn)
 }
 declare 82 generic {!PNG_USER_MEM_SUPPORTED} {
-    void png_set_mem_fn(png_structp png_ptr, png_voidp mem_ptr,
+    void png_set_mem_fn(png_structrp png_ptr, png_voidp mem_ptr,
     	png_malloc_ptr malloc_fn, png_free_ptr free_fn)
 }
 declare 83 generic {!PNG_USER_MEM_SUPPORTED} {
     png_voidp png_get_mem_ptr(png_const_structrp png_ptr)
 }
 declare 84 generic {{!PNG_READ_USER_TRANSFORM_SUPPORTED !PNG_LEGACY_SUPPORTED}} {
-    void png_set_read_user_transform_fn(png_structp png_ptr,
+    void png_set_read_user_transform_fn(png_structrp png_ptr,
     	png_user_transform_ptr read_user_transform_fn)
 }
 declare 85 generic {{!PNG_WRITE_USER_TRANSFORM_SUPPORTED !PNG_LEGACY_SUPPORTED}} {
-    void png_set_write_user_transform_fn(png_structp png_ptr,
+    void png_set_write_user_transform_fn(png_structrp png_ptr,
     	png_user_transform_ptr write_user_transform_fn)
 }
 declare 86 generic {{!PNG_READ_USER_TRANSFORM_SUPPORTED !PNG_WRITE_USER_TRANSFORM_SUPPORTED !PNG_LEGACY_SUPPORTED}} {
-    void png_set_user_transform_info(png_structp png_ptr, png_voidp user_transform_ptr,
+    void png_set_user_transform_info(png_structrp png_ptr, png_voidp user_transform_ptr,
     	int user_transform_depth, int user_transform_channels)
 }
 declare 87 generic {{!PNG_READ_USER_TRANSFORM_SUPPORTED !PNG_WRITE_USER_TRANSFORM_SUPPORTED !PNG_LEGACY_SUPPORTED}} {
     png_voidp png_get_user_transform_ptr(png_const_structrp png_ptr)
 }
 declare 88 generic {!PNG_READ_USER_CHUNKS_SUPPORTED} {
-    void png_set_read_user_chunk_fn(png_structp png_ptr, png_voidp user_chunk_ptr,
+    void png_set_read_user_chunk_fn(png_structrp png_ptr, png_voidp user_chunk_ptr,
     	png_user_chunk_ptr read_user_chunk_fn)
 }
 declare 89 generic {!PNG_READ_USER_CHUNKS_SUPPORTED} {
     png_voidp png_get_user_chunk_ptr(png_const_structrp png_ptr)
 }
 declare 90 generic {!PNG_PROGRESSIVE_READ_SUPPORTED} {
-    void png_set_progressive_read_fn(png_structp png_ptr, png_voidp progressive_ptr,
+    void png_set_progressive_read_fn(png_structrp png_ptr, png_voidp progressive_ptr,
     	png_progressive_info_ptr info_fn, png_progressive_row_ptr row_fn,
     	png_progressive_end_ptr end_fn)
 }
@@ -402,7 +402,7 @@ declare 127 {
     png_const_bytep png_get_signature(png_const_structrp png_ptr, png_const_inforp info_ptr)
 }
 declare 128 generic {!PNG_READ_bKGD_SUPPORTED} {
-    png_uint_32 png_get_bKGD(png_const_structrp png_ptr, png_infop info_ptr, png_color_16p *background)
+    png_uint_32 png_get_bKGD(png_const_structrp png_ptr, png_inforp info_ptr, png_color_16p *background)
 }
 declare 129 generic {!PNG_bKGD_SUPPORTED} {
     void png_set_bKGD(png_const_structrp png_ptr,
@@ -474,7 +474,7 @@ declare 146 generic {!PNG_READ_pHYs_SUPPORTED} {
     png_uint_32 png_get_pHYs(png_const_structrp png_ptr, png_const_inforp info_ptr, png_uint_32 *res_x, png_uint_32 *res_y, int *unit_type)
 }
 declare 147 generic {!PNG_pHYs_SUPPORTED} {
-    void png_set_pHYs(png_const_structrp png_ptr, png_infop info_ptr, png_uint_32 res_x, png_uint_32 res_y, int unit_type)
+    void png_set_pHYs(png_const_structrp png_ptr, png_inforp info_ptr, png_uint_32 res_x, png_uint_32 res_y, int unit_type)
 }
 declare 148 {
     png_uint_32 png_get_PLTE(png_const_structrp png_ptr, png_inforp info_ptr, png_colorp *palette, int *num_palette)
@@ -484,7 +484,7 @@ declare 149 {
 }
 
 declare 150 generic {!PNG_READ_sBIT_SUPPORTED} {
-    png_uint_32 png_get_sBIT(png_const_structrp png_ptr, png_infop info_ptr, png_color_8p *sig_bit)
+    png_uint_32 png_get_sBIT(png_const_structrp png_ptr, png_inforp info_ptr, png_color_8p *sig_bit)
 }
 declare 151 generic {!PNG_sBIT_SUPPORTED} {
     void png_set_sBIT(png_const_structrp png_ptr, png_inforp info_ptr, png_const_color_8p sig_bit)
@@ -493,10 +493,10 @@ declare 152 generic {!PNG_sRGB_SUPPORTED} {
     png_uint_32 png_get_sRGB(png_const_structrp png_ptr, png_const_inforp info_ptr, int *intent)
 }
 declare 153 generic {!PNG_sRGB_SUPPORTED} {
-    void png_set_sRGB(png_const_structrp png_ptr, png_infop info_ptr, int intent)
+    void png_set_sRGB(png_const_structrp png_ptr, png_inforp info_ptr, int intent)
 }
 declare 154 generic {!PNG_sRGB_SUPPORTED} {
-    void png_set_sRGB_gAMA_and_cHRM(png_const_structrp png_ptr, png_infop info_ptr, int intent)
+    void png_set_sRGB_gAMA_and_cHRM(png_const_structrp png_ptr, png_inforp info_ptr, int intent)
 }
 declare 155 generic {!PNG_READ_iCCP_SUPPORTED} {
     png_uint_32 png_get_iCCP(png_const_structrp png_ptr, png_inforp info_ptr, png_charpp name, int *compression_type, png_bytepp profile, png_uint_32 *proflen)
@@ -517,16 +517,16 @@ declare 160 generic {!PNG_TEXT_SUPPORTED} {
     void png_set_text(png_const_structrp png_ptr, png_inforp info_ptr, png_const_textp text_ptr, int num_text)
 }
 declare 161 generic {!PNG_READ_tIME_SUPPORTED} {
-    png_uint_32 png_get_tIME(png_const_structrp png_ptr, png_infop info_ptr, png_timep *mod_time)
+    png_uint_32 png_get_tIME(png_const_structrp png_ptr, png_inforp info_ptr, png_timep *mod_time)
 }
 declare 162 generic {!PNG_tIME_SUPPORTED} {
     void png_set_tIME(png_const_structrp png_ptr, png_inforp info_ptr, png_const_timep mod_time)
 }
 declare 163 generic {!PNG_READ_tRNS_SUPPORTED} {
-    png_uint_32 png_get_tRNS(png_const_structrp png_ptr, png_infop info_ptr, png_bytep *trans, int *num_trans, png_color_16p *trans_values)
+    png_uint_32 png_get_tRNS(png_const_structrp png_ptr, png_inforp info_ptr, png_bytep *trans, int *num_trans, png_color_16p *trans_values)
 }
 declare 164 generic {!PNG_tRNS_SUPPORTED} {
-    void png_set_tRNS(png_structrp png_ptr, png_infop info_ptr, png_const_bytep trans_alpha, int num_trans, png_const_color_16p trans_values)
+    void png_set_tRNS(png_structrp png_ptr, png_inforp info_ptr, png_const_bytep trans_alpha, int num_trans, png_const_color_16p trans_values)
 }
 declare 165 generic {!PNG_READ_sCAL_SUPPORTED} {
     png_uint_32 png_get_sCAL(png_const_structrp png_ptr, png_const_inforp info_ptr, int *unit, double *width, double *height)
@@ -553,13 +553,13 @@ declare 172 generic {!PNG_UNKNOWN_CHUNKS_SUPPORTED} {
     int png_get_unknown_chunks(png_const_structrp png_ptr, png_inforp info_ptr, png_unknown_chunkpp entries)
 }
 declare 173 {
-    void png_set_invalid(png_const_structrp png_ptr, png_infop info_ptr, int mask)
+    void png_set_invalid(png_const_structrp png_ptr, png_inforp info_ptr, int mask)
 }
 declare 174 generic {!PNG_INFO_IMAGE_SUPPORTED} {
-    void png_read_png(png_structp png_ptr, png_infop info_ptr, int transforms, png_voidp params)
+    void png_read_png(png_structrp png_ptr, png_inforp info_ptr, int transforms, png_voidp params)
 }
 declare 175 generic {!PNG_INFO_IMAGE_SUPPORTED} {
-    void png_write_png(png_structp png_ptr, png_infop info_ptr, int transforms, png_voidp params)
+    void png_write_png(png_structrp png_ptr, png_inforp info_ptr, int transforms, png_voidp params)
 }
 declare 176 generic {!PNG_INTERNAL PNG_USE_GLOBAL_ARRAYS {PNG_NO_EXTERN !PNG_ALWAYS_EXTERN}} {
     png_bytep png_sig_bytes(void)
@@ -967,7 +967,7 @@ declare 317 generic {!PNG_INTERNAL !PNG_PROGRESSIVE_READ_SUPPORTED !PNG_iTXt_SUP
     void png_push_read_iTXt(png_structp png_ptr, png_infop info_ptr, png_uint_32 length)
 }
 declare 319 generic {{!PNG_READ_FILLER_SUPPORTED !PNG_WRITE_FILLER_SUPPORTED}} {
-    void png_set_add_alpha(png_structp png_ptr, png_uint_32 filler, int flags)
+    void png_set_add_alpha(png_structrp png_ptr, png_uint_32 filler, int flags)
 }
 declare 320 generic {!PNG_READ_SCALE_16_TO_8_SUPPORTED} {
     void png_set_scale_16(png_structrp png_ptr)

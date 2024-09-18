@@ -44,8 +44,6 @@
  *
  * Modified for dynamical loading, reading from channels and Tcl_Obj's by:
  *	Jan Nijtmans (nijtmans@users.sourceforge.net)
- *
- * $Id: jpeg.c 395 2016-04-02 19:47:57Z obermeier $
  */
 
 /*

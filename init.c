@@ -5,8 +5,6 @@
  *
  * Copyright (c) 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
  *
- * $Id: init.c 274 2010-06-28 13:23:34Z nijtmans $
- *
  */
 
 #include "tkimg.h"

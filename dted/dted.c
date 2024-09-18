@@ -55,8 +55,6 @@
  *
  * ENDHEADER
  *
- * $Id$
- *
  */
 
 #include <stdlib.h>

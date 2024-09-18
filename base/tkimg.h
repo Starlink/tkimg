@@ -13,9 +13,6 @@
  * or fit for any purpose.  Zveno Pty Ltd disclaims any liability for
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
- *
- * $Id: tkimg.h 266 2010-06-03 19:48:13Z nijtmans $
- *
  */
 
 #ifndef __TKIMG_H__

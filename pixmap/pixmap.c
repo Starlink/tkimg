@@ -17,7 +17,7 @@
 #include "tkimg.h"
 
 #if defined(__WIN32__) && !defined (__GNUC__)
-#define strncasecmp strnicmp
+#define strncasecmp _strnicmp
 #endif
 
 #ifndef MAC_TCL

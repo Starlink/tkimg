@@ -6,8 +6,6 @@
  * Copyright (c) 1997-2003 Jan Nijtmans    <nijtmans@users.sourceforge.net>
  * Copyright (c) 2002      Andreas Kupries <andreas_kupries@users.sourceforge.net>
  *
- * $Id: bmp.c 331 2011-11-27 18:29:13Z oehhar $
- *
  * The following format options are available:
  *
  * Write BMP image: "ico -resolution <list>"
@@ -26,6 +24,7 @@
  * Generic initialization code, parameterized via CPACKAGE and PACKAGE.
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include "init.c"
@@ -485,7 +484,7 @@ CommonRead(interp, handle, imageHandle, destX, destY,
                 }
                 break;
             default:
-                sprintf(buf,"%d", numBits);
+                sprintf(buf, "%d", numBits);
                 Tcl_AppendResult(interp, buf,
                         "-bits BMP file not (yet) supported", (char *) NULL);
                 goto error;

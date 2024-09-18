@@ -1,14 +1,13 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Id: configure.in 399 2016-04-04 13:14:06Z nijtmans $)
 
 #--------------------------------------------------------------------
 # Configure script for package 'pngtcl', as distributed at November 20, 2001.
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([pngtcl],[1.6.21])
+AC_INIT([pngtcl],[1.6.28])
 
 TEA_INIT([3.9])
 

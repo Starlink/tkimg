@@ -1,7 +1,6 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_REVISION($Id: configure.in 389 2015-07-06 11:56:49Z nijtmans $)
 
 #--------------------------------------------------------------------
 # Configure script for package 'tifftcl', as distributed at November 20, 2001.

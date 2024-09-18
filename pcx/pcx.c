@@ -52,8 +52,6 @@
  *
  * ENDHEADER
  *
- * $Id: pcx.c 345 2013-09-09 20:29:59Z obermeier $
- *
  */
 
 /*

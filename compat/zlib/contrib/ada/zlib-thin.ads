@@ -6,7 +6,7 @@
 --  Open source license information is in the zlib.ads file.  --
 ----------------------------------------------------------------
 
---  $Id: zlib-thin.ads 66 2005-08-17 18:20:58Z andreas_kupries $
+--  $Id: zlib-thin.ads 411 2017-01-16 15:00:56Z nijtmans $
 
 with Interfaces.C.Strings;
 
@@ -436,7 +436,7 @@ private
 
    pragma Import (C, inflateBackInit, "inflateBackInit_");
 
-   --  I stopped binding the inflateBack routines, becouse realize that
+   --  I stopped binding the inflateBack routines, because realize that
    --  it does not support zlib and gzip headers for now, and have no
    --  symmetric deflateBack routines.
    --  ZLib-Ada is symmetric regarding deflate/inflate data transformation

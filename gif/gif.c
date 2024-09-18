@@ -34,8 +34,6 @@
  * |   provided "as is" without express or implied warranty.           |
  * +-------------------------------------------------------------------+
  *
- * $Id: gif.c 371 2014-12-27 21:21:30Z obermeier $
- *
  */
 
 /*

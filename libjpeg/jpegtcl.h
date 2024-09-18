@@ -14,8 +14,6 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: jpegtcl.h 395 2016-04-02 19:47:57Z obermeier $
- *
  */
 
 #ifndef __JPEGTCL_H__

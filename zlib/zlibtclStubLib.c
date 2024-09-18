@@ -10,7 +10,6 @@
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * RCS: @(#) $Id: zlibtclStubLib.c 274 2010-06-28 13:23:34Z nijtmans $
  */
 
 #ifndef USE_TCL_STUBS

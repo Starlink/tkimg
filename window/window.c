@@ -5,8 +5,6 @@
  *
  * Author : Jan Nijtmans
  *
- * $Id: window.c 397 2016-04-03 18:43:14Z obermeier $
- *
  */
 
 /*

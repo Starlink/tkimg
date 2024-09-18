@@ -103,7 +103,8 @@ ZEXTERN int		uncompress(Bytef *dest, uLongf *destLen,
 				const Bytef *source, uLong sourceLen);
 /* 28 */
 ZEXTERN int		inflateReset2(z_streamp strm, int windowBits);
-/* Slot 29 is reserved */
+/* 29 */
+ZEXTERN int		inflateValidate(z_streamp strm, int check);
 /* 30 */
 ZEXTERN gzFile		gzopen(const char *path, const char *mode);
 /* 31 */
@@ -172,7 +173,7 @@ typedef struct ZlibtclStubs {
     int (*inflateResetPtr) (z_streamp stream); /* 26 */
     int (*uncompressPtr) (Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen); /* 27 */
     int (*inflateReset2Ptr) (z_streamp strm, int windowBits); /* 28 */
-    void (*reserved29)(void);
+    int (*inflateValidatePtr) (z_streamp strm, int check); /* 29 */
     gzFile (*gzopenPtr) (const char *path, const char *mode); /* 30 */
     gzFile (*gzdopenPtr) (int fd, const char *mode); /* 31 */
     int (*gzsetparamsPtr) (gzFile file, int level, int strategy); /* 32 */
@@ -258,7 +259,8 @@ ZEXTERN const ZlibtclStubs *zlibtclStubsPtr;
 	(zlibtclStubsPtr->uncompressPtr) /* 27 */
 #define inflateReset2 \
 	(zlibtclStubsPtr->inflateReset2Ptr) /* 28 */
-/* Slot 29 is reserved */
+#define inflateValidate \
+	(zlibtclStubsPtr->inflateValidatePtr) /* 29 */
 #define gzopen \
 	(zlibtclStubsPtr->gzopenPtr) /* 30 */
 #define gzdopen \
