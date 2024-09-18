@@ -136,21 +136,21 @@ static RLEBUF
 static Boln readUByte (tkimg_MFile *handle, UByte *b)
 {
     char buf[1];
-    if (1 != tkimg_Read(handle, buf, 1))
+    if (1 != tkimg_Read2(handle, buf, 1))
         return FALSE;
     *b = (UByte) buf[0];
     return TRUE;
 }
 #else
     /* Use this macro for better performance, esp. when reading RLE files. */
-#   define readUByte(h,b) (1 == tkimg_Read((h),(char *)(b),1))
+#   define readUByte(h,b) (1 == tkimg_Read2((h),(char *)(b),1))
 #endif
 
 static Boln writeUByte (tkimg_MFile *handle, UByte b)
 {
     UByte buf[1];
     buf[0] = b;
-    if (1 != tkimg_Write(handle, (const char *)buf, 1))
+    if (1 != tkimg_Write2(handle, (const char *)buf, 1))
         return FALSE;
     return TRUE;
 }
@@ -160,7 +160,7 @@ static Boln readUInt (tkimg_MFile *ifp, UInt *i)
     UByte buf[4];
     UInt  c;
 
-    if (4 != tkimg_Read(ifp, (char *)buf, 4)) {
+    if (4 != tkimg_Read2(ifp, (char *)buf, 4)) {
 	return FALSE;
     }
 
@@ -180,7 +180,7 @@ static Boln writeUInt (tkimg_MFile *ofp, UInt c)
     buf[1] = (c >> 16) & 0xff;
     buf[2] = (c >>  8) & 0xff;
     buf[3] = (c      ) & 0xff;
-    if (4 != tkimg_Write(ofp, (const char *)buf, 4)) {
+    if (4 != tkimg_Write2(ofp, (const char *)buf, 4)) {
 	return FALSE;
     }
     return TRUE;
@@ -256,7 +256,7 @@ static int rle_fread (char *ptr, int sz, int nelem, tkimg_MFile *ifp)
 /* Read uncompressed pixels from input stream "ifp" */
 static int sun_fread (char *ptr, int sz, int nelem, tkimg_MFile *ifp)
 {
-    if (nelem*sz != tkimg_Read(ifp, ptr, nelem*sz)) {
+    if (nelem*sz != tkimg_Read2(ifp, ptr, nelem*sz)) {
 	return -1;
     }
     return nelem;
@@ -474,7 +474,7 @@ static Boln read_sun_cols (tkimg_MFile *ifp, SUNHEADER *sunhdr, UByte *colormap)
     if (ncols <= 0)
 	return FALSE;
 
-    if (3*ncols != tkimg_Read(ifp, (char *)colormap, 3*ncols)) {
+    if (3*ncols != tkimg_Read2(ifp, (char *)colormap, 3*ncols)) {
 	return FALSE;
     }
     return TRUE;
@@ -487,7 +487,7 @@ static Boln write_sun_cols (tkimg_MFile *ofp, SUNHEADER *sunhdr, UByte *colormap
     int ncols;
 
     ncols = sunhdr->ras_maplength / 3;
-    if (3*ncols != tkimg_Write(ofp, (const char *)colormap, 3*ncols)) {
+    if (3*ncols != tkimg_Write2(ofp, (const char *)colormap, 3*ncols)) {
 	return FALSE;
     }
     return TRUE;
@@ -847,7 +847,7 @@ static int ParseFormatOpts (interp, format, comp, verb, matte)
 	verbose     = "0";
 	transp      = "1";
 	for (i=1; i<objc; i++) {
-	    if (Tcl_GetIndexFromObj(interp, objv[i], (CONST84 char *CONST86 *)sunOptions,
+	    if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)sunOptions,
 		    "format option", 0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -1279,7 +1279,7 @@ static int CommonWrite (interp, filename, format, handle, blockPtr)
 		*(rowPtr++) = pixelPtr[redOffset];
 		pixelPtr += blockPtr->pixelSize;
 	    }
-	    if (nBytes != tkimg_Write(handle, (const char *)row, nBytes)) {
+	    if (nBytes != tkimg_Write2(handle, (const char *)row, nBytes)) {
 		sprintf(errMsg, "Can't write %d bytes to image file", nBytes);
 		Tcl_AppendResult(interp, errMsg, (char *)NULL);
 		ckfree ((char *)row);

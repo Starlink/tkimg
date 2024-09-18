@@ -33,7 +33,12 @@ typedef struct tkimg_MFile {
 	char *data; /* mmencoded source string */
 	int c; /* bits left over from previous char */
 	int state; /* decoder state (0-4 or IMG_DONE) */
-	int length; /* length of physical line already written */
+#if TCL_MAJOR_VERSION > 8
+	size_t length; /* length of physical line already written */
+#else
+	unsigned int length; /* length of physical line already written */
+	int notused; /* just to be sure to always allocate more than enough */
+#endif
 } tkimg_MFile;
 
 /* !BEGIN!: Do not edit below this line. */
@@ -62,8 +67,12 @@ TKIMGAPI int		tkimg_Write(tkimg_MFile *handle, const char *src,
 				int count);
 /* 7 */
 TKIMGAPI void		tkimg_ReadBuffer(int onOff);
-/* Slot 8 is reserved */
-/* Slot 9 is reserved */
+/* 8 */
+TKIMGAPI size_t		tkimg_Read2(tkimg_MFile *handle, char *dst,
+				size_t count);
+/* 9 */
+TKIMGAPI size_t		tkimg_Write2(tkimg_MFile *handle, const char *src,
+				size_t count);
 /* 10 */
 TKIMGAPI int		tkimg_PhotoPutBlock(Tcl_Interp *interp,
 				Tk_PhotoHandle handle,
@@ -82,19 +91,9 @@ TKIMGAPI int		tkimg_PhotoSetSize(Tcl_Interp *interp,
 /* Slot 17 is reserved */
 /* Slot 18 is reserved */
 /* Slot 19 is reserved */
-/* 20 */
-TKIMGAPI void		tkimg_FixChanMatchProc(Tcl_Interp **interp,
-				Tcl_Channel *chan, const char **file,
-				Tcl_Obj **format, int **width, int **height);
-/* 21 */
-TKIMGAPI void		tkimg_FixObjMatchProc(Tcl_Interp **interp,
-				Tcl_Obj **data, Tcl_Obj **format,
-				int **width, int **height);
-/* 22 */
-TKIMGAPI void		tkimg_FixStringWriteProc(Tcl_DString *data,
-				Tcl_Interp **interp, Tcl_DString **dataPtr,
-				Tcl_Obj **format,
-				Tk_PhotoImageBlock **blockPtr);
+/* Slot 20 is reserved */
+/* Slot 21 is reserved */
+/* Slot 22 is reserved */
 /* Slot 23 is reserved */
 /* Slot 24 is reserved */
 /* Slot 25 is reserved */
@@ -111,6 +110,12 @@ TKIMGAPI unsigned char * tkimg_GetByteArrayFromObj(Tcl_Obj *objPtr,
 /* 32 */
 TKIMGAPI int		tkimg_ListObjGetElements(Tcl_Interp *interp,
 				Tcl_Obj *objPtr, int *argc, Tcl_Obj ***argv);
+/* 33 */
+TKIMGAPI const char *	tkimg_GetStringFromObj2(Tcl_Obj *objPtr,
+				size_t *lengthPtr);
+/* 34 */
+TKIMGAPI unsigned char * tkimg_GetByteArrayFromObj2(Tcl_Obj *objPtr,
+				size_t *lengthPtr);
 
 typedef struct TkimgStubs {
     int magic;
@@ -124,8 +129,8 @@ typedef struct TkimgStubs {
     int (*tkimg_PutcPtr) (int c, tkimg_MFile *handle); /* 5 */
     int (*tkimg_WritePtr) (tkimg_MFile *handle, const char *src, int count); /* 6 */
     void (*tkimg_ReadBufferPtr) (int onOff); /* 7 */
-    void (*reserved8)(void);
-    void (*reserved9)(void);
+    size_t (*tkimg_Read2Ptr) (tkimg_MFile *handle, char *dst, size_t count); /* 8 */
+    size_t (*tkimg_Write2Ptr) (tkimg_MFile *handle, const char *src, size_t count); /* 9 */
     int (*tkimg_PhotoPutBlockPtr) (Tcl_Interp *interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int flags); /* 10 */
     int (*tkimg_PhotoExpandPtr) (Tcl_Interp *interp, Tk_PhotoHandle handle, int width, int height); /* 11 */
     int (*tkimg_PhotoSetSizePtr) (Tcl_Interp *interp, Tk_PhotoHandle handle, int width, int height); /* 12 */
@@ -136,9 +141,9 @@ typedef struct TkimgStubs {
     void (*reserved17)(void);
     void (*reserved18)(void);
     void (*reserved19)(void);
-    void (*tkimg_FixChanMatchProcPtr) (Tcl_Interp **interp, Tcl_Channel *chan, const char **file, Tcl_Obj **format, int **width, int **height); /* 20 */
-    void (*tkimg_FixObjMatchProcPtr) (Tcl_Interp **interp, Tcl_Obj **data, Tcl_Obj **format, int **width, int **height); /* 21 */
-    void (*tkimg_FixStringWriteProcPtr) (Tcl_DString *data, Tcl_Interp **interp, Tcl_DString **dataPtr, Tcl_Obj **format, Tk_PhotoImageBlock **blockPtr); /* 22 */
+    void (*reserved20)(void);
+    void (*reserved21)(void);
+    void (*reserved22)(void);
     void (*reserved23)(void);
     void (*reserved24)(void);
     void (*reserved25)(void);
@@ -149,6 +154,8 @@ typedef struct TkimgStubs {
     const char * (*tkimg_GetStringFromObjPtr) (Tcl_Obj *objPtr, int *lengthPtr); /* 30 */
     unsigned char * (*tkimg_GetByteArrayFromObjPtr) (Tcl_Obj *objPtr, int *lengthPtr); /* 31 */
     int (*tkimg_ListObjGetElementsPtr) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *argc, Tcl_Obj ***argv); /* 32 */
+    const char * (*tkimg_GetStringFromObj2Ptr) (Tcl_Obj *objPtr, size_t *lengthPtr); /* 33 */
+    unsigned char * (*tkimg_GetByteArrayFromObj2Ptr) (Tcl_Obj *objPtr, size_t *lengthPtr); /* 34 */
 } TkimgStubs;
 
 #ifdef __cplusplus
@@ -181,8 +188,10 @@ TKIMGAPI const TkimgStubs *tkimgStubsPtr;
 	(tkimgStubsPtr->tkimg_WritePtr) /* 6 */
 #define tkimg_ReadBuffer \
 	(tkimgStubsPtr->tkimg_ReadBufferPtr) /* 7 */
-/* Slot 8 is reserved */
-/* Slot 9 is reserved */
+#define tkimg_Read2 \
+	(tkimgStubsPtr->tkimg_Read2Ptr) /* 8 */
+#define tkimg_Write2 \
+	(tkimgStubsPtr->tkimg_Write2Ptr) /* 9 */
 #define tkimg_PhotoPutBlock \
 	(tkimgStubsPtr->tkimg_PhotoPutBlockPtr) /* 10 */
 #define tkimg_PhotoExpand \
@@ -196,12 +205,9 @@ TKIMGAPI const TkimgStubs *tkimgStubsPtr;
 /* Slot 17 is reserved */
 /* Slot 18 is reserved */
 /* Slot 19 is reserved */
-#define tkimg_FixChanMatchProc \
-	(tkimgStubsPtr->tkimg_FixChanMatchProcPtr) /* 20 */
-#define tkimg_FixObjMatchProc \
-	(tkimgStubsPtr->tkimg_FixObjMatchProcPtr) /* 21 */
-#define tkimg_FixStringWriteProc \
-	(tkimgStubsPtr->tkimg_FixStringWriteProcPtr) /* 22 */
+/* Slot 20 is reserved */
+/* Slot 21 is reserved */
+/* Slot 22 is reserved */
 /* Slot 23 is reserved */
 /* Slot 24 is reserved */
 /* Slot 25 is reserved */
@@ -215,6 +221,10 @@ TKIMGAPI const TkimgStubs *tkimgStubsPtr;
 	(tkimgStubsPtr->tkimg_GetByteArrayFromObjPtr) /* 31 */
 #define tkimg_ListObjGetElements \
 	(tkimgStubsPtr->tkimg_ListObjGetElementsPtr) /* 32 */
+#define tkimg_GetStringFromObj2 \
+	(tkimgStubsPtr->tkimg_GetStringFromObj2Ptr) /* 33 */
+#define tkimg_GetByteArrayFromObj2 \
+	(tkimgStubsPtr->tkimg_GetByteArrayFromObj2Ptr) /* 34 */
 
 #endif /* defined(USE_TKIMG_STUBS) */
 

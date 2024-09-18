@@ -45,6 +45,12 @@ declare 6 {
 declare 7 {
     void tkimg_ReadBuffer(int onOff)
 }
+declare 8 {
+    size_t tkimg_Read2(tkimg_MFile *handle, char *dst, size_t count)
+}
+declare 9 {
+    size_t tkimg_Write2(tkimg_MFile *handle, const char *src, size_t count)
+}
 
 #########################################################################
 ###  Specialized put block handling transparency
@@ -63,23 +69,6 @@ declare 12 {
 }
 
 #########################################################################
-###  Utilities to help handling the differences in 8.3.2 and 8.2 image
-###  types. Not used any more.
-
-declare 20 {
-    void tkimg_FixChanMatchProc(Tcl_Interp **interp, Tcl_Channel *chan,
-	const char **file, Tcl_Obj **format, int **width, int **height)
-}
-declare 21 {
-    void tkimg_FixObjMatchProc(Tcl_Interp **interp, Tcl_Obj **data,
-	Tcl_Obj **format, int **width, int **height)
-}
-declare 22 {
-    void tkimg_FixStringWriteProc(Tcl_DString *data, Tcl_Interp **interp,
-	Tcl_DString **dataPtr, Tcl_Obj **format, Tk_PhotoImageBlock **blockPtr)
-}
-
-#########################################################################
 ###  Like the core functions, except that they accept objPtr == NULL.
 ###  The byte array function also handles both UTF and non-UTF cores.
 
@@ -91,6 +80,12 @@ declare 31 {
 }
 declare 32 {
     int tkimg_ListObjGetElements(Tcl_Interp *interp, Tcl_Obj *objPtr, int *argc, Tcl_Obj ***argv)
+}
+declare 33 {
+    const char *tkimg_GetStringFromObj2(Tcl_Obj *objPtr, size_t *lengthPtr)
+}
+declare 34 {
+    unsigned char *tkimg_GetByteArrayFromObj2(Tcl_Obj *objPtr, size_t *lengthPtr)
 }
 
 #########################################################################

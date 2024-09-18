@@ -313,7 +313,7 @@ static void dtedClose (DTEDFILE *tf)
 static Boln readUByte (tkimg_MFile *handle, UByte *b)
 {
     char buf[1];
-    if (1 != tkimg_Read (handle, buf, 1))
+    if (1 != tkimg_Read2(handle, buf, 1))
         return FALSE;
     *b = buf[0];
     return TRUE;
@@ -327,7 +327,7 @@ static Boln readUByte (tkimg_MFile *handle, UByte *b)
 static Boln readShort (tkimg_MFile *handle, Short *s)
 {
     char buf[2];
-    if (2 != tkimg_Read (handle, buf, 2))
+    if (2 != tkimg_Read2(handle, buf, 2))
         return FALSE;
     *s = (buf[0] & 0xFF) | (buf[1] << 8);
     return TRUE;
@@ -340,7 +340,7 @@ static Boln readShort (tkimg_MFile *handle, Short *s)
 static Boln readInt (tkimg_MFile *handle, Int *i)
 {
     char buf[4];
-    if (4 != tkimg_Read (handle, buf, 4))
+    if (4 != tkimg_Read2(handle, buf, 4))
         return FALSE;
     *i = ((((Int)buf[0] & 0x000000FFU) << 24) | \
           (((Int)buf[1] & 0x0000FF00U) <<  8) | \
@@ -356,7 +356,7 @@ static Boln writeUByte (tkimg_MFile *handle, UByte b)
 {
     UByte buf[1];
     buf[0] = b;
-    if (1 != tkimg_Write (handle, (const char *)buf, 1))
+    if (1 != tkimg_Write2(handle, (const char *)buf, 1))
         return FALSE;
     return TRUE;
 }
@@ -369,7 +369,7 @@ static Boln writeByte (tkimg_MFile *handle, Byte b)
 {
     Byte buf[1];
     buf[0] = b;
-    if (1 != tkimg_Write (handle, buf, 1))
+    if (1 != tkimg_Write2(handle, buf, 1))
         return FALSE;
     return TRUE;
 }
@@ -384,7 +384,7 @@ static Boln writeShort (tkimg_MFile *handle, Short s)
     Byte buf[2];
     buf[0] = s;
     buf[1] = s >> 8;
-    if (2 != tkimg_Write (handle, buf, 2))
+    if (2 != tkimg_Write2(handle, buf, 2))
         return FALSE;
     return TRUE;
 }
@@ -399,7 +399,7 @@ static Boln writeUShort (tkimg_MFile *handle, UShort s)
     Byte buf[2];
     buf[0] = s;
     buf[1] = s >> 8;
-    if (2 != tkimg_Write (handle, buf, 2))
+    if (2 != tkimg_Write2(handle, buf, 2))
         return FALSE;
     return TRUE;
 }
@@ -438,7 +438,7 @@ static void printImgInfo (DTEDHEADER *th, FMTOPT *opts,
 #undef OUT
 static Boln readHeader (tkimg_MFile *handle, DTEDHEADER *th)
 {
-    if (sizeof (DTEDHEADER) != tkimg_Read (handle, (char *)th, sizeof(DTEDHEADER))) {
+    if (sizeof (DTEDHEADER) != tkimg_Read2(handle, (char *)th, sizeof(DTEDHEADER))) {
         return FALSE;
     }
     if (strncmp ((char *)th->uhl.uhl_tag, "UHL", 3) != 0) {
@@ -502,7 +502,7 @@ static Boln readDtedColumn (tkimg_MFile *handle, Short *pixels, Int nRows,
 
     /* Read the elevation data into the supplied column buffer "buf". */
     nBytes = sizeof (Short) * nRows;
-    if (nBytes != tkimg_Read (handle, buf, nBytes)) {
+    if (nBytes != tkimg_Read2(handle, buf, nBytes)) {
         printf ("Error reading elevation data\n");
         return FALSE;
     }
@@ -695,7 +695,7 @@ static int ParseFormatOpts (interp, format, opts)
 	return TCL_ERROR;
     if (objc) {
 	for (i=1; i<objc; i++) {
-	    if (Tcl_GetIndexFromObj (interp, objv[i], (CONST84 char *CONST86 *)dtedOptions,
+	    if (Tcl_GetIndexFromObj (interp, objv[i], (const char *CONST86 *)dtedOptions,
 		    "format option", 0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }

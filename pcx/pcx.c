@@ -120,14 +120,14 @@ static UShort qtohs (UShort x)
 static Boln readUByte (tkimg_MFile *handle, UByte *b)
 {
     char buf[1];
-    if (1 != tkimg_Read(handle, (char *) buf, 1))
+    if (1 != tkimg_Read2(handle, (char *) buf, 1))
         return FALSE;
     *b = buf[0];
     return TRUE;
 }
 #else
     /* Use this macro for better performance, esp. when reading RLE files. */
-#   define readUByte(h,b) (1 == tkimg_Read((h),(char *)(b),1))
+#   define readUByte(h,b) (1 == tkimg_Read2((h),(char *)(b),1))
 #endif
 
 /* Write 1 byte, representing an unsigned integer to a file. */
@@ -136,14 +136,14 @@ static Boln writeUByte (tkimg_MFile *handle, UByte b)
 {
     UByte buf[1];
     buf[0] = b;
-    if (1 != tkimg_Write(handle, (const char *)buf, 1))
+    if (1 != tkimg_Write2(handle, (const char *)buf, 1))
         return FALSE;
     return TRUE;
 }
 
 static Boln read_pcx_header (tkimg_MFile *ifp, PCXHEADER *pcxhdr)
 {
-    if (tkimg_Read(ifp, (char *)pcxhdr, 128) != 128) {
+    if (tkimg_Read2(ifp, (char *)pcxhdr, 128) != 128) {
 	return FALSE;
     }
 
@@ -206,7 +206,7 @@ static Boln readline (tkimg_MFile *handle, UByte *buffer, Int bytes, Int compr)
 	    *(buffer++) = value;
 	}
     } else {
-	if (bytes != tkimg_Read(handle, (char *)buffer, bytes)) {
+	if (bytes != tkimg_Read2(handle, (char *)buffer, bytes)) {
 	    return FALSE;
 	}
     }
@@ -290,10 +290,10 @@ static Boln load_8 (Tcl_Interp *interp, tkimg_MFile *ifp,
 	indBufPtr += fileWidth;
     }
     /* Read the colormap: 256 entries a 3 values for RGB */
-    if (tkimg_Read(ifp, (char *)&sepChar, 1) == 1) {
+    if (tkimg_Read2(ifp, (char *)&sepChar, 1) == 1) {
         if (sepChar == 12) {
             /* A colormap is available, if sepChar equals 0x0C */
-            if (tkimg_Read(ifp, (char *)&cmap, 768) != 768) {
+            if (tkimg_Read2(ifp, (char *)&cmap, 768) != 768) {
                 ckfree ((char *) line);
                 ckfree ((char *) buffer);
                 ckfree ((char *) indBuf);
@@ -477,7 +477,7 @@ static int ParseFormatOpts (interp, format, comp, verb, matte)
 	verbose     = "0";
 	transp      = "1";
 	for (i=1; i<objc; i++) {
-	    if (Tcl_GetIndexFromObj(interp, objv[i], (CONST84 char *CONST86 *)pcxOptions,
+	    if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)pcxOptions,
 		    "format option", 0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -828,7 +828,7 @@ static int CommonWrite (interp, filename, format, handle, blockPtr)
     ph.vdpi = htoqs (300);
     ph.reserved = 0;
 
-    if (tkimg_Write(handle, (const char *)&ph, 128) != 128) {
+    if (tkimg_Write2(handle, (const char *)&ph, 128) != 128) {
 	Tcl_AppendResult(interp, "Can't write PCX header.", (char *)NULL);
 	return TCL_ERROR;
     }
@@ -845,7 +845,7 @@ static int CommonWrite (interp, filename, format, handle, blockPtr)
 		row[x + 2*blockPtr->width] = pixelPtr[blueOffset];
 		pixelPtr += blockPtr->pixelSize;
 	    }
-	    if (nBytes != tkimg_Write(handle, (const char *)row, nBytes)) {
+	    if (nBytes != tkimg_Write2(handle, (const char *)row, nBytes)) {
 		sprintf(errMsg, "Can't write %d bytes to image file.", nBytes);
 		Tcl_AppendResult(interp, errMsg, (char *)NULL);
 		ckfree ((char *)row);

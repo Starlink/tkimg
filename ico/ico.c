@@ -117,7 +117,7 @@ typedef struct {
 static Boln readUByte (tkimg_MFile *handle, UByte *b)
 {
     char buf[1];
-    if (1 != tkimg_Read(handle, buf, 1)) {
+    if (1 != tkimg_Read2(handle, buf, 1)) {
         return FALSE;
     }
     *b = buf[0] & 0xFF;
@@ -133,7 +133,7 @@ static Boln readUShort (tkimg_MFile *handle, UShort *s)
     char buf[2];
     UShort tmp;
 
-    if (2 != tkimg_Read(handle, buf, 2)) {
+    if (2 != tkimg_Read2(handle, buf, 2)) {
         return FALSE;
     }
     tmp  =  buf[0] & 0xFF;
@@ -151,7 +151,7 @@ static Boln readUInt (tkimg_MFile *handle, UInt *i)
     char buf[4];
     UInt tmp;
 
-    if (4 != tkimg_Read(handle, buf, 4)) {
+    if (4 != tkimg_Read2(handle, buf, 4)) {
         return FALSE;
     }
     tmp  =  buf[0] & 0xFF;
@@ -168,7 +168,7 @@ static Boln writeUByte (tkimg_MFile *handle, UByte b)
 {
     UByte buf[1];
     buf[0] = b;
-    if (1 != tkimg_Write(handle, (const char *)buf, 1)) {
+    if (1 != tkimg_Write2(handle, (const char *)buf, 1)) {
         return FALSE;
     }
     return TRUE;
@@ -182,7 +182,7 @@ static Boln writeUShort (tkimg_MFile *handle, UShort s)
     Byte buf[2];
     buf[0] = (Byte)s;
     buf[1] = s >> 8;
-    if (2 != tkimg_Write(handle, buf, 2)) {
+    if (2 != tkimg_Write2(handle, buf, 2)) {
         return FALSE;
     }
     return TRUE;
@@ -198,7 +198,7 @@ static Boln writeUInt (tkimg_MFile *handle, UInt i)
     buf[1] = i >> 8;
     buf[2] = i >> 16;
     buf[3] = i >> 24;
-    if (4 != tkimg_Write(handle, buf, 4)) {
+    if (4 != tkimg_Write2(handle, buf, 4)) {
         return FALSE;
     }
     return TRUE;
@@ -450,7 +450,7 @@ static int ParseFormatOpts (interp, format, opts)
         return TCL_ERROR;
     if (objc) {
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (CONST84 char *CONST86 *)icoOptions,
+            if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)icoOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -651,7 +651,7 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
                    16 * icoHeader.nIcons;
     if (nBytesToSkip > 0) {
         char *dummy = ckalloc (nBytesToSkip);
-        tkimg_Read(handle, dummy, nBytesToSkip);
+        tkimg_Read2(handle, dummy, nBytesToSkip);
         ckfree ((char *) dummy);
     }
 
@@ -743,7 +743,7 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
     switch (infoHeader.nBitsPerPixel) {
         case 32:
             for (y=0; y<fileHeight; y++) {
-                tkimg_Read(handle, (char *)line, bytesPerLine);
+                tkimg_Read2(handle, (char *)line, bytesPerLine);
                 for (x = 0; x < fileWidth; x++) {
                     expline[0] = line[x*4 + 2];
                     expline[1] = line[x*4 + 1];
@@ -755,7 +755,7 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
             break;
         case 24:
             for (y=0; y<fileHeight; y++) {
-                tkimg_Read(handle, (char *)line, bytesPerLine);
+                tkimg_Read2(handle, (char *)line, bytesPerLine);
                 for (x = 0; x < fileWidth; x++) {
                     expline[0] = line[x*3 + 2];
                     expline[1] = line[x*3 + 1];
@@ -766,7 +766,7 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
             break;
         case 8:
             for (y=0; y<fileHeight; y++) {
-                tkimg_Read(handle, (char *)line, bytesPerLine);
+                tkimg_Read2(handle, (char *)line, bytesPerLine);
                 for (x = 0; x < fileWidth; x++) {
                     expline[0] = colorMap[line[x]].red;
                     expline[1] = colorMap[line[x]].green;
@@ -778,7 +778,7 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
         case 4:
             for (y=0; y<fileHeight; y++) {
                 int c;
-                tkimg_Read(handle, (char *)line, bytesPerLine);
+                tkimg_Read2(handle, (char *)line, bytesPerLine);
                 for (x=0; x<fileWidth; x++) {
                     if (x&1) {
                         c = line[x/2] & 0x0f;
@@ -795,7 +795,7 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
         case 1:
             for (y=0; y<fileHeight; y++) {
                 int c;
-                tkimg_Read(handle, (char *)line, bytesPerLine);
+                tkimg_Read2(handle, (char *)line, bytesPerLine);
                 for (x=0; x<fileWidth; x++) {
                     c = (line[x/8] >> (7-(x%8))) & 1;
                     expline[0] = colorMap[c].red;
@@ -821,7 +821,7 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
         expline = block.pixelPtr;
         for (y=0; y<fileHeight; y++) {
             int c;
-            tkimg_Read(handle, (char *)line, bytesPerLine);
+            tkimg_Read2(handle, (char *)line, bytesPerLine);
             for (x=0; x<fileWidth; x++) {
                 c = (line[x/8] >> (7-(x%8))) & 1;
                 expline[3] = (c? 0: 255);
@@ -1051,11 +1051,11 @@ static int CommonWrite (interp, handle, blockPtr)
                 buf[1] = pixelPtr[greenOffset];
                 buf[2] = pixelPtr[redOffset];
             }
-            tkimg_Write(handle, (char *) buf, nbytes);
+            tkimg_Write2(handle, (char *) buf, nbytes);
             pixelPtr += blockPtr->pixelSize;
         }
         if (bytesPerLineXOR) {
-            tkimg_Write(handle, "\0\0\0", bytesPerLineXOR);
+            tkimg_Write2(handle, "\0\0\0", bytesPerLineXOR);
         }
     }
 
@@ -1077,12 +1077,12 @@ static int CommonWrite (interp, handle, blockPtr)
                 }
             }
             if (x % 8 == 7) {
-                tkimg_Write(handle, (char *) buf, 1);
+                tkimg_Write2(handle, (char *) buf, 1);
             }
             pixelPtr += blockPtr->pixelSize;
         }
         if (bytesPerLineAND) {
-            tkimg_Write(handle, "\0\0\0", bytesPerLineAND);
+            tkimg_Write2(handle, "\0\0\0", bytesPerLineAND);
         }
     }
     return TCL_OK;

@@ -152,7 +152,7 @@ static int ParseFormatOpts (interp, format, matte, alpha, gamma, verbose)
         gammaStr   = "-1.0";
         verboseStr = "0";
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (CONST84 char *CONST86 *)pngOptions,
+            if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)pngOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -261,7 +261,7 @@ tk_png_read(png_ptr, data, length)
     png_bytep data;
     png_size_t length;
 {
-    if (tkimg_Read((tkimg_MFile *) png_get_progressive_ptr(png_ptr),
+    if (tkimg_Read2((tkimg_MFile *) png_get_progressive_ptr(png_ptr),
             (char *) data, (size_t) length) != (int) length) {
         png_error(png_ptr, "Read Error");
     }
@@ -273,7 +273,7 @@ tk_png_write(png_ptr, data, length)
     png_bytep data;
     png_size_t length;
 {
-    if (tkimg_Write((tkimg_MFile *) png_get_progressive_ptr(png_ptr),
+    if (tkimg_Write2((tkimg_MFile *) png_get_progressive_ptr(png_ptr),
             (char *) data, (size_t) length) != (int) length) {
         png_error(png_ptr, "Write Error");
     }
@@ -324,11 +324,11 @@ CommonMatchPNG(handle, widthPtr, heightPtr)
 {
     unsigned char buf[8];
 
-    if ((tkimg_Read(handle, (char *) buf, 8) != 8)
+    if ((tkimg_Read2(handle, (char *) buf, 8) != 8)
             || (strncmp("\211\120\116\107\15\12\32\12", (char *) buf, 8) != 0)
-            || (tkimg_Read(handle, (char *) buf, 8) != 8)
+            || (tkimg_Read2(handle, (char *) buf, 8) != 8)
             || (strncmp("\111\110\104\122", (char *) buf+4, 4) != 0)
-            || (tkimg_Read(handle, (char *) buf, 8) != 8)) {
+            || (tkimg_Read2(handle, (char *) buf, 8) != 8)) {
         return 0;
     }
     *widthPtr = (buf[0]<<24) + (buf[1]<<16) + (buf[2]<<8) + buf[3];

@@ -25,8 +25,8 @@ const TkimgStubs tkimgStubs = {
     tkimg_Putc, /* 5 */
     tkimg_Write, /* 6 */
     tkimg_ReadBuffer, /* 7 */
-    0, /* 8 */
-    0, /* 9 */
+    tkimg_Read2, /* 8 */
+    tkimg_Write2, /* 9 */
     tkimg_PhotoPutBlock, /* 10 */
     tkimg_PhotoExpand, /* 11 */
     tkimg_PhotoSetSize, /* 12 */
@@ -37,9 +37,9 @@ const TkimgStubs tkimgStubs = {
     0, /* 17 */
     0, /* 18 */
     0, /* 19 */
-    tkimg_FixChanMatchProc, /* 20 */
-    tkimg_FixObjMatchProc, /* 21 */
-    tkimg_FixStringWriteProc, /* 22 */
+    0, /* 20 */
+    0, /* 21 */
+    0, /* 22 */
     0, /* 23 */
     0, /* 24 */
     0, /* 25 */
@@ -50,6 +50,8 @@ const TkimgStubs tkimgStubs = {
     tkimg_GetStringFromObj, /* 30 */
     tkimg_GetByteArrayFromObj, /* 31 */
     tkimg_ListObjGetElements, /* 32 */
+    tkimg_GetStringFromObj2, /* 33 */
+    tkimg_GetByteArrayFromObj2, /* 34 */
 };
 
 /* !END!: Do not edit above this line. */

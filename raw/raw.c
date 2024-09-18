@@ -46,14 +46,14 @@
  * For raw images with header:
  * Read  RAW image: "raw -useheader true -verbose <bool> -map <enum>
  *                       -gamma <float> -min <float> -max <float>
- *                       -cutoff <float> -saturation <float>"
+ *                       -cutoff <float> -saturation <float> -printagc <bool>"
  * Write RAW image: "raw -useheader true -verbose <bool> -nchan <int>
  *                       -scanorder <string>"
  *
  * For raw images without header:
  * Read  RAW image: "raw -useheader false -verbose <bool> -map <enum>
  *                       -gamma <float> -min <float> -max <float>
- *                       -cutoff <float> -saturation <float>
+ *                       -cutoff <float> -saturation <float> -printagc <bool>
  *                       -nchan <int> -scanorder <string> -byteorder <string>
  *                       -width <int> -height <int> 
  *                       -pixeltype <string> -uuencode <bool>"
@@ -97,9 +97,17 @@
  * -min <float>:        Specify the minimum pixel value to be used for mapping
  *                      the input data to 8-bit image values.
  *                      Default is the minimum value found in the image data.
+ * -saturation <float>: If option is given, an Automatic Gain Control algorithmn is
+ *                      applied to the input values. The supplied value specifies the
+ *                      saturation value, i.e. all pixel values greater than the 
+ *                      saturation are mapped to white.
+ *                      Valid for mapping mode: agc
  * -cutoff <float>:     If option is given, an Automatic Gain Control algorithmn is
  *                      applied to the input values. The supplied value specifies the
  *                      cut-off value in percent.
+ *                      Valid for mapping mode: agc
+ * -printagc <bool>:    If set to true, additional information about the Automatic
+ *                      Gain Control is printed to stdout. Default is false.
  *                      Valid for mapping mode: agc
  *
  * -nchan <int>:        Specify the number of channels of the input image.
@@ -143,7 +151,6 @@
 #include "init.c"
 
 #define DEBUG_READ 0
-#define DEBUG_AGC  0
 
 /* Maximum length of a header line. */
 #define HEADLEN 100
@@ -233,6 +240,7 @@ typedef struct {
     Float saturation;   /* MAP_AGC */
     Float cutOff;       /* MAP_AGC */
     Boln  verbose;
+    Boln  printAgc;
     Boln  uuencode;
     Boln  useHeader;
 } FMTOPT;
@@ -380,7 +388,7 @@ static Boln readFloatRow (tkimg_MFile *handle, Float *pixels, Int nFloats,
 #if DEBUG_READ == 1
     printf ("Reading %d floats\n", nFloats); fflush (stdout);
 #endif
-    if (4 * nFloats != tkimg_Read (handle, buf, 4 * nFloats))
+    if (4 * nFloats != tkimg_Read2(handle, buf, 4 * nFloats))
         return FALSE;
 
     if (swapBytes) {
@@ -415,7 +423,7 @@ static Boln readUShortRow (tkimg_MFile *handle, UShort *pixels, Int nShorts,
 #if DEBUG_READ == 1
     printf ("Reading %d UShorts\n", nShorts); fflush (stdout);
 #endif
-    if (2 * nShorts != tkimg_Read (handle, buf, 2 * nShorts))
+    if (2 * nShorts != tkimg_Read2(handle, buf, 2 * nShorts))
         return FALSE;
 
     if (swapBytes) {
@@ -441,7 +449,7 @@ static Boln readUByteRow (tkimg_MFile *handle, UByte *pixels, Int nBytes)
 #if DEBUG_READ == 1
     printf ("Reading %d UBytes\n", nBytes); fflush (stdout);
 #endif
-    if (nBytes != tkimg_Read (handle, (char *)pixels, nBytes))
+    if (nBytes != tkimg_Read2(handle, (char *)pixels, nBytes))
         return FALSE;
 
     return TRUE;
@@ -502,7 +510,7 @@ static Boln readHeaderLine (Tcl_Interp *interp, tkimg_MFile *handle, char *buf)
     printf ("readHeaderLine\n"); fflush (stdout);
 #endif
 
-    while (tkimg_Read (handle, &c, 1) == 1 && bufPtr < bufEndPtr) {
+    while (tkimg_Read2(handle, &c, 1) == 1 && bufPtr < bufEndPtr) {
         if (c == '\n') {
             *bufPtr = '\0';
             failure = FALSE;
@@ -627,23 +635,23 @@ static Boln writeHeader (tkimg_MFile *handle, RAWHEADER *th)
     char buf[1024];
 
     sprintf (buf, strMagic, "RAW");
-    tkimg_Write (handle, buf, strlen (buf));
+    tkimg_Write2(handle, buf, strlen (buf));
     sprintf (buf, strWidth, th->width);
-    tkimg_Write (handle, buf, strlen (buf));
+    tkimg_Write2(handle, buf, strlen (buf));
     sprintf (buf, strHeight, th->height);
-    tkimg_Write (handle, buf, strlen (buf));
+    tkimg_Write2(handle, buf, strlen (buf));
     sprintf (buf, strNumChan, th->nChans);
-    tkimg_Write (handle, buf, strlen (buf));
+    tkimg_Write2(handle, buf, strlen (buf));
     sprintf (buf, strByteOrder, isIntel()? strIntel: strMotorola);
-    tkimg_Write (handle, buf, strlen (buf));
+    tkimg_Write2(handle, buf, strlen (buf));
     sprintf (buf, strScanOrder, th->scanOrder == TOP_DOWN?
                                 strTopDown: strBottomUp);
-    tkimg_Write (handle, buf, strlen (buf));
+    tkimg_Write2(handle, buf, strlen (buf));
     sprintf (buf, strPixelType, (th->pixelType == TYPE_FLOAT?  strFloat:
                                 (th->pixelType == TYPE_USHORT? strUShort:
                                 (th->pixelType == TYPE_UBYTE?  strUByte:
                                                                strUnknown))));
-    tkimg_Write (handle, buf, strlen (buf));
+    tkimg_Write2(handle, buf, strlen (buf));
     return TRUE;
 }
 
@@ -663,16 +671,20 @@ static void initHeader (RAWHEADER *th)
 
 static Boln readFloatFile (tkimg_MFile *handle, Float *buf, Int width, Int height,
                            Int nchan, Boln swapBytes, Boln verbose, Boln findMinMax,
-                           Float minVals[], Float maxVals[])
+                           Float minVals[], Float maxVals[], Float saturation)
 {
     Int x, y, c;
     Float *bufPtr = buf;
+    Float value;
     char  *line;
 
 #if DEBUG_READ == 1
     printf ("readFloatFile: Width=%d Height=%d nchan=%d swapBytes=%s findMinMax=%s\n",
              width, height, nchan, swapBytes? "yes": "no", findMinMax? "yes": "no"); fflush (stdout);
 #endif
+    if (saturation <= 0.0) {
+        saturation = 1.0E30;
+    }
     for (c=0; c<nchan; c++) {
         minVals[c] = (Float) 1.0E30;
         maxVals[c] = (Float)-1.0E30;
@@ -685,8 +697,9 @@ static Boln readFloatFile (tkimg_MFile *handle, Float *buf, Int width, Int heigh
         if (findMinMax) {
             for (x=0; x<width; x++) {
                 for (c=0; c<nchan; c++) {
-                    if (*bufPtr > maxVals[c]) maxVals[c] = *bufPtr;
-                    if (*bufPtr < minVals[c]) minVals[c] = *bufPtr;
+                    value = MIN (*bufPtr, saturation);
+                    if (value > maxVals[c]) maxVals[c] = value;
+                    if (value < minVals[c]) minVals[c] = value;
                     bufPtr++;
                 }
             }
@@ -819,7 +832,8 @@ static Int GetHistoIndex (Float val, Float minVal, Float maxVal )
 }
 
 static Boln HistogramFloat (Float *buf, Int width, Int height, Int nchan,
-                            Float minVals[], Float maxVals[], Int histogram[])
+                            Float minVals[], Float maxVals[], Int histogram[],
+                            Boln printAgc)
 {
     Int x, y, c;
     Int histoInd;
@@ -835,8 +849,7 @@ static Boln HistogramFloat (Float *buf, Int width, Int height, Int nchan,
             bufPtr++;
         }
     }
-#if DEBUG_AGC
-    {
+    if (printAgc) {
         Int i;
         Int count = 0;
         printf("agc globalMin %f\n", minVals[0]);
@@ -847,13 +860,12 @@ static Boln HistogramFloat (Float *buf, Int width, Int height, Int nchan,
         }
         printf( "agc histostat %d %d\n", count, HISTOGRAM_SIZE - count);
     }
-#endif
     return TRUE;
 }
 
 static Boln remapFloatValues (Float *buf, Int width, Int height, Int nchan,
                               Float minVals[], Float maxVals[],
-                              Float agcCutOffPercent)
+                              Float agcCutOffPercent, Boln printAgc)
 {
     Int   x, y, c;
     Float *bufPtr = buf;
@@ -875,7 +887,7 @@ static Boln remapFloatValues (Float *buf, Int width, Int height, Int nchan,
         Float sum = 0.0;
 
         /* Calculate histogram. */
-        HistogramFloat (buf, width, height, nchan, minVals, maxVals, histogram);
+        HistogramFloat (buf, width, height, nchan, minVals, maxVals, histogram, printAgc);
 
         /* Accumulate the histogram and divide by the image size. */
         for (i=0; i<HISTOGRAM_SIZE; i++) {
@@ -884,24 +896,24 @@ static Boln remapFloatValues (Float *buf, Int width, Int height, Int nchan,
             if( lut[i] >= agcCutOff && minLutInd < 0 ) {
                 minLutInd = i;
             }
-            if( lut[i] >= (1.0 - agcCutOff) && maxLutInd < 0 ) {
+            if (lut[i] >= (1.0 - agcCutOff) && maxLutInd < 0) {
                 maxLutInd = i;
             }
-#if DEBUG_AGC
-            printf ("agc lut %3d %.3f\n", i, lut[i]);
-#endif
+            if (printAgc) {
+                printf ("agc lut %3d %.3f\n", i, lut[i]);
+            }
         }
 
         for (c=0; c<nchan; c++) {
             minNewVals[c] = minLutInd * (maxVals[c] - minVals[c]) / HISTOGRAM_SCALE + minVals[c];
             maxNewVals[c] = maxLutInd * (maxVals[c] - minVals[c]) / HISTOGRAM_SCALE + minVals[c];
-#if DEBUG_AGC
-            printf( "agc cutOff %f\n", agcCutOff);
-            printf( "agc lutMinInd %d\n", minLutInd);
-            printf( "agc lutMaxInd %d\n", maxLutInd);
-            printf( "agc lutMin %f\n", minNewVals[c]);
-            printf( "agc lutMax %f\n", maxNewVals[c]);
-#endif
+            if (printAgc) {
+                printf ("agc cutOff %f\n", agcCutOff);
+                printf ("agc lutMinInd %d\n", minLutInd);
+                printf ("agc lutMaxInd %d\n", maxLutInd);
+                printf ("agc lutMin %f\n", minNewVals[c]);
+                printf ("agc lutMax %f\n", maxNewVals[c]);
+            }
         }
     }
 
@@ -974,7 +986,7 @@ static int ParseFormatOpts (interp, format, opts)
          "-verbose", "-width", "-height", "-nchan", "-byteorder",
          "-scanorder", "-pixeltype", "-min", "-max", "-gamma",
          "-useheader", "-map", "-uuencode", "-saturation", "-cutoff", 
-         "-nomap", NULL
+         "-nomap", "-printagc", NULL
     };
     int objc, i, index;
     char *optionStr;
@@ -999,12 +1011,13 @@ static int ParseFormatOpts (interp, format, opts)
     opts->uuencode   = 1;
     opts->saturation = -1.0;
     opts->cutOff     = 3.0;
+    opts->printAgc   = 0;
 
     if (tkimg_ListObjGetElements (interp, format, &objc, &objv) != TCL_OK)
         return TCL_ERROR;
     if (objc) {
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj (interp, objv[i], (CONST84 char *CONST86 *)rawOptions,
+            if (Tcl_GetIndexFromObj (interp, objv[i], (const char *CONST86 *)rawOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -1183,6 +1196,15 @@ static int ParseFormatOpts (interp, format, opts)
                         opts->mapMode = MAP_NONE;
                     }
                     break;
+                case 16:
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_AppendResult (interp, "Invalid printagc mode \"", optionStr,
+                                          "\": should be 1 or 0, on or off, true or false",
+                                          (char *) NULL);
+                        return TCL_ERROR;
+                    }
+                    opts->printAgc = boolVal;
+                    break;
             }
         }
     }
@@ -1225,7 +1247,9 @@ static int ObjMatch(
         return FALSE;
     }
     if (!opts.uuencode) {
-        handle.data = (char *) tkimg_GetByteArrayFromObj(data, &handle.length);
+        size_t length;
+        handle.data = (char *) tkimg_GetByteArrayFromObj2(data, &length);
+        handle.length = length;
         handle.state = IMG_STRING;
     } else {
         tkimg_ReadInit(data, 'M', &handle);
@@ -1309,7 +1333,9 @@ static int ObjRead (interp, data, format, imageHandle,
         return TCL_ERROR;
     }
     if (!opts.uuencode) {
-        handle.data = (char *) tkimg_GetByteArrayFromObj(data, &handle.length);
+        size_t length;
+        handle.data = (char *) tkimg_GetByteArrayFromObj2(data, &length);
+        handle.length = length;
         handle.state = IMG_STRING;
     } else {
         tkimg_ReadInit(data, 'M', &handle);
@@ -1400,7 +1426,7 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
         case TYPE_FLOAT: {
             tf.floatBuf = (Float *)ckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (Float));
             readFloatFile (handle, tf.floatBuf, fileWidth, fileHeight, tf.th.nChans,
-                           swapBytes, opts.verbose, opts.mapMode != MAP_NONE, minVals, maxVals);
+                           swapBytes, opts.verbose, opts.mapMode != MAP_NONE, minVals, maxVals, opts.saturation);
             break;
         }
         case TYPE_USHORT: {
@@ -1438,11 +1464,7 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
             break;
         }
         case MAP_AGC: {
-            if (opts.saturation >= 0.0) {
-                for (c=0; c<tf.th.nChans; c++) {
-                    maxVals[c] = opts.saturation;
-                }
-            }
+            /* Nothing to do. Saturation is considered on readFloatFile. */
             break;
         }
     }
@@ -1450,7 +1472,8 @@ static int CommonRead (interp, handle, filename, format, imageHandle,
     switch (pixelType) {
         case TYPE_FLOAT: {
             remapFloatValues (tf.floatBuf, fileWidth, fileHeight, tf.th.nChans,
-                              minVals, maxVals, opts.mapMode == MAP_AGC? opts.cutOff: -1.0);
+                              minVals, maxVals, opts.mapMode == MAP_AGC? opts.cutOff: -1.0,
+                              opts.printAgc);
             break;
         }
         case TYPE_USHORT: {
@@ -1662,7 +1685,7 @@ static int CommonWrite (interp, filename, format, handle, blockPtr)
                 pixelPtr += blockPtr->pixelSize;
             }
         }
-        if (tkimg_Write (handle, (char *)tf.ubyteBuf, bytesPerLine) != bytesPerLine) {
+        if (tkimg_Write2(handle, (char *)tf.ubyteBuf, bytesPerLine) != bytesPerLine) {
             rawClose (&tf, FALSE);
             return TCL_ERROR;
         }

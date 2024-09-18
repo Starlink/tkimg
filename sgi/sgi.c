@@ -357,7 +357,7 @@ static int imgopen(int f, MYCHANNEL file, IMAGE *image, const char *mode,
                 unsigned int xsize, unsigned int ysize, unsigned int zsize)
 {
     register int rw;
-    int tablesize;
+    size_t tablesize;
     register int i, max;
 
     rw = mode[1] == '+';
@@ -428,13 +428,13 @@ static int imgopen(int f, MYCHANNEL file, IMAGE *image, const char *mode,
         } else {
             tablesize = image->ysize*image->zsize*sizeof(int);
             Tcl_Seek (file, 512L, 0);
-            if (tablesize != Tcl_Read (file, (char *)image->rowstart, tablesize)) {
+            if (tablesize != (size_t)Tcl_Read (file, (char *)image->rowstart, tablesize)) {
                 i_errhdlr("iopen: error on read of rowstart\n");
                 return 0;
             }
             if(image->dorev)
                 cvtlongs(image->rowstart,tablesize);
-            if (Tcl_Read (file, (char *)image->rowsize, tablesize) != tablesize) {
+            if ((size_t)Tcl_Read (file, (char *)image->rowsize, tablesize) != tablesize) {
                 i_errhdlr("iopen: error on read of rowsize\n");
                 return 0;
             }
@@ -466,7 +466,7 @@ static int imgopen(int f, MYCHANNEL file, IMAGE *image, const char *mode,
 
 static int iclose(IMAGE *image)
 {
-    int tablesize;
+    size_t tablesize;
 
     iflush(image);
     img_optseek(image, 0);
@@ -484,13 +484,13 @@ static int iclose(IMAGE *image)
             tablesize = image->ysize*image->zsize*sizeof(int);
             if(image->dorev)
                 cvtlongs(image->rowstart,tablesize);
-            if (img_write(image,(char *)(image->rowstart),tablesize) != tablesize) {
+            if ((size_t)img_write(image,(char *)(image->rowstart),tablesize) != tablesize) {
                 i_errhdlr("iclose: error on write of rowstart\n");
                 return EOF;
             }
             if(image->dorev)
                 cvtlongs(image->rowsize,tablesize);
-            if (img_write(image,(char *)(image->rowsize),tablesize) != tablesize) {
+            if ((size_t)img_write(image,(char *)(image->rowsize),tablesize) != tablesize) {
                 i_errhdlr("iclose: error on write of rowsize\n");
                 return EOF;
             }
@@ -1185,7 +1185,7 @@ static void printImgInfo (IMAGE *th, const char *filename, const char *msg)
 
 static Boln readHeader (tkimg_MFile *handle, IMAGE *th)
 {
-    if (512 != tkimg_Read(handle, (char *)th, 512)) {
+    if (512 != tkimg_Read2(handle, (char *)th, 512)) {
         return FALSE;
     }
                                                                                     if( ((th->imagic>>8) | ((th->imagic&0xff)<<8)) == IMAGIC ) {
@@ -1338,7 +1338,7 @@ static int ParseFormatOpts (interp, format, comp, verb, matte)
         verbose     = "0";
         transp      = "1";
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (CONST84 char *CONST86 *)sgiOptions,
+            if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)sgiOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -1518,10 +1518,10 @@ static int ObjRead (interp, data, format, imageHandle,
         return TCL_ERROR;
     }
 
-    count = tkimg_Read(&handle, buffer, BUFLEN);
+    count = tkimg_Read2(&handle, buffer, BUFLEN);
     while (count == BUFLEN) {
         Tcl_Write (outchan, buffer, count);
-        count = tkimg_Read(&handle, buffer, BUFLEN);
+        count = tkimg_Read2(&handle, buffer, BUFLEN);
     }
     if (count>0) {
         Tcl_Write (outchan, buffer, count);
@@ -1718,11 +1718,11 @@ static int StringWrite(
 
     count = Tcl_Read(inchan, buffer, BUFLEN);
     while (count == BUFLEN) {
-        tkimg_Write(&handle, buffer, count);
+        tkimg_Write2(&handle, buffer, count);
         count = Tcl_Read(inchan, buffer, BUFLEN);
     }
     if (count>0) {
-        tkimg_Write(&handle, buffer, count);
+        tkimg_Write2(&handle, buffer, count);
     }
     if (Tcl_Close(interp, inchan) == TCL_ERROR) {
         return TCL_ERROR;

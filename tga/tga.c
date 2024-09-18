@@ -150,7 +150,7 @@ static Boln writeError(Tcl_Interp *interp)
 static Boln readUByte (tkimg_MFile *handle, UByte *b)
 {
     char buf[1];
-    if (1 != tkimg_Read(handle, buf, 1))
+    if (1 != tkimg_Read2(handle, buf, 1))
         return FALSE;
     *b = buf[0];
     return TRUE;
@@ -162,7 +162,7 @@ static Boln readUByte (tkimg_MFile *handle, UByte *b)
 static Boln readShort (tkimg_MFile *handle, Short *s)
 {
     char buf[2];
-    if (2 != tkimg_Read(handle, buf, 2))
+    if (2 != tkimg_Read2(handle, buf, 2))
         return FALSE;
     *s = (buf[0] & 0xFF) | (buf[1] << 8);
     return TRUE;
@@ -174,7 +174,7 @@ static Boln writeUByte (tkimg_MFile *handle, UByte b)
 {
     UByte buf[1];
     buf[0] = b;
-    if (1 != tkimg_Write(handle, (const char *)buf, 1))
+    if (1 != tkimg_Write2(handle, (const char *)buf, 1))
         return FALSE;
     return TRUE;
 }
@@ -185,7 +185,7 @@ static Boln writeByte(tkimg_MFile *handle, Byte b)
 {
     Byte buf[1];
     buf[0] = b;
-    if (1 != tkimg_Write(handle, buf, 1))
+    if (1 != tkimg_Write2(handle, buf, 1))
         return FALSE;
     return TRUE;
 }
@@ -198,7 +198,7 @@ static Boln writeShort (tkimg_MFile *handle, Short s)
     Byte buf[2];
     buf[0] = s;
     buf[1] = s >> 8;
-    if (2 != tkimg_Write(handle, buf, 2))
+    if (2 != tkimg_Write2(handle, buf, 2))
         return FALSE;
     return TRUE;
 }
@@ -320,7 +320,7 @@ static Boln readRlePixel (Tcl_Interp *interp, tkimg_MFile *handle, UByte **pixBu
     UByte localBuf[4];
 
     nchan = NCHAN(tf->th.pixsize);
-    if (nchan != tkimg_Read(handle, (char *)localBuf, nchan))
+    if (nchan != tkimg_Read2(handle, (char *)localBuf, nchan))
 	return readError (interp);
     count = *countPtr;
     for (i=0; i<n; i++)
@@ -376,7 +376,7 @@ static Boln tgaReadScan (Tcl_Interp *interp, tkimg_MFile *handle,
 	   appropriate number of pixel values (TGA_MODE_DIFF). */
 	while (tf->scanrest) {
 	    if (tf->scanmode == TGA_MODE_DIFF) {
-		if (nchan != tkimg_Read(handle, (char *)localBuf, nchan))
+		if (nchan != tkimg_Read2(handle, (char *)localBuf, nchan))
 		    return readError (interp);
 	    }
 #ifdef DEBUG_LOCAL
@@ -399,7 +399,7 @@ static Boln tgaReadScan (Tcl_Interp *interp, tkimg_MFile *handle,
 	/* Read the byte telling us the compression mode and the compression
 	   count. Then read the pixel values till a scanline is filled. */
 	do {
-	    if (1 != tkimg_Read(handle, cbuf, 1))
+	    if (1 != tkimg_Read2(handle, cbuf, 1))
 		return readError (interp);
 	    numpix = (cbuf[0] & 0x7F) + 1;
 
@@ -432,7 +432,7 @@ static Boln tgaReadScan (Tcl_Interp *interp, tkimg_MFile *handle,
 	UByte curPix;
 
 	bytesPerLine = nchan * tf->th.xsize;
-	if (bytesPerLine != tkimg_Read(handle, (char *)tf->pixbuf, bytesPerLine))
+	if (bytesPerLine != tkimg_Read2(handle, (char *)tf->pixbuf, bytesPerLine))
 	    return readError (interp);
 
 	for (i=0; i<stop; i++) {
@@ -453,7 +453,7 @@ static Boln writePixel(tkimg_MFile *handle, UByte b, UByte g,
     buf[1] = g;
     buf[2] = r;
     buf[3] = m;
-    if (nchan != tkimg_Write(handle, (const char *)buf, nchan))
+    if ((size_t)nchan != tkimg_Write2(handle, (const char *)buf, nchan))
 	return FALSE;
     return TRUE;
 }
@@ -610,7 +610,7 @@ static int ParseFormatOpts(interp, format, comp, verb, matte)
 	verbose     = "0";
 	transp      = "1";
 	for (i=1; i<objc; i++) {
-	    if (Tcl_GetIndexFromObj(interp, objv[i], (CONST84 char *CONST86 *)tgaOptions,
+	    if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)tgaOptions,
 		    "format option", 0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }

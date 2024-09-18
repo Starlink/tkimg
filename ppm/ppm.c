@@ -273,7 +273,7 @@ static int getNextVal (Tcl_Interp *interp, tkimg_MFile *handle, UInt *val)
     UInt i;
 
     /* First skip leading whitespaces. */
-    while (tkimg_Read (handle, &c, 1) == 1) {
+    while (tkimg_Read2(handle, &c, 1) == 1) {
         if (!isspace(UCHAR(c))) {
             break;
         }
@@ -281,7 +281,7 @@ static int getNextVal (Tcl_Interp *interp, tkimg_MFile *handle, UInt *val)
 
     buf[0] = c;
     i = 1;
-    while (tkimg_Read (handle, &c, 1) == 1 && i < TCL_INTEGER_SPACE) {
+    while (tkimg_Read2(handle, &c, 1) == 1 && i < TCL_INTEGER_SPACE) {
         if (isspace(UCHAR(c))) {
             buf[i] = '\0';
             sscanf (buf, "%u", val);
@@ -313,7 +313,7 @@ static Boln readUShortRow (Tcl_Interp *interp, tkimg_MFile *handle, UShort *pixe
         return TRUE;
     }
 
-    if (2 * nShorts != tkimg_Read (handle, buf, 2 * nShorts))
+    if (2 * nShorts != tkimg_Read2(handle, buf, 2 * nShorts))
         return FALSE;
              
     if (swapBytes) {
@@ -354,7 +354,7 @@ static Boln readUByteRow (Tcl_Interp *interp, tkimg_MFile *handle, UByte *pixels
         return TRUE;
     }
 
-    if (nBytes != tkimg_Read (handle, buf, nBytes))
+    if (nBytes != tkimg_Read2(handle, buf, nBytes))
         return FALSE;
              
     for (i=0; i<nBytes; i++) {
@@ -503,7 +503,7 @@ static int ParseFormatOpts (interp, format, opts)
         return TCL_ERROR;
     if (objc) {
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (CONST84 char *CONST86 *)ppmOptions,
+            if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)ppmOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -979,7 +979,7 @@ static int writeAsciiRow (tkimg_MFile *handle, const unsigned char *scanline, in
 
     for (i=0; i<nBytes; i++) {
         sprintf (buf, "%d\n", scanline[i]);
-        if (tkimg_Write(handle, buf, strlen(buf)) != (int)strlen(buf)) {
+        if (tkimg_Write2(handle, buf, strlen(buf)) != strlen(buf)) {
             return i;
         }
     }
@@ -1006,7 +1006,7 @@ static int CommonWrite (interp, filename, format, handle, blockPtr)
 
     sprintf(header, "P%d\n%d %d\n255\n", opts.writeAscii? 3: 6,
                      blockPtr->width, blockPtr->height);
-    if (tkimg_Write(handle, header, strlen(header)) != (int)strlen(header)) {
+    if (tkimg_Write2(handle, header, strlen(header)) != strlen(header)) {
         goto writeerror;
     }
 
@@ -1027,11 +1027,11 @@ static int CommonWrite (interp, filename, format, handle, blockPtr)
             pixelPtr += blockPtr->pixelSize;
         }
         if (opts.writeAscii) {
-            if (writeAsciiRow (handle, scanline, nBytes) != nBytes) {
+            if (writeAsciiRow(handle, scanline, nBytes) != nBytes) {
                 goto writeerror;
             }
         } else {
-            if (tkimg_Write(handle, (char *) scanline, nBytes) != nBytes) {
+            if (tkimg_Write2(handle, (char *) scanline, nBytes) != nBytes) {
                 goto writeerror;
             }
         }
@@ -1089,7 +1089,7 @@ ReadPPMFileHeader (handle, widthPtr, heightPtr, maxIntensityPtr, isAsciiPtr)
      * comments (any line that starts with "#").
      */
 
-    if (tkimg_Read(handle, &c, 1) != 1) {
+    if (tkimg_Read2(handle, &c, 1) != 1) {
         return 0;
     }
     i = 0;
@@ -1100,7 +1100,7 @@ ReadPPMFileHeader (handle, widthPtr, heightPtr, maxIntensityPtr, isAsciiPtr)
 
         while (1) {
             while (isspace(UCHAR(c))) {
-                if (tkimg_Read(handle, &c, 1) != 1) {
+                if (tkimg_Read2(handle, &c, 1) != 1) {
                     return 0;
                 }
             }
@@ -1108,7 +1108,7 @@ ReadPPMFileHeader (handle, widthPtr, heightPtr, maxIntensityPtr, isAsciiPtr)
                 break;
             }
             do {
-                if (tkimg_Read(handle, &c, 1) != 1) {
+                if (tkimg_Read2(handle, &c, 1) != 1) {
                     return 0;
                 }
             } while (c != '\n');
@@ -1123,7 +1123,7 @@ ReadPPMFileHeader (handle, widthPtr, heightPtr, maxIntensityPtr, isAsciiPtr)
                 buffer[i] = c;
                 i++;
             }
-            if (tkimg_Read(handle, &c, 1) != 1) {
+            if (tkimg_Read2(handle, &c, 1) != 1) {
                 goto done;
             }
         }
