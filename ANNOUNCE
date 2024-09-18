@@ -1,7 +1,11 @@
-We are happy to announce version 1.4.10 of the "tkImg" package
+We are happy to announce version 1.4.11 of the "tkImg" package
 (formerly known as "Img").
 
 This package enhances Tk, adding support for many image formats.
+
+Changes compared to version 1.4.10:
+  - Fixed "-format window" on Windows.
+    It is now possible to get the window content, even if the window is hidden.
 
 Changes compared to version 1.4.9:
   - Bug fix when reading 16-bit images (tkimg_RemapUShortValues).

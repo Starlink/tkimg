@@ -7,7 +7,7 @@ dnl
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimgpixmap],[1.4.10])
+AC_INIT([tkimgpixmap],[1.4.11])
 
 TEA_INIT([3.9])
 

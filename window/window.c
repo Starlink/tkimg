@@ -195,7 +195,7 @@ static int ObjMatch(
         INT     height;
     } BITMAPCAPTURE;
 
-    static BOOL CaptureScreen (BITMAPCAPTURE *bmpCapture)
+    static BOOL CaptureWindow (BITMAPCAPTURE *bmpCapture, Tk_Window tkwin)
     {
         BOOL bResult = FALSE;
         if (!bmpCapture) {
@@ -204,11 +204,15 @@ static int ObjMatch(
          
         ZeroMemory (bmpCapture, sizeof(BITMAPCAPTURE));
          
-        HDC hdcScreen  = GetDC(NULL);
+        HWND hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
+        if( ! hWnd ) {
+            return bResult;
+        }
+        HDC hdcScreen  = GetDC(hWnd);
         HDC hdcCapture = CreateCompatibleDC(NULL);
-        int nWidth     = GetSystemMetrics(SM_CXVIRTUALSCREEN),
-            nHeight    = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-         
+        int nWidth  = Tk_Width(tkwin);
+        int nHeight = Tk_Height(tkwin);
+
         LPBYTE lpCapture;
         BITMAPINFO bmiCapture = { {
             sizeof(BITMAPINFOHEADER), nWidth, -nHeight, 1, 32, BI_RGB, 0, 0, 0, 0, 0,
@@ -344,7 +348,7 @@ static int ObjRead(
 #else
     ximage = TkWinGetDrawableDC(Tk_Display(tkwin), Tk_WindowId(tkwin), &DCi);
 
-    if ( ! CaptureScreen (&grab)) {
+    if ( ! CaptureWindow (&grab, tkwin)) {
         Tcl_AppendResult(interp, "Window \"", name, "\" cannot be grabbed", (char *) NULL);
         return TCL_ERROR;
     }
@@ -450,7 +454,7 @@ static int ObjRead(
 #else
             /* Bitmap has order ARGB. */
             #define BITMAP_PIXEL(b, x, y) ((b).pixels[(y) * (b).width + (x)])
-            COLORREF pixel = BITMAP_PIXEL (grab, x+rootX, y+rootY);
+            COLORREF pixel = BITMAP_PIXEL (grab, x, y);
             p[0] = (pixel & 0xFF0000) >> 16;
             p[1] = (pixel & 0xFF00)   >>  8;
             p[2] = (pixel & 0xFF);
