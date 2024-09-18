@@ -21,12 +21,28 @@
 #ifdef _MSC_VER
 #pragma warning(disable:4244) /* '=' : conversion from '__int64' to 'int', possible loss of data */
 #pragma warning(disable:4761) /* integral size mismatch in argument; conversion supplied */
+#if _MSC_VER <= 1800 /* VS 2013 and older do not have snprintf */
+#define tkimg_snprintf _snprintf
+#else
+#define tkimg_snprintf snprintf
+#endif
+#else
+#define tkimg_snprintf snprintf
+#endif
+
+#if defined(__MINGW32__)
+#define SETJMP(jbuf) __builtin_setjmp(jbuf)
+#define LONGJMP(jbuf, code) __builtin_longjmp(jbuf, code)
+#else
+#define SETJMP(jbuf) setjmp(jbuf)
+#define LONGJMP(jbuf, code) longjmp(jbuf, code)
 #endif
 
 #include <stdio.h> /* stdout, and other definitions */
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <setjmp.h>
 #include <tk.h>
 
 /*
@@ -58,10 +74,6 @@ typedef int boolean;
  * we can just get the version info.
  */
 #ifndef RC_INVOKED
-
-#ifndef CONST86
-#   define CONST86
-#endif
 
 #ifndef TK_PHOTO_COMPOSITE_OVERLAY
 #   define TK_PHOTO_COMPOSITE_OVERLAY 0

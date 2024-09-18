@@ -168,11 +168,8 @@ TIFFTCLAPI int		TIFFReadRGBAStrip(TIFF *tiffptr, tstrip_t a,
 /* 56 */
 TIFFTCLAPI int		TIFFReadRGBATile(TIFF *tiffptr, uint32_t a,
 				uint32_t b, uint32_t *c);
-/* 57 */
-TIFFTCLAPI int		TIFFRGBAImageOK(TIFF *tiffptr, char *a);
-/* 58 */
-TIFFTCLAPI int		TIFFRGBAImageBegin(TIFFRGBAImage *a, TIFF *tiffptr,
-				int b, char *c);
+/* Slot 57 is reserved */
+/* Slot 58 is reserved */
 /* 59 */
 TIFFTCLAPI int		TIFFRGBAImageGet(TIFFRGBAImage *d, uint32_t *c,
 				uint32_t b, uint32_t a);
@@ -299,42 +296,21 @@ TIFFTCLAPI int		_TIFFMergeFields(TIFF *tiffptr, const TIFFField *a,
 /* Slot 117 is reserved */
 /* Slot 118 is reserved */
 /* Slot 119 is reserved */
-/* 120 */
-TIFFTCLAPI int		_TIFFgetMode(const char *a, const char *b);
-/* 121 */
-TIFFTCLAPI int		_TIFFNoRowEncode(TIFF *tiffptr, tidata_t a,
-				tsize_t b, tsample_t c);
-/* 122 */
-TIFFTCLAPI int		_TIFFNoStripEncode(TIFF *tiffptr, tidata_t c,
-				tsize_t b, tsample_t a);
-/* 123 */
-TIFFTCLAPI int		_TIFFNoTileEncode(TIFF *tiffptr, tidata_t a,
-				tsize_t b, tsample_t c);
-/* 124 */
-TIFFTCLAPI int		_TIFFNoRowDecode(TIFF *tiffptr, tidata_t c,
-				tsize_t b, tsample_t a);
-/* 125 */
-TIFFTCLAPI int		_TIFFNoStripDecode(TIFF *tiffptr, tidata_t a,
-				tsize_t b, tsample_t c);
-/* 126 */
-TIFFTCLAPI int		_TIFFNoTileDecode(TIFF *tiffptr, tidata_t c,
-				tsize_t b, tsample_t a);
+/* Slot 120 is reserved */
+/* Slot 121 is reserved */
+/* Slot 122 is reserved */
+/* Slot 123 is reserved */
+/* Slot 124 is reserved */
+/* Slot 125 is reserved */
+/* Slot 126 is reserved */
 /* 127 */
 TIFFTCLAPI void		_TIFFNoPostDecode(TIFF *tiffptr, tidata_t a,
 				tsize_t b);
-/* 128 */
-TIFFTCLAPI int		_TIFFNoPreCode(TIFF *tiffptr, tsample_t a);
-/* 129 */
-TIFFTCLAPI int		_TIFFNoSeek(TIFF *tiffptr, uint32_t a);
-/* 130 */
-TIFFTCLAPI void		_TIFFSwab16BitData(TIFF *tiffptr, tidata_t a,
-				tsize_t b);
-/* 131 */
-TIFFTCLAPI void		_TIFFSwab32BitData(TIFF *tiffptr, tidata_t b,
-				tsize_t a);
-/* 132 */
-TIFFTCLAPI void		_TIFFSwab64BitData(TIFF *tiffptr, tidata_t a,
-				tsize_t b);
+/* Slot 128 is reserved */
+/* Slot 129 is reserved */
+/* Slot 130 is reserved */
+/* Slot 131 is reserved */
+/* Slot 132 is reserved */
 /* 133 */
 TIFFTCLAPI int		TIFFFlushData1(TIFF *tiffptr);
 /* 134 */
@@ -347,30 +323,17 @@ TIFFTCLAPI int		TIFFSetCompressionScheme(TIFF *tiffptr, int a);
 TIFFTCLAPI void		_TIFFSetDefaultCompressionState(TIFF *tiffptr);
 /* 138 */
 TIFFTCLAPI uint32_t	_TIFFDefaultStripSize(TIFF *tiffptr, uint32_t a);
-/* 139 */
-TIFFTCLAPI void		_TIFFDefaultTileSize(TIFF *tiffptr, uint32_t *a,
-				uint32_t *b);
+/* Slot 139 is reserved */
 /* 140 */
 TIFFTCLAPI void		_TIFFsetByteArray(void **a, const void *b,
 				uint32_t c);
 /* Slot 141 is reserved */
-/* 142 */
-TIFFTCLAPI void		_TIFFsetShortArray(uint16_t **a, const uint16_t *b,
-				uint32_t c);
-/* 143 */
-TIFFTCLAPI void		_TIFFsetLongArray(uint32_t **a, const uint32_t *b,
-				uint32_t c);
-/* 144 */
-TIFFTCLAPI void		_TIFFsetFloatArray(float **a, const float *b,
-				uint32_t c);
-/* 145 */
-TIFFTCLAPI void		_TIFFsetDoubleArray(double **a, const double *b,
-				uint32_t c);
-/* 146 */
-TIFFTCLAPI void		_TIFFprintAscii(FILE *a, const char *b);
-/* 147 */
-TIFFTCLAPI void		_TIFFprintAsciiTag(FILE *a, const char *b,
-				const char *c);
+/* Slot 142 is reserved */
+/* Slot 143 is reserved */
+/* Slot 144 is reserved */
+/* Slot 145 is reserved */
+/* Slot 146 is reserved */
+/* Slot 147 is reserved */
 /* 148 */
 TIFFTCLAPI int		TIFFInitDumpMode(TIFF *tiffptr, int a);
 /* 149 */
@@ -404,6 +367,9 @@ TIFFTCLAPI int		TIFFInitSGILog(TIFF *tiffptr, int a);
 /* 163 */
 TIFFTCLAPI tmsize_t	_TIFFMultiplySSize(TIFF *tiffptr, tmsize_t a,
 				tmsize_t b, const char *c);
+/* 164 */
+TIFFTCLAPI void		TIFFWarningExt(thandle_t h, const char *a,
+				const char *b, ...);
 
 typedef struct TifftclStubs {
     int magic;
@@ -466,8 +432,8 @@ typedef struct TifftclStubs {
     int (*tIFFReadRGBAImage) (TIFF *tiffptr, uint32_t a, uint32_t b, uint32_t *c, int d); /* 54 */
     int (*tIFFReadRGBAStrip) (TIFF *tiffptr, tstrip_t a, uint32_t *b); /* 55 */
     int (*tIFFReadRGBATile) (TIFF *tiffptr, uint32_t a, uint32_t b, uint32_t *c); /* 56 */
-    int (*tIFFRGBAImageOK) (TIFF *tiffptr, char *a); /* 57 */
-    int (*tIFFRGBAImageBegin) (TIFFRGBAImage *a, TIFF *tiffptr, int b, char *c); /* 58 */
+    void (*reserved57)(void);
+    void (*reserved58)(void);
     int (*tIFFRGBAImageGet) (TIFFRGBAImage *d, uint32_t *c, uint32_t b, uint32_t a); /* 59 */
     void (*tIFFRGBAImageEnd) (TIFFRGBAImage *a); /* 60 */
     TIFF * (*tIFFOpen) (const char *b, const char *a); /* 61 */
@@ -529,34 +495,34 @@ typedef struct TifftclStubs {
     void (*reserved117)(void);
     void (*reserved118)(void);
     void (*reserved119)(void);
-    int (*_TIFFgetModePtr) (const char *a, const char *b); /* 120 */
-    int (*_TIFFNoRowEncodePtr) (TIFF *tiffptr, tidata_t a, tsize_t b, tsample_t c); /* 121 */
-    int (*_TIFFNoStripEncodePtr) (TIFF *tiffptr, tidata_t c, tsize_t b, tsample_t a); /* 122 */
-    int (*_TIFFNoTileEncodePtr) (TIFF *tiffptr, tidata_t a, tsize_t b, tsample_t c); /* 123 */
-    int (*_TIFFNoRowDecodePtr) (TIFF *tiffptr, tidata_t c, tsize_t b, tsample_t a); /* 124 */
-    int (*_TIFFNoStripDecodePtr) (TIFF *tiffptr, tidata_t a, tsize_t b, tsample_t c); /* 125 */
-    int (*_TIFFNoTileDecodePtr) (TIFF *tiffptr, tidata_t c, tsize_t b, tsample_t a); /* 126 */
+    void (*reserved120)(void);
+    void (*reserved121)(void);
+    void (*reserved122)(void);
+    void (*reserved123)(void);
+    void (*reserved124)(void);
+    void (*reserved125)(void);
+    void (*reserved126)(void);
     void (*_TIFFNoPostDecodePtr) (TIFF *tiffptr, tidata_t a, tsize_t b); /* 127 */
-    int (*_TIFFNoPreCodePtr) (TIFF *tiffptr, tsample_t a); /* 128 */
-    int (*_TIFFNoSeekPtr) (TIFF *tiffptr, uint32_t a); /* 129 */
-    void (*_TIFFSwab16BitDataPtr) (TIFF *tiffptr, tidata_t a, tsize_t b); /* 130 */
-    void (*_TIFFSwab32BitDataPtr) (TIFF *tiffptr, tidata_t b, tsize_t a); /* 131 */
-    void (*_TIFFSwab64BitDataPtr) (TIFF *tiffptr, tidata_t a, tsize_t b); /* 132 */
+    void (*reserved128)(void);
+    void (*reserved129)(void);
+    void (*reserved130)(void);
+    void (*reserved131)(void);
+    void (*reserved132)(void);
     int (*tIFFFlushData1) (TIFF *tiffptr); /* 133 */
     void (*tIFFFreeDirectory) (TIFF *tiffptr); /* 134 */
     int (*tIFFDefaultDirectory) (TIFF *tiffptr); /* 135 */
     int (*tIFFSetCompressionScheme) (TIFF *tiffptr, int a); /* 136 */
     void (*_TIFFSetDefaultCompressionStatePtr) (TIFF *tiffptr); /* 137 */
     uint32_t (*_TIFFDefaultStripSizePtr) (TIFF *tiffptr, uint32_t a); /* 138 */
-    void (*_TIFFDefaultTileSizePtr) (TIFF *tiffptr, uint32_t *a, uint32_t *b); /* 139 */
+    void (*reserved139)(void);
     void (*_TIFFsetByteArrayPtr) (void **a, const void *b, uint32_t c); /* 140 */
     void (*reserved141)(void);
-    void (*_TIFFsetShortArrayPtr) (uint16_t **a, const uint16_t *b, uint32_t c); /* 142 */
-    void (*_TIFFsetLongArrayPtr) (uint32_t **a, const uint32_t *b, uint32_t c); /* 143 */
-    void (*_TIFFsetFloatArrayPtr) (float **a, const float *b, uint32_t c); /* 144 */
-    void (*_TIFFsetDoubleArrayPtr) (double **a, const double *b, uint32_t c); /* 145 */
-    void (*_TIFFprintAsciiPtr) (FILE *a, const char *b); /* 146 */
-    void (*_TIFFprintAsciiTagPtr) (FILE *a, const char *b, const char *c); /* 147 */
+    void (*reserved142)(void);
+    void (*reserved143)(void);
+    void (*reserved144)(void);
+    void (*reserved145)(void);
+    void (*reserved146)(void);
+    void (*reserved147)(void);
     int (*tIFFInitDumpMode) (TIFF *tiffptr, int a); /* 148 */
     int (*tIFFInitPackBits) (TIFF *tiffptr, int a); /* 149 */
     int (*tIFFInitCCITTRLE) (TIFF *tiffptr, int a); /* 150 */
@@ -573,6 +539,7 @@ typedef struct TifftclStubs {
     int (*tIFFInitPixarLog) (TIFF *tiffptr, int a); /* 161 */
     int (*tIFFInitSGILog) (TIFF *tiffptr, int a); /* 162 */
     tmsize_t (*_TIFFMultiplySSizePtr) (TIFF *tiffptr, tmsize_t a, tmsize_t b, const char *c); /* 163 */
+    void (*tIFFWarningExt) (thandle_t h, const char *a, const char *b, ...); /* 164 */
 } TifftclStubs;
 
 #ifdef __cplusplus
@@ -702,10 +669,8 @@ TIFFTCLAPI const TifftclStubs *tifftclStubsPtr;
 	(tifftclStubsPtr->tIFFReadRGBAStrip) /* 55 */
 #define TIFFReadRGBATile \
 	(tifftclStubsPtr->tIFFReadRGBATile) /* 56 */
-#define TIFFRGBAImageOK \
-	(tifftclStubsPtr->tIFFRGBAImageOK) /* 57 */
-#define TIFFRGBAImageBegin \
-	(tifftclStubsPtr->tIFFRGBAImageBegin) /* 58 */
+/* Slot 57 is reserved */
+/* Slot 58 is reserved */
 #define TIFFRGBAImageGet \
 	(tifftclStubsPtr->tIFFRGBAImageGet) /* 59 */
 #define TIFFRGBAImageEnd \
@@ -811,32 +776,20 @@ TIFFTCLAPI const TifftclStubs *tifftclStubsPtr;
 /* Slot 117 is reserved */
 /* Slot 118 is reserved */
 /* Slot 119 is reserved */
-#define _TIFFgetMode \
-	(tifftclStubsPtr->_TIFFgetModePtr) /* 120 */
-#define _TIFFNoRowEncode \
-	(tifftclStubsPtr->_TIFFNoRowEncodePtr) /* 121 */
-#define _TIFFNoStripEncode \
-	(tifftclStubsPtr->_TIFFNoStripEncodePtr) /* 122 */
-#define _TIFFNoTileEncode \
-	(tifftclStubsPtr->_TIFFNoTileEncodePtr) /* 123 */
-#define _TIFFNoRowDecode \
-	(tifftclStubsPtr->_TIFFNoRowDecodePtr) /* 124 */
-#define _TIFFNoStripDecode \
-	(tifftclStubsPtr->_TIFFNoStripDecodePtr) /* 125 */
-#define _TIFFNoTileDecode \
-	(tifftclStubsPtr->_TIFFNoTileDecodePtr) /* 126 */
+/* Slot 120 is reserved */
+/* Slot 121 is reserved */
+/* Slot 122 is reserved */
+/* Slot 123 is reserved */
+/* Slot 124 is reserved */
+/* Slot 125 is reserved */
+/* Slot 126 is reserved */
 #define _TIFFNoPostDecode \
 	(tifftclStubsPtr->_TIFFNoPostDecodePtr) /* 127 */
-#define _TIFFNoPreCode \
-	(tifftclStubsPtr->_TIFFNoPreCodePtr) /* 128 */
-#define _TIFFNoSeek \
-	(tifftclStubsPtr->_TIFFNoSeekPtr) /* 129 */
-#define _TIFFSwab16BitData \
-	(tifftclStubsPtr->_TIFFSwab16BitDataPtr) /* 130 */
-#define _TIFFSwab32BitData \
-	(tifftclStubsPtr->_TIFFSwab32BitDataPtr) /* 131 */
-#define _TIFFSwab64BitData \
-	(tifftclStubsPtr->_TIFFSwab64BitDataPtr) /* 132 */
+/* Slot 128 is reserved */
+/* Slot 129 is reserved */
+/* Slot 130 is reserved */
+/* Slot 131 is reserved */
+/* Slot 132 is reserved */
 #define TIFFFlushData1 \
 	(tifftclStubsPtr->tIFFFlushData1) /* 133 */
 #define TIFFFreeDirectory \
@@ -849,23 +802,16 @@ TIFFTCLAPI const TifftclStubs *tifftclStubsPtr;
 	(tifftclStubsPtr->_TIFFSetDefaultCompressionStatePtr) /* 137 */
 #define _TIFFDefaultStripSize \
 	(tifftclStubsPtr->_TIFFDefaultStripSizePtr) /* 138 */
-#define _TIFFDefaultTileSize \
-	(tifftclStubsPtr->_TIFFDefaultTileSizePtr) /* 139 */
+/* Slot 139 is reserved */
 #define _TIFFsetByteArray \
 	(tifftclStubsPtr->_TIFFsetByteArrayPtr) /* 140 */
 /* Slot 141 is reserved */
-#define _TIFFsetShortArray \
-	(tifftclStubsPtr->_TIFFsetShortArrayPtr) /* 142 */
-#define _TIFFsetLongArray \
-	(tifftclStubsPtr->_TIFFsetLongArrayPtr) /* 143 */
-#define _TIFFsetFloatArray \
-	(tifftclStubsPtr->_TIFFsetFloatArrayPtr) /* 144 */
-#define _TIFFsetDoubleArray \
-	(tifftclStubsPtr->_TIFFsetDoubleArrayPtr) /* 145 */
-#define _TIFFprintAscii \
-	(tifftclStubsPtr->_TIFFprintAsciiPtr) /* 146 */
-#define _TIFFprintAsciiTag \
-	(tifftclStubsPtr->_TIFFprintAsciiTagPtr) /* 147 */
+/* Slot 142 is reserved */
+/* Slot 143 is reserved */
+/* Slot 144 is reserved */
+/* Slot 145 is reserved */
+/* Slot 146 is reserved */
+/* Slot 147 is reserved */
 #define TIFFInitDumpMode \
 	(tifftclStubsPtr->tIFFInitDumpMode) /* 148 */
 #define TIFFInitPackBits \
@@ -898,6 +844,8 @@ TIFFTCLAPI const TifftclStubs *tifftclStubsPtr;
 	(tifftclStubsPtr->tIFFInitSGILog) /* 162 */
 #define _TIFFMultiplySSize \
 	(tifftclStubsPtr->_TIFFMultiplySSizePtr) /* 163 */
+#define TIFFWarningExt \
+	(tifftclStubsPtr->tIFFWarningExt) /* 164 */
 
 #endif /* defined(USE_TIFFTCL_STUBS) */
 

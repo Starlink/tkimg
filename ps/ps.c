@@ -251,7 +251,7 @@ CommonRead(
 		tkimg_GetStringFromObj2(format, NULL), "\"", (char *) NULL);
 	return TCL_ERROR;
     }
-    sprintf(zoom, "-r%dx%d", zoomx, zoomy);
+    tkimg_snprintf(zoom, 64, "-r%dx%d", zoomx, zoomy);
 
     len = (size_t)tkimg_Read2(handle, buffer, 1024);
     buffer[1024] = 0;
@@ -276,7 +276,7 @@ CommonRead(
 	srcY -= (792 * zoomy + 36) /72;
     }
 
-    sprintf(papersize, "-g%dx%d", srcX+width, fileHeight);
+    tkimg_snprintf(papersize, 64, "-g%dx%d", srcX+width, fileHeight);
 
     argv[0] = "gs";
     argv[1] = "-sDEVICE=ppmraw";
@@ -329,12 +329,13 @@ CommonRead(
     if ((width <= 0) || (height <= 0)) {
 	Tcl_Close(interp, chan);
 	Tcl_DStringFree(&dstring);
-	return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+	return TCL_ERROR;
     }
     if (tkimg_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
 	Tcl_Close(interp, chan);
 	Tcl_DStringFree(&dstring);
-	return TCL_OK;
+	return TCL_ERROR;
     }
 
     maxintensity = strtoul(p, &p, 0);

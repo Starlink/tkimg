@@ -211,7 +211,6 @@ typedef struct {
     Float  *floatBuf;
     UInt   *uintBuf;
     UShort *ushortBuf;
-    UByte  *ubyteBuf;
 } FPF_FILE;
 
 static void fpfClose (FPF_FILE *tf)
@@ -221,7 +220,6 @@ static void fpfClose (FPF_FILE *tf)
     if (tf->floatBuf)  ckfree ((char *)tf->floatBuf);
     if (tf->uintBuf)   ckfree ((char *)tf->uintBuf);
     if (tf->ushortBuf) ckfree ((char *)tf->ushortBuf);
-    if (tf->ubyteBuf)  ckfree ((char *)tf->ubyteBuf);
     return;
 }
 
@@ -236,26 +234,26 @@ static void printImgInfo (FPF_HEADER *th, FMTOPT *opts,
     if (!outChan) {
         return;
     }
-    sprintf (str, "%s %s\n", msg, filename);                                                       OUT;
-    sprintf (str, "\tSize in pixel    : %d x %d\n", th->imgData.width, th->imgData.height);        OUT;
-    sprintf (str, "\tPixel type       : %s\n",      (th->imgData.pixelType == TYPE_DOUBLE? strDouble:
-                                                    (th->imgData.pixelType == TYPE_FLOAT?  strFloat:
-                                                    (th->imgData.pixelType == TYPE_INT?    strInt:
-                                                    (th->imgData.pixelType == TYPE_SHORT?  strShort:
-                                                                                  strUnknown))))); OUT;
-    sprintf (str, "\tMapping mode     : %s\n",      (opts->mapMode == IMG_MAP_NONE?   IMG_MAP_NONE_STR:
-                                                    (opts->mapMode == IMG_MAP_MINMAX? IMG_MAP_MINMAX_STR:
-                                                    (opts->mapMode == IMG_MAP_AGC?    IMG_MAP_AGC_STR:
-                                                                                  strUnknown))));  OUT;
+    tkimg_snprintf (str, 256, "%s %s\n", msg, filename);                                                       OUT;
+    tkimg_snprintf (str, 256, "\tSize in pixel    : %d x %d\n", th->imgData.width, th->imgData.height);        OUT;
+    tkimg_snprintf (str, 256, "\tPixel type       : %s\n",      (th->imgData.pixelType == TYPE_DOUBLE? strDouble:
+                                                                (th->imgData.pixelType == TYPE_FLOAT?  strFloat:
+                                                                (th->imgData.pixelType == TYPE_INT?    strInt:
+                                                                (th->imgData.pixelType == TYPE_SHORT?  strShort:
+                                                                                              strUnknown))))); OUT;
+    tkimg_snprintf (str, 256, "\tMapping mode     : %s\n",      (opts->mapMode == IMG_MAP_NONE?   IMG_MAP_NONE_STR:
+                                                                (opts->mapMode == IMG_MAP_MINMAX? IMG_MAP_MINMAX_STR:
+                                                                (opts->mapMode == IMG_MAP_AGC?    IMG_MAP_AGC_STR:
+                                                                                              strUnknown))));  OUT;
     if (opts->mapMode != IMG_MAP_NONE) {
-        sprintf (str, "\tGamma correction : %f\n",       opts->gamma);                             OUT;
+        tkimg_snprintf (str, 256, "\tGamma correction : %f\n",       opts->gamma);                             OUT;
         if (opts->mapMode == IMG_MAP_MINMAX) {
-            sprintf (str, "\tMinimum map value: %f\n",   opts->minVal);                            OUT;
-            sprintf (str, "\tMaximum map value: %f\n",   opts->maxVal);                            OUT;
+            tkimg_snprintf (str, 256, "\tMinimum map value: %f\n",   opts->minVal);                            OUT;
+            tkimg_snprintf (str, 256, "\tMaximum map value: %f\n",   opts->maxVal);                            OUT;
         }
         if (opts->mapMode == IMG_MAP_AGC) {
-            sprintf (str, "\tSaturation       : %f\n",   opts->saturation);                        OUT;
-            sprintf (str, "\tCutOff           : %f%%\n", opts->cutOff);                            OUT;
+            tkimg_snprintf (str, 256, "\tSaturation       : %f\n",   opts->saturation);                        OUT;
+            tkimg_snprintf (str, 256, "\tCutOff           : %f%%\n", opts->cutOff);                            OUT;
         }
     }
     Tcl_Flush (outChan);
@@ -345,7 +343,7 @@ static int ParseFormatOpts(
     }
     if (objc) {
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj (interp, objv[i], (const char *CONST86 *)fpfOptions,
+            if (Tcl_GetIndexFromObj (interp, objv[i], (const char * const *)fpfOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -633,35 +631,52 @@ static int CommonRead(
     }
     if ((outWidth <= 0) || (outHeight <= 0)
         || (srcX >= fileWidth) || (srcY >= fileHeight)) {
-        return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+        return TCL_ERROR;
     }
 
     tkimg_CreateGammaTable (opts.gamma, gtable);
 
     switch (tf.th.imgData.pixelType) {
         case TYPE_DOUBLE: {
-            tf.doubleBuf = (Double *)ckalloc (fileWidth*fileHeight*nChans*sizeof (Double));
+            tf.doubleBuf = (Double *)attemptckalloc (fileWidth*fileHeight*nChans*sizeof (Double));
+            if (tf.doubleBuf == NULL) {
+                Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                return TCL_ERROR;
+            }
             tkimg_ReadDoubleFile (handle, tf.doubleBuf, fileWidth, fileHeight, nChans,
                                   swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
                                   minVals, maxVals, opts.saturation);
             break;
         }
         case TYPE_FLOAT: {
-            tf.floatBuf = (Float *)ckalloc (fileWidth*fileHeight*nChans*sizeof (Float));
+            tf.floatBuf = (Float *)attemptckalloc (fileWidth*fileHeight*nChans*sizeof (Float));
+            if (tf.floatBuf == NULL) {
+                Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                return TCL_ERROR;
+            }
             tkimg_ReadFloatFile (handle, tf.floatBuf, fileWidth, fileHeight, nChans,
                                  swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
                                  minVals, maxVals, opts.saturation);
             break;
         }
         case TYPE_INT: {
-            tf.uintBuf = (UInt *)ckalloc (fileWidth*fileHeight*nChans*sizeof (UInt));
+            tf.uintBuf = (UInt *)attemptckalloc (fileWidth*fileHeight*nChans*sizeof (UInt));
+            if (tf.uintBuf == NULL) {
+                Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                return TCL_ERROR;
+            }
             tkimg_ReadUIntFile (handle, tf.uintBuf, fileWidth, fileHeight, nChans,
                                 swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
                                 minVals, maxVals, opts.saturation);
             break;
         }
         case TYPE_SHORT: {
-            tf.ushortBuf = (UShort *)ckalloc (fileWidth*fileHeight*nChans*sizeof (UShort));
+            tf.ushortBuf = (UShort *)attemptckalloc (fileWidth*fileHeight*nChans*sizeof (UShort));
+            if (tf.ushortBuf == NULL) {
+                Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                return TCL_ERROR;
+            }
             tkimg_ReadUShortFile (handle, tf.ushortBuf, fileWidth, fileHeight, nChans,
                                   swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
                                   minVals, maxVals, opts.saturation);
@@ -740,7 +755,12 @@ static int CommonRead(
         return TCL_ERROR;
     }
 
-    tf.pixbuf = (UByte *) ckalloc (fileWidth * nChans);
+    tf.pixbuf = (UByte *) attemptckalloc (fileWidth * nChans);
+    if (tf.pixbuf == NULL) {
+        fpfClose (&tf);
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
 
     block.pixelSize = nChans;
     block.pitch = fileWidth * nChans;

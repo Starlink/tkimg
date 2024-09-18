@@ -70,7 +70,7 @@
 #include "init.c"
 
 
-#ifdef WIN32
+#ifdef _WIN32
 #   include <windows.h>
 #   define TCLSEEK_WORKAROUND
 #else
@@ -995,6 +995,7 @@ static void sgiClose (SGIFILE *tf)
     if (tf->blueScan)  ckfree ((char *)tf->blueScan);
     if (tf->matteScan) ckfree ((char *)tf->matteScan);
     if (tf->pixbuf)    ckfree ((char *)tf->pixbuf);
+    if (tf->scanline)  ckfree ((char *)tf->scanline);
     return;
 }
 
@@ -1008,11 +1009,11 @@ static void printImgInfo (IMAGE *th, const char *filename, const char *msg)
     if (!outChan) {
         return;
     }
-    sprintf(str, "%s %s\n", msg, filename);                                      OUTSTR;
-    sprintf(str, "\tSize in pixel      : %d x %d\n", th->xsize, th->ysize);      OUTSTR;
-    sprintf(str, "\tNo. of channels    : %d\n", (th->zsize));                    OUTSTR;
-    sprintf(str, "\tBytes per pixel    : %d\n", BPP(th->type));                  OUTSTR;
-    sprintf(str, "\tCompression        : %s\n", ISRLE(th->type)? "rle": "None"); OUTSTR;
+    tkimg_snprintf(str, 256, "%s %s\n", msg, filename);                                      OUTSTR;
+    tkimg_snprintf(str, 256, "\tSize in pixel      : %d x %d\n", th->xsize, th->ysize);      OUTSTR;
+    tkimg_snprintf(str, 256, "\tNo. of channels    : %d\n", (th->zsize));                    OUTSTR;
+    tkimg_snprintf(str, 256, "\tBytes per pixel    : %d\n", BPP(th->type));                  OUTSTR;
+    tkimg_snprintf(str, 256, "\tCompression        : %s\n", ISRLE(th->type)? "rle": "None"); OUTSTR;
     Tcl_Flush(outChan);
 }
 #undef OUTSTR
@@ -1174,7 +1175,7 @@ static int ParseFormatOpts(
     }
     if (objc) {
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)sgiOptions,
+            if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)sgiOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -1439,7 +1440,8 @@ static int CommonRead(
     }
     if ((outWidth <= 0) || (outHeight <= 0)
         || (srcX >= fileWidth) || (srcY >= fileHeight)) {
-        return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+        return TCL_ERROR;
     }
 
     if (tkimg_PhotoExpand(interp, imageHandle, destX + outWidth, destY + outHeight) == TCL_ERROR) {
@@ -1448,8 +1450,17 @@ static int CommonRead(
 
     nchan = tf.th.zsize;
 
-    tf.pixbuf   = (UShort *) ckalloc (fileWidth * nchan * sizeof (UShort));
-    tf.scanline = (UByte  *) ckalloc (fileWidth * nchan);
+    tf.pixbuf   = (UShort *) attemptckalloc (fileWidth * nchan * sizeof (UShort));
+    if (tf.pixbuf == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
+    tf.scanline = (UByte  *) attemptckalloc (fileWidth * nchan);
+    if (tf.scanline == NULL) {
+        ckfree( (char *) tf.pixbuf);
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
 
     block.pixelSize = nchan;
     block.pitch = fileWidth * nchan;
@@ -1667,11 +1678,16 @@ static int CommonWrite(
     }
     nchan = ((opts.matte && alphaOffset)? 4: 3);
 
-    tf.redScan   = (UByte *)  ckalloc (blockPtr->width);
-    tf.greenScan = (UByte *)  ckalloc (blockPtr->width);
-    tf.blueScan  = (UByte *)  ckalloc (blockPtr->width);
-    tf.matteScan = (UByte *)  ckalloc (blockPtr->width);
-    tf.pixbuf    = (UShort *) ckalloc (blockPtr->width * sizeof (UShort));
+    tf.redScan   = (UByte *)  attemptckalloc (blockPtr->width);
+    tf.greenScan = (UByte *)  attemptckalloc (blockPtr->width);
+    tf.blueScan  = (UByte *)  attemptckalloc (blockPtr->width);
+    tf.matteScan = (UByte *)  attemptckalloc (blockPtr->width);
+    tf.pixbuf    = (UShort *) attemptckalloc (blockPtr->width * sizeof (UShort));
+    if (tf.redScan == NULL || tf.greenScan == NULL || tf.blueScan == NULL || tf.matteScan == NULL || tf.pixbuf == NULL) {
+        sgiClose( &tf );
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
     tf.th.imagic = IMAGIC;
 
     if (!writeHeader(handle, &tf.th,

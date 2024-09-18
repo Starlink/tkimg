@@ -272,33 +272,33 @@ static void printImgInfo (RAWHEADER *th, FMTOPT *opts,
     if (!outChan) {
         return;
     }
-    sprintf (str, "%s %s\n", msg, filename);                                                         OUT;
-    sprintf (str, "\tSize in pixel    : %d x %d\n", th->width, th->height);                          OUT;
-    sprintf (str, "\tNo. of channels  : %d\n",      th->nChans);                                     OUT;
-    sprintf (str, "\tPixel type       : %s\n",      (th->pixelType == TYPE_DOUBLE? strDouble:
-                                                    (th->pixelType == TYPE_FLOAT?  strFloat:
-                                                    (th->pixelType == TYPE_UINT?   strUInt:
-                                                    (th->pixelType == TYPE_USHORT? strUShort:
-                                                    (th->pixelType == TYPE_UBYTE?  strUByte:
-                                                                                   strUnknown)))))); OUT;
-    sprintf (str, "\tVertical encoding: %s\n",      th->scanOrder == TOP_DOWN?
-                                                    strTopDown: strBottomUp);                        OUT;
-    sprintf (str, "\tHost byte order  : %s\n",      tkimg_IsIntel ()?  strIntel: strMotorola);       OUT;
-    sprintf (str, "\tFile byte order  : %s\n",      th->byteOrder == INTEL?
-                                                    strIntel: strMotorola);                          OUT;
-    sprintf (str, "\tMapping mode     : %s\n",      (opts->mapMode == IMG_MAP_NONE?   IMG_MAP_NONE_STR:
-                                                    (opts->mapMode == IMG_MAP_MINMAX? IMG_MAP_MINMAX_STR:
-                                                    (opts->mapMode == IMG_MAP_AGC?    IMG_MAP_AGC_STR:
-                                                                                  strUnknown))));    OUT;
+    tkimg_snprintf (str, 256, "%s %s\n", msg, filename);                                                         OUT;
+    tkimg_snprintf (str, 256, "\tSize in pixel    : %d x %d\n", th->width, th->height);                          OUT;
+    tkimg_snprintf (str, 256, "\tNo. of channels  : %d\n",      th->nChans);                                     OUT;
+    tkimg_snprintf (str, 256, "\tPixel type       : %s\n",      (th->pixelType == TYPE_DOUBLE? strDouble:
+                                                                (th->pixelType == TYPE_FLOAT?  strFloat:
+                                                                (th->pixelType == TYPE_UINT?   strUInt:
+                                                                (th->pixelType == TYPE_USHORT? strUShort:
+                                                                (th->pixelType == TYPE_UBYTE?  strUByte:
+                                                                                               strUnknown)))))); OUT;
+    tkimg_snprintf (str, 256, "\tVertical encoding: %s\n",      th->scanOrder == TOP_DOWN?
+                                                                strTopDown: strBottomUp);                        OUT;
+    tkimg_snprintf (str, 256, "\tHost byte order  : %s\n",      tkimg_IsIntel ()?  strIntel: strMotorola);       OUT;
+    tkimg_snprintf (str, 256, "\tFile byte order  : %s\n",      th->byteOrder == INTEL?
+                                                                strIntel: strMotorola);                          OUT;
+    tkimg_snprintf (str, 256, "\tMapping mode     : %s\n",      (opts->mapMode == IMG_MAP_NONE?   IMG_MAP_NONE_STR:
+                                                                (opts->mapMode == IMG_MAP_MINMAX? IMG_MAP_MINMAX_STR:
+                                                                (opts->mapMode == IMG_MAP_AGC?    IMG_MAP_AGC_STR:
+                                                                                              strUnknown))));    OUT;
     if (opts->mapMode != IMG_MAP_NONE) {
-        sprintf (str, "\tGamma correction : %lf\n",       opts->gamma);                              OUT;
+        tkimg_snprintf (str, 256, "\tGamma correction : %lf\n",       opts->gamma);                              OUT;
         if (opts->mapMode == IMG_MAP_MINMAX) {
-            sprintf (str, "\tMinimum map value: %lf\n",   opts->minVal);                             OUT;
-            sprintf (str, "\tMaximum map value: %lf\n",   opts->maxVal);                             OUT;
+            tkimg_snprintf (str, 256, "\tMinimum map value: %lf\n",   opts->minVal);                             OUT;
+            tkimg_snprintf (str, 256, "\tMaximum map value: %lf\n",   opts->maxVal);                             OUT;
         }
         if (opts->mapMode == IMG_MAP_AGC) {
-            sprintf (str, "\tSaturation       : %lf\n",   opts->saturation);                         OUT;
-            sprintf (str, "\tCutOff           : %lf%%\n", opts->cutOff);                             OUT;
+            tkimg_snprintf (str, 256, "\tSaturation       : %lf\n",   opts->saturation);                         OUT;
+            tkimg_snprintf (str, 256, "\tCutOff           : %lf%%\n", opts->cutOff);                             OUT;
         }
     }
     Tcl_Flush (outChan);
@@ -310,6 +310,7 @@ static Boln readHeaderLine (Tcl_Interp *interp, tkimg_MFile *handle, char *buf)
     char c, *bufPtr, *bufEndPtr;
     Boln failure;
 
+    buf[0]    = '\0';
     bufPtr    = buf;
     bufEndPtr = buf + HEADLEN;
     failure   = TRUE;
@@ -324,8 +325,7 @@ static Boln readHeaderLine (Tcl_Interp *interp, tkimg_MFile *handle, char *buf)
         bufPtr++;
     }
     if (failure) {
-        Tcl_AppendResult (interp, "RAW handler: Error reading header line (",
-                          buf, ")\n", NULL);
+        Tcl_AppendResult (interp, "RAW handler: Error reading header line\n", NULL);
         return FALSE;
     }
     return TRUE;
@@ -442,25 +442,25 @@ static Boln writeHeader (tkimg_MFile *handle, RAWHEADER *th)
 {
     char buf[1024];
 
-    sprintf (buf, strMagic, "RAW");
+    tkimg_snprintf (buf, 1024, strMagic, "RAW");
     tkimg_Write2(handle, buf, strlen (buf));
-    sprintf (buf, strWidth, th->width);
+    tkimg_snprintf (buf, 1024, strWidth, th->width);
     tkimg_Write2(handle, buf, strlen (buf));
-    sprintf (buf, strHeight, th->height);
+    tkimg_snprintf (buf, 1024, strHeight, th->height);
     tkimg_Write2(handle, buf, strlen (buf));
-    sprintf (buf, strNumChan, th->nChans);
+    tkimg_snprintf (buf, 1024, strNumChan, th->nChans);
     tkimg_Write2(handle, buf, strlen (buf));
-    sprintf (buf, strByteOrder, tkimg_IsIntel()? strIntel: strMotorola);
+    tkimg_snprintf (buf, 1024, strByteOrder, tkimg_IsIntel()? strIntel: strMotorola);
     tkimg_Write2(handle, buf, strlen (buf));
-    sprintf (buf, strScanOrder, th->scanOrder == TOP_DOWN?
-                                strTopDown: strBottomUp);
+    tkimg_snprintf (buf, 1024, strScanOrder, th->scanOrder == TOP_DOWN?
+                                             strTopDown: strBottomUp);
     tkimg_Write2(handle, buf, strlen (buf));
-    sprintf (buf, strPixelType, (th->pixelType == TYPE_DOUBLE? strDouble:
-                                (th->pixelType == TYPE_FLOAT?  strFloat:
-                                (th->pixelType == TYPE_UINT?   strUInt:
-                                (th->pixelType == TYPE_USHORT? strUShort:
-                                (th->pixelType == TYPE_UBYTE?  strUByte:
-                                                               strUnknown))))));
+    tkimg_snprintf (buf, 1024, strPixelType, (th->pixelType == TYPE_DOUBLE? strDouble:
+                                             (th->pixelType == TYPE_FLOAT?  strFloat:
+                                             (th->pixelType == TYPE_UINT?   strUInt:
+                                             (th->pixelType == TYPE_USHORT? strUShort:
+                                             (th->pixelType == TYPE_UBYTE?  strUByte:
+                                                                            strUnknown))))));
     tkimg_Write2(handle, buf, strlen (buf));
     return TRUE;
 }
@@ -541,7 +541,7 @@ static int ParseFormatOpts(
         return TCL_ERROR;
     if (objc) {
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj (interp, objv[i], (const char *CONST86 *)rawOptions,
+            if (Tcl_GetIndexFromObj (interp, objv[i], (const char * const *)rawOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -822,7 +822,11 @@ static int CommonMatch(
         th.scanOrder = opts.scanOrder;
         th.byteOrder = opts.byteOrder;
         if (opts.skipBytes > 0) {
-            buf = (char *)ckalloc (opts.skipBytes);
+            buf = (char *)attemptckalloc (opts.skipBytes);
+            if (buf == NULL) {
+                Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                return FALSE;
+            }
             if (opts.skipBytes != tkimg_Read2(handle, buf, opts.skipBytes)) {
                 return 0;
             }
@@ -949,7 +953,8 @@ static int CommonRead(
     }
     if ((outWidth <= 0) || (outHeight <= 0)
         || (srcX >= fileWidth) || (srcY >= fileHeight)) {
-        return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+        return TCL_ERROR;
     }
 
     byteOrder = opts.useHeader? tf.th.byteOrder: opts.byteOrder;
@@ -967,35 +972,55 @@ static int CommonRead(
 
     switch (pixelType) {
         case TYPE_DOUBLE: {
-            tf.doubleBuf = (Double *)ckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (Double));
+            tf.doubleBuf = (Double *)attemptckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (Double));
+            if (tf.doubleBuf == NULL) {
+                Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                return TCL_ERROR;
+            }
             tkimg_ReadDoubleFile (handle, tf.doubleBuf, fileWidth, fileHeight, tf.th.nChans,
                                   swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
                                   minVals, maxVals, opts.saturation);
             break;
         }
         case TYPE_FLOAT: {
-            tf.floatBuf = (Float *)ckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (Float));
+            tf.floatBuf = (Float *)attemptckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (Float));
+            if (tf.floatBuf == NULL) {
+                Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                return TCL_ERROR;
+            }
             tkimg_ReadFloatFile (handle, tf.floatBuf, fileWidth, fileHeight, tf.th.nChans,
                                  swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
                                  minVals, maxVals, opts.saturation);
             break;
         }
         case TYPE_UINT: {
-            tf.uintBuf = (UInt *)ckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (UInt));
+            tf.uintBuf = (UInt *)attemptckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (UInt));
+            if (tf.uintBuf == NULL) {
+                Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                return TCL_ERROR;
+            }
             tkimg_ReadUIntFile (handle, tf.uintBuf, fileWidth, fileHeight, tf.th.nChans,
                                 swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
                                 minVals, maxVals, opts.saturation);
             break;
         }
         case TYPE_USHORT: {
-            tf.ushortBuf = (UShort *)ckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (UShort));
+            tf.ushortBuf = (UShort *)attemptckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (UShort));
+            if (tf.ushortBuf == NULL) {
+                Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                return TCL_ERROR;
+            }
             tkimg_ReadUShortFile (handle, tf.ushortBuf, fileWidth, fileHeight, tf.th.nChans,
                                   swapBytes, opts.verbose, opts.mapMode != IMG_MAP_NONE,
                                   minVals, maxVals, opts.saturation);
             break;
         }
         case TYPE_UBYTE: {
-            tf.ubyteBuf = (UByte *)ckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (UByte));
+            tf.ubyteBuf = (UByte *)attemptckalloc (fileWidth*fileHeight*tf.th.nChans*sizeof (UByte));
+            if (tf.ubyteBuf == NULL) {
+                Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                return TCL_ERROR;
+            }
             tkimg_ReadUByteFile (handle, tf.ubyteBuf, fileWidth, fileHeight, tf.th.nChans,
                                  opts.verbose, opts.mapMode != IMG_MAP_NONE, minVals, maxVals);
             break;
@@ -1071,7 +1096,12 @@ static int CommonRead(
     if (fastMode) {
         tf.pixbuf = tf.ubyteBuf;
     } else {
-        tf.pixbuf = (UByte *) ckalloc (fileWidth * tf.th.nChans);
+        tf.pixbuf = (UByte *) attemptckalloc (fileWidth * tf.th.nChans);
+        if (tf.pixbuf == NULL) {
+            Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+            rawClose (&tf, fastMode);
+            return TCL_ERROR;
+        }
     }
 
     block.pixelSize = tf.th.nChans;
@@ -1263,7 +1293,11 @@ static int CommonWrite(
 
     writeHeader (handle, &tf.th);
     bytesPerLine = blockPtr->width * tf.th.nChans * sizeof (UByte);
-    tf.ubyteBuf = (UByte *)ckalloc (bytesPerLine);
+    tf.ubyteBuf = (UByte *)attemptckalloc (bytesPerLine);
+    if (tf.ubyteBuf == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
 
     rowPixPtr = blockPtr->pixelPtr + blockPtr->offset[0];
     for (y = 0; y < blockPtr->height; y++) {

@@ -52,7 +52,11 @@ PRJ_DEFINES  = $(PRJ_DEFINES) -D_CRT_SECURE_NO_DEPRECATE -DPNG_IMPEXP=MODULE_SCO
 !endif
 !include versions.vc
 
+!if $(TCL_MAJOR_VERSION) <= 8
 PRJ_LIBS = $(PRJ_LIBS) "..\..\zlib\win\$(BUILDDIRTOP)\zlibtclstub$(ZLIB_VERSION:.=).lib"
+!else
+PRJ_LIBS = $(PRJ_LIBS) "..\..\zlib\win\$(BUILDDIRTOP)\zlibtclstub.lib"
+!endif
 
 !include "..\..\win\install-lib.vc"
 

@@ -20,7 +20,7 @@
 #define PACKAGE_TCLNAME "img::pixmap"
 #endif
 
-#if defined(__WIN32__) && !defined (__GNUC__)
+#if defined(_WIN32) && !defined (__GNUC__)
 #define strncasecmp _strnicmp
 #endif
 
@@ -967,7 +967,7 @@ TkimgXpmCmd(
 	     instancePtr = instancePtr->nextPtr) {
 	    count += instancePtr->refCount;
 	}
-	sprintf(buff, "%d", count);
+	tkimg_snprintf(buff, 30, "%d", count);
 	Tcl_AppendResult(interp, buff, (char *) NULL);
 	return TCL_OK;
     } else {

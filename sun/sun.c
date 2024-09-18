@@ -359,13 +359,13 @@ static void printImgInfo (SUNHEADER *sh, const char *filename, const char *msg)
         return;
     }
 
-    sprintf(str, "%s %s\n", msg, filename);                                       OUT;
-    sprintf(str, "\tSize in pixel   : %d x %d\n", sh->ras_width, sh->ras_height); OUT;
-    sprintf(str, "\tDepth of pixels : %d\n", sh->ras_depth);                      OUT;
-    sprintf(str, "\tCompression     : %s\n", (type == RAS_TYPE_STD? "None":
-                                              (type == RAS_TYPE_RLE? "RLE":
-                                                                     "Unknown"))); OUT;
-    sprintf(str, "\tColormap type   : %d\n", sh->ras_maptype);                    OUT;
+    tkimg_snprintf(str, 256, "%s %s\n", msg, filename);                                       OUT;
+    tkimg_snprintf(str, 256, "\tSize in pixel   : %d x %d\n", sh->ras_width, sh->ras_height); OUT;
+    tkimg_snprintf(str, 256, "\tDepth of pixels : %d\n", sh->ras_depth);                      OUT;
+    tkimg_snprintf(str, 256, "\tCompression     : %s\n", (type == RAS_TYPE_STD? "None":
+                                                         (type == RAS_TYPE_RLE? "RLE":
+                                                                                "Unknown"))); OUT;
+    tkimg_snprintf(str, 256, "\tColormap type   : %d\n", sh->ras_maptype);                    OUT;
     Tcl_Flush(outChan);
 }
 #undef OUT
@@ -439,12 +439,12 @@ static Boln load_sun_d1 (Tcl_Interp *interp, tkimg_MFile *ifp,
     int stopY, outY;
     int i, j;
     int err = 0, rle;
-    char errMsg[200];
+    char errMsg[256];
     Boln result = TRUE;
 
-    pixbuf = (UByte *) ckalloc (fileWidth);
+    pixbuf = (UByte *) attemptckalloc (fileWidth);
     if (!pixbuf) {
-        sprintf(errMsg, "Can't allocate memory of size %d", fileWidth);
+        tkimg_snprintf(errMsg, 256, "Can't allocate memory of size %d", fileWidth);
         Tcl_AppendResult(interp, errMsg, (char *)NULL);
         return TCL_ERROR;
     }
@@ -508,7 +508,7 @@ static Boln load_sun_d1 (Tcl_Interp *interp, tkimg_MFile *ifp,
         }
 
         if (err) {
-            sprintf(errMsg, "Unexpected EOF while reading scanline %d", y);
+            tkimg_snprintf(errMsg, 256, "Unexpected EOF while reading scanline %d", y);
             Tcl_AppendResult(interp, errMsg, (char *) NULL);
             return FALSE;
         }
@@ -540,7 +540,7 @@ static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_MFile *ifp,
     int ncols;
     int greyscale, nchan;
     int err, rle;
-    char errMsg[200];
+    char errMsg[256];
     Boln result = TRUE;
 
     rle     = (type == RAS_TYPE_RLE);
@@ -556,10 +556,10 @@ static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_MFile *ifp,
     }
 
     if (!greyscale) {
-        pixbuf = (UByte *) ckalloc (fileWidth * nchan);
+        pixbuf = (UByte *) attemptckalloc (fileWidth * nchan);
         if (!pixbuf) {
-            sprintf(errMsg, "Can't allocate memory of size %d",
-                              fileWidth * nchan);
+            tkimg_snprintf(errMsg, 256, "Can't allocate memory of size %d",
+                           fileWidth * nchan);
             Tcl_AppendResult(interp, errMsg, (char *)NULL);
             if (suncolmap) {
                 ckfree ((char *)suncolmap);
@@ -569,10 +569,10 @@ static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_MFile *ifp,
     }
 
     /* This buffer contains either the color indices or the greyscale value. */
-    indData = (UByte *)ckalloc (fileWidth * sizeof (UByte));
+    indData = (UByte *)attemptckalloc (fileWidth * sizeof (UByte));
     if (!indData) {
-        sprintf(errMsg, "Can't allocate memory of size %d",
-                          (int) (fileWidth * sizeof (UByte)));
+        tkimg_snprintf(errMsg, 256, "Can't allocate memory of size %d",
+                       (int) (fileWidth * sizeof (UByte)));
         Tcl_AppendResult(interp, errMsg, (char *)NULL);
         return TCL_ERROR;
     }
@@ -602,7 +602,7 @@ static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_MFile *ifp,
         err = ((rle ? rle_fread ((char *)src, 1, fileWidth, ifp) :
                       sun_fread ((char *)src, 1, fileWidth, ifp)) != fileWidth);
         if (err && (y != height -1)) {
-            sprintf(errMsg, "Unexpected EOF while reading scanline %d", y);
+            tkimg_snprintf(errMsg, 256, "Unexpected EOF while reading scanline %d", y);
             Tcl_AppendResult(interp, errMsg, (char *) NULL);
             ckfree ((char *)indData);
             return FALSE;
@@ -610,7 +610,7 @@ static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_MFile *ifp,
         if (linepad) {
             err = ((rle ? rle_getc (ifp) : sun_getc (ifp)) < 0);
             if (err) {
-                sprintf(errMsg, "Unexpected EOF while reading scanline %d", y);
+                tkimg_snprintf(errMsg, 256, "Unexpected EOF while reading scanline %d", y);
                 Tcl_AppendResult(interp, errMsg, (char *) NULL);
                 ckfree ((char *)indData);
                 return FALSE;
@@ -656,13 +656,13 @@ static Boln load_rgb (Tcl_Interp *interp, tkimg_MFile *ifp,
     int x, y;
     int stopY, outY;
     int err, rle;
-    char errMsg[200];
+    char errMsg[256];
     Boln result = TRUE;
 
-    pixbuf = (UByte *) ckalloc (fileWidth * nchan);
+    pixbuf = (UByte *) attemptckalloc (fileWidth * nchan);
     if (!pixbuf) {
-        sprintf(errMsg, "Can't allocate memory of size %d",
-                          fileWidth * nchan);
+        tkimg_snprintf(errMsg, 256, "Can't allocate memory of size %d",
+                       fileWidth * nchan);
         Tcl_AppendResult(interp, errMsg, (char *)NULL);
         return TCL_ERROR;
     }
@@ -697,7 +697,7 @@ static Boln load_rgb (Tcl_Interp *interp, tkimg_MFile *ifp,
         err = ((rle ? rle_fread ((char *)dest, nchan, fileWidth, ifp) :
                       sun_fread ((char *)dest, nchan, fileWidth, ifp)) != fileWidth);
         if (err && (y != height -1)) {
-            sprintf(errMsg, "Unexpected EOF while reading scanline %d", y);
+            tkimg_snprintf(errMsg, 256, "Unexpected EOF while reading scanline %d", y);
             Tcl_AppendResult(interp, errMsg, (char *) NULL);
             ckfree ((char *)pixbuf);
             return FALSE;
@@ -705,7 +705,7 @@ static Boln load_rgb (Tcl_Interp *interp, tkimg_MFile *ifp,
         if (linepad) {
             err = ((rle ? rle_getc (ifp) : sun_getc (ifp)) < 0);
             if (err) {
-                sprintf(errMsg, "Unexpected EOF while reading scanline %d", y);
+                tkimg_snprintf(errMsg, 256, "Unexpected EOF while reading scanline %d", y);
                 Tcl_AppendResult(interp, errMsg, (char *) NULL);
                 ckfree ((char *)pixbuf);
                 return FALSE;
@@ -791,7 +791,7 @@ static int ParseFormatOpts(
     }
     if (objc) {
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)sunOptions,
+            if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)sunOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -956,7 +956,7 @@ static int CommonRead(
     SUNHEADER sh;
     FMTOPT opts;
     UByte *suncolmap = NULL;
-    char errMsg[200];
+    char errMsg[256];
 
     if (ParseFormatOpts(interp, format, &opts) != TCL_OK) {
         return TCL_ERROR;
@@ -985,11 +985,12 @@ static int CommonRead(
     }
     if ((outWidth <= 0) || (outHeight <= 0)
         || (srcX >= fileWidth) || (srcY >= fileHeight)) {
-        return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+        return TCL_ERROR;
     }
 
     if (sh.ras_type > 5) {
-        sprintf(errMsg, "Unknown Sun Raster type: %d", sh.ras_type);
+        tkimg_snprintf(errMsg, 256, "Unknown Sun Raster type: %d", sh.ras_type);
         Tcl_AppendResult(interp, errMsg, (char *)NULL);
         return TCL_ERROR;
     }
@@ -1000,10 +1001,10 @@ static int CommonRead(
 
     /* Is there a RGB colourmap ? */
     if ((sh.ras_maptype == 1) && (sh.ras_maplength > 0)) {
-        suncolmap = (UByte *)ckalloc (sh.ras_maplength);
+        suncolmap = (UByte *)attemptckalloc (sh.ras_maplength);
         if (!suncolmap) {
-            sprintf(errMsg, "Can't allocate memory of size %d",
-                              sh.ras_maplength);
+            tkimg_snprintf(errMsg, 256, "Can't allocate memory of size %d",
+                           sh.ras_maplength);
             Tcl_AppendResult(interp, errMsg, (char *)NULL);
             tkimg_ReadBuffer (0);
             return TCL_ERROR;
@@ -1073,7 +1074,7 @@ static int CommonRead(
             break;
 
         default:
-            sprintf(errMsg, "Image has invalid pixel depth: %d", sh.ras_depth);
+            tkimg_snprintf(errMsg, 256, "Image has invalid pixel depth: %d", sh.ras_depth);
             Tcl_AppendResult(interp, errMsg, (char *)NULL);
             retCode = TCL_ERROR;
             break;
@@ -1145,7 +1146,7 @@ static int CommonWrite(
     SUNHEADER sh;
     FMTOPT opts;
     UByte *row, *rowPtr;
-    char errMsg[200];
+    char errMsg[256];
 
     if (ParseFormatOpts(interp, format, &opts) != TCL_OK) {
         return TCL_ERROR;
@@ -1184,9 +1185,9 @@ static int CommonWrite(
     /* Now write out the image data. */
     pixRowPtr = blockPtr->pixelPtr + blockPtr->offset[0];
     if (!opts.compression) {
-        row = (UByte *) ckalloc (nBytes);
+        row = (UByte *) attemptckalloc (nBytes);
         if (!row) {
-            sprintf(errMsg, "Can't allocate memory of size %d", nBytes);
+            tkimg_snprintf(errMsg, 256, "Can't allocate memory of size %d", nBytes);
             Tcl_AppendResult(interp, errMsg, (char *)NULL);
             return TCL_ERROR;
         }
@@ -1204,7 +1205,7 @@ static int CommonWrite(
                 pixelPtr += blockPtr->pixelSize;
             }
             if (nBytes != tkimg_Write2(handle, (const char *)row, nBytes)) {
-                sprintf(errMsg, "Can't write %d bytes to image file", nBytes);
+                tkimg_snprintf(errMsg, 256, "Can't write %d bytes to image file", nBytes);
                 Tcl_AppendResult(interp, errMsg, (char *)NULL);
                 ckfree ((char *)row);
                 return TCL_ERROR;

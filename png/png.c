@@ -116,14 +116,14 @@ static void PrintReadInfo (int width, int height, int nchans, int bits,
     if (!outChan) {
         return;
     }
-    sprintf(str, "%s %s\n", msg, filename);                        OUT;
-    sprintf(str, "\tSize in pixel   : %d x %d\n", width, height);  OUT;
-    sprintf(str, "\tNum channels    : %d\n", nchans);              OUT;
-    sprintf(str, "\tBits per channel: %d\n", bits);                OUT;
+    tkimg_snprintf(str, 256, "%s %s\n", msg, filename);                        OUT;
+    tkimg_snprintf(str, 256, "\tSize in pixel   : %d x %d\n", width, height);  OUT;
+    tkimg_snprintf(str, 256, "\tNum channels    : %d\n", nchans);              OUT;
+    tkimg_snprintf(str, 256, "\tBits per channel: %d\n", bits);                OUT;
     if (fileGamma < 0.0) {
-        sprintf(str, "\tFile gamma      : %s\n", "None");          OUT;
+        tkimg_snprintf(str, 256, "\tFile gamma      : %s\n", "None");          OUT;
     } else {
-        sprintf(str, "\tFile gamma      : %f\n", fileGamma);       OUT;
+        tkimg_snprintf(str, 256, "\tFile gamma      : %f\n", fileGamma);       OUT;
     }
     Tcl_Flush(outChan);
 }
@@ -153,7 +153,7 @@ static int ParseFormatOpts(
     }
     if (objc) {
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)pngOptions,
+            if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)pngOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -230,7 +230,7 @@ tk_png_error(
 ) {
     cleanup_info *info = (cleanup_info *) png_get_error_ptr(png_ptr);
     Tcl_AppendResult(info->interp, error_msg, (char *) NULL);
-    longjmp(info->jmpbuf,1);
+    LONGJMP(info->jmpbuf,1);
 }
 
 static void
@@ -344,7 +344,7 @@ ChnRead(
 
     png_ptr=png_create_read_struct(PNG_LIBPNG_VER_STRING,
             (png_voidp) &cleanup,tk_png_error,tk_png_warning);
-    if (!png_ptr) return(0);
+    if (!png_ptr) return 0;
 
     png_set_read_fn(png_ptr, (png_voidp) &handle, tk_png_read);
 
@@ -412,16 +412,16 @@ CommonReadPNG(
     info_ptr=png_create_info_struct(png_ptr);
     if (!info_ptr) {
         png_destroy_read_struct(&png_ptr,NULL,NULL);
-        return(TCL_ERROR);
+        return TCL_ERROR;
     }
 
     end_info=png_create_info_struct(png_ptr);
     if (!end_info) {
         png_destroy_read_struct(&png_ptr,&info_ptr,NULL);
-        return(TCL_ERROR);
+        return TCL_ERROR;
     }
 
-    if (setjmp((((cleanup_info *) png_get_error_ptr(png_ptr))->jmpbuf))) {
+    if (SETJMP((((cleanup_info *) png_get_error_ptr(png_ptr))->jmpbuf))) {
         if (png_data) {
             ckfree((char *)png_data);
         }
@@ -444,7 +444,8 @@ CommonReadPNG(
         || (srcX >= (int) info_width)
         || (srcY >= (int) info_height)) {
         png_destroy_read_struct(&png_ptr,&info_ptr,&end_info);
-        return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+        return TCL_ERROR;
     }
 
     if (tkimg_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
@@ -537,7 +538,12 @@ CommonReadPNG(
         block.offset[3] = block.pixelSize - 1;
     }
 
-    png_data = (char **) ckalloc(sizeof(char *) * info_height + info_height * block.pitch);
+    png_data = (char **) attemptckalloc(sizeof(char *) * info_height + info_height * block.pitch);
+    if (png_data == NULL) {
+        png_destroy_read_struct(&png_ptr,&info_ptr,&end_info);
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
 
     for(i=0;i<info_height;i++) {
         png_data[i] = ((char *) png_data) + (sizeof(char *) * info_height + i * block.pitch);
@@ -673,7 +679,7 @@ CommonWritePNG(
     }
     tagcount = (tagcount > 1) ? (tagcount - 1) / 2: 0;
 
-    if (setjmp((((cleanup_info *) png_get_error_ptr(png_ptr))->jmpbuf))) {
+    if (SETJMP((((cleanup_info *) png_get_error_ptr(png_ptr))->jmpbuf))) {
         if (row_pointers) {
             ckfree((char *) row_pointers);
         }
@@ -745,8 +751,12 @@ CommonWritePNG(
         int J, oldPixelSize;
         png_bytep src, dst;
         oldPixelSize = blockPtr->pixelSize;
-        row_pointers = (png_bytep)
-                ckalloc(blockPtr->width * newPixelSize);
+        row_pointers = (png_bytep) attemptckalloc(blockPtr->width * newPixelSize);
+        if (row_pointers == NULL) {
+            png_destroy_write_struct(&png_ptr,&info_ptr);
+            Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+            return TCL_ERROR;
+        }
         for (pass = 0; pass < number_passes; pass++) {
             for(I=0; I<blockPtr->height; I++) {
                 src = (png_bytep) blockPtr->pixelPtr
@@ -773,5 +783,5 @@ CommonWritePNG(
     png_write_end(png_ptr,NULL);
     png_destroy_write_struct(&png_ptr,&info_ptr);
 
-    return(TCL_OK);
+    return TCL_OK;
 }

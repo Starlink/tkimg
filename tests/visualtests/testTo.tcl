@@ -60,14 +60,15 @@ set sep ""
 if { $ui_enable_tk } {
     set sep "\n\t"
 }
-set count 1
+set errors 0
+set count  1
 set phCanvas [getCanvasPhoto $canvId]
 foreach elem $fmtList {
     set ext [lindex $elem 0]
     set fmt [lindex $elem 1]
     set opt [lindex $elem 2]
-    catch { file mkdir out }
-    set fname [file join out testTo$ext]
+    catch { file mkdir testOut }
+    set fname [file join testOut testTo$ext]
     set msg "Image $count: $fname Format: $fmt $sep (Options: $opt)"
     P $msg
 
@@ -75,30 +76,34 @@ foreach elem $fmtList {
     writePhotoFile $phCanvas $fname "$fmt $opt" 0
     if { $testMode & $modeFile } {
         set ph [readPhotoFile2 $fname "fmt $opt" 200 100 \
-                               -from 140 50 200 110 -to 10 30]
+                               -from 10 50 100 110 -to 10 30]
         if { $ph eq "" } {
             set ph [createErrImg]
+            incr errors
         }
         set msg "Image $count.1: $fname Format: $fmt $sep (Read from file 2)"
         ui_addphoto $ph $msg
     }
     if { $testMode & $modeBin } {
-        set str [writePhotoFile $phCanvas $fname "$fmt $opt" 0 -from 140 50 200 110]
+        set str [writePhotoFile $phCanvas $fname "$fmt $opt" 0 -from 10 50 100 110]
         set ph  [readPhotoBinary2 $fname "$fmt $opt" 200 100 -to 10 30]
         if { $ph eq "" } {
             set ph [createErrImg]
+            incr errors
         }
         set msg "Image $count.2: $fname Format: $fmt $sep (Read as binary 2)"
         ui_addphoto $ph $msg
     }
     if { $testMode & $modeUU } {
-        set str [writePhotoString $phCanvas "$fmt $opt" 0 -from 140 50 200 110]
+        set str [writePhotoString $phCanvas "$fmt $opt" 0 -from 10 50 100 110]
         if { $str eq "" } {
             set ph [createErrImg]
+            incr errors
         } else {
             set ph [readPhotoString $str "$fmt $opt" 200 100 -to 10 30]
             if { $ph eq "" } {
                 set ph [createErrImg]
+                incr errors
             }
         }
         set msg "Image $count.3: $fname Format: $fmt $sep (Read as uuencoded string)"
@@ -110,8 +115,7 @@ foreach elem $fmtList {
 }
 
 PS
-P "End of test"
+P "End of test (Errors: $errors)"
 
 P ""
-P "Package tkimg: $version"
 ui_show

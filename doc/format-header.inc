@@ -3,7 +3,7 @@
 [manpage_begin img-[vset FORMATNAME] n 1.4]
 [moddesc Img]
 [titledesc "Img, [vset FORMATFULLNAME] ([vset FORMATNAME])"]
-[copyright {1995-2009 Jan Nijtmans <nijtmans@users.sourceforge.net>}]
+[copyright {1995-2023 Jan Nijtmans <nijtmans@users.sourceforge.net>}]
 [require Tk]
 [require img::[vset FORMATNAME] [opt 1.4]]
 [description]

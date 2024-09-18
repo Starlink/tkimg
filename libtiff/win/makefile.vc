@@ -36,6 +36,7 @@ PRJ_OBJS	= \
 	$(TMP_DIR)\tif_dumpmode.obj \
 	$(TMP_DIR)\tif_error.obj \
 	$(TMP_DIR)\tif_fax3.obj \
+	$(TMP_DIR)\tif_hash_set.obj \
 	$(TMP_DIR)\tif_getimage.obj \
 	$(TMP_DIR)\tif_flush.obj \
 	$(TMP_DIR)\tif_luv.obj \

@@ -174,18 +174,22 @@ SetupJPegLibrary(
     /* overallocat size, so we don't get a core-dump if the library
        thinks that the structure is much larger */
 
-    cinfo = (struct jpeg_compress_struct *) ckalloc(8*sizeof(struct jpeg_compress_struct));
+    cinfo = (struct jpeg_compress_struct *) attemptckalloc(8*sizeof(struct jpeg_compress_struct));
+    if (cinfo == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
     cinfo->err = jpeg_std_error(&jerror.pub);
     jerror.pub.error_exit = my_error_exit;
     jerror.pub.output_message = my_output_message;
     /* Establish the setjmp return context for my_error_exit to use. */
-    if (setjmp(jerror.setjmp_buffer)) {
+    if (SETJMP(jerror.setjmp_buffer)) {
       /* If we get here, the JPEG library is invalid. */
       jpeg_destroy_compress(cinfo);
       ckfree((char *)cinfo);
 
       if (interp) {
-	Tcl_AppendResult(interp, "couldn't use \"", "jpegtcl",
+	Tcl_AppendResult(interp, "Could not use \"", "jpegtcl",
 		"\": please upgrade to at least version 6a", (char *) NULL);
       }
       return TCL_ERROR;
@@ -355,7 +359,9 @@ CommonMatch(
 	}
 	i = ((buf[0] & 0x0ff)<<8) + (buf[1] & 0x0ff) - 1;
 	while (i>256) {
-	    tkimg_Read2(handle, buf, 256);
+	    if (tkimg_Read2(handle, buf, 256) != 256) {
+                return 0;
+            }
 	    i -= 256;
 	}
 	if ((i<1) || (tkimg_Read2(handle, buf, i)) != i) {
@@ -423,9 +429,9 @@ ChnRead(
     jerror.pub.output_message = my_output_message;
 
     /* Establish the setjmp return context for my_error_exit to use. */
-    if (setjmp(jerror.setjmp_buffer)) {
+    if (SETJMP(jerror.setjmp_buffer)) {
       /* If we get here, the JPEG code has signaled an error. */
-      Tcl_AppendResult(interp, "couldn't read JPEG string: ", (char *) NULL);
+      Tcl_AppendResult(interp, "Could not read JPEG string: ", (char *) NULL);
       append_jpeg_message(interp, (j_common_ptr) &cinfo);
       jpeg_destroy_decompress(&cinfo);
       return TCL_ERROR;
@@ -489,9 +495,9 @@ ObjRead(
     jerror.pub.output_message = my_output_message;
 
     /* Establish the setjmp return context for my_error_exit to use. */
-    if (setjmp(jerror.setjmp_buffer)) {
+    if (SETJMP(jerror.setjmp_buffer)) {
       /* If we get here, the JPEG code has signaled an error. */
-      Tcl_AppendResult(interp, "couldn't read JPEG string: ", (char *) NULL);
+      Tcl_AppendResult(interp, "Could not read JPEG string: ", (char *) NULL);
       append_jpeg_message(interp, (j_common_ptr) &cinfo);
       jpeg_destroy_decompress(&cinfo);
       return TCL_ERROR;
@@ -560,7 +566,7 @@ CommonRead(
     }
     if (objc) {
 	for (i=1; i<objc; i++) {
-	    if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)jpegReadOptions,
+	    if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)jpegReadOptions,
 		    "format option", 0, &index)!=TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -599,7 +605,8 @@ CommonRead(
     }
     if ((outWidth <= 0) || (outHeight <= 0)
 	|| (srcX >= fileWidth) || (srcY >= fileHeight)) {
-	return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+	return TCL_ERROR;
     }
 
     /* Check colorspace. */
@@ -703,9 +710,9 @@ ChnWrite(
     jerror.pub.output_message = my_output_message;
 
     /* Establish the setjmp return context for my_error_exit to use. */
-    if (setjmp(jerror.setjmp_buffer)) {
+    if (SETJMP(jerror.setjmp_buffer)) {
       /* If we get here, the JPEG code has signaled an error. */
-      Tcl_AppendResult(interp, "couldn't write JPEG file \"", fileName,
+      Tcl_AppendResult(interp, "Could not write JPEG file \"", fileName,
 		       "\": ", (char *) NULL);
       append_jpeg_message(interp, (j_common_ptr) &cinfo);
       jpeg_destroy_compress(&cinfo);
@@ -764,9 +771,9 @@ static int StringWrite(
     jerror.pub.output_message = my_output_message;
 
     /* Establish the setjmp return context for my_error_exit to use. */
-    if (setjmp(jerror.setjmp_buffer)) {
+    if (SETJMP(jerror.setjmp_buffer)) {
       /* If we get here, the JPEG code has signaled an error. */
-      Tcl_AppendResult(interp, "couldn't write JPEG string: ", (char *) NULL);
+      Tcl_AppendResult(interp, "Could not write JPEG string: ", (char *) NULL);
       append_jpeg_message(interp, (j_common_ptr) &cinfo);
       result = TCL_ERROR;
       goto writeend;
@@ -850,7 +857,7 @@ CommonWrite(
     }
     if (objc) {
 	for (i=1; i<objc; i++) {
-	    if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)jpegWriteOptions,
+	    if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)jpegWriteOptions,
 		    "format option", 0, &index)!=TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -1165,7 +1172,7 @@ my_error_exit(
 ) {
   struct my_error_mgr *myerr = (struct my_error_mgr *) cinfo->err;
   /* Exit back to outer level */
-  longjmp(myerr->setjmp_buffer, 1);
+  LONGJMP(myerr->setjmp_buffer, 1);
 }
 
 static void

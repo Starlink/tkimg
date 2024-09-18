@@ -68,6 +68,7 @@ const JpegtclStubs jpegtclStubs = {
     jpeg_abort, /* 45 */
     jpeg_destroy, /* 46 */
     jpeg_resync_to_restart, /* 47 */
+    jpeg_std_huff_table, /* 48 */
 };
 
 /* !END!: Do not edit above this line. */

@@ -47,6 +47,8 @@ proc PrintMachineInfo {} {
     P  "user        : $tcl_platform(user)"
     P  "hostname    : [info hostname]"
     P  "Tcl version : [info patchlevel]"
+    P  "Tk version  : [package version Tk]"
+    P  "Img version : [package version Img]"
     P  "Visuals     : [winfo visualsavailable .]"
 }
 

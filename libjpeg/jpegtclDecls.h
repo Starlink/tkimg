@@ -160,6 +160,9 @@ JPEGTCLAPI void		jpeg_destroy(j_common_ptr cinfo);
 /* 47 */
 JPEGTCLAPI boolean	jpeg_resync_to_restart(j_decompress_ptr cinfo,
 				int desired);
+/* 48 */
+JPEGTCLAPI JHUFF_TBL *	jpeg_std_huff_table(j_common_ptr cinfo, boolean isDC,
+				int tblno);
 
 typedef struct JpegtclStubs {
     int magic;
@@ -213,6 +216,7 @@ typedef struct JpegtclStubs {
     void (*jpeg_abortPtr) (j_common_ptr cinfo); /* 45 */
     void (*jpeg_destroyPtr) (j_common_ptr cinfo); /* 46 */
     boolean (*jpeg_resync_to_restartPtr) (j_decompress_ptr cinfo, int desired); /* 47 */
+    JHUFF_TBL * (*jpeg_std_huff_tablePtr) (j_common_ptr cinfo, boolean isDC, int tblno); /* 48 */
 } JpegtclStubs;
 
 #ifdef __cplusplus
@@ -325,6 +329,8 @@ JPEGTCLAPI const JpegtclStubs *jpegtclStubsPtr;
 	(jpegtclStubsPtr->jpeg_destroyPtr) /* 46 */
 #define jpeg_resync_to_restart \
 	(jpegtclStubsPtr->jpeg_resync_to_restartPtr) /* 47 */
+#define jpeg_std_huff_table \
+	(jpegtclStubsPtr->jpeg_std_huff_tablePtr) /* 48 */
 
 #endif /* defined(USE_JPEGTCL_STUBS) */
 

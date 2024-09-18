@@ -68,6 +68,9 @@
 /* Define to 1 if you have the `jbg_newlen' function. */
 #undef HAVE_JBG_NEWLEN
 
+/* libjpeg-turbo >= 2.2 dual mode enabled */
+#undef HAVE_JPEGTURBO_DUAL_MODE_8_12
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -211,6 +214,9 @@
 
 /* Support ThunderScan 4-bit RLE algorithm */
 #undef THUNDER_SUPPORT
+
+/* Maximum number of TIFF directories that libtiff can browse through */
+#undef TIFF_MAX_DIR_COUNT
 
 /* Signed size type */
 #undef TIFF_SSIZE_T

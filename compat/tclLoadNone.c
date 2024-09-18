@@ -137,14 +137,6 @@ extern int TIFFFindCODEC();
 extern int TIFFRegisterCODEC();
 extern int TIFFSetCompressionScheme();
 extern int TIFFUnRegisterCODEC();
-extern int _TIFFNoPreCode();
-extern int _TIFFNoRowDecode();
-extern int _TIFFNoRowEncode();
-extern int _TIFFNoSeek();
-extern int _TIFFNoStripDecode();
-extern int _TIFFNoStripEncode();
-extern int _TIFFNoTileDecode();
-extern int _TIFFNoTileEncode();
 extern int TIFFCurrentDirOffset();
 extern int TIFFDefaultDirectory();
 extern int TIFFFreeDirectory();
@@ -158,11 +150,6 @@ extern int TIFFUnlinkDirectory();
 extern int TIFFVGetField();
 extern int TIFFVSetField();
 extern int _TIFFsetByteArray();
-extern int _TIFFsetDoubleArray();
-extern int _TIFFsetFloatArray();
-extern int _TIFFsetLongArray();
-extern int _TIFFsetShortArray();
-extern int _TIFFsetString();
 extern int _TIFFFieldWithTag();
 extern int _TIFFFindFieldInfo();
 extern int _TIFFMergeFieldInfo();
@@ -174,10 +161,8 @@ extern int TIFFWriteDirectory();
 extern int TIFFError();
 extern int TIFFSetErrorHandler();
 extern int _TIFFFax3fillruns();
-extern int TIFFRGBAImageBegin();
 extern int TIFFRGBAImageEnd();
 extern int TIFFRGBAImageGet();
-extern int TIFFRGBAImageOK();
 extern int TIFFReadRGBAImage();
 extern int TIFFFlush();
 extern int TIFFFlushData();
@@ -193,11 +178,8 @@ extern int TIFFIsByteSwapped();
 extern int TIFFIsMSB2LSB();
 extern int TIFFIsTiled();
 extern int TIFFIsUpSampled();
-extern int _TIFFgetMode();
 extern int TIFFPredictorInit();
 extern int TIFFPrintDirectory();
-extern int _TIFFprintAscii();
-extern int _TIFFprintAsciiTag();
 extern int TIFFReadBufferSetup();
 extern int TIFFReadEncodedStrip();
 extern int TIFFReadEncodedTile();
@@ -206,9 +188,6 @@ extern int TIFFReadRawTile();
 extern int TIFFReadScanline();
 extern int TIFFReadTile();
 extern int _TIFFNoPostDecode();
-extern int _TIFFSwab16BitData();
-extern int _TIFFSwab32BitData();
-extern int _TIFFSwab64BitData();
 extern int TIFFGetBitRevTable();
 extern int TIFFReverseBits();
 extern int TIFFSwabArrayOfDouble();
@@ -227,12 +206,10 @@ extern int TIFFVStripSize();
 extern int _TIFFDefaultStripSize();
 extern int TIFFCheckTile();
 extern int TIFFComputeTile();
-extern int TIFFDefaultTileSize();
 extern int TIFFNumberOfTiles();
 extern int TIFFTileRowSize();
 extern int TIFFTileSize();
 extern int TIFFVTileSize();
-extern int _TIFFDefaultTileSize();
 extern int TIFFFdOpen();
 extern int TIFFOpen();
 extern int _TIFFfree();
@@ -378,14 +355,6 @@ static struct {
   {"TIFFRegisterCODEC", TIFFRegisterCODEC},
   {"TIFFSetCompressionScheme", TIFFSetCompressionScheme},
   {"TIFFUnRegisterCODEC", TIFFUnRegisterCODEC},
-  {"_TIFFNoPreCode", _TIFFNoPreCode},
-  {"_TIFFNoRowDecode", _TIFFNoRowDecode},
-  {"_TIFFNoRowEncode", _TIFFNoRowEncode},
-  {"_TIFFNoSeek", _TIFFNoSeek},
-  {"_TIFFNoStripDecode", _TIFFNoStripDecode},
-  {"_TIFFNoStripEncode", _TIFFNoStripEncode},
-  {"_TIFFNoTileDecode", _TIFFNoTileDecode},
-  {"_TIFFNoTileEncode", _TIFFNoTileEncode},
   {"TIFFCurrentDirOffset", TIFFCurrentDirOffset},
   {"TIFFDefaultDirectory", TIFFDefaultDirectory},
   {"TIFFFreeDirectory", TIFFFreeDirectory},
@@ -399,11 +368,6 @@ static struct {
   {"TIFFVGetField", TIFFVGetField},
   {"TIFFVSetField", TIFFVSetField},
   {"_TIFFsetByteArray", _TIFFsetByteArray},
-  {"_TIFFsetDoubleArray", _TIFFsetDoubleArray},
-  {"_TIFFsetFloatArray", _TIFFsetFloatArray},
-  {"_TIFFsetLongArray", _TIFFsetLongArray},
-  {"_TIFFsetShortArray", _TIFFsetShortArray},
-  {"_TIFFsetString", _TIFFsetString},
   {"_TIFFFieldWithTag", _TIFFFieldWithTag},
   {"_TIFFFindFieldInfo", _TIFFFindFieldInfo},
   {"_TIFFMergeFieldInfo", _TIFFMergeFieldInfo},
@@ -415,10 +379,8 @@ static struct {
   {"TIFFError", TIFFError},
   {"TIFFSetErrorHandler", TIFFSetErrorHandler},
   {"_TIFFFax3fillruns", _TIFFFax3fillruns},
-  {"TIFFRGBAImageBegin", TIFFRGBAImageBegin},
   {"TIFFRGBAImageEnd", TIFFRGBAImageEnd},
   {"TIFFRGBAImageGet", TIFFRGBAImageGet},
-  {"TIFFRGBAImageOK", TIFFRGBAImageOK},
   {"TIFFReadRGBAImage", TIFFReadRGBAImage},
   {"TIFFFlush", TIFFFlush},
   {"TIFFFlushData", TIFFFlushData},
@@ -434,11 +396,8 @@ static struct {
   {"TIFFIsMSB2LSB", TIFFIsMSB2LSB},
   {"TIFFIsTiled", TIFFIsTiled},
   {"TIFFIsUpSampled", TIFFIsUpSampled},
-  {"_TIFFgetMode", _TIFFgetMode},
   {"TIFFPredictorInit", TIFFPredictorInit},
   {"TIFFPrintDirectory", TIFFPrintDirectory},
-  {"_TIFFprintAscii", _TIFFprintAscii},
-  {"_TIFFprintAsciiTag", _TIFFprintAsciiTag},
   {"TIFFReadBufferSetup", TIFFReadBufferSetup},
   {"TIFFReadEncodedStrip", TIFFReadEncodedStrip},
   {"TIFFReadEncodedTile", TIFFReadEncodedTile},
@@ -447,9 +406,6 @@ static struct {
   {"TIFFReadScanline", TIFFReadScanline},
   {"TIFFReadTile", TIFFReadTile},
   {"_TIFFNoPostDecode", _TIFFNoPostDecode},
-  {"_TIFFSwab16BitData", _TIFFSwab16BitData},
-  {"_TIFFSwab32BitData", _TIFFSwab32BitData},
-  {"_TIFFSwab64BitData", _TIFFSwab64BitData},
   {"TIFFGetBitRevTable", TIFFGetBitRevTable},
   {"TIFFReverseBits", TIFFReverseBits},
   {"TIFFSwabArrayOfDouble", TIFFSwabArrayOfDouble},
@@ -473,7 +429,6 @@ static struct {
   {"TIFFTileRowSize", TIFFTileRowSize},
   {"TIFFTileSize", TIFFTileSize},
   {"TIFFVTileSize", TIFFVTileSize},
-  {"_TIFFDefaultTileSize", _TIFFDefaultTileSize},
   {"TIFFFdOpen", TIFFFdOpen},
   {"TIFFOpen", TIFFOpen},
   {"_TIFFfree", _TIFFfree},

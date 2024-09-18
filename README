@@ -1,16 +1,16 @@
 
         Tcl/Tk Image formats (TkImg)
-        (Version 1.4.14 / November 2022)
+        (Version 1.4.15 / August 2023)
 
         Jan Nijtmans, Andreas Kupries, Paul Obermeier
 
 This file contains a collection of format handlers for the Tk photo
 image type, and a new image type, pixmaps. It can be used in
-combination with Tcl/Tk 8.3 or later but 8.6 or newer are highly
+combination with Tcl/Tk 8.3 or later, but 8.6 or newer are highly
 recommended.
 
 Included in this distribution are the most recent versions (as of
-January 2021) of the libz, libpng, libjpeg, and libtiff libraries.
+July 2023) of the libz, libpng, libjpeg, and libtiff libraries.
 These are not required, unless you need support for the PNG, JPEG,
 or TIFF format. Note that you have to build these libraries to
 support the named formats, even if your system already has shared
@@ -132,7 +132,6 @@ supporting packages, as noted below. Their names and directories are
     img::pixmap tkimg/pixmap
     img::png    tkimg/png     pngtcl, zlibtcl
     img::ppm    tkimg/ppm
-    img::ps     tkimg/ps
     img::sgi    tkimg/sgi
     img::sun    tkimg/sun
     img::tga    tkimg/tga
@@ -141,14 +140,19 @@ supporting packages, as noted below. Their names and directories are
     img::xbm    tkimg/xbm
     img::xpm    tkimg/xpm
 
+    img::ps     tkimg/ps
+
     img::dted   tkimg/dted
     img::flir   tkimg/flir
     img::raw    tkimg/raw
     -------------------------------------------------
 
-The packages img::dted, img::flir and img::raw are special, because they are
-not included when doing a "package require Img". These must be explicitely
-loaded via a "package require img::FMT".
+The packages img::dted, img::flir, img::raw and img::ps are special, because
+they are not included when doing a "package require Img". These must be 
+explicitely loaded via a "package require img::FMT".
+img::ps reads Postscript files and transforms the first page into a photo
+image using external program "gs". As the current implementation might hang
+using larger PostScript files, it is not automatically loaded.
 img::dted reads Digital Terrain Elevation Data and transforms the elevation
 data into photo images.
 img::flir reads FLIR files and transforms the temperature information
@@ -225,9 +229,10 @@ doctools format (see tcllib).
 
 PLATFORMS
     Tested:
-        Linux    (gcc)
-        Windows  (MSys/MinGW, Visual Studio C++)
-        Darwin   (gcc)
+        Linux           (gcc)
+        Raspberry Pi OS (gcc)
+        Windows         (MSys/MinGW, Visual Studio C++)
+        Darwin          (gcc)
 
     Other machines and OS's should work too.
 

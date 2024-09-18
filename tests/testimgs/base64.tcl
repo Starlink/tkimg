@@ -7,7 +7,7 @@
 # Copyright (c) 1998-2000 by Ajuba Solutions.
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-# 
+#
 
 # Version 1.0   implemented Base64_Encode, Bae64_Decode
 # Version 2.0   uses the base64 namespace
@@ -37,10 +37,10 @@ if {![catch {package require Trf 2.0}]} {
     # Results:
     #	A Base64 encoded version of $string, wrapped at $maxlen characters
     #	by $wrapchar.
-    
+
     proc ::base64::encode {args} {
 	# Set the default wrapchar and maximum line length to match the output
-	# of GNU uuencode 4.2.  Various RFC's allow for different wrapping 
+	# of GNU uuencode 4.2.  Various RFC's allow for different wrapping
 	# characters and wraplengths, so these may be overridden by command line
 	# options.
 	set wrapchar "\n"
@@ -73,7 +73,7 @@ if {![catch {package require Trf 2.0}]} {
 	    # FRINK: nocheck
 	    set [string range [lindex $optionStrings $index] 1 end] $val
 	}
-    
+
 	# [string is] requires Tcl8.2; this works with 8.0 too
 	if {[catch {expr {$maxlen % 2}}]} {
 	    error "expected integer but got \"$maxlen\""
@@ -174,12 +174,12 @@ if {![catch {package require Trf 2.0}]} {
     # Results:
     #	A Base64 encoded version of $string, wrapped at $maxlen characters
     #	by $wrapchar.
-    
+
     proc ::base64::encode {args} {
 	set base64_en $::base64::base64_en
 	
 	# Set the default wrapchar and maximum line length to match the output
-	# of GNU uuencode 4.2.  Various RFC's allow for different wrapping 
+	# of GNU uuencode 4.2.  Various RFC's allow for different wrapping
 	# characters and wraplengths, so these may be overridden by command line
 	# options.
 	set wrapchar "\n"
@@ -212,7 +212,7 @@ if {![catch {package require Trf 2.0}]} {
 	    # FRINK: nocheck
 	    set [string range [lindex $optionStrings $index] 1 end] $val
 	}
-    
+
 	# [string is] requires Tcl8.2; this works with 8.0 too
 	if {[catch {expr {$maxlen % 2}}]} {
 	    error "expected integer but got \"$maxlen\""
@@ -236,9 +236,9 @@ if {![catch {package require Trf 2.0}]} {
 		set length 0
 	    }
 	
-	    append result [lindex $base64_en [expr {($x >>2) & 0x3F}]] 
+	    append result [lindex $base64_en [expr {($x >>2) & 0x3F}]]
 	    if {$y != {}} {
-		append result [lindex $base64_en [expr {(($x << 4) & 0x30) | (($y >> 4) & 0xF)}]] 
+		append result [lindex $base64_en [expr {(($x << 4) & 0x30) | (($y >> 4) & 0xF)}]]
 		if {$z != {}} {
 		    append result \
 			    [lindex $base64_en [expr {(($y << 2) & 0x3C) | (($z >> 6) & 0x3)}]]
@@ -254,9 +254,9 @@ if {![catch {package require Trf 2.0}]} {
 	    incr length 4
 	}
 	if {$state == 1} {
-	    append result [lindex $base64_en [expr {(($x << 4) & 0x30)}]]== 
+	    append result [lindex $base64_en [expr {(($x << 4) & 0x30)}]]==
 	} elseif {$state == 2} {
-	    append result [lindex $base64_en [expr {(($y << 2) & 0x3C)}]]=  
+	    append result [lindex $base64_en [expr {(($y << 2) & 0x3C)}]]=
 	}
 	return $result
     }
@@ -292,7 +292,7 @@ if {![catch {package require Trf 2.0}]} {
 	    } elseif {$bits == -1} {
 		# = indicates end of data.  Output whatever chars are left.
 		# The encoding algorithm dictates that we can only have 1 or 2
-		# padding characters.  If x=={}, we have 12 bits of input 
+		# padding characters.  If x=={}, we have 12 bits of input
 		# (enough for 1 8-bit output).  If x!={}, we have 18 bits of
 		# input (enough for 2 8-bit outputs).
 		
@@ -310,7 +310,7 @@ if {![catch {package require Trf 2.0}]} {
 		# RFC 2045 says that line breaks and other characters not part
 		# of the Base64 alphabet must be ignored, and that the decoder
 		# can optionally emit a warning or reject the message.  We opt
-		# not to do so, but to just ignore the character. 
+		# not to do so, but to just ignore the character.
 		continue
 	    }
 	}

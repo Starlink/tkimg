@@ -26,7 +26,6 @@ package ifneeded Img @PACKAGE_VERSION@ {
     package require img::sun
     package require img::xbm
     package require img::xpm
-    package require img::ps
     package require img::jpeg
     package require img::png
     package require img::tiff

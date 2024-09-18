@@ -855,7 +855,7 @@ void tkimg_RemapUShortValues (unsigned short *buf, int width, int height, int nc
     double scaledVal;
     unsigned short *bufPtr = buf;
     double minNewVals[IMG_MAX_CHANNELS], maxNewVals[IMG_MAX_CHANNELS];
-    
+ 
     for (c=0; c<nchan; c++) {
         minNewVals[c] = minVals[c];
         maxNewVals[c] = maxVals[c];

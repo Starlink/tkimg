@@ -216,15 +216,15 @@ static void printImgInfo (ICOHEADER *th, INFOHEADER *ih, FMTOPT *opts,
     if (!outChan) {
         return;
     }
-    sprintf(str, "%s %s\n", msg, filename);                                 OUT;
-    sprintf(str, "  No. of icons : %d\n", th->nIcons);                      OUT;
-    sprintf(str, "  Icon %d:\n", i);                                        OUT;
-    sprintf(str, "    Width and Height: %dx%d\n", ih->width, ih->height/2); OUT;
-    sprintf(str, "    Number of colors: %d\n", th->entries[i].nColors);     OUT;
-    sprintf(str, "    Number of planes: %d\n", ih->nPlanes);                OUT;
-    sprintf(str, "    Bits per pixel:   %d\n", ih->nBitsPerPixel);          OUT;
-    sprintf(str, "    Size in bytes:    %d\n", th->entries[i].sizeInBytes); OUT;
-    sprintf(str, "    File offset:      %d\n", th->entries[i].fileOffset);  OUT;
+    tkimg_snprintf(str, 256, "%s %s\n", msg, filename);                                 OUT;
+    tkimg_snprintf(str, 256, "  No. of icons : %d\n", th->nIcons);                      OUT;
+    tkimg_snprintf(str, 256, "  Icon %d:\n", i);                                        OUT;
+    tkimg_snprintf(str, 256, "    Width and Height: %dx%d\n", ih->width, ih->height/2); OUT;
+    tkimg_snprintf(str, 256, "    Number of colors: %d\n", th->entries[i].nColors);     OUT;
+    tkimg_snprintf(str, 256, "    Number of planes: %d\n", ih->nPlanes);                OUT;
+    tkimg_snprintf(str, 256, "    Bits per pixel:   %d\n", ih->nBitsPerPixel);          OUT;
+    tkimg_snprintf(str, 256, "    Size in bytes:    %d\n", th->entries[i].sizeInBytes); OUT;
+    tkimg_snprintf(str, 256, "    File offset:      %d\n", th->entries[i].fileOffset);  OUT;
     Tcl_Flush(outChan);
 }
 #undef OUT
@@ -256,7 +256,8 @@ static Boln readIcoHeader (tkimg_MFile *handle, ICOHEADER *th)
     }
 
     th->nIcons = nIcons;
-    if (!(th->entries = (ICOENTRY *)ckalloc (sizeof (ICOENTRY) * nIcons))) {
+    th->entries = (ICOENTRY *) attemptckalloc (sizeof (ICOENTRY) * nIcons);
+    if (th->entries == NULL) {
         return FALSE;
     }
 
@@ -453,7 +454,7 @@ static int ParseFormatOpts(
     }
     if (objc) {
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)icoOptions,
+            if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)icoOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -632,7 +633,7 @@ static int CommonRead(
     }
 
     if (opts.index < 0 || opts.index >= icoHeader.nIcons) {
-        sprintf(msgStr, "Invalid icon index: %d", opts.index);
+        tkimg_snprintf(msgStr, 1024, "Invalid icon index: %d", opts.index);
         Tcl_AppendResult(interp, msgStr, (char *)NULL);
         errorFlag = TCL_ERROR;
         goto error;
@@ -644,8 +645,17 @@ static int CommonRead(
     nBytesToSkip = icoHeader.entries[opts.index].fileOffset -6 -
                    16 * icoHeader.nIcons;
     if (nBytesToSkip > 0) {
-        char *dummy = ckalloc (nBytesToSkip);
-        tkimg_Read2(handle, dummy, nBytesToSkip);
+        char *dummy = attemptckalloc (nBytesToSkip);
+        if (dummy == NULL) {
+            Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+            errorFlag = TCL_ERROR;
+            goto error;
+        }
+        if (nBytesToSkip != tkimg_Read2(handle, dummy, nBytesToSkip)) {
+            Tcl_AppendResult (interp, "Unable to read image data.", (char *) NULL);
+            errorFlag = TCL_ERROR;
+            goto error;
+        }
         ckfree ((char *) dummy);
     }
 
@@ -657,7 +667,7 @@ static int CommonRead(
     }
 
     if (infoHeader.compression != BI_RGB) {
-        sprintf(msgStr,"Unsupported compression type (%d)", infoHeader.compression);
+        tkimg_snprintf(msgStr, 1024, "Unsupported compression type (%d)", infoHeader.compression);
         Tcl_AppendResult(interp, msgStr, (char *)NULL);
         errorFlag = TCL_ERROR;
         goto error;
@@ -682,9 +692,9 @@ static int CommonRead(
         icoHeaderHeight = 256;
     }
     if (fileWidth  != icoHeaderWidth || fileHeight != icoHeaderHeight) {
-        sprintf(msgStr,"ICO sizes don't match (%dx%d) vs. (%dx%d)",
-                fileWidth, fileHeight,
-                icoHeaderWidth, icoHeaderHeight);
+        tkimg_snprintf(msgStr, 1024, "ICO sizes don't match (%dx%d) vs. (%dx%d)",
+                      fileWidth, fileHeight,
+                      icoHeaderWidth, icoHeaderHeight);
         Tcl_AppendResult(interp, msgStr, (char *)NULL);
         errorFlag = TCL_ERROR;
         goto error;
@@ -707,7 +717,8 @@ static int CommonRead(
     }
     if ((outWidth <= 0) || (outHeight <= 0)
         || (srcX >= fileWidth) || (srcY >= fileHeight)) {
-        return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+        return TCL_ERROR;
     }
 
     if (opts.verbose) {
@@ -730,14 +741,26 @@ static int CommonRead(
     block.offset[1] = 1;
     block.offset[2] = 2;
     block.offset[3] = 3;
-    block.pixelPtr = (unsigned char *) ckalloc (4 * fileWidth * fileHeight);
+    block.pixelPtr = (unsigned char *) attemptckalloc (4 * fileWidth * fileHeight);
+    if (block.pixelPtr == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        goto error;
+    }
+ 
     expline = block.pixelPtr;
 
-    line = (unsigned char *) ckalloc(bytesPerLine);
+    line = (unsigned char *) attemptckalloc(bytesPerLine);
+    if (line == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        goto error;
+    }
     switch (infoHeader.nBitsPerPixel) {
         case 32:
             for (y=0; y<fileHeight; y++) {
-                tkimg_Read2(handle, (char *)line, bytesPerLine);
+                if( bytesPerLine != tkimg_Read2(handle, (char *)line, bytesPerLine)) {
+                    Tcl_AppendResult (interp, "Unable to read pixel row.", (char *) NULL);
+                    goto error;
+                }
                 for (x = 0; x < fileWidth; x++) {
                     expline[0] = line[x*4 + 2];
                     expline[1] = line[x*4 + 1];
@@ -749,7 +772,10 @@ static int CommonRead(
             break;
         case 24:
             for (y=0; y<fileHeight; y++) {
-                tkimg_Read2(handle, (char *)line, bytesPerLine);
+                if( bytesPerLine != tkimg_Read2(handle, (char *)line, bytesPerLine)) {
+                    Tcl_AppendResult (interp, "Unable to read pixel row.", (char *) NULL);
+                    goto error;
+                }
                 for (x = 0; x < fileWidth; x++) {
                     expline[0] = line[x*3 + 2];
                     expline[1] = line[x*3 + 1];
@@ -760,7 +786,10 @@ static int CommonRead(
             break;
         case 8:
             for (y=0; y<fileHeight; y++) {
-                tkimg_Read2(handle, (char *)line, bytesPerLine);
+                if( bytesPerLine != tkimg_Read2(handle, (char *)line, bytesPerLine)) {
+                    Tcl_AppendResult (interp, "Unable to read pixel row.", (char *) NULL);
+                    goto error;
+                }
                 for (x = 0; x < fileWidth; x++) {
                     expline[0] = colorMap[line[x]].red;
                     expline[1] = colorMap[line[x]].green;
@@ -772,7 +801,10 @@ static int CommonRead(
         case 4:
             for (y=0; y<fileHeight; y++) {
                 int c;
-                tkimg_Read2(handle, (char *)line, bytesPerLine);
+                if( bytesPerLine != tkimg_Read2(handle, (char *)line, bytesPerLine)) {
+                    Tcl_AppendResult (interp, "Unable to read pixel row.", (char *) NULL);
+                    goto error;
+                }
                 for (x=0; x<fileWidth; x++) {
                     if (x&1) {
                         c = line[x/2] & 0x0f;
@@ -789,7 +821,10 @@ static int CommonRead(
         case 1:
             for (y=0; y<fileHeight; y++) {
                 int c;
-                tkimg_Read2(handle, (char *)line, bytesPerLine);
+                if( bytesPerLine != tkimg_Read2(handle, (char *)line, bytesPerLine)) {
+                    Tcl_AppendResult (interp, "Unable to read pixel row.", (char *) NULL);
+                    goto error;
+                }
                 for (x=0; x<fileWidth; x++) {
                     c = (line[x/8] >> (7-(x%8))) & 1;
                     expline[0] = colorMap[c].red;
@@ -800,8 +835,8 @@ static int CommonRead(
             }
             break;
         default:
-            sprintf(msgStr,"%d-bits ICO file not supported",
-                     infoHeader.nBitsPerPixel);
+            tkimg_snprintf(msgStr, 1024, "%d-bits ICO file not supported",
+                           infoHeader.nBitsPerPixel);
             Tcl_AppendResult(interp, msgStr, (char *)NULL);
             errorFlag = TCL_ERROR;
             goto error;
@@ -815,7 +850,10 @@ static int CommonRead(
         expline = block.pixelPtr;
         for (y=0; y<fileHeight; y++) {
             int c;
-            tkimg_Read2(handle, (char *)line, bytesPerLine);
+            if( bytesPerLine != tkimg_Read2(handle, (char *)line, bytesPerLine)) {
+                Tcl_AppendResult (interp, "Unable to read pixel row.", (char *) NULL);
+                goto error;
+            }
             for (x=0; x<fileWidth; x++) {
                 c = (line[x/8] >> (7-(x%8))) & 1;
                 expline[3] = (c? 0: 255);
@@ -984,7 +1022,9 @@ static int CommonWrite(
     bytesPerLineAND = ((blockPtr->width * 1      + 31) / 32 )* 4;
 
     icoHeader.nIcons = 1;
-    if (!(icoHeader.entries = (ICOENTRY *) ckalloc (sizeof (ICOENTRY)))) {
+    icoHeader.entries = (ICOENTRY *) attemptckalloc (sizeof (ICOENTRY));
+    if (icoHeader.entries == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
         return TCL_ERROR;
     }
     icoHeader.entries[0].width       = blockPtr->width;

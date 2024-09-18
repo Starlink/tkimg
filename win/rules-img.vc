@@ -34,7 +34,11 @@ PRJ_OBJS = $(TMP_DIR)\$(PHIMGTYPE).obj
 
 PRJ_INCLUDES = $(PRJ_INCLUDES) -I"$(TMP_DIR)" -I"..\..\base"
 PRJ_DEFINES  = $(PRJ_DEFINES) -DPACKAGE_TCLNAME="\"$(PRJ_PACKAGE_TCLNAME)\"" -DTKIMG_VERSION="\"$(TKIMG_VERSION)"\"
+!if $(TCL_MAJOR_VERSION) <= 8
 PRJ_LIBS = $(PRJ_LIBS) "..\..\base\win\$(BUILDDIRTOP)\tkimgstub$(TKIMG_VERSION:.=).lib"
+!else
+PRJ_LIBS = $(PRJ_LIBS) "..\..\base\win\$(BUILDDIRTOP)\tkimgstub.lib"
+!endif
 
 !ifdef REQUIRE_LIBJPEG
 !if [echo LIBJPEG_VERSION = \> versions.vc] \
@@ -43,7 +47,11 @@ PRJ_LIBS = $(PRJ_LIBS) "..\..\base\win\$(BUILDDIRTOP)\tkimgstub$(TKIMG_VERSION:.
 !endif
 !include versions.vc
 PRJ_INCLUDES = $(PRJ_INCLUDES) -I"$(TMP_DIR)" -I../../libjpeg
+!if $(TCL_MAJOR_VERSION) <= 8
 PRJ_LIBS = $(PRJ_LIBS) "..\..\libjpeg\win\$(BUILDDIRTOP)\jpegtclstub$(LIBJPEG_VERSION:.=).lib"
+!else
+PRJ_LIBS = $(PRJ_LIBS) "..\..\libjpeg\win\$(BUILDDIRTOP)\jpegtclstub.lib"
+!endif
 !endif
 
 !ifdef REQUIRE_ZLIB
@@ -53,7 +61,11 @@ PRJ_LIBS = $(PRJ_LIBS) "..\..\libjpeg\win\$(BUILDDIRTOP)\jpegtclstub$(LIBJPEG_VE
 !endif
 !include versions.vc
 PRJ_INCLUDES = $(PRJ_INCLUDES) -I"$(TMP_DIR)" -I../../zlib
+!if $(TCL_MAJOR_VERSION) <= 8
 PRJ_LIBS = $(PRJ_LIBS) "..\..\zlib\win\$(BUILDDIRTOP)\zlibtclstub$(ZLIB_VERSION:.=).lib"
+!else
+PRJ_LIBS = $(PRJ_LIBS) "..\..\zlib\win\$(BUILDDIRTOP)\zlibtclstub.lib"
+!endif
 !endif
 
 !ifdef REQUIRE_LIBPNG
@@ -63,7 +75,11 @@ PRJ_LIBS = $(PRJ_LIBS) "..\..\zlib\win\$(BUILDDIRTOP)\zlibtclstub$(ZLIB_VERSION:
 !endif
 !include versions.vc
 PRJ_INCLUDES = $(PRJ_INCLUDES) -I"$(TMP_DIR)" -I../../libpng
+!if $(TCL_MAJOR_VERSION) <= 8
 PRJ_LIBS = $(PRJ_LIBS) "..\..\libpng\win\$(BUILDDIRTOP)\pngtclstub$(LIBPNG_VERSION:.=).lib"
+!else
+PRJ_LIBS = $(PRJ_LIBS) "..\..\libpng\win\$(BUILDDIRTOP)\pngtclstub.lib"
+!endif
 !endif
 
 !ifdef REQUIRE_LIBTIFF
@@ -73,7 +89,11 @@ PRJ_LIBS = $(PRJ_LIBS) "..\..\libpng\win\$(BUILDDIRTOP)\pngtclstub$(LIBPNG_VERSI
 !endif
 !include versions.vc
 PRJ_INCLUDES = $(PRJ_INCLUDES) -I"$(TMP_DIR)" -I../../libtiff -I../../libtiff/libtiff
+!if $(TCL_MAJOR_VERSION) <= 8
 PRJ_LIBS = $(PRJ_LIBS) "..\..\libtiff\win\$(BUILDDIRTOP)\tifftclstub$(LIBTIFF_VERSION:.=).lib"
+!else
+PRJ_LIBS = $(PRJ_LIBS) "..\..\libtiff\win\$(BUILDDIRTOP)\tifftclstub.lib"
+!endif
 !endif
 
 # We have our own install target as we want installation to go into

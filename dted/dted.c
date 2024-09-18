@@ -237,22 +237,22 @@ static void printImgInfo (DTEDHEADER *th, FMTOPT *opts,
     if (!outChan) {
         return;
     }
-    sprintf (str, "%s\n", msg);                                              OUT;
-    sprintf (str, "\tLongitude of origin  : %.8s\n", th->uhl.origin_long);   OUT;
-    sprintf (str, "\tLatitude of origin   : %.8s\n", th->uhl.origin_lat);    OUT;
-    sprintf (str, "\tEast-West interval   : %.4s\n", th->uhl.ew_interval);   OUT;
-    sprintf (str, "\tNorth-South interval : %.4s\n", th->uhl.ns_interval);   OUT;
-    sprintf (str, "\tVertical accuracy    : %.4s\n", th->uhl.accuracy);      OUT;
-    sprintf (str, "\tSecurity Code        : %.3s\n", th->uhl.security);      OUT;
-    sprintf (str, "\tDTED level           : %.5s\n", th->dsi.level);         OUT;
-    sprintf (str, "\tNumber of rows       : %.4s\n", th->dsi.rows);          OUT;
-    sprintf (str, "\tNumber of columns    : %.4s\n", th->dsi.cols);          OUT;
-    sprintf (str, "\tCell coverage        : %.2s\n", th->dsi.cell_coverage); OUT;
-    sprintf (str, "\tGamma correction     : %f\n", opts->gamma);             OUT;
-    sprintf (str, "\tMinimum map value    : %d\n", opts->minVal);            OUT;
-    sprintf (str, "\tMaximum map value    : %d\n", opts->maxVal);            OUT;
-    sprintf (str, "\tHost byte order      : %s\n", tkimg_IsIntel ()?
-                                                   strIntel: strMotorola);   OUT;
+    tkimg_snprintf (str, 256, "%s\n", msg);                                              OUT;
+    tkimg_snprintf (str, 256, "\tLongitude of origin  : %.8s\n", th->uhl.origin_long);   OUT;
+    tkimg_snprintf (str, 256, "\tLatitude of origin   : %.8s\n", th->uhl.origin_lat);    OUT;
+    tkimg_snprintf (str, 256, "\tEast-West interval   : %.4s\n", th->uhl.ew_interval);   OUT;
+    tkimg_snprintf (str, 256, "\tNorth-South interval : %.4s\n", th->uhl.ns_interval);   OUT;
+    tkimg_snprintf (str, 256, "\tVertical accuracy    : %.4s\n", th->uhl.accuracy);      OUT;
+    tkimg_snprintf (str, 256, "\tSecurity Code        : %.3s\n", th->uhl.security);      OUT;
+    tkimg_snprintf (str, 256, "\tDTED level           : %.5s\n", th->dsi.level);         OUT;
+    tkimg_snprintf (str, 256, "\tNumber of rows       : %.4s\n", th->dsi.rows);          OUT;
+    tkimg_snprintf (str, 256, "\tNumber of columns    : %.4s\n", th->dsi.cols);          OUT;
+    tkimg_snprintf (str, 256, "\tCell coverage        : %.2s\n", th->dsi.cell_coverage); OUT;
+    tkimg_snprintf (str, 256, "\tGamma correction     : %f\n", opts->gamma);             OUT;
+    tkimg_snprintf (str, 256, "\tMinimum map value    : %d\n", opts->minVal);            OUT;
+    tkimg_snprintf (str, 256, "\tMaximum map value    : %d\n", opts->maxVal);            OUT;
+    tkimg_snprintf (str, 256, "\tHost byte order      : %s\n", tkimg_IsIntel ()?
+                                                               strIntel: strMotorola);   OUT;
     Tcl_Flush (outChan);
 }
 #undef OUT
@@ -347,7 +347,8 @@ static Boln readDtedColumn (tkimg_MFile *handle, Short *pixels, Int nRows,
     return TRUE;
 }
 
-static Boln readDtedFile (tkimg_MFile *handle, Short *buf, Int width, Int height,
+static Boln readDtedFile (Tcl_Interp *interp, tkimg_MFile *handle,
+                          Short *buf, Int width, Int height,
                           Int nchan, Boln hostIsIntel, Boln verbose,
                           Short minVals[], Short maxVals[])
 {
@@ -363,7 +364,11 @@ static Boln readDtedFile (tkimg_MFile *handle, Short *buf, Int width, Int height
         minVals[c] =  MAX_SHORT;
         maxVals[c] =  MIN_SHORT;
     }
-    colBuf = (char *)ckalloc (sizeof (Short) * nchan * height);
+    colBuf = (char *)attemptckalloc (sizeof (Short) * nchan * height);
+    if (colBuf == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return FALSE;
+    }
 
     /* Read the elevation data column by column. */
     for (x=0; x<width; x++) {
@@ -488,7 +493,7 @@ static int ParseFormatOpts(
         return TCL_ERROR;
     if (objc) {
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj (interp, objv[i], (const char *CONST86 *)dtedOptions,
+            if (Tcl_GetIndexFromObj (interp, objv[i], (const char * const *)dtedOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -582,6 +587,7 @@ static int CommonMatch(
     DTEDHEADER th;
     FMTOPT opts;
     Int nRows, nCols;
+    Byte buf[4];
 
     if (ParseFormatOpts (interp, format, &opts) == TCL_ERROR) {
         return FALSE;
@@ -590,8 +596,11 @@ static int CommonMatch(
     if (!readHeader (handle, &th)) {
         return FALSE;
     }
-    sscanf (th.dsi.rows, "%4d", &nRows);
-    sscanf (th.dsi.cols, "%4d", &nCols);
+
+    memcpy (buf, th.dsi.rows, 4);
+    sscanf (buf, "%04d", &nRows);
+    memcpy (buf, th.dsi.cols, 4);
+    sscanf (buf, "%04d", &nCols);
     *widthPtr  = nCols;
     *heightPtr = nRows;
     if (dtedHeaderPtr) {
@@ -690,14 +699,18 @@ static int CommonRead(
     }
     if ((outWidth <= 0) || (outHeight <= 0)
         || (srcX >= fileWidth) || (srcY >= fileHeight)) {
-        return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+        return TCL_ERROR;
     }
 
     hostIsIntel = tkimg_IsIntel ();
 
-    tf.rawbuf = (Short *)ckalloc (fileWidth * fileHeight *
-                                  nchan * sizeof (Short));
-    readDtedFile (handle, tf.rawbuf, fileWidth, fileHeight, nchan,
+    tf.rawbuf = (Short *)attemptckalloc (fileWidth * fileHeight * nchan * sizeof (Short));
+    if (tf.rawbuf == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
+    readDtedFile (interp, handle, tf.rawbuf, fileWidth, fileHeight, nchan,
                   hostIsIntel, opts.verbose, minVals, maxVals);
     if (opts.minVal != 0 || opts.maxVal != 0) {
         for (c=0; c<nchan; c++) {
@@ -712,7 +725,11 @@ static int CommonRead(
         return TCL_ERROR;
     }
 
-    tf.pixbuf = (UByte *) ckalloc (fileWidth * nchan);
+    tf.pixbuf = (UByte *) attemptckalloc (fileWidth * nchan);
+    if (tf.pixbuf == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
 
     block.pixelSize = nchan;
     block.pitch = fileWidth * nchan;

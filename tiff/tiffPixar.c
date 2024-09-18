@@ -2,23 +2,23 @@
  * Copyright (c) 1996-1997 Sam Leffler
  * Copyright (c) 1996 Pixar
  *
- * Permission to use, copy, modify, distribute, and sell this software and 
+ * Permission to use, copy, modify, distribute, and sell this software and
  * its documentation for any purpose is hereby granted without fee, provided
  * that (i) the above copyright notices and this permission notice appear in
  * all copies of the software and related documentation, and (ii) the names of
  * Pixar, Sam Leffler and Silicon Graphics may not be used in any advertising or
  * publicity relating to the software without the specific, prior written
  * permission of Pixar, Sam Leffler and Silicon Graphics.
- * 
- * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND, 
- * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY 
- * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  
- * 
+ *
+ * THE SOFTWARE IS PROVIDED "AS-IS" AND WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS, IMPLIED OR OTHERWISE, INCLUDING WITHOUT LIMITATION, ANY
+ * WARRANTY OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.
+ *
  * IN NO EVENT SHALL PIXAR, SAM LEFFLER OR SILICON GRAPHICS BE LIABLE FOR
  * ANY SPECIAL, INCIDENTAL, INDIRECT OR CONSEQUENTIAL DAMAGES OF ANY KIND,
  * OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
- * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF 
- * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 
+ * WHETHER OR NOT ADVISED OF THE POSSIBILITY OF DAMAGE, AND ON ANY THEORY OF
+ * LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
  * OF THIS SOFTWARE.
  */
 
@@ -31,10 +31,10 @@
  * Contributed by Dan McCoy.
  *
  * PixarLog film support uses the TIFF library to store companded
- * 11 bit values into a tiff file, which are compressed using the 
- * zip compressor.  
+ * 11 bit values into a tiff file, which are compressed using the
+ * zip compressor.
  *
- * The codec can take as input and produce as output 32-bit IEEE float values 
+ * The codec can take as input and produce as output 32-bit IEEE float values
  * as well as 16-bit or 8-bit unsigned integer values.
  *
  * On writing any of the above are converted into the internal
@@ -48,7 +48,7 @@
  * than the human eye can perceive with extra room to allow for
  * error introduced by further image computation.  As with any quantized
  * color format, it is possible to perform image calculations which
- * expose the quantization error. This format should certainly be less 
+ * expose the quantization error. This format should certainly be less
  * susceptible to such errors than standard 8-bit encodings, but more
  * susceptible than straight 16-bit or 32-bit encodings.
  *
@@ -108,7 +108,7 @@ static float  LogK1, LogK2;
 
 static void
 horizontalAccumulateF(uint16_t *wp, int n, int stride, float *op,
-	float *ToLinearF)
+                      float *ToLinearF)
 {
     register unsigned int  cr, cg, cb, ca, mask;
     register float  t0, t1, t2, t3;
@@ -171,7 +171,7 @@ horizontalAccumulateF(uint16_t *wp, int n, int stride, float *op,
 
 static void
 horizontalAccumulate12(uint16_t *wp, int n, int stride, int16_t *op,
-	float *ToLinearF)
+                       float *ToLinearF)
 {
     register unsigned int  cr, cg, cb, ca, mask;
     register float  t0, t1, t2, t3;
@@ -239,7 +239,7 @@ horizontalAccumulate12(uint16_t *wp, int n, int stride, int16_t *op,
 
 static void
 horizontalAccumulate16(uint16_t *wp, int n, int stride, uint16_t *op,
-	uint16_t *ToLinear16)
+                       uint16_t *ToLinear16)
 {
     register unsigned int  cr, cg, cb, ca, mask;
 
@@ -285,7 +285,7 @@ horizontalAccumulate16(uint16_t *wp, int n, int stride, uint16_t *op,
     }
 }
 
-/* 
+/*
  * Returns the log encoded 11-bit values with the horizontal
  * differencing undone.
  */
@@ -321,7 +321,7 @@ horizontalAccumulate11(uint16_t *wp, int n, int stride, uint16_t *op)
 		op[1] = (uint16_t)((cg += wp[1]) & mask);
 		op[2] = (uint16_t)((cb += wp[2]) & mask);
 		op[3] = (uint16_t)((ca += wp[3]) & mask);
-	    } 
+	    }
 	} else {
 	    REPEAT(stride, *op = *wp&mask; wp++; op++)
 	    n -= stride;
@@ -336,7 +336,7 @@ horizontalAccumulate11(uint16_t *wp, int n, int stride, uint16_t *op)
 
 static void
 horizontalAccumulate8(uint16_t *wp, int n, int stride, unsigned char *op,
-	unsigned char *ToLinear8)
+                      unsigned char *ToLinear8)
 {
     register unsigned int  cr, cg, cb, ca, mask;
 
@@ -385,7 +385,7 @@ horizontalAccumulate8(uint16_t *wp, int n, int stride, unsigned char *op,
 
 static void
 horizontalAccumulate8abgr(uint16_t *wp, int n, int stride, unsigned char *op,
-	unsigned char *ToLinear8)
+                          unsigned char *ToLinear8)
 {
     register unsigned int  cr, cg, cb, ca, mask;
     register unsigned char  t0, t1, t2, t3;
@@ -456,8 +456,8 @@ typedef	struct {
 	TIFFPredictorState	predict;
 	z_stream		stream;
 	tmsize_t		tbuf_size; /* only set/used on reading for now */
-	uint16_t		*tbuf; 
-	uint16_t		stride;
+	uint16_t			*tbuf;
+	uint16_t			stride;
 	int			state;
 	int			user_datafmt;
 	int			quality;
@@ -485,7 +485,7 @@ PixarLogMakeTables(PixarLogState *sp)
  *    11-bit companded representation.  The 11-bit representation has two
  *    distinct regions.  A linear bottom end up through .018316 in steps
  *    of about .000073, and a region of constant ratio up to about 25.
- *    These floating point numbers are stored in the main table ToLinearF. 
+ *    These floating point numbers are stored in the main table ToLinearF.
  *    All other tables are derived from this one.  The tables (and the
  *    ratios) are continuous at the internal seam.
  */
@@ -509,9 +509,9 @@ PixarLogMakeTables(PixarLogState *sp)
     LogK1 = (float)(1./c);	/* if (v >= 2)  token = k1*log(v*k2) */
     LogK2 = (float)(1./b);
     lt2size = (int)(2./linstep) + 1;
-    FromLT2 = (uint16_t *)TkimgTIFFmalloc(lt2size*sizeof(uint16_t));
-    From14 = (uint16_t *)TkimgTIFFmalloc(16384*sizeof(uint16_t));
-    From8 = (uint16_t *)TkimgTIFFmalloc(256*sizeof(uint16_t));
+    FromLT2 = (uint16_t *)TkimgTIFFmalloc(lt2size * sizeof(uint16_t));
+    From14 = (uint16_t *)TkimgTIFFmalloc(16384 * sizeof(uint16_t));
+    From8 = (uint16_t *)TkimgTIFFmalloc(256 * sizeof(uint16_t));
     ToLinearF = (float *)TkimgTIFFmalloc(TSIZEP1 * sizeof(float));
     ToLinear16 = (uint16_t *)TkimgTIFFmalloc(TSIZEP1 * sizeof(uint16_t));
     ToLinear8 = (unsigned char *)TkimgTIFFmalloc(TSIZEP1 * sizeof(unsigned char));
@@ -592,8 +592,8 @@ PixarLogMakeTables(PixarLogState *sp)
 #define DecoderState(tif)	((PixarLogState*) (tif)->tif_data)
 #define EncoderState(tif)	((PixarLogState*) (tif)->tif_data)
 
-static int PixarLogEncode(TIFF* tif, uint8_t bp, tmsize_t cc, uint16_t s);
-static int PixarLogDecode(TIFF* tif, uint8_t op, tmsize_t occ, uint16_t s);
+static int PixarLogEncode(TIFF* tif, uint8_t* bp, tmsize_t cc, uint16_t s);
+static int PixarLogDecode(TIFF* tif, uint8_t* op, tmsize_t occ, uint16_t s);
 
 #define PIXARLOGDATAFMT_UNKNOWN	-1
 
@@ -681,7 +681,7 @@ PixarLogSetupDecode(TIFF* tif)
 
 	/* Make sure no byte swapping happens on the data
 	 * after decompression. */
-	tif->tif_postdecode = _TIFFNoPostDecode;  
+	tif->tif_postdecode = _TIFFNoPostDecode;
 
 	/* for some reason, we can't do this in TIFFInitPixarLog */
 
@@ -704,7 +704,7 @@ PixarLogSetupDecode(TIFF* tif)
                 sp->tbuf = NULL;
                 sp->tbuf_size = 0;
 		TIFFErrorExt(tif->tif_clientdata, module,
-			"PixarLog compression can't handle bits depth/data format combination (depth: %d)", 
+			"PixarLog compression can't handle bits depth/data format combination (depth: %"PRIu16")",
 			td->td_bitspersample);
 		return (0);
 	}
@@ -747,7 +747,7 @@ PixarLogPreDecode(TIFF* tif, uint16_t s)
 }
 
 static int
-PixarLogDecode(TIFF* tif, uint8_t op, tmsize_t occ, uint16_t s)
+PixarLogDecode(TIFF* tif, uint8_t* op, tmsize_t occ, uint16_t s)
 {
 	static const char module[] = "PixarLogDecode";
 	TIFFDirectory *td = &tif->tif_dir;
@@ -772,7 +772,7 @@ PixarLogDecode(TIFF* tif, uint8_t op, tmsize_t occ, uint16_t s)
 		break;
 	default:
 		TIFFErrorExt(tif->tif_clientdata, module,
-			"%d bit input not supported in PixarLog",
+			"%"PRIu16" bit input not supported in PixarLog",
 			td->td_bitspersample);
 		return 0;
 	}
@@ -809,8 +809,8 @@ PixarLogDecode(TIFF* tif, uint8_t op, tmsize_t occ, uint16_t s)
 		}
 		if (state == Z_DATA_ERROR) {
 			TIFFErrorExt(tif->tif_clientdata, module,
-			    "Decoding error at scanline %lu, %s",
-			    (unsigned long) tif->tif_row, sp->stream.msg ? sp->stream.msg : "(null)");
+			    "Decoding error at scanline %"PRIu32", %s",
+			    tif->tif_row, sp->stream.msg ? sp->stream.msg : "(null)");
 			return (0);
 		}
 		if (state != Z_OK) {
@@ -823,8 +823,8 @@ PixarLogDecode(TIFF* tif, uint8_t op, tmsize_t occ, uint16_t s)
 	/* hopefully, we got all the bytes we needed */
 	if (sp->stream.avail_out != 0) {
 		TIFFErrorExt(tif->tif_clientdata, module,
-		    "Not enough data at scanline %lu (short " "%I64u" " bytes)",
-		    (unsigned long) tif->tif_row, (uint64_t) sp->stream.avail_out);
+		    "Not enough data at scanline %"PRIu32" (short %u bytes)",
+		    tif->tif_row, sp->stream.avail_out);
 		return (0);
 	}
 
@@ -841,10 +841,10 @@ PixarLogDecode(TIFF* tif, uint8_t op, tmsize_t occ, uint16_t s)
 	 * may overflow the output buffer, so truncate it enough to prevent
 	 * that but still salvage as much data as possible.
 	 */
-	if (nsamples % llen) { 
-		TIFFWarning(module,
-			"stride %lu is not a multiple of sample count, "
-			"%lu, data truncated.", (unsigned long) llen, (unsigned long) nsamples);
+	if (nsamples % llen) {
+		TIFFWarningExt(tif->tif_clientdata, module,
+			"stride %d is not a multiple of sample count, "
+            "%"TIFF_SSIZE_FORMAT", data truncated.", llen, nsamples);
 		nsamples -= nsamples % llen;
 	}
 
@@ -857,12 +857,12 @@ PixarLogDecode(TIFF* tif, uint8_t op, tmsize_t occ, uint16_t s)
 			break;
 		case PIXARLOGDATAFMT_16BIT:
 			horizontalAccumulate16(up, llen, sp->stride,
-					(uint16_t *)op, sp->ToLinear16);
+                                   (uint16_t *)op, sp->ToLinear16);
 			op += llen * sizeof(uint16_t);
 			break;
 		case PIXARLOGDATAFMT_12BITPICIO:
 			horizontalAccumulate12(up, llen, sp->stride,
-					(int16_t *)op, sp->ToLinearF);
+                                   (int16_t *)op, sp->ToLinearF);
 			op += llen * sizeof(int16_t);
 			break;
 		case PIXARLOGDATAFMT_11BITLOG:
@@ -882,7 +882,7 @@ PixarLogDecode(TIFF* tif, uint8_t op, tmsize_t occ, uint16_t s)
 			break;
 		default:
 			TIFFErrorExt(tif->tif_clientdata, module,
-				  "Unsupported bits/sample: %d",
+				  "Unsupported bits/sample: %"PRIu16,
 				  td->td_bitspersample);
 			return (0);
 		}
@@ -915,7 +915,7 @@ PixarLogSetupEncode(TIFF* tif)
 	if (sp->user_datafmt == PIXARLOGDATAFMT_UNKNOWN)
 		sp->user_datafmt = PixarLogGuessDataFmt(td);
 	if (sp->user_datafmt == PIXARLOGDATAFMT_UNKNOWN) {
-		TIFFErrorExt(tif->tif_clientdata, module, "PixarLog compression can't handle %d bit linear encodings", td->td_bitspersample);
+		TIFFErrorExt(tif->tif_clientdata, module, "PixarLog compression can't handle %"PRIu16" bit linear encodings", td->td_bitspersample);
 		return (0);
 	}
 
@@ -975,9 +975,9 @@ horizontalDifferenceF(float *ip, int n, int stride, uint16_t *wp, uint16_t *From
 		n -= 3;
 		wp += 3;
 		ip += 3;
-		r1 = (int32_t) CLAMP(ip[0]); wp[0] = (uint16_t)((r1-r2) & mask); r2 = r1;
-		g1 = (int32_t) CLAMP(ip[1]); wp[1] = (uint16_t)((g1-g2) & mask); g2 = g1;
-		b1 = (int32_t) CLAMP(ip[2]); wp[2] = (uint16_t)((b1-b2) & mask); b2 = b1;
+		r1 = (int32_t) CLAMP(ip[0]); wp[0] = (uint16_t)((r1 - r2) & mask); r2 = r1;
+		g1 = (int32_t) CLAMP(ip[1]); wp[1] = (uint16_t)((g1 - g2) & mask); g2 = g1;
+		b1 = (int32_t) CLAMP(ip[2]); wp[2] = (uint16_t)((b1 - b2) & mask); b2 = b1;
 	    }
 	} else if (stride == 4) {
 	    r2 = wp[0] = (uint16_t) CLAMP(ip[0]);
@@ -989,17 +989,17 @@ horizontalDifferenceF(float *ip, int n, int stride, uint16_t *wp, uint16_t *From
 		n -= 4;
 		wp += 4;
 		ip += 4;
-		r1 = (int32_t) CLAMP(ip[0]); wp[0] = (uint16_t)((r1-r2) & mask); r2 = r1;
-		g1 = (int32_t) CLAMP(ip[1]); wp[1] = (uint16_t)((g1-g2) & mask); g2 = g1;
-		b1 = (int32_t) CLAMP(ip[2]); wp[2] = (uint16_t)((b1-b2) & mask); b2 = b1;
-		a1 = (int32_t) CLAMP(ip[3]); wp[3] = (uint16_t)((a1-a2) & mask); a2 = a1;
+		r1 = (int32_t) CLAMP(ip[0]); wp[0] = (uint16_t)((r1 - r2) & mask); r2 = r1;
+		g1 = (int32_t) CLAMP(ip[1]); wp[1] = (uint16_t)((g1 - g2) & mask); g2 = g1;
+		b1 = (int32_t) CLAMP(ip[2]); wp[2] = (uint16_t)((b1 - b2) & mask); b2 = b1;
+		a1 = (int32_t) CLAMP(ip[3]); wp[3] = (uint16_t)((a1 - a2) & mask); a2 = a1;
 	    }
 	} else {
         REPEAT(stride, wp[0] = (uint16_t) CLAMP(ip[0]); wp++; ip++)
         n -= stride;
         while (n > 0) {
             REPEAT(stride,
-                wp[0] = (uint16_t)(((int32_t)CLAMP(ip[0])-(int32_t)CLAMP(ip[-stride])) & mask);
+                wp[0] = (uint16_t)(((int32_t)CLAMP(ip[0]) - (int32_t)CLAMP(ip[-stride])) & mask);
                 wp++; ip++)
             n -= stride;
         }
@@ -1008,8 +1008,8 @@ horizontalDifferenceF(float *ip, int n, int stride, uint16_t *wp, uint16_t *From
 }
 
 static void
-horizontalDifference16(unsigned short *ip, int n, int stride, 
-	unsigned short *wp, uint16_t *From14)
+horizontalDifference16(unsigned short *ip, int n, int stride,
+                       unsigned short *wp, uint16_t *From14)
 {
     register int  r1, g1, b1, a1, r2, g2, b2, a2, mask;
 
@@ -1027,9 +1027,9 @@ horizontalDifference16(unsigned short *ip, int n, int stride,
 		n -= 3;
 		wp += 3;
 		ip += 3;
-		r1 = CLAMP(ip[0]); wp[0] = (uint16_t)((r1-r2) & mask); r2 = r1;
-		g1 = CLAMP(ip[1]); wp[1] = (uint16_t)((g1-g2) & mask); g2 = g1;
-		b1 = CLAMP(ip[2]); wp[2] = (uint16_t)((b1-b2) & mask); b2 = b1;
+		r1 = CLAMP(ip[0]); wp[0] = (uint16_t)((r1 - r2) & mask); r2 = r1;
+		g1 = CLAMP(ip[1]); wp[1] = (uint16_t)((g1 - g2) & mask); g2 = g1;
+		b1 = CLAMP(ip[2]); wp[2] = (uint16_t)((b1 - b2) & mask); b2 = b1;
 	    }
 	} else if (stride == 4) {
 	    r2 = wp[0] = CLAMP(ip[0]);  g2 = wp[1] = CLAMP(ip[1]);
@@ -1039,17 +1039,17 @@ horizontalDifference16(unsigned short *ip, int n, int stride,
 		n -= 4;
 		wp += 4;
 		ip += 4;
-		r1 = CLAMP(ip[0]); wp[0] = (uint16_t)((r1-r2) & mask); r2 = r1;
-		g1 = CLAMP(ip[1]); wp[1] = (uint16_t)((g1-g2) & mask); g2 = g1;
-		b1 = CLAMP(ip[2]); wp[2] = (uint16_t)((b1-b2) & mask); b2 = b1;
-		a1 = CLAMP(ip[3]); wp[3] = (uint16_t)((a1-a2) & mask); a2 = a1;
+		r1 = CLAMP(ip[0]); wp[0] = (uint16_t)((r1 - r2) & mask); r2 = r1;
+		g1 = CLAMP(ip[1]); wp[1] = (uint16_t)((g1 - g2) & mask); g2 = g1;
+		b1 = CLAMP(ip[2]); wp[2] = (uint16_t)((b1 - b2) & mask); b2 = b1;
+		a1 = CLAMP(ip[3]); wp[3] = (uint16_t)((a1 - a2) & mask); a2 = a1;
 	    }
 	} else {
         REPEAT(stride, wp[0] = CLAMP(ip[0]); wp++; ip++)
 	    n -= stride;
 	    while (n > 0) {
             REPEAT(stride,
-                wp[0] = (uint16_t)((CLAMP(ip[0])-CLAMP(ip[-stride])) & mask);
+                wp[0] = (uint16_t)((CLAMP(ip[0]) - CLAMP(ip[-stride])) & mask);
                 wp++; ip++)
             n -= stride;
         }
@@ -1059,8 +1059,8 @@ horizontalDifference16(unsigned short *ip, int n, int stride,
 
 
 static void
-horizontalDifference8(unsigned char *ip, int n, int stride, 
-	unsigned short *wp, uint16_t *From8)
+horizontalDifference8(unsigned char *ip, int n, int stride,
+                      unsigned short *wp, uint16_t *From8)
 {
     register int  r1, g1, b1, a1, r2, g2, b2, a2, mask;
 
@@ -1075,9 +1075,9 @@ horizontalDifference8(unsigned char *ip, int n, int stride,
 	    n -= 3;
 	    while (n > 0) {
 		n -= 3;
-		r1 = CLAMP(ip[3]); wp[3] = (uint16_t)((r1-r2) & mask); r2 = r1;
-		g1 = CLAMP(ip[4]); wp[4] = (uint16_t)((g1-g2) & mask); g2 = g1;
-		b1 = CLAMP(ip[5]); wp[5] = (uint16_t)((b1-b2) & mask); b2 = b1;
+		r1 = CLAMP(ip[3]); wp[3] = (uint16_t)((r1 - r2) & mask); r2 = r1;
+		g1 = CLAMP(ip[4]); wp[4] = (uint16_t)((g1 - g2) & mask); g2 = g1;
+		b1 = CLAMP(ip[5]); wp[5] = (uint16_t)((b1 - b2) & mask); b2 = b1;
 		wp += 3;
 		ip += 3;
 	    }
@@ -1087,10 +1087,10 @@ horizontalDifference8(unsigned char *ip, int n, int stride,
 	    n -= 4;
 	    while (n > 0) {
 		n -= 4;
-		r1 = CLAMP(ip[4]); wp[4] = (uint16_t)((r1-r2) & mask); r2 = r1;
-		g1 = CLAMP(ip[5]); wp[5] = (uint16_t)((g1-g2) & mask); g2 = g1;
-		b1 = CLAMP(ip[6]); wp[6] = (uint16_t)((b1-b2) & mask); b2 = b1;
-		a1 = CLAMP(ip[7]); wp[7] = (uint16_t)((a1-a2) & mask); a2 = a1;
+		r1 = CLAMP(ip[4]); wp[4] = (uint16_t)((r1 - r2) & mask); r2 = r1;
+		g1 = CLAMP(ip[5]); wp[5] = (uint16_t)((g1 - g2) & mask); g2 = g1;
+		b1 = CLAMP(ip[6]); wp[6] = (uint16_t)((b1 - b2) & mask); b2 = b1;
+		a1 = CLAMP(ip[7]); wp[7] = (uint16_t)((a1 - a2) & mask); a2 = a1;
 		wp += 4;
 		ip += 4;
 	    }
@@ -1099,7 +1099,7 @@ horizontalDifference8(unsigned char *ip, int n, int stride,
         n -= stride;
         while (n > 0) {
             REPEAT(stride,
-                wp[0] = (uint16_t)((CLAMP(ip[0])-CLAMP(ip[-stride])) & mask);
+                wp[0] = (uint16_t)((CLAMP(ip[0]) - CLAMP(ip[-stride])) & mask);
                 wp++; ip++)
             n -= stride;
         }
@@ -1111,7 +1111,7 @@ horizontalDifference8(unsigned char *ip, int n, int stride,
  * Encode a chunk of pixels.
  */
 static int
-PixarLogEncode(TIFF* tif, uint8_t bp, tmsize_t cc, uint16_t s)
+PixarLogEncode(TIFF* tif, uint8_t* bp, tmsize_t cc, uint16_t s)
 {
 	static const char module[] = "PixarLogEncode";
 	TIFFDirectory *td = &tif->tif_dir;
@@ -1138,7 +1138,7 @@ PixarLogEncode(TIFF* tif, uint8_t bp, tmsize_t cc, uint16_t s)
 		break;
 	default:
 		TIFFErrorExt(tif->tif_clientdata, module,
-			"%d bit input not supported in PixarLog",
+			"%"PRIu16" bit input not supported in PixarLog",
 			td->td_bitspersample);
 		return 0;
 	}
@@ -1155,28 +1155,28 @@ PixarLogEncode(TIFF* tif, uint8_t bp, tmsize_t cc, uint16_t s)
 	for (i = 0, up = sp->tbuf; i < n; i += llen, up += llen) {
 		switch (sp->user_datafmt)  {
 		case PIXARLOGDATAFMT_FLOAT:
-			horizontalDifferenceF((float *)bp, llen, 
+			horizontalDifferenceF((float *)bp, llen,
 				sp->stride, up, sp->FromLT2);
 			bp += llen * sizeof(float);
 			break;
 		case PIXARLOGDATAFMT_16BIT:
-			horizontalDifference16((uint16_t *)bp, llen, 
-				sp->stride, up, sp->From14);
+			horizontalDifference16((uint16_t *)bp, llen,
+                                   sp->stride, up, sp->From14);
 			bp += llen * sizeof(uint16_t);
 			break;
 		case PIXARLOGDATAFMT_8BIT:
-			horizontalDifference8((unsigned char *)bp, llen, 
+			horizontalDifference8((unsigned char *)bp, llen,
 				sp->stride, up, sp->From8);
 			bp += llen * sizeof(unsigned char);
 			break;
 		default:
 			TIFFErrorExt(tif->tif_clientdata, module,
-				"%d bit input not supported in PixarLog",
+				"%"PRIu16" bit input not supported in PixarLog",
 				td->td_bitspersample);
 			return 0;
 		}
 	}
- 
+
 	sp->stream.next_in = (unsigned char *) sp->tbuf;
 	assert(sizeof(sp->stream.avail_in)==4);  /* if this assert gets raised,
 	    we need to simplify this code to reflect a ZLib that is likely updated
@@ -1198,7 +1198,8 @@ PixarLogEncode(TIFF* tif, uint8_t bp, tmsize_t cc, uint16_t s)
 		}
 		if (sp->stream.avail_out == 0) {
 			tif->tif_rawcc = tif->tif_rawdatasize;
-			TIFFFlushData1(tif);
+			if (!TIFFFlushData1(tif))
+				return 0;
 			sp->stream.next_out = tif->tif_rawdata;
 			sp->stream.avail_out = (uInt) tif->tif_rawdatasize;  /* this is a safe typecast, as check is made already in PixarLogPreEncode */
 		}
@@ -1228,7 +1229,8 @@ PixarLogPostEncode(TIFF* tif)
 		    if ((tmsize_t)sp->stream.avail_out != tif->tif_rawdatasize) {
 			    tif->tif_rawcc =
 				tif->tif_rawdatasize - sp->stream.avail_out;
-			    TIFFFlushData1(tif);
+			    if (!TIFFFlushData1(tif))
+                                return 0;
 			    sp->stream.next_out = tif->tif_rawdata;
 			    sp->stream.avail_out = (uInt) tif->tif_rawdatasize;  /* this is a safe typecast, as check is made already in PixarLogPreEncode */
 		    }
@@ -1265,7 +1267,7 @@ PixarLogClose(TIFF* tif)
              * a TransferFunction is set. The size of the TransferFunction
              * depends on 1<<bitspersample. So if we increase it, an access
              * out of the buffer will happen at directory flushing.
-             * Another option would be to clear those targs. 
+             * Another option would be to clear those targs.
              */
             td->td_bitspersample = 8;
             td->td_sampleformat = SAMPLEFORMAT_UINT;
@@ -1392,10 +1394,11 @@ static const TIFFField pixarlogFields[] = {
 int
 TkimgTIFFInitPixar(TIFF* tif, int scheme)
 {
-	static const char module[] = "TIFFInitPixar";
+	static const char module[] = "TIFFInitPixarLog";
 
 	PixarLogState* sp;
 
+        (void)scheme;
 	assert(scheme == COMPRESSION_PIXARLOG);
 
 	/*
@@ -1411,7 +1414,7 @@ TkimgTIFFInitPixar(TIFF* tif, int scheme)
 	/*
 	 * Allocate state block so tag methods have storage to record values.
 	 */
-	tif->tif_data = (uint8_t) TkimgTIFFmalloc(sizeof (PixarLogState));
+	tif->tif_data = (uint8_t*) TkimgTIFFmalloc(sizeof (PixarLogState));
 	if (tif->tif_data == NULL)
 		goto bad;
 	sp = (PixarLogState*) tif->tif_data;
@@ -1422,18 +1425,18 @@ TkimgTIFFInitPixar(TIFF* tif, int scheme)
 	/*
 	 * Install codec methods.
 	 */
-	tif->tif_fixuptags = PixarLogFixupTags; 
+	tif->tif_fixuptags = PixarLogFixupTags;
 	tif->tif_setupdecode = PixarLogSetupDecode;
 	tif->tif_predecode = PixarLogPreDecode;
 	tif->tif_decoderow = PixarLogDecode;
-	tif->tif_decodestrip = PixarLogDecode;  
+	tif->tif_decodestrip = PixarLogDecode;
 	tif->tif_decodetile = PixarLogDecode;
 	tif->tif_setupencode = PixarLogSetupEncode;
 	tif->tif_preencode = PixarLogPreEncode;
 	tif->tif_postencode = PixarLogPostEncode;
-	tif->tif_encoderow = PixarLogEncode;  
+	tif->tif_encoderow = PixarLogEncode;
 	tif->tif_encodestrip = PixarLogEncode;
-	tif->tif_encodetile = PixarLogEncode;  
+	tif->tif_encodetile = PixarLogEncode;
 	tif->tif_close = PixarLogClose;
 	tif->tif_cleanup = PixarLogCleanup;
 
@@ -1447,13 +1450,13 @@ TkimgTIFFInitPixar(TIFF* tif, int scheme)
 	sp->quality = Z_DEFAULT_COMPRESSION; /* default comp. level */
 	sp->state = 0;
 
-	/* we don't wish to use the predictor, 
+	/* we don't wish to use the predictor,
 	 * the default is none, which predictor value 1
 	 */
 	(void) TIFFPredictorInit(tif);
 
 	/*
-	 * build the companding tables 
+	 * build the companding tables
 	 */
 	PixarLogMakeTables(sp);
 

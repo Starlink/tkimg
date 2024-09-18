@@ -263,7 +263,7 @@ CommonRead(
         char *c = Tcl_GetStringFromObj(objv[1], &nBytes);
         if ((objc > 3) || ((objc == 3) && ((c[0] != '-') ||
             (c[1] != 'i') || strncmp(c, "-index", strlen(c))))) {
-            Tcl_AppendResult(interp, "invalid format: \"",
+            Tcl_AppendResult(interp, "Invalid format: \"",
                 tkimg_GetStringFromObj2(format, NULL), "\"", (char *) NULL);
             return TCL_ERROR;
         }
@@ -273,7 +273,7 @@ CommonRead(
     }
 
     if (!ReadGIFHeader(gifConfPtr, &fileWidth, &fileHeight)) {
-        Tcl_AppendResult(interp, "couldn't read GIF header from file \"", fileName, "\"", NULL);
+        Tcl_AppendResult(interp, "Could not read GIF header from file \"", fileName, "\"", NULL);
         return TCL_ERROR;
     }
     if ((fileWidth <= 0) || (fileHeight <= 0)) {
@@ -283,14 +283,15 @@ CommonRead(
     }
 
     if (tkimg_Read2(&gifConfPtr->handle, (char *)buf, 3) != 3) {
-        return TCL_OK;
+        Tcl_AppendResult(interp, "Inconsistent decoding", (char *) NULL);
+        return TCL_ERROR;
     }
 
     bitPixel = 2<<(buf[0]&0x07);
 
     if (BitSet(buf[0], LOCALCOLORMAP)) {    /* Global Colormap */
         if (!ReadColorMap(gifConfPtr, bitPixel, colorMap)) {
-            Tcl_AppendResult(interp, "error reading color map", (char *) NULL);
+            Tcl_AppendResult(interp, "Error reading color map", (char *) NULL);
             return TCL_ERROR;
         }
     }
@@ -302,11 +303,12 @@ CommonRead(
         height = fileHeight - srcY;
     }
     if ((width <= 0) || (height <= 0) || (srcX >= fileWidth) || (srcY >= fileHeight)) {
-        return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+        return TCL_ERROR;
     }
 
     if (tkimg_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
-        return TCL_ERROR;;
+        return TCL_ERROR;
     }
 
     block.pixelSize = 4;
@@ -321,7 +323,7 @@ CommonRead(
             /*
              * Premature end of image.
              */
-            Tcl_AppendResult(interp,"premature end of image data", (char *) NULL);
+            Tcl_AppendResult(interp,"Premature end of image data", (char *) NULL);
             goto error;
         }
 
@@ -329,7 +331,7 @@ CommonRead(
             /*
              * GIF terminator.
              */
-            Tcl_AppendResult(interp,"no image data for this index", (char *) NULL);
+            Tcl_AppendResult(interp,"No image data for this index", (char *) NULL);
             goto error;
         }
 
@@ -340,12 +342,12 @@ CommonRead(
 
             if (tkimg_Read2(&gifConfPtr->handle, (char *)buf, 1) != 1) {
                 Tcl_AppendResult(interp,
-                    "error reading extension function code in GIF image",
+                    "Error reading extension function code in GIF image",
                     (char *) NULL);
                 goto error;
             }
             if (DoExtension(gifConfPtr, buf[0], &transparent) < 0) {
-                Tcl_AppendResult(interp, "error reading extension in GIF image", (char *) NULL);
+                Tcl_AppendResult(interp, "Error reading extension in GIF image", (char *) NULL);
                 goto error;
             }
             continue;
@@ -360,14 +362,17 @@ CommonRead(
 
         if (tkimg_Read2(&gifConfPtr->handle, (char *)buf, 9) != 9) {
             Tcl_AppendResult(interp,
-                "couldn't read left/top/width/height in GIF image",
+                "Could not read left/top/width/height in GIF image",
                 (char *) NULL);
             goto error;
         }
 
         imageWidth = LM_to_uint(buf[4],buf[5]);
         imageHeight = LM_to_uint(buf[6],buf[7]);
-
+	if (imageWidth != fileWidth || imageHeight != fileHeight) {
+            Tcl_AppendResult(interp, "File and image width are not identical", (char *) NULL);
+            goto error;
+	}
         bitPixel = 2<<(buf[8]&0x07);
 
         if (index--) {
@@ -375,7 +380,7 @@ CommonRead(
             if (BitSet(buf[8], LOCALCOLORMAP)) {
                 if (!ReadColorMap(gifConfPtr, bitPixel, colorMap)) {
                     Tcl_AppendResult(interp,
-                        "error reading color map", (char *) NULL);
+                        "Error reading color map", (char *) NULL);
                     goto error;
                 }
             }
@@ -383,7 +388,11 @@ CommonRead(
             /* If we've not yet allocated a trash buffer, do so now */
             if (trashBuffer == NULL) {
                 nBytes = fileWidth * fileHeight * 3;
-                trashBuffer = (char *) ckalloc((unsigned int) nBytes);
+                trashBuffer = (char *) attemptckalloc((unsigned int) nBytes);
+                if (trashBuffer == NULL) {
+                    Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                    goto error;
+                }
             }
 
             /*
@@ -415,7 +424,7 @@ CommonRead(
         }
         if (BitSet(buf[8], LOCALCOLORMAP)) {
             if (!ReadColorMap(gifConfPtr, bitPixel, colorMap)) {
-                Tcl_AppendResult(interp, "error reading color map", (char *) NULL);
+                Tcl_AppendResult(interp, "Error reading color map", (char *) NULL);
                 goto error;
             }
         }
@@ -451,7 +460,11 @@ CommonRead(
         block.pixelSize = (transparent>=0)? 4: 3;
         block.pitch = block.pixelSize * imageWidth;
         nBytes = block.pitch * imageHeight;
-        pixBuf = (unsigned char *) ckalloc((unsigned) nBytes);
+        pixBuf = (unsigned char *) attemptckalloc((unsigned) nBytes);
+        if (pixBuf == NULL) {
+            Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+            goto error;
+        }
         block.pixelPtr = pixBuf;
 
         if (ReadImage(interp, (char *) block.pixelPtr, gifConfPtr, imageWidth, imageHeight,
@@ -616,6 +629,9 @@ ReadColorMap(
     int i;
     unsigned char rgb[3];
 
+    if (number > MAXCOLORMAPSIZE) {
+        return 0;
+    }
     for (i=0; i<number; ++i) {
         if (! ReadOK(&gifConfPtr->handle, rgb, sizeof(rgb))) {
             return 0;
@@ -748,12 +764,12 @@ ReadImage(
      *  Initialize the decoder
      */
     if (! ReadOK(&gifConfPtr->handle,&initialCodeSize,1))  {
-        Tcl_AppendResult(interp, "error reading GIF image: ",
+        Tcl_AppendResult(interp, "Error reading GIF image: ",
                          Tcl_PosixError(interp), (char *) NULL);
         return TCL_ERROR;
     }
     if (initialCodeSize > MAX_LWZ_BITS) {
-        Tcl_AppendResult(interp, "error reading GIF image: malformed image", (char *) NULL);
+        Tcl_AppendResult(interp, "Error reading GIF image: malformed image", (char *) NULL);
         return TCL_ERROR;
     }
     if (transparent!=-1) {
@@ -859,12 +875,12 @@ ReadImage(
                 *top++ = firstCode;
 
                 if (maxCode < (1 << MAX_LWZ_BITS)) {
-		    /*
-		     * If there's still room in our codes table, add a new entry.
-		     * Otherwise don't, and keep using the current table.
+                    /*
+                     * If there's still room in our codes table, add a new entry.
+                     * Otherwise don't, and keep using the current table.
                      * See DEFERRED CLEAR CODE IN LZW COMPRESSION in the GIF89a
                      * specification.
-		     */
+                     */
                     prefix[maxCode] = oldCode;
                     append[maxCode] = firstCode;
                     maxCode++;
@@ -1053,7 +1069,7 @@ GetCode(
 #define GIFBITS 12
 #define HSIZE  5003            /* 80% occupancy */
 
-#define DEFAULT_BACKGROUND_VALUE	0xD9
+#define DEFAULT_BACKGROUND_VALUE        0xD9
 
 typedef struct {
     int ssize;
@@ -1168,8 +1184,6 @@ CommonWrite(
         state.alphaOffset = 0;
     }
 
-    tkimg_Write2(handle, (const char *) (state.alphaOffset ? GIF89a: GIF87a), 6);
-
     for (x=0; x<MAXCOLORMAPSIZE; x++) {
         state.mapa[x][CM_RED]   = 255;
         state.mapa[x][CM_GREEN] = 255;
@@ -1183,12 +1197,14 @@ CommonWrite(
 
     SaveMap(&state, blockPtr);
     if (state.num >= MAXCOLORMAPSIZE) {
-        Tcl_AppendResult(interp, "too many colors", (char *) NULL);
+        Tcl_AppendResult(interp, "Image contains more than 256 colors.", (char *) NULL);
         return TCL_ERROR;
     }
     if (state.num<2) {
         state.num = 2;
     }
+
+    tkimg_Write2(handle, (const char *) (state.alphaOffset ? GIF89a: GIF87a), 6);
 
     c=LSB(width);
     tkimg_Putc(c, handle);
@@ -1307,26 +1323,26 @@ SaveMap(
     GifWriterState *statePtr,
     Tk_PhotoImageBlock *blockPtr
 ) {
-    unsigned char *colores;
+    unsigned char *colors;
     int x, y;
     unsigned char red,green,blue;
 
     if (statePtr->alphaOffset) {
-        statePtr->num = 1;
+        statePtr->num = 0;
         statePtr->mapa[0][CM_RED]   = DEFAULT_BACKGROUND_VALUE;
-        statePtr->mapa[0][CM_GREEN] = DEFAULT_BACKGROUND_VALUE;;
-        statePtr->mapa[0][CM_BLUE]  = DEFAULT_BACKGROUND_VALUE;;
+        statePtr->mapa[0][CM_GREEN] = DEFAULT_BACKGROUND_VALUE;
+        statePtr->mapa[0][CM_BLUE]  = DEFAULT_BACKGROUND_VALUE;
     } else {
         statePtr->num = -1;
     }
 
     for(y=0; y<blockPtr->height; y++) {
-        colores=blockPtr->pixelPtr + blockPtr->offset[0] + y * blockPtr->pitch;
+        colors=blockPtr->pixelPtr + blockPtr->offset[0] + y * blockPtr->pitch;
         for(x=0; x<blockPtr->width; x++) {
-            if (!statePtr->alphaOffset || (colores[statePtr->alphaOffset] != 0)) {
-                red = colores[0];
-                green = colores[statePtr->greenOffset];
-                blue = colores[statePtr->blueOffset];
+            if (!statePtr->alphaOffset || (colors[statePtr->alphaOffset] != 0)) {
+                red = colors[0];
+                green = colors[statePtr->greenOffset];
+                blue = colors[statePtr->blueOffset];
                 if (IsNewColor(statePtr, red, green, blue)) {
                     statePtr->num++;
                     if (statePtr->num >= MAXCOLORMAPSIZE) {
@@ -1337,7 +1353,7 @@ SaveMap(
                     statePtr->mapa[statePtr->num][CM_BLUE]=blue;
                 }
             }
-            colores += statePtr->pixelSize;
+            colors += statePtr->pixelSize;
         }
     }
 }

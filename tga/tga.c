@@ -218,15 +218,15 @@ static void printImgInfo (TGAHEADER *th, const char *filename, const char *msg)
         return;
     }
 
-    sprintf(str, "%s %s\n", msg, filename);                                     OUT;
-    sprintf(str, "\tSize in pixel      : %d x %d\n", th->xsize, th->ysize);     OUT;
-    sprintf(str, "\tNo. of channels    : %d\n", NCHAN(th->pixsize));            OUT;
-    sprintf(str, "\tCompression        : %s\n",
-                 IS_COMPRESSED(th->imgtyp)? "rle": "none");                     OUT;
-    sprintf(str, "\tVertical encoding  : %s\n",
-                 ENC_TOP_BOTTOM(th->imgdes)? "Top -> Bottom": "Bottom -> Top"); OUT;
-    sprintf(str, "\tHorizontal encoding: %s\n",
-                 ENC_LEFT_RIGHT(th->imgdes)? "Left -> Right": "Right -> Left"); OUT;
+    tkimg_snprintf(str, 256, "%s %s\n", msg, filename);                                     OUT;
+    tkimg_snprintf(str, 256, "\tSize in pixel      : %d x %d\n", th->xsize, th->ysize);     OUT;
+    tkimg_snprintf(str, 256, "\tNo. of channels    : %d\n", NCHAN(th->pixsize));            OUT;
+    tkimg_snprintf(str, 256, "\tCompression        : %s\n",
+                             IS_COMPRESSED(th->imgtyp)? "rle": "none");                     OUT;
+    tkimg_snprintf(str, 256, "\tVertical encoding  : %s\n",
+                             ENC_TOP_BOTTOM(th->imgdes)? "TopBottom": "BottomTop");         OUT;
+    tkimg_snprintf(str, 256, "\tHorizontal encoding: %s\n",
+                             ENC_LEFT_RIGHT(th->imgdes)? "LeftRight": "RightLeft");         OUT;
     Tcl_Flush(outChan);
 }
 #undef OUT
@@ -473,19 +473,23 @@ static Boln writePixel(tkimg_MFile *handle, UByte b, UByte g,
 static Boln tgaWriteScan(Tcl_Interp *interp, tkimg_MFile *handle,
                           TGAFILE *tf, Int y)
 {
-    UByte *stop, *red_end, *green_end, *blue_end, *matte_end;
+    UByte *red_end, *green_end, *blue_end, *matte_end;
+    UByte *red_stop, *green_stop, *blue_stop, *matte_stop;
     Int nchan;
 
     tf->red   = tf->redScan;
     tf->green = tf->greenScan;
     tf->blue  = tf->blueScan;
     tf->matte = tf->matteScan;
-    stop = tf->red + tf->th.xsize;
+    red_stop   = tf->red   + tf->th.xsize;
+    green_stop = tf->green + tf->th.xsize;
+    blue_stop  = tf->blue  + tf->th.xsize;
+    matte_stop = tf->matte + tf->th.xsize;
     nchan = NCHAN(tf->th.pixsize);
 
     /* Write the scanline data to the file. */
     if (! IS_COMPRESSED(tf->th.imgtyp)) {
-        while (tf->red < stop) {
+        while (tf->red < red_stop) {
             if (!writePixel(handle, *tf->blue, *tf->green, *tf->red, *tf->matte, nchan)) {
                 return FALSE;
             }
@@ -500,8 +504,8 @@ static Boln tgaWriteScan(Tcl_Interp *interp, tkimg_MFile *handle,
         green_end = tf->green + 1;
         blue_end = tf->blue + 1;
         matte_end = tf->matte + 1;
-        while (tf->red < stop) {
-            while (red_end < stop &&
+        while (tf->red < red_stop) {
+            while (red_end < red_stop &&
                    *tf->red == *red_end &&
                    *tf->green == *green_end &&
                    *tf->blue == *blue_end &&
@@ -528,24 +532,24 @@ static Boln tgaWriteScan(Tcl_Interp *interp, tkimg_MFile *handle,
                 tf->matte = matte_end;
             } else {
                 /* Found a run of uncompressable data */
-                while (red_end < stop &&
-                       ((red_end + 1 >= stop ||
+                while (red_end < red_stop &&
+                       ((red_end + 1 >= red_stop ||
                         *red_end != *(red_end + 1)) ||
-                        (red_end + 2 >= stop ||
+                        (red_end + 2 >= red_stop ||
                         *(red_end + 1) != *(red_end + 2))) &&
-                       ((green_end + 1 >= stop ||
+                       ((green_end + 1 >= green_stop ||
                         *green_end != *(green_end + 1)) ||
-                        (green_end + 2 >= stop ||
+                        (green_end + 2 >= green_stop ||
                         *(green_end + 1) != *(green_end + 2))) &&
-                       ((blue_end + 1 >= stop ||
+                       ((blue_end + 1 >= blue_stop ||
                         *blue_end != *(blue_end + 1)) ||
-                        (blue_end + 2 >= stop ||
+                        (blue_end + 2 >= blue_stop ||
                         *(blue_end + 1) != *(blue_end + 2))) &&
                         red_end - tf->red < MAXRUN) {
                     if (nchan == 4) {
-                        if (! ((matte_end + 1 >= stop ||
+                        if (! ((matte_end + 1 >= matte_stop ||
                                *matte_end != *(matte_end + 1)) ||
-                               (matte_end + 2 >= stop ||
+                               (matte_end + 2 >= matte_stop ||
                                *(matte_end + 1) != *(matte_end + 2)))) {
                             break;
                         }
@@ -619,7 +623,7 @@ static int ParseFormatOpts(interp, format, opts)
     }
     if (objc) {
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)tgaOptions,
+            if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)tgaOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -776,7 +780,7 @@ static int CommonRead(
     int stopY, outY, outWidth, outHeight;
     TGAFILE tf;
     FMTOPT opts;
-    char errMsg[200];
+    char errMsg[256];
     int result = TCL_OK;
 
     memset (&tf, 0, sizeof (TGAFILE));
@@ -803,7 +807,8 @@ static int CommonRead(
     }
     if ((outWidth <= 0) || (outHeight <= 0)
         || (srcX >= fileWidth) || (srcY >= fileHeight)) {
-        return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+        return TCL_ERROR;
     }
 
     if (tkimg_PhotoExpand(interp, imageHandle, destX + outWidth, destY + outHeight) == TCL_ERROR) {
@@ -817,9 +822,9 @@ static int CommonRead(
     tf.scanmode = TGA_MODE_DIFF;
     nchan = NCHAN(tf.th.pixsize);
 
-    tf.pixbuf = (UByte *) ckalloc (fileWidth * nchan);
+    tf.pixbuf = (UByte *) attemptckalloc (fileWidth * nchan);
     if (!tf.pixbuf) {
-        sprintf(errMsg, "Can't allocate memory of size %d", fileWidth * nchan);
+        tkimg_snprintf(errMsg, 256, "Can't allocate memory of size %d", fileWidth * nchan);
         Tcl_AppendResult(interp, errMsg, (char *)NULL);
         tkimg_ReadBuffer (0);
         return TCL_ERROR;
@@ -931,7 +936,7 @@ static int CommonWrite(
     UByte   *pixelPtr, *rowPixPtr;
     TGAFILE tf;
     FMTOPT opts;
-    char errMsg[200];
+    char errMsg[256];
 
     memset(&tf, 0, sizeof(TGAFILE));
     if (ParseFormatOpts(interp, format, &opts) != TCL_OK) {
@@ -954,12 +959,12 @@ static int CommonWrite(
 
     nchan = ((opts.matte && alphaOffset)? 4: 3);
 
-    tf.redScan   = (UByte *) ckalloc(blockPtr->width);
-    tf.greenScan = (UByte *) ckalloc(blockPtr->width);
-    tf.blueScan  = (UByte *) ckalloc(blockPtr->width);
-    tf.matteScan = (UByte *) ckalloc(blockPtr->width);
+    tf.redScan   = (UByte *) attemptckalloc(blockPtr->width);
+    tf.greenScan = (UByte *) attemptckalloc(blockPtr->width);
+    tf.blueScan  = (UByte *) attemptckalloc(blockPtr->width);
+    tf.matteScan = (UByte *) attemptckalloc(blockPtr->width);
     if (!tf.redScan || !tf.greenScan || !tf.blueScan || !tf.matteScan) {
-        sprintf(errMsg, "Can't allocate memory of size %d", blockPtr->width);
+        tkimg_snprintf(errMsg, 256, "Can't allocate memory of size %d", blockPtr->width);
         Tcl_AppendResult(interp, errMsg, (char *)NULL);
         return TCL_ERROR;
     }

@@ -161,16 +161,14 @@ _TIFFerr(
     char *cp = buf;
 
     if (module != NULL) {
-        sprintf(cp, "%s: ", module);
+        tkimg_snprintf(cp, 2048, "%s: ", module);
         cp += strlen(module) + 2;
     }
 
     vsprintf(cp, fmt, ap);
     if (errorMessage) {
         ckfree(errorMessage);
-    }
-    if (strstr(buf, "Null count for")) {
-        return;
+        errorMessage = NULL;
     }
     errorMessage = (char *) ckalloc(strlen(buf)+1);
     strcpy(errorMessage, buf);
@@ -446,7 +444,11 @@ ObjRead(
 
     if (TIFFClientOpen) {
         if (handle.state != IMG_STRING) {
-            dataPtr = ckalloc((handle.length*3)/4 + 2);
+            dataPtr = attemptckalloc((handle.length*3)/4 + 2);
+            if (dataPtr == NULL) {
+                Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                return TCL_ERROR;
+            }
             handle.length = tkimg_Read2(&handle, dataPtr, handle.length);
             handle.data = dataPtr;
         }
@@ -510,6 +512,7 @@ ObjRead(
     if (tif != NULL) {
         result = CommonRead(interp, tif, format, imageHandle,
                  destX, destY, width, height, srcX, srcY);
+        TIFFClose(tif);
     } else {
         result = TCL_ERROR;
     }
@@ -606,6 +609,7 @@ ChnRead(
     if (tif) {
         result = CommonRead(interp, tif, format, imageHandle,
                 destX, destY, width, height, srcX, srcY);
+        TIFFClose(tif);
     } else {
         result = TCL_ERROR;
     }
@@ -615,7 +619,7 @@ ChnRead(
     if (result == TCL_ERROR) {
         Tcl_AppendResult(interp, errorMessage, (char *) NULL);
         ckfree(errorMessage);
-        errorMessage = 0;
+        errorMessage = NULL;
     }
     return result;
 }
@@ -634,7 +638,6 @@ CommonRead(
     uint32_t w, h;
     size_t npixels;
     uint32_t *raster;
-    int result = TCL_OK;
     int nBytes, index = 0, objc = 0;
     Tcl_Obj **objv = NULL;
 
@@ -678,22 +681,22 @@ CommonRead(
     npixels = w * h;
 
     raster = (uint32_t*) TkimgTIFFmalloc(npixels * sizeof (uint32_t));
+    if (raster == NULL) {
+        Tcl_AppendResult(interp,"Cannot allocate raster memory", (char *) NULL);
+        return TCL_ERROR;
+    }
     block.width = w;
     block.height = h;
     block.pitch = - (block.pixelSize * (int) w);
     block.pixelPtr = ((unsigned char *) raster) + ((1-h) * block.pitch);
-    if (raster == NULL) {
-        printf("cannot malloc\n");
-        return TCL_ERROR;
-    }
 
     if (!TIFFReadRGBAImage(tif, w, h, raster, 0) || errorMessage) {
-        TkimgTIFFfree (raster);
         if (errorMessage) {
             Tcl_AppendResult(interp, errorMessage, (char *) NULL);
             ckfree(errorMessage);
             errorMessage = NULL;
         }
+        TkimgTIFFfree (raster);
         return TCL_ERROR;
     }
 
@@ -701,12 +704,12 @@ CommonRead(
     block.offset[3] = block.offset[0]; /* don't use transparency */
     if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX,
                         destY, width, height, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
-        result = TCL_ERROR;
+        TkimgTIFFfree (raster);
+        return TCL_ERROR;
     }
 
     TkimgTIFFfree (raster);
-    TIFFClose(tif);
-    return result;
+    return TCL_OK;
 }
 
 static int StringWrite(
@@ -887,7 +890,7 @@ ParseWriteFormat(
         compression = "none";
         byteorder = "";
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)tiffWriteOptions,
+            if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)tiffWriteOptions,
                     "format option", 0, &index) !=TCL_OK) {
                 return TCL_ERROR;
             }
@@ -987,8 +990,12 @@ CommonWrite(
     } else {
         unsigned char *srcPtr, *dstPtr, *rowPtr;
         int greenOffset, blueOffset, alphaOffset, x, y;
-        dstPtr = data = (unsigned char *) ckalloc(numsamples *
+        dstPtr = data = (unsigned char *) attemptckalloc(numsamples *
                 blockPtr->width * blockPtr->height);
+        if (dstPtr == NULL) {
+            Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+            return TCL_ERROR;
+        }
         rowPtr = blockPtr->pixelPtr + blockPtr->offset[0];
         greenOffset = blockPtr->offset[1] - blockPtr->offset[0];
         blueOffset = blockPtr->offset[2] - blockPtr->offset[0];

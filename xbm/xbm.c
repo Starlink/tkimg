@@ -11,6 +11,10 @@
  * <paul@poSoft.de> Paul Obermeier
  * Feb 2001:
  *      - Bugfix  in CommonWrite: const char *fileName was overwritten.
+ *
+ * The following format options are available:
+ *
+ * Read XBM image: "xbm -foreground <ColorString> -background <ColorString>"
  */
 
 /*
@@ -39,10 +43,18 @@ typedef struct ParseInfo {
     int wordLength;		/* Number of non-NULL bytes in word. */
 } ParseInfo;
 
+/* Format options structure for use with ParseFormatOpts */
+#define BG 0
+#define FG 1
+typedef struct {
+    int red[2], green[2], blue[2];
+} FMTOPT;
+
 /*
  * Prototypes for local procedures defined in this file:
  */
 
+static int ParseFormatOpts(Tcl_Interp *interp, Tcl_Obj *format, FMTOPT *opts);
 static int CommonRead(Tcl_Interp *interp,
 	ParseInfo *parseInfo,
 	Tcl_Obj *format, Tk_PhotoHandle imageHandle,
@@ -55,6 +67,69 @@ static int CommonWrite(Tcl_Interp *interp,
 static int ReadXBMFileHeader(ParseInfo *parseInfo,
 	int *widthPtr, int *heightPtr);
 static int NextBitmapWord(ParseInfo *parseInfoPtr);
+
+static int ParseFormatOpts(interp, format, opts)
+    Tcl_Interp *interp;
+    Tcl_Obj *format;
+    FMTOPT *opts;
+{
+    static const char *const xbmOptions[] = {
+        "-background", "-foreground", NULL
+    };
+    int objc, i, index;
+    char *optionStr;
+    Tcl_Obj **objv;
+    Tk_Window tkwin = Tk_MainWindow(interp);
+    XColor * color;
+
+    /* Initialize options with default values. 
+     * Background color is set to transparent. Foreground color is set to black.
+     */
+    opts->red[BG]   = -1;
+    opts->green[BG] = -1;
+    opts->blue[BG]  = -1;
+    opts->red[FG]   =  0;
+    opts->green[FG] =  0;
+    opts->blue[FG]  =  0;
+
+    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK) {
+        return TCL_ERROR;
+    }
+    if (objc) {
+        for (i=1; i<objc; i++) {
+            if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)xbmOptions,
+                    "format option", 0, &index) != TCL_OK) {
+                return TCL_ERROR;
+            }
+            if (++i >= objc) {
+                Tcl_AppendResult(interp, "No value for option \"",
+                        Tcl_GetStringFromObj (objv[--i], (int *) NULL),
+                        "\"", (char *) NULL);
+                return TCL_ERROR;
+            }
+            optionStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
+            color = NULL;
+            switch(index) {
+                case BG:
+                case FG: {
+                    if (strlen (optionStr) > 0) {
+                        color = Tk_GetColor (interp, tkwin, optionStr);
+                        if (color) {
+                            opts->red[index]   = color->red>>8;
+                            opts->green[index] = color->green>>8;
+                            opts->blue[index]  = color->blue>>8;
+                            Tk_FreeColor (color);
+                        } else {
+                            return TCL_ERROR;
+			}
+                    }
+                    break;
+                }
+            }
+        }
+    }
+    return TCL_OK;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -160,11 +235,16 @@ CommonRead(
 				 * in image being read. */
 ) {
     Tk_PhotoImageBlock block;
+    FMTOPT opts;
     int fileWidth, fileHeight;
     int numBytes, row, col, value, i;
     unsigned char *data, *pixelPtr;
     char *end;
     int result = TCL_OK;
+
+    if (ParseFormatOpts (interp, format, &opts) != TCL_OK) {
+        return TCL_ERROR;
+    }
 
     ReadXBMFileHeader(parseInfo, &fileWidth, &fileHeight);
 
@@ -176,7 +256,8 @@ CommonRead(
     }
     if ((width <= 0) || (height <= 0)
 	|| (srcX >= fileWidth) || (srcY >= fileHeight)) {
-	return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+	return TCL_ERROR;
     }
 
     if (tkimg_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
@@ -192,7 +273,11 @@ CommonRead(
     block.offset[2] = 2;
     block.offset[3] = 3;
 
-    data = (unsigned char *) ckalloc((unsigned) numBytes);
+    data = (unsigned char *) attemptckalloc((unsigned) numBytes);
+    if (data == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
     block.pixelPtr = data + srcX*4;
     for (row = 0; row < srcY + height; row++) {
 	pixelPtr = data;
@@ -207,10 +292,21 @@ CommonRead(
 	    	return TCL_ERROR;
 	    }
 	    for (i=0; i<8; i++) {
-	        *pixelPtr++ = 0;
-	        *pixelPtr++ = 0;
-	        *pixelPtr++ = 0;
-	        *pixelPtr++ = (value & 0x1)? 255:0;
+                if( value & 0x1 ) {
+                    *pixelPtr++ = opts.red[FG];
+                    *pixelPtr++ = opts.green[FG];
+                    *pixelPtr++ = opts.blue[FG];
+                    *pixelPtr++ = 255;
+                } else {
+                    *pixelPtr++ = opts.red[BG];
+                    *pixelPtr++ = opts.green[BG];
+                    *pixelPtr++ = opts.blue[BG];
+                    if( opts.red[BG] < 0 ) {
+                        *pixelPtr++ = 0;
+                    } else {
+                        *pixelPtr++ = 255;
+                    }
+                }
 	  	value >>= 1;
 	    }
 	}
@@ -361,6 +457,7 @@ NextBitmapWord(
     char *dst, buf;
     int num;
 
+    buf = '\0';
     parseInfoPtr->wordLength = 0;
     dst = parseInfoPtr->word;
 
@@ -593,7 +690,6 @@ static char %s_bits[] = {\n";
 	alphaOffset = 0;
     }
 
-
     /* open the output file (if needed) */
     if (!dataPtr) {
       chan = Tcl_OpenFileChannel(interp, fileName, "w", 0644);
@@ -622,8 +718,8 @@ static char %s_bits[] = {\n";
 	*p = 0;
     }
 
-    sprintf(buffer, header, imgName, blockPtr->width, imgName,
-	    blockPtr->height, imgName);
+    tkimg_snprintf(buffer, 256, header, imgName, blockPtr->width, imgName,
+	           blockPtr->height, imgName);
     WRITE(buffer);
 
     /* write image itself */
@@ -642,7 +738,7 @@ static char %s_bits[] = {\n";
 	    mask <<= 1;
 	    if (mask >= 256)
              {
-	      sprintf(buffer,"%c 0x%02x",sep,value);
+	      tkimg_snprintf(buffer, 256, "%c 0x%02x",sep,value);
 	      WRITE(buffer);
               value = 0;
 	      mask = 1;
@@ -650,7 +746,7 @@ static char %s_bits[] = {\n";
              }
 	}
 	if (mask != 1) {
-	      sprintf(buffer,"%c 0x%02x",sep, value);
+	      tkimg_snprintf(buffer, 256, "%c 0x%02x",sep, value);
 	      WRITE(buffer);
 	}
 

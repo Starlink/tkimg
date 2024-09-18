@@ -27,6 +27,7 @@ set fmtListExtra {
 set bits [expr $tcl_platform(pointerSize) * 8]
 puts "Testing Img version: [package require Img]"
 puts "Using Tcl version  : [info patchlevel] (${bits}-bit)"
+puts "Using Tk  version  : [package require Tk] (${bits}-bit)"
 
 puts "Standard formats (provided by package require Img)"
 foreach fmt $fmtListStandard {

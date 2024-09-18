@@ -14,13 +14,14 @@ set rundir [file dirname [info script]]
 set auto_path "[list $rundir] $auto_path"
 package require img::raw
 package require img::dted
+package require img::ps
 set img_version [package require Img]
 
 wm title . [mc {Tests for available image formats}]
 eval destroy [winfo children .]
 eval image delete [image names]
 
-bind . <Key-Escape> exit
+bind . <Key-Escape> "destroy ."
 
 frame .f
 frame .img
@@ -56,22 +57,16 @@ proc run_more_tests {} {
     set olddir [pwd]
     cd [file join $rundir tests]
     proc puts args {
-	.t.t insert end "[lindex $args 1]\n"
+	.t.t insert end "[join $args]\n"
 	.t.t see end
 	update
+    }
+    proc exit args {
     }
     set result [catch {uplevel #0 source all}]
     cd $olddir
     if $result return
     .t.t insert end "-------- [mc {end of tests}] --------\n"
-    if {[package vcompare [info tclversion] 8.3]<0} {
-    .t.t insert end {
-  note:  if the  previous  tests fail, and you are
-  using Tcl/Tk 8.2.X  or lower, the cause  is that
-  Tk doesn't handle transparency correctly. If you
-  don't mind transparency, all else should be well.
-}
-}
     .t.t see end
 }
 

@@ -58,13 +58,14 @@ set sep ""
 if { $ui_enable_tk } {
     set sep "\n\t"
 }
-set count 1
+set errors 0
+set count  1
 foreach elem $fmtList {
     set ext [lindex $elem 0]
     set fmt [lindex $elem 1]
     set opt [lindex $elem 2]
-    catch { file mkdir out }
-    set prefix [file join out testSmall]
+    catch { file mkdir testOut }
+    set prefix [file join testOut testSmall]
 
     P "Format $fmt :"
     for { set w 1 } { $w <=4 } { incr w } {
@@ -99,17 +100,20 @@ foreach elem $fmtList {
 	    set ph [readPhotoFile1 $fname "$fmt $opt"]
 	    if { $ph eq "" } {
 		set ph [createErrImg]
+                incr errors
 		set zoom 1
 	    }
 	    # Write the image to a uuencoded string and read it back again.
 	    set str [writePhotoString $ph "$fmt $opt" 1]
 	    if { $str eq "" } {
 		set ph [createErrImg]
+                incr errors
 		set zoom 1
 	    } else {
 		set ph [readPhotoString $str "$fmt $opt" -1 -1]
 		if { $ph eq "" } {
 		    set ph [createErrImg]
+                    incr errors
 		    set zoom 1
 		}
 	    }
@@ -130,8 +134,7 @@ foreach elem $fmtList {
 }
 
 PS
-P "End of test"
+P "End of test (Errors: $errors)"
 
 P ""
-P "Package tkImg: $version"
 ui_show

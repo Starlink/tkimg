@@ -14,7 +14,7 @@
 #include "init.c"
 
 #include "X11/Xutil.h"
-#if !defined(__WIN32__)
+#if !defined(_WIN32)
 #  if !defined(MAC_OSX_TK)
 #   include "X11/Xproto.h"
 #  else
@@ -184,7 +184,7 @@ static int ObjMatch(
     return 0;
 }
 
-#if defined(__WIN32__)
+#if defined(_WIN32)
     typedef struct _BITMAPCAPTURE {
         HBITMAP hbm;
         LPDWORD pixels;
@@ -239,7 +239,7 @@ static int ObjMatch(
         return bResult;
     }
 
-#endif /* __WIN32__ */
+#endif /* _WIN32 */
 
 /*
  *----------------------------------------------------------------------
@@ -271,7 +271,7 @@ static int ObjRead(
     Tk_Window tkwin;
     int fileWidth, fileHeight, nBytes, x, y;
     const char *name;
-#if !defined(__WIN32__)
+#if !defined(_WIN32)
     XImage *ximage;
     ColormapData cdata;
     Colormap cmap;
@@ -315,7 +315,8 @@ static int ObjRead(
 	height = fileHeight - srcY;
     }
     if ((width <= 0) || (height <= 0)) {
-	return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+	return TCL_ERROR;
     }
 
     /*
@@ -328,7 +329,7 @@ static int ObjRead(
 	    X_GetImage, -1, xerrorhandler, (ClientData) tkwin);
 #endif
 
-#if !defined(__WIN32__)
+#if !defined(_WIN32)
     /*
      * Generate an XImage from the window.  We can then read pixel
      * values out of the XImage.
@@ -364,7 +365,7 @@ static int ObjRead(
 	return TCL_ERROR;
     }
 
-#if !defined(__WIN32__)
+#if !defined(_WIN32)
     visual = Tk_Visual(tkwin);
     cmap = Tk_Colormap(tkwin);
 
@@ -375,7 +376,12 @@ static int ObjRead(
      */
 
     ncolors = visual->map_entries;
-    cdata.colors = (XColor *) ckalloc(sizeof(XColor) * ncolors);
+    cdata.colors = (XColor *) attemptckalloc(sizeof(XColor) * ncolors);
+    if (cdata.colors == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
+
     cdata.ncolors = ncolors;
     if (visual->class == DirectColor || visual->class == TrueColor) {
 	cdata.separated = 1;
@@ -413,13 +419,13 @@ static int ObjRead(
 
     block.offset[0] = 0;
     block.offset[3] = 0;
-#if !defined(__WIN32__)
+#if !defined(_WIN32)
     if (cdata.color) {
 #endif
 	block.pixelSize = 3;
 	block.offset[1] = green = 1;
 	block.offset[2] = blue = 2;
-#if !defined(__WIN32__)
+#if !defined(_WIN32)
     } else {
 	block.pixelSize = 1;
 	block.offset[1] = green = 0;
@@ -430,12 +436,16 @@ static int ObjRead(
     block.height = height;
     block.pitch = block.pixelSize * width;
     nBytes = block.pitch * height;
-    block.pixelPtr = (unsigned char *) ckalloc((unsigned) nBytes);
+    block.pixelPtr = (unsigned char *) attemptckalloc((unsigned) nBytes);
+    if (block.pixelPtr == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
 
     p = block.pixelPtr;
     for (y = 0; y<height; y++) {
 	for (x = 0; x<width; x++) {
-#if !defined(__WIN32__)
+#if !defined(_WIN32)
 	    unsigned long pixel = XGetPixel(ximage, x, y);
 	    if (cdata.separated) {
 		int r = (pixel & cdata.red_mask) >> cdata.red_shift;
@@ -469,7 +479,7 @@ static int ObjRead(
 	result = TCL_ERROR;
     }
 
-#if !defined(__WIN32__)
+#if !defined(_WIN32)
     XDestroyImage(ximage);
     ckfree((char *) cdata.colors);
 #else

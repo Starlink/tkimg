@@ -247,6 +247,7 @@ proc ui_show {} {
 	    bind $ui_top <Key-Left>   show_prev
 	    bind $ui_top <Key-p>      show_play
 	}
+        focus $ui_top
     } else {
 	ui_exit
     }

@@ -77,8 +77,8 @@ const TifftclStubs tifftclStubs = {
     TIFFReadRGBAImage, /* 54 */
     TIFFReadRGBAStrip, /* 55 */
     TIFFReadRGBATile, /* 56 */
-    TIFFRGBAImageOK, /* 57 */
-    TIFFRGBAImageBegin, /* 58 */
+    0, /* 57 */
+    0, /* 58 */
     TIFFRGBAImageGet, /* 59 */
     TIFFRGBAImageEnd, /* 60 */
     TIFFOpen, /* 61 */
@@ -140,34 +140,34 @@ const TifftclStubs tifftclStubs = {
     0, /* 117 */
     0, /* 118 */
     0, /* 119 */
-    _TIFFgetMode, /* 120 */
-    _TIFFNoRowEncode, /* 121 */
-    _TIFFNoStripEncode, /* 122 */
-    _TIFFNoTileEncode, /* 123 */
-    _TIFFNoRowDecode, /* 124 */
-    _TIFFNoStripDecode, /* 125 */
-    _TIFFNoTileDecode, /* 126 */
+    0, /* 120 */
+    0, /* 121 */
+    0, /* 122 */
+    0, /* 123 */
+    0, /* 124 */
+    0, /* 125 */
+    0, /* 126 */
     _TIFFNoPostDecode, /* 127 */
-    _TIFFNoPreCode, /* 128 */
-    _TIFFNoSeek, /* 129 */
-    _TIFFSwab16BitData, /* 130 */
-    _TIFFSwab32BitData, /* 131 */
-    _TIFFSwab64BitData, /* 132 */
+    0, /* 128 */
+    0, /* 129 */
+    0, /* 130 */
+    0, /* 131 */
+    0, /* 132 */
     TIFFFlushData1, /* 133 */
     TIFFFreeDirectory, /* 134 */
     TIFFDefaultDirectory, /* 135 */
     TIFFSetCompressionScheme, /* 136 */
     _TIFFSetDefaultCompressionState, /* 137 */
     _TIFFDefaultStripSize, /* 138 */
-    _TIFFDefaultTileSize, /* 139 */
+    0, /* 139 */
     _TIFFsetByteArray, /* 140 */
     0, /* 141 */
-    _TIFFsetShortArray, /* 142 */
-    _TIFFsetLongArray, /* 143 */
-    _TIFFsetFloatArray, /* 144 */
-    _TIFFsetDoubleArray, /* 145 */
-    _TIFFprintAscii, /* 146 */
-    _TIFFprintAsciiTag, /* 147 */
+    0, /* 142 */
+    0, /* 143 */
+    0, /* 144 */
+    0, /* 145 */
+    0, /* 146 */
+    0, /* 147 */
     TIFFInitDumpMode, /* 148 */
 #if !defined(PACKBITS_SUPPORT)
     0, /* 149 */
@@ -240,6 +240,7 @@ const TifftclStubs tifftclStubs = {
     TIFFInitSGILog, /* 162 */
 #endif /* !LOGLUV_SUPPORT */
     _TIFFMultiplySSize, /* 163 */
+    TIFFWarningExt, /* 164 */
 };
 
 /* !END!: Do not edit above this line. */

@@ -7,7 +7,7 @@ dnl
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tifftcl],[4.4.0])
+AC_INIT([tifftcl],[4.5.0])
 
 TEA_INIT([3.9])
 
@@ -85,14 +85,14 @@ TEA_ADD_SOURCES([tifftcl.c tifftclStubInit.c])
 TEA_ADD_SOURCES([
 	../compat/libtiff/libtiff/tif_aux.c		../compat/libtiff/libtiff/tif_close.c		../compat/libtiff/libtiff/tif_codec.c
 	../compat/libtiff/libtiff/tif_compress.c	../compat/libtiff/libtiff/tif_dir.c		../compat/libtiff/libtiff/tif_dirinfo.c
-	../compat/libtiff/libtiff/tif_dirread.c	../compat/libtiff/libtiff/tif_dirwrite.c	../compat/libtiff/libtiff/tif_dumpmode.c
-	../compat/libtiff/libtiff/tif_error.c		../compat/libtiff/libtiff/tif_fax3.c
+	../compat/libtiff/libtiff/tif_dirread.c	        ../compat/libtiff/libtiff/tif_dirwrite.c	../compat/libtiff/libtiff/tif_dumpmode.c
+	../compat/libtiff/libtiff/tif_error.c		../compat/libtiff/libtiff/tif_fax3.c            ../compat/libtiff/libtiff/tif_hash_set.c
 	../compat/libtiff/libtiff/tif_getimage.c	../compat/libtiff/libtiff/tif_flush.c		../compat/libtiff/libtiff/tif_luv.c
 	../compat/libtiff/libtiff/tif_lzw.c		../compat/libtiff/libtiff/tif_next.c		../compat/libtiff/libtiff/tif_open.c
-	../compat/libtiff/libtiff/tif_packbits.c	../compat/libtiff/libtiff/tif_predict.c	../compat/libtiff/libtiff/tif_print.c
+	../compat/libtiff/libtiff/tif_packbits.c	../compat/libtiff/libtiff/tif_predict.c	        ../compat/libtiff/libtiff/tif_print.c
 	../compat/libtiff/libtiff/tif_read.c		../compat/libtiff/libtiff/tif_swab.c		../compat/libtiff/libtiff/tif_strip.c
-	../compat/libtiff/libtiff/tif_thunder.c	../compat/libtiff/libtiff/tif_tile.c		../compat/libtiff/libtiff/tif_version.c
-	../compat/libtiff/libtiff/tif_warning.c	../compat/libtiff/libtiff/tif_write.c
+	../compat/libtiff/libtiff/tif_thunder.c	        ../compat/libtiff/libtiff/tif_tile.c		../compat/libtiff/libtiff/tif_version.c
+	../compat/libtiff/libtiff/tif_warning.c	        ../compat/libtiff/libtiff/tif_write.c
 	../compat/libtiff/libtiff/tif_color.c		../compat/libtiff/libtiff/tif_extension.c
 ])
 

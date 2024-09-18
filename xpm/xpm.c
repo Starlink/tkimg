@@ -34,7 +34,7 @@
 
 #include "init.c"
 
-#if defined(__WIN32__) && !defined(__GNUC__)
+#if defined(_WIN32) && !defined(__GNUC__)
 #define strncasecmp _strnicmp
 #endif
 
@@ -228,7 +228,8 @@ CommonRead(
     Colormap colormap = Tk_Colormap(tkwin);
     int depth = Tk_Depth(tkwin);
     char *p;
-    char buffer[MAX_BUFFER];
+    char *buffer;
+    int maxBuffer;
     int i, isMono;
     int color1;
     unsigned int data;
@@ -270,9 +271,16 @@ CommonRead(
     }
     if ((width <= 0) || (height <= 0)
 	|| (srcX >= fileWidth) || (srcY >= fileHeight)) {
-	return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+	return TCL_ERROR;
     }
 
+    maxBuffer = byteSize * fileWidth + 2;
+    buffer = (char*)attemptckalloc(maxBuffer);
+    if (buffer == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for row data.", (char *) NULL);
+        return TCL_ERROR;
+    }
     for (i=0; i<numColors; i++) {
 	char * colorDefn;		/* the color definition line */
 	char * colorName;		/* temp place to hold the color name
@@ -285,17 +293,29 @@ CommonRead(
 	XColor color;
 	int found;
 
-	p = Gets(handle, buffer,MAX_BUFFER);
+	p = Gets(handle, buffer, maxBuffer);
 	while (((p = strchr(p,'\"')) == NULL)) {
-	    p = Gets(handle, buffer,MAX_BUFFER);
+	    p = Gets(handle, buffer, maxBuffer);
 	    if (p == NULL) {
+                ckfree ((char *) buffer);
 		return TCL_ERROR;
 	    }
 	    p = buffer;
 	}
 	colorDefn = p + byteSize + 1;
-	colorName = (char*)ckalloc(strlen(colorDefn)+1);
-	useName   = (char*)ckalloc(strlen(colorDefn)+1);
+	colorName = (char*)attemptckalloc(strlen(colorDefn)+1);
+	useName   = (char*)attemptckalloc(strlen(colorDefn)+1);
+        if (colorDefn == NULL) {
+            ckfree ((char *) buffer);
+            Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+            return TCL_ERROR;
+        }
+        if (useName == NULL) {
+            ckfree ((char *) buffer);
+            ckfree ((char *) colorDefn);
+            Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+            return TCL_ERROR;
+        }
 	found     = 0;
 	color1 = 0;
 	data = 0;
@@ -374,6 +394,7 @@ CommonRead(
     Tk_PhotoGetImage(imageHandle, &block);
 
     if (tkimg_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
+        ckfree ((char *) buffer);
 	return TCL_ERROR;
     }
 
@@ -385,14 +406,20 @@ CommonRead(
     block.offset[1] = 1;
     block.offset[2] = 2;
     block.offset[3] = (nchan == 4 && matte? 3: 0);
-    block.pixelPtr = (unsigned char *) ckalloc((unsigned) nchan * width);
+    block.pixelPtr = (unsigned char *) attemptckalloc((unsigned) nchan * width);
+    if (block.pixelPtr == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        ckfree ((char *) buffer);
+        return TCL_ERROR;
+    }
 
     i = srcY;
     while (i-- > 0) {
-	p = Gets(handle, buffer,MAX_BUFFER);
+	p = Gets(handle, buffer, maxBuffer);
 	while (((p = strchr(p,'\"')) == NULL)) {
-	    p = Gets(handle, buffer,MAX_BUFFER);
+	    p = Gets(handle, buffer, maxBuffer);
 	    if (p == NULL) {
+                ckfree ((char *) buffer);
 		return TCL_ERROR;
 	    }
 	    p = buffer;
@@ -401,10 +428,11 @@ CommonRead(
 
 
     for (h = height; h > 0; h--) {
-	p = Gets(handle, buffer,MAX_BUFFER);
+	p = Gets(handle, buffer, maxBuffer);
 	while (((p = strchr(p,'\"')) == NULL)) {
-	    p = Gets(handle, buffer,MAX_BUFFER);
+	    p = Gets(handle, buffer, maxBuffer);
 	    if (p == NULL) {
+                ckfree ((char *) buffer);
 		return TCL_ERROR;
 	    }
 	    p = buffer;
@@ -466,6 +494,7 @@ CommonRead(
 
     Tcl_DeleteHashTable(&colorTable);
 
+    ckfree ((char *) buffer);
     ckfree((char *) block.pixelPtr);
     return result;
 }
@@ -596,7 +625,7 @@ ReadXPMFileHeader(
     char buffer[MAX_BUFFER];
     char *p;
 
-    p = Gets(handle, buffer,MAX_BUFFER);
+    p = Gets(handle, buffer, MAX_BUFFER);
     if (p == NULL) {
 	return 0;
     }
@@ -608,14 +637,14 @@ ReadXPMFileHeader(
 	return 0;
     }
     while ((p = strchr(p,'{')) == NULL) {
-	p = Gets(handle, buffer,MAX_BUFFER);
+	p = Gets(handle, buffer, MAX_BUFFER);
 	if (p == NULL) {
 	    return 0;
 	}
 	p = buffer;
     }
     while ((p = strchr(p,'"')) == NULL) {
-	p = Gets(handle, buffer,MAX_BUFFER);
+	p = Gets(handle, buffer, MAX_BUFFER);
 	if (p == NULL) {
 	    return 0;
 	}
@@ -924,7 +953,7 @@ CommonWrite(
     if (p) {
 	*p = 0;
     }
-    sprintf(buffer, "/* XPM */\nstatic char * %s[] = {\n", imgName);
+    tkimg_snprintf(buffer, 256, "/* XPM */\nstatic char * %s[] = {\n", imgName);
     WRITE(buffer);
 
     /*
@@ -959,15 +988,15 @@ CommonWrite(
     }
 
     /* write image info into XPM */
-    sprintf(buffer, "\"%d %d %d %d\",\n", blockPtr->width, blockPtr->height,
-	    ncolors+(alphaOffset != 0), chars_per_pixel);
+    tkimg_snprintf(buffer, 256, "\"%d %d %d %d\",\n", blockPtr->width, blockPtr->height,
+	           ncolors+(alphaOffset != 0), chars_per_pixel);
     WRITE(buffer);
 
     /* write transparent color id if transparency is available*/
     if (alphaOffset) {
 	strcpy(temp.component, "    ");
 	temp.component[chars_per_pixel] = 0;
- 	sprintf(buffer, "\"%s s None c None\",\n", temp.component);
+ 	tkimg_snprintf(buffer, 256, "\"%s s None c None\",\n", temp.component);
 	WRITE(buffer);
     }
 
@@ -986,8 +1015,8 @@ CommonWrite(
 	 */
 	Tcl_SetHashValue(entry, (char *) temp.value);
 	pp = (unsigned char *)&entry->key.oneWordValue;
-	sprintf(buffer, "\"%s c #%02x%02x%02x\",\n",
-		temp.component, pp[0], pp[1], pp[2]);
+	tkimg_snprintf(buffer, 256, "\"%s c #%02x%02x%02x\",\n",
+		       temp.component, pp[0], pp[1], pp[2]);
 	WRITE(buffer);
 	entry = Tcl_NextHashEntry(&search);
     }

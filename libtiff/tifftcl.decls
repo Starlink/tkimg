@@ -190,12 +190,6 @@ declare 55 {
 declare 56 {
     int TIFFReadRGBATile(TIFF *tiffptr, uint32_t a, uint32_t b, uint32_t *c)
 }
-declare 57 {
-    int TIFFRGBAImageOK(TIFF *tiffptr, char *a)
-}
-declare 58 {
-    int TIFFRGBAImageBegin(TIFFRGBAImage *a, TIFF *tiffptr, int b, char *c)
-}
 declare 59 {
     int TIFFRGBAImageGet(TIFFRGBAImage *d, uint32_t *c, uint32_t b, uint32_t a)
 }
@@ -343,44 +337,8 @@ declare 115 {
 
 # Source: tiffiop.h ...
 
-declare 120 {
-    int _TIFFgetMode(const char *a, const char *b)
-}
-declare 121 {
-    int _TIFFNoRowEncode(TIFF *tiffptr, tidata_t a, tsize_t b, tsample_t c)
-}
-declare 122 {
-    int _TIFFNoStripEncode(TIFF *tiffptr, tidata_t c, tsize_t b, tsample_t a)
-}
-declare 123 {
-    int _TIFFNoTileEncode(TIFF *tiffptr, tidata_t a, tsize_t b, tsample_t c)
-}
-declare 124 {
-    int _TIFFNoRowDecode(TIFF *tiffptr, tidata_t c, tsize_t b, tsample_t a)
-}
-declare 125 {
-    int _TIFFNoStripDecode(TIFF *tiffptr, tidata_t a, tsize_t b, tsample_t c)
-}
-declare 126 {
-    int _TIFFNoTileDecode(TIFF *tiffptr, tidata_t c, tsize_t b, tsample_t a)
-}
 declare 127 {
     void _TIFFNoPostDecode(TIFF *tiffptr, tidata_t a, tsize_t b)
-}
-declare 128 {
-    int _TIFFNoPreCode(TIFF *tiffptr, tsample_t a)
-}
-declare 129 {
-    int _TIFFNoSeek(TIFF *tiffptr, uint32_t a)
-}
-declare 130 {
-    void _TIFFSwab16BitData(TIFF *tiffptr, tidata_t a, tsize_t b)
-}
-declare 131 {
-    void _TIFFSwab32BitData(TIFF *tiffptr, tidata_t b, tsize_t a)
-}
-declare 132 {
-    void _TIFFSwab64BitData(TIFF *tiffptr, tidata_t a, tsize_t b)
 }
 declare 133 {
     int TIFFFlushData1(TIFF *tiffptr)
@@ -400,29 +358,8 @@ declare 137 {
 declare 138 {
     uint32_t _TIFFDefaultStripSize(TIFF *tiffptr, uint32_t a)
 }
-declare 139 {
-    void _TIFFDefaultTileSize(TIFF *tiffptr, uint32_t *a, uint32_t *b)
-}
 declare 140 {
     void _TIFFsetByteArray(void **a, const void *b, uint32_t c)
-}
-declare 142 {
-    void _TIFFsetShortArray(uint16_t **a, const uint16_t *b, uint32_t c)
-}
-declare 143 {
-    void _TIFFsetLongArray(uint32_t **a, const uint32_t *b, uint32_t c)
-}
-declare 144 {
-    void _TIFFsetFloatArray(float **a, const float *b, uint32_t c)
-}
-declare 145 {
-    void _TIFFsetDoubleArray(double **a, const double *b, uint32_t c)
-}
-declare 146 {
-    void _TIFFprintAscii(FILE *a, const char *b)
-}
-declare 147 {
-    void _TIFFprintAsciiTag(FILE *a, const char *b, const char *c)
 }
 declare 148 {
     int TIFFInitDumpMode(TIFF *tiffptr, int a)
@@ -471,6 +408,9 @@ declare 162 generic {!LOGLUV_SUPPORT} {
 }
 declare 163 {
     tmsize_t _TIFFMultiplySSize(TIFF *tiffptr, tmsize_t a, tmsize_t b, const char * c)
+}
+declare 164 {
+    void TIFFWarningExt(thandle_t h, const char *a, const char *b, ...)
 }
 
 #########################################################################

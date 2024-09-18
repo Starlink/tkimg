@@ -44,7 +44,9 @@ EXTRA_DIST = \
 	TiffTest.cmake
 
 # All of the tests to execute via 'make check'
+if TIFF_TESTS
 TESTS = $(check_PROGRAMS) $(TESTSCRIPTS)
+endif
 
 # Tests which are expected to fail
 XFAIL_TESTS =
@@ -65,11 +67,17 @@ JPEG_DEPENDENT_CHECK_PROG=
 JPEG_DEPENDENT_TESTSCRIPTS=
 endif
 
+if BUILD_STATIC
+STATIC_CHECK_PROGS=rational_precision2double
+endif
+
 # Executable programs which need to be built in order to support tests
+if TIFF_TESTS
 check_PROGRAMS = \
 	ascii_tag long_tag short_tag strip_rw rewrite custom_dir custom_dir_EXIF_231 \
-	rational_precision2double defer_strile_loading defer_strile_writing test_directory \
-	testtypes test_signed_tags $(JPEG_DEPENDENT_CHECK_PROG)
+	defer_strile_loading defer_strile_writing test_directory test_open_options \
+	test_append_to_strip test_ifd_loop_detection testtypes test_signed_tags $(JPEG_DEPENDENT_CHECK_PROG) $(STATIC_CHECK_PROGS)
+endif
 
 # Test scripts to execute
 TESTSCRIPTS = \
@@ -201,6 +209,10 @@ IMAGES_EXTRA_DIST = \
 	images/miniswhite-1c-1b.g3 \
 	images/test_float64_predictor2_le_lzw.tif \
 	images/test_float64_predictor2_be_lzw.tif \
+	images/tiff_with_subifd_chain.tif \
+	images/test_ifd_loop_to_self.tif \
+	images/test_ifd_loop_to_first.tif \
+	images/test_two_ifds.tif \
 	$(PNMIMAGES) \
 	$(TIFFIMAGES)
 
@@ -222,8 +234,13 @@ raw_decode_SOURCES = raw_decode.c
 raw_decode_LDADD = $(LIBTIFF)
 custom_dir_SOURCES = custom_dir.c
 custom_dir_LDADD = $(LIBTIFF)
+
+if BUILD_STATIC
 rational_precision2double_SOURCES = rational_precision2double.c
 rational_precision2double_LDADD = $(LIBTIFF)
+rational_precision2double_LDFLAGS = -static
+endif
+
 custom_dir_EXIF_231_SOURCES = custom_dir_EXIF_231.c
 custom_dir_EXIF_231_LDADD = $(LIBTIFF)
 defer_strile_loading_SOURCES = defer_strile_loading.c
@@ -232,6 +249,13 @@ defer_strile_writing_SOURCES = defer_strile_writing.c
 defer_strile_writing_LDADD = $(LIBTIFF)
 test_directory_SOURCES = test_directory.c
 test_directory_LDADD = $(LIBTIFF)
+test_open_options_SOURCES = test_open_options.c
+test_open_options_LDADD = $(LIBTIFF)
+test_append_to_strip_SOURCES = test_append_to_strip.c
+test_append_to_strip_LDADD = $(LIBTIFF)
+test_ifd_loop_detection_CFLAGS = -DSOURCE_DIR=\"@srcdir@\"
+test_ifd_loop_detection_SOURCES = test_ifd_loop_detection.c
+test_ifd_loop_detection_LDADD = $(LIBTIFF)
 
 AM_CPPFLAGS = -I$(top_srcdir)/libtiff
 

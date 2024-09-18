@@ -171,12 +171,12 @@ static void printImgInfo (PCXHEADER *ph, const char *filename, const char *msg)
     width  = qtohs (ph->x2) - qtohs (ph->x1) + 1;
     height = qtohs (ph->y2) - qtohs (ph->y1) + 1;
 
-    sprintf(str, "%s %s\n", msg, filename);                                 OUT;
-    sprintf(str, "\tSize in pixel   : %d x %d\n", width, height);           OUT;
-    sprintf(str, "\tNo. of channels : %d\n", ph->planes);                   OUT;
-    sprintf(str, "\tBits per pixel  : %d\n", ph->bpp);                      OUT;
-    sprintf(str, "\tBytes per line  : %d\n", ph->bytesperline);             OUT;
-    sprintf(str, "\tRLE compression : %s\n", ph->compression? "yes": "no"); OUT;
+    tkimg_snprintf(str, 256, "%s %s\n", msg, filename);                                 OUT;
+    tkimg_snprintf(str, 256, "\tSize in pixel   : %d x %d\n", width, height);           OUT;
+    tkimg_snprintf(str, 256, "\tNo. of channels : %d\n", ph->planes);                   OUT;
+    tkimg_snprintf(str, 256, "\tBits per pixel  : %d\n", ph->bpp);                      OUT;
+    tkimg_snprintf(str, 256, "\tBytes per line  : %d\n", ph->bytesperline);             OUT;
+    tkimg_snprintf(str, 256, "\tRLE compression : %s\n", ph->compression? "yes": "no"); OUT;
     Tcl_Flush(outChan);
 }
 #undef OUT
@@ -253,11 +253,18 @@ static Boln load_8 (Tcl_Interp *interp, tkimg_MFile *ifp,
     UByte cmap[768], sepChar;
     Boln haveColormap = FALSE;
     Boln result = TRUE;
-    char errMsg[200];
+    char errMsg[256];
 
-    line   = (UByte *) ckalloc (bytesPerLine);
-    buffer = (UByte *) ckalloc (fileWidth * 3);
-    indBuf = (UByte *) ckalloc (fileWidth * fileHeight);
+    line   = (UByte *) attemptckalloc (bytesPerLine);
+    buffer = (UByte *) attemptckalloc (fileWidth * 3);
+    indBuf = (UByte *) attemptckalloc (fileWidth * fileHeight);
+    if (line == NULL || buffer == NULL || indBuf == NULL) {
+        if (line)   ckfree ((char *) line);
+        if (buffer) ckfree ((char *) buffer);
+        if (indBuf) ckfree ((char *) indBuf);
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return FALSE;
+    }
     indBufPtr = indBuf;
 
     block.pixelSize = 3;
@@ -280,7 +287,7 @@ static Boln load_8 (Tcl_Interp *interp, tkimg_MFile *ifp,
             ckfree ((char *) line);
             ckfree ((char *) buffer);
             ckfree ((char *) indBuf);
-            sprintf(errMsg, "Unexpected end-of-file while scanline %d", y);
+            tkimg_snprintf(errMsg, 256, "Unexpected end-of-file while scanline %d", y);
             Tcl_AppendResult(interp, errMsg, (char *)NULL);
             return FALSE;
         }
@@ -343,8 +350,14 @@ static Boln load_24 (Tcl_Interp *interp, tkimg_MFile *ifp,
     UByte *line, *buffer;
     Boln result = TRUE;
 
-    line   = (UByte *) ckalloc (bytesPerLine);
-    buffer = (UByte *) ckalloc (fileWidth * 3);
+    line   = (UByte *) attemptckalloc (bytesPerLine);
+    buffer = (UByte *) attemptckalloc (fileWidth * 3);
+    if (line == NULL || buffer == NULL) {
+        if (line)   ckfree ((char *) line);
+        if (buffer) ckfree ((char *) buffer);
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return FALSE;
+    }
 
     block.pixelSize = 3;
     block.pitch = fileWidth * 3;
@@ -396,8 +409,14 @@ static Boln load_1 (Tcl_Interp *interp, tkimg_MFile *ifp,
     UByte *line, *buffer;
     Boln result = TRUE;
 
-    line   = (UByte *) ckalloc (fileWidth);
-    buffer = (UByte *) ckalloc (fileWidth * 1);
+    line   = (UByte *) attemptckalloc (fileWidth);
+    buffer = (UByte *) attemptckalloc (fileWidth * 1);
+    if (line == NULL || buffer == NULL) {
+        if (line)   ckfree ((char *) line);
+        if (buffer) ckfree ((char *) buffer);
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return FALSE;
+    }
 
     block.pixelSize = 1;
     block.pitch = fileWidth * 1;
@@ -477,7 +496,7 @@ static int ParseFormatOpts(
     }
     if (objc) {
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)pcxOptions,
+            if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)pcxOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -636,7 +655,7 @@ static int CommonRead(
     int retCode = TCL_OK;
     PCXHEADER ph;
     FMTOPT opts;
-    char errMsg[200];
+    char errMsg[256];
 
     if (ParseFormatOpts(interp, format, &opts) != TCL_OK) {
         return TCL_ERROR;
@@ -659,7 +678,8 @@ static int CommonRead(
     }
     if ((outWidth <= 0) || (outHeight <= 0)
         || (srcX >= fileWidth) || (srcY >= fileHeight)) {
-        return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+        return TCL_ERROR;
     }
 
     if (tkimg_PhotoExpand(interp, imageHandle, destX + outWidth, destY + outHeight) == TCL_ERROR) {
@@ -693,8 +713,8 @@ static int CommonRead(
             retCode = TCL_ERROR;
         }
     } else {
-        sprintf(errMsg, "Image has invalid channel/bpp combination: (%d, %d)",
-                          ph.planes, ph.bpp);
+        tkimg_snprintf(errMsg, 256, "Image has invalid channel/bpp combination: (%d, %d)",
+                       ph.planes, ph.bpp);
         Tcl_AppendResult(interp, errMsg, (char *)NULL);
         retCode = TCL_ERROR;
     }
@@ -762,7 +782,7 @@ static int CommonWrite(
     PCXHEADER ph;
     UByte *row;
     FMTOPT opts;
-    char errMsg[200];
+    char errMsg[256];
 
     if (ParseFormatOpts(interp, format, &opts) != TCL_OK) {
         return TCL_ERROR;
@@ -808,7 +828,12 @@ static int CommonWrite(
         return TCL_ERROR;
     }
 
-    row = (UByte *) ckalloc (nBytes);
+    row = (UByte *) attemptckalloc (nBytes);
+    if (row == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
+ 
     /* Now write out the image data. */
     pixRowPtr = blockPtr->pixelPtr + blockPtr->offset[0];
     if (!opts.compression) {
@@ -821,7 +846,7 @@ static int CommonWrite(
                 pixelPtr += blockPtr->pixelSize;
             }
             if (nBytes != tkimg_Write2(handle, (const char *)row, nBytes)) {
-                sprintf(errMsg, "Can't write %d bytes to image file.", nBytes);
+                tkimg_snprintf(errMsg, 256, "Can't write %d bytes to image file.", nBytes);
                 Tcl_AppendResult(interp, errMsg, (char *)NULL);
                 ckfree ((char *)row);
                 return TCL_ERROR;
@@ -838,7 +863,7 @@ static int CommonWrite(
                 pixelPtr += blockPtr->pixelSize;
             }
             if (!writeline (handle, row, nBytes)) {
-                sprintf(errMsg, "Can't write %d bytes to image file.", nBytes);
+                tkimg_snprintf(errMsg, 256, "Can't write %d bytes to image file.", nBytes);
                 Tcl_AppendResult(interp, errMsg, (char *)NULL);
                 ckfree ((char *)row);
                 return TCL_ERROR;

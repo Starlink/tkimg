@@ -102,78 +102,94 @@ set(simple_tests)
 
 add_executable(test_signed_tags ../placeholder.h)
 target_sources(test_signed_tags PRIVATE test_signed_tags.c)
-target_link_libraries(test_signed_tags PRIVATE tiff port)
+target_link_libraries(test_signed_tags PRIVATE tiff tiff_port)
 list(APPEND simple_tests test_signed_tags)
 
 add_executable(ascii_tag ../placeholder.h)
 target_sources(ascii_tag PRIVATE ascii_tag.c)
-target_link_libraries(ascii_tag PRIVATE tiff port)
+target_link_libraries(ascii_tag PRIVATE tiff tiff_port)
 list(APPEND simple_tests ascii_tag)
 
 add_executable(long_tag ../placeholder.h)
 target_sources(long_tag PRIVATE long_tag.c check_tag.c)
-target_link_libraries(long_tag PRIVATE tiff port)
+target_link_libraries(long_tag PRIVATE tiff tiff_port)
 list(APPEND simple_tests long_tag)
 
 add_executable(short_tag ../placeholder.h)
 target_sources(short_tag PRIVATE short_tag.c check_tag.c)
-target_link_libraries(short_tag PRIVATE tiff port)
+target_link_libraries(short_tag PRIVATE tiff tiff_port)
 list(APPEND simple_tests short_tag)
 
 add_executable(strip_rw ../placeholder.h)
 target_sources(strip_rw PRIVATE strip_rw.c strip.c test_arrays.c test_arrays.h)
-target_link_libraries(strip_rw PRIVATE tiff port)
+target_link_libraries(strip_rw PRIVATE tiff tiff_port)
 list(APPEND simple_tests strip_rw)
 
 add_executable(rewrite ../placeholder.h)
 target_sources(rewrite PRIVATE rewrite_tag.c)
-target_link_libraries(rewrite PRIVATE tiff port)
+target_link_libraries(rewrite PRIVATE tiff tiff_port)
 list(APPEND simple_tests rewrite)
 
 if(JPEG_SUPPORT)
   add_executable(raw_decode ../placeholder.h)
   target_sources(raw_decode PRIVATE raw_decode.c)
-  target_link_libraries(raw_decode PRIVATE tiff port JPEG::JPEG)
+  target_link_libraries(raw_decode PRIVATE tiff tiff_port JPEG::JPEG)
   list(APPEND simple_tests raw_decode)
 endif()
 
 add_executable(custom_dir ../placeholder.h)
 target_sources(custom_dir PRIVATE custom_dir.c)
-target_link_libraries(custom_dir PRIVATE tiff port)
+target_link_libraries(custom_dir PRIVATE tiff tiff_port)
 list(APPEND simple_tests custom_dir)
 
 # Uses private functions from static library
 if(NOT BUILD_SHARED_LIBS)
   add_executable(rational_precision2double ../placeholder.h)
   target_sources(rational_precision2double PRIVATE rational_precision2double.c)
-  target_link_libraries(rational_precision2double PRIVATE tiff port)
+  target_link_libraries(rational_precision2double PRIVATE tiff tiff_port)
   list(APPEND simple_tests rational_precision2double)
 endif()
 
 add_executable(custom_dir_EXIF_231 ../placeholder.h)
 target_sources(custom_dir_EXIF_231 PRIVATE custom_dir_EXIF_231.c)
-target_link_libraries(custom_dir_EXIF_231 PRIVATE tiff port)
+target_link_libraries(custom_dir_EXIF_231 PRIVATE tiff tiff_port)
 list(APPEND simple_tests custom_dir_EXIF_231)
 
 add_executable(defer_strile_loading ../placeholder.h)
 target_sources(defer_strile_loading PRIVATE defer_strile_loading.c)
-target_link_libraries(defer_strile_loading PRIVATE tiff port)
+target_link_libraries(defer_strile_loading PRIVATE tiff tiff_port)
 list(APPEND simple_tests defer_strile_loading)
 
 add_executable(defer_strile_writing ../placeholder.h)
 target_sources(defer_strile_writing PRIVATE defer_strile_writing.c)
-target_link_libraries(defer_strile_writing PRIVATE tiff port)
+target_link_libraries(defer_strile_writing PRIVATE tiff tiff_port)
 list(APPEND simple_tests defer_strile_writing)
 
 add_executable(test_directory ../placeholder.h)
 target_sources(test_directory PRIVATE test_directory.c)
-target_link_libraries(test_directory PRIVATE tiff port)
+target_link_libraries(test_directory PRIVATE tiff tiff_port)
 list(APPEND simple_tests test_directory)
 
 add_executable(testtypes ../placeholder.h)
 target_sources(testtypes PRIVATE testtypes.c)
-target_link_libraries(testtypes PRIVATE tiff port)
+target_link_libraries(testtypes PRIVATE tiff tiff_port)
 list(APPEND simple_tests testtypes)
+
+add_executable(test_open_options ../placeholder.h)
+target_sources(test_open_options PRIVATE test_open_options.c)
+target_link_libraries(test_open_options PRIVATE tiff tiff_port)
+list(APPEND simple_tests test_open_options)
+
+add_executable(test_append_to_strip ../placeholder.h)
+target_sources(test_append_to_strip PRIVATE test_append_to_strip.c)
+target_link_libraries(test_append_to_strip PRIVATE tiff tiff_port)
+list(APPEND simple_tests test_append_to_strip)
+
+add_executable(test_ifd_loop_detection ../placeholder.h)
+target_sources(test_ifd_loop_detection PRIVATE test_ifd_loop_detection.c)
+target_link_libraries(test_ifd_loop_detection PRIVATE tiff tiff_port)
+target_compile_definitions(test_ifd_loop_detection PRIVATE SOURCE_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\")
+list(APPEND simple_tests test_ifd_loop_detection)
 
 if(WEBP_SUPPORT AND EMSCRIPTEN)
   # Emscripten is pretty finnicky about linker flags.
@@ -372,6 +388,7 @@ add_reader_test(tiffdump "" "images/miniswhite-1c-1b.tiff")
 # tiffinfo
 add_reader_test(tiffinfo "-c -D -d -j -s" "images/custom_dir_EXIF_GPS.tiff")
 add_reader_test(tiffinfo "-c -D -d -j -s" "images/minisblack-1c-16b.tiff")
+add_reader_test(tiffinfo " " "images/tiff_with_subifd_chain.tif")
 
 # tiffcp split/join
 foreach(image ${UNCOMPRESSEDIMAGES})

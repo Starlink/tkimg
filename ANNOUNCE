@@ -1,7 +1,16 @@
-We are happy to announce version 1.4.14 of the "tkImg" package
+We are happy to announce version 1.4.15 of the "tkImg" package
 (formerly known as "Img").
 
 This package enhances Tk, adding support for many image formats.
+
+Changes compared to version 1.4.14:
+  - Added support for Tcl 9 and Tk 8.7.
+  - Several security and stability related changes.
+  - Updated external libraries: PNG 1.6.39, TIFF 4.5.0.
+  - Added test suite with afl fuzzed images for formats bmp, gif, ico, jpeg, png, tiff.
+  - Added test suites bmpsuite and pngsuite.
+  - POSSIBLE INCOMPATIBILITY to previous Img versions:
+    Format ps must now be explicitely loaded with "package require img::ps".
 
 Changes compared to version 1.4.13:
   - Added support for reading RAW images with 32-bit integer and 64-bit double pixel values.
@@ -74,7 +83,8 @@ Changes compared to version 1.4.1:
     wrong format option.
 
 Changes compared to version 1.4:
-  - Will build correctly on more platforms (TEA upgraded to version 3.9)
+  - Will build correctly on more platforms (TEA upgraded
+    to version 3.9)
   - Upgrade to zlib 1.2.7, libpng-1.4.12, libtiff-3.9.4, libjpeg-8c
 
 

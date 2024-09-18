@@ -157,17 +157,17 @@ static void printImgInfo (int width, int height, int maxVal, int isAscii, int nC
     if (!outChan) {
         return;
     }
-    sprintf (str, "%s %s\n", msg, filename);                                        OUT;
-    sprintf (str, "\tSize in pixel    : %d x %d\n", width, height);                 OUT;
-    sprintf (str, "\tMaximum value    : %d\n", maxVal);                             OUT;
-    sprintf (str, "\tNo. of channels  : %d\n", nChans);                             OUT;
-    sprintf (str, "\tGamma correction : %f\n", opts->gamma);                        OUT;
-    sprintf (str, "\tMinimum map value: %f\n", opts->minVal);                       OUT;
-    sprintf (str, "\tMaximum map value: %f\n", opts->maxVal);                       OUT;
-    sprintf (str, "\tVertical encoding: %s\n", opts->scanOrder == TOP_DOWN?
-                                               strTopDown: strBottomUp);            OUT;
-    sprintf (str, "\tAscii format     : %s\n", isAscii?  "Yes": "No");              OUT;
-    sprintf (str, "\tHost byte order  : %s\n", tkimg_IsIntel ()?  strIntel: strMotorola); OUT;
+    tkimg_snprintf (str, 256, "%s %s\n", msg, filename);                                        OUT;
+    tkimg_snprintf (str, 256, "\tSize in pixel    : %d x %d\n", width, height);                 OUT;
+    tkimg_snprintf (str, 256, "\tMaximum value    : %d\n", maxVal);                             OUT;
+    tkimg_snprintf (str, 256, "\tNo. of channels  : %d\n", nChans);                             OUT;
+    tkimg_snprintf (str, 256, "\tGamma correction : %f\n", opts->gamma);                        OUT;
+    tkimg_snprintf (str, 256, "\tMinimum map value: %f\n", opts->minVal);                       OUT;
+    tkimg_snprintf (str, 256, "\tMaximum map value: %f\n", opts->maxVal);                       OUT;
+    tkimg_snprintf (str, 256, "\tVertical encoding: %s\n", opts->scanOrder == TOP_DOWN?
+                                                           strTopDown: strBottomUp);            OUT;
+    tkimg_snprintf (str, 256, "\tAscii format     : %s\n", isAscii?  "Yes": "No");              OUT;
+    tkimg_snprintf (str, 256, "\tHost byte order  : %s\n", tkimg_IsIntel ()?  strIntel: strMotorola); OUT;
     Tcl_Flush (outChan);
 }
 #undef OUT
@@ -298,7 +298,11 @@ static Boln readUShortFile (Tcl_Interp *interp, tkimg_MFile *handle, UShort *buf
         minVals[c] =  DBL_MAX;
         maxVals[c] = -DBL_MAX;
     }
-    line = ckalloc (sizeof (UShort) * nchan * width);
+    line = attemptckalloc (sizeof (UShort) * nchan * width);
+    if (line == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return FALSE;
+    }
 
     for (y=0; y<height; y++) {
         if (!readUShortRow (interp, handle, bufPtr, nchan * width, line, swapBytes, isAscii)) {
@@ -345,7 +349,11 @@ static Boln readUByteFile (Tcl_Interp *interp, tkimg_MFile *handle, UByte *buf, 
         minVals[c] =  DBL_MAX;
         maxVals[c] = -DBL_MAX;
     }
-    line = ckalloc (sizeof (UByte) * nchan * width);
+    line = attemptckalloc (sizeof (UByte) * nchan * width);
+    if (line == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return FALSE;
+    }
 
     for (y=0; y<height; y++) {
         if (!readUByteRow (interp, handle, bufPtr, nchan * width, line, swapBytes, isAscii)) {
@@ -403,7 +411,7 @@ static int ParseFormatOpts(
     }
     if (objc) {
         for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (const char *CONST86 *)ppmOptions,
+            if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)ppmOptions,
                     "format option", 0, &index) != TCL_OK) {
                 return TCL_ERROR;
             }
@@ -668,7 +676,7 @@ static int CommonRead(
     if ((maxIntensity <= 0) || (maxIntensity >= 65536)) {
         char buffer[TCL_INTEGER_SPACE];
 
-        sprintf(buffer, "%d", maxIntensity);
+        tkimg_snprintf(buffer, TCL_INTEGER_SPACE, "%d", maxIntensity);
         Tcl_AppendResult(interp, "PPM image file \"", filename,
                           "\" has bad maximum intensity value ", buffer,
                           (char *) NULL);
@@ -692,7 +700,8 @@ static int CommonRead(
     }
     if ((width <= 0) || (height <= 0)
         || (srcX >= fileWidth) || (srcY >= fileHeight)) {
-        return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+        return TCL_ERROR;
     }
 
     if (type == PGM) {
@@ -708,12 +717,21 @@ static int CommonRead(
     block.width = width;
     block.height = 1;
     block.pitch = block.pixelSize * fileWidth;
-    tf.pixbuf = (UByte *) ckalloc (fileWidth * block.pixelSize);
+    tf.pixbuf = (UByte *) attemptckalloc (fileWidth * block.pixelSize);
+    if (tf.pixbuf == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
     block.pixelPtr = tf.pixbuf + srcX * block.pixelSize;
 
     switch (bytesPerPixel) {
         case 2: {
-            tf.ushortBuf = (UShort *)ckalloc (fileWidth*fileHeight*block.pixelSize*sizeof (UShort));
+            tf.ushortBuf = (UShort *)attemptckalloc (fileWidth*fileHeight*block.pixelSize*sizeof (UShort));
+            if (tf.ushortBuf == NULL) {
+                Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                ppmClose (&tf);
+                return TCL_ERROR;
+            }
             if (!readUShortFile(interp, handle, tf.ushortBuf, fileWidth, fileHeight, block.pixelSize,
                                  swapBytes, isAscii, opts.verbose, minVals, maxVals)) {
                 ppmClose (&tf);
@@ -722,7 +740,12 @@ static int CommonRead(
             break;
         }
         case 1: {
-            tf.ubyteBuf = (UByte *)ckalloc (fileWidth*fileHeight*block.pixelSize*sizeof (UByte));
+            tf.ubyteBuf = (UByte *)attemptckalloc (fileWidth*fileHeight*block.pixelSize*sizeof (UByte));
+            if (tf.ubyteBuf == NULL) {
+                Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                ppmClose (&tf);
+                return TCL_ERROR;
+            }
             if (!readUByteFile (interp, handle, tf.ubyteBuf, fileWidth, fileHeight, block.pixelSize,
                         swapBytes, isAscii, opts.verbose, minVals, maxVals)) {
                 ppmClose (&tf);
@@ -871,7 +894,7 @@ static int writeAsciiRow (tkimg_MFile *handle, const unsigned char *scanline, in
     char buf[TCL_INTEGER_SPACE];
 
     for (i=0; i<nBytes; i++) {
-        sprintf (buf, "%d\n", scanline[i]);
+        tkimg_snprintf (buf, TCL_INTEGER_SPACE, "%d\n", scanline[i]);
         if (tkimg_Write2(handle, buf, strlen(buf)) != strlen(buf)) {
             return i;
         }
@@ -897,8 +920,9 @@ static int CommonWrite(
         return TCL_ERROR;
     }
 
-    sprintf(header, "P%d\n%d %d\n255\n", opts.writeAscii? 3: 6,
-                     blockPtr->width, blockPtr->height);
+    tkimg_snprintf(header, 16 + TCL_INTEGER_SPACE * 2,
+                  "P%d\n%d %d\n255\n", opts.writeAscii? 3: 6,
+                   blockPtr->width, blockPtr->height);
     if (tkimg_Write2(handle, header, strlen(header)) != strlen(header)) {
         goto writeerror;
     }
@@ -909,7 +933,11 @@ static int CommonWrite(
     blueOff    = blockPtr->offset[2] - blockPtr->offset[0];
 
     nBytes = blockPtr->width * 3; /* Only RGB images allowed. */
-    scanline = (unsigned char *) ckalloc((unsigned) nBytes);
+    scanline = (unsigned char *) attemptckalloc((unsigned) nBytes);
+    if (scanline == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        goto writeerror;
+    }
     for (h = blockPtr->height; h > 0; h--) {
         pixelPtr = pixLinePtr;
         scanlinePtr = scanline;
