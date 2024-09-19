@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tifftclStubLib.c 279 2010-06-30 15:03:06Z nijtmans $
  */
 
 #ifndef USE_TCL_STUBS
@@ -40,15 +38,15 @@ const TifftclStubs *tifftclStubsPtr;
  */
 
 MODULE_SCOPE const char *
-Tifftcl_InitStubs(interp, version, exact)
-    Tcl_Interp *interp;
-    const char *version;
-    int exact;
+Tifftcl_InitStubs(
+    Tcl_Interp *interp,
+    const char *version,
+    int exact)
 {
     const char *result;
     ClientData data;
 
-    result = Tcl_PkgRequireEx(interp, "tifftcl", (CONST84 char *) version, exact, &data);
+    result = Tcl_PkgRequireEx(interp, "tifftcl", (const char *) version, exact, &data);
     if (!result || !data) {
         return NULL;
     }

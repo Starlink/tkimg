@@ -5,8 +5,6 @@
  *
  * Author : Jan Nijtmans
  *
- * $Id: window.c 363 2013-10-03 09:48:24Z nijtmans $
- *
  */
 
 /*
@@ -16,29 +14,29 @@
 #include "init.c"
 
 #include "X11/Xutil.h"
-#ifndef	__WIN32__
-#  ifndef MAC_OSX_TK
+#if !defined(_WIN32)
+#  if !defined(MAC_OSX_TK)
 #   include "X11/Xproto.h"
 #  else
 #   include "X11/Xlib.h"
 #   include "X11/Xfuncproto.h"
+#   undef X_GetImage
 #  endif
 #else
 #   include "X11/Xlib.h"
 #   include "tkInt.h"
 #   include "tkWinInt.h"
 #   include "X11/Xfuncproto.h"
-#endif
-
-#ifndef X_GetImage
-#   define X_GetImage 73
+#   undef X_GetImage
 #endif
 
 /*
  * The format record for the Win data format:
  */
 
+#ifdef X_GetImage
 static int xerrorhandler(ClientData clientData, XErrorEvent *e);
+#endif
 
 typedef struct ColormapData {	/* Hold color information for a window */
     int separated;		/* Whether to use separate color bands */
@@ -53,7 +51,6 @@ typedef struct ColormapData {	/* Hold color information for a window */
  * Prototypes for local procedures defined in this file:
  */
 
-#define UCHAR(c) ((unsigned char) (c))
 /*
  *--------------------------------------------------------------
  *
@@ -71,6 +68,7 @@ typedef struct ColormapData {	/* Hold color information for a window */
  *--------------------------------------------------------------
  */
 
+#ifdef X_GetImage
 static int
 xerrorhandler(clientData, e)
     ClientData clientData;
@@ -78,20 +76,19 @@ xerrorhandler(clientData, e)
 {
     return 0;
 }
+#endif
 
-/* OPA TODO: Must be a better way to specify non-existing format functions. */
 static int
-ChnRead (interp, chan, fileName, format, imageHandle,
-         destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;
-    Tcl_Channel chan;
-    const char *fileName;
-    Tcl_Obj *format;
-    Tk_PhotoHandle imageHandle;
-    int destX, destY;
-    int width, height;
-    int srcX, srcY;
-{
+ChnRead(
+    Tcl_Interp *interp,
+    Tcl_Channel chan,
+    const char *fileName,
+    Tcl_Obj *format,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY
+) {
     return 0;
 }
 
@@ -168,10 +165,9 @@ static int ObjMatch(
     Tk_Window tkwin;
     const char *name;
 
-    name = tkimg_GetStringFromObj(data, NULL);
+    name = tkimg_GetStringFromObj2(data, NULL);
 
-    if (interp && name && (name[0] == '.') &&
-        ((name[1] == 0) || islower(UCHAR(name[1])))) {
+    if (interp && name && (name[0] == '.') ) {
 	tkwin = Tk_MainWindow(interp);
 	if (tkwin == NULL) {
 	    return 0;
@@ -187,6 +183,63 @@ static int ObjMatch(
     }
     return 0;
 }
+
+#if defined(_WIN32)
+    typedef struct _BITMAPCAPTURE {
+        HBITMAP hbm;
+        LPDWORD pixels;
+        INT     width;
+        INT     height;
+    } BITMAPCAPTURE;
+
+    static BOOL CaptureWindow (BITMAPCAPTURE *bmpCapture, Tk_Window tkwin)
+    {
+        BOOL bResult = FALSE;
+        HWND hWnd;
+        HDC hdcScreen;
+        HDC hdcCapture;
+        int nWidth;
+        int nHeight;
+        LPBYTE lpCapture;
+        BITMAPINFO bmiCapture = {
+            { sizeof(BITMAPINFOHEADER), 0, 0, 1, 32, BI_RGB, 0, 0, 0, 0, 0 }
+        };
+
+        if (!bmpCapture) {
+            return bResult;
+        }
+
+        ZeroMemory (bmpCapture, sizeof(BITMAPCAPTURE));
+
+        hWnd = Tk_GetHWND(Tk_WindowId(tkwin));
+        if( ! hWnd ) {
+            return bResult;
+        }
+        hdcScreen  = GetDC(hWnd);
+        hdcCapture = CreateCompatibleDC(NULL);
+        nWidth  = Tk_Width(tkwin);
+        nHeight = Tk_Height(tkwin);
+
+        bmiCapture.bmiHeader.biWidth  = nWidth;
+        bmiCapture.bmiHeader.biHeight = -nHeight;
+
+        bmpCapture->hbm = CreateDIBSection (hdcScreen, &bmiCapture,
+            DIB_RGB_COLORS, (LPVOID *)&lpCapture, NULL, 0);
+        if (bmpCapture->hbm) {
+            HBITMAP hbmOld = (HBITMAP)SelectObject(hdcCapture, bmpCapture->hbm);
+            BitBlt(hdcCapture, 0, 0, nWidth, nHeight, hdcScreen, 0, 0, SRCCOPY);
+            SelectObject(hdcCapture, hbmOld);
+            bmpCapture->pixels = (LPDWORD)lpCapture;
+            bmpCapture->width  = nWidth;
+            bmpCapture->height = nHeight;
+            bResult = TRUE;
+        }
+        DeleteDC(hdcCapture);
+        DeleteDC(hdcScreen);
+        return bResult;
+    }
+
+#endif /* _WIN32 */
 
 /*
  *----------------------------------------------------------------------
@@ -205,21 +258,20 @@ static int ObjMatch(
  *
  *----------------------------------------------------------------------
  */
-static int ObjRead(interp, data, format, imageHandle,
-                   destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;
-    Tcl_Obj *data;
-    Tcl_Obj *format;
-    Tk_PhotoHandle imageHandle;
-    int destX, destY;
-    int width, height;
-    int srcX, srcY;
-{
-	Tk_PhotoImageBlock block;
+static int ObjRead(
+    Tcl_Interp *interp,
+    Tcl_Obj *data,
+    Tcl_Obj *format,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY
+) {
+    Tk_PhotoImageBlock block;
     Tk_Window tkwin;
     int fileWidth, fileHeight, nBytes, x, y;
     const char *name;
-#ifndef	__WIN32__
+#if !defined(_WIN32)
     XImage *ximage;
     ColormapData cdata;
     Colormap cmap;
@@ -229,28 +281,31 @@ static int ObjRead(interp, data, format, imageHandle,
 #   undef XGetPixel
 #   define XGetPixel(P,X,Y) GetPixel(P, X, Y)
     TkWinDCState DCi;
-    HDC			ximage;
+    HDC         ximage;
+    BITMAPCAPTURE grab;
 #endif
     unsigned char *p;
+#ifdef X_GetImage
     Tk_ErrorHandler	handle;
+#endif
     int green, blue;
     int result = TCL_OK;
 
-    name = tkimg_GetStringFromObj(data, NULL);
+    name = tkimg_GetStringFromObj2(data, NULL);
 
     tkwin = Tk_NameToWindow(interp, name, Tk_MainWindow(interp));
 
     if (!tkwin) {
-	Tcl_AppendResult(interp, "Window \"", name,"\" doesn't exist", (char *) NULL);
+	Tcl_AppendResult(interp, " Window \"", name,"\" does not exist.", (char *) NULL);
 	return TCL_ERROR;
     }
 
     if (!Tk_WindowId(tkwin)) {
-	Tcl_AppendResult(interp, "Window \"", name,"\" is not mapped", (char *) NULL);
+	Tcl_AppendResult(interp, " Window \"", name,"\" is not mapped.", (char *) NULL);
 	return TCL_ERROR;
     }
 
-    fileWidth = Tk_Width(tkwin);
+    fileWidth  = Tk_Width(tkwin);
     fileHeight = Tk_Height(tkwin);
 
     if ((srcX + width) > fileWidth) {
@@ -260,7 +315,8 @@ static int ObjRead(interp, data, format, imageHandle,
 	height = fileHeight - srcY;
     }
     if ((width <= 0) || (height <= 0)) {
-	return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+	return TCL_ERROR;
     }
 
     /*
@@ -268,10 +324,12 @@ static int ObjRead(interp, data, format, imageHandle,
      * We catch any BadMatch errors here
      */
 
+#ifdef X_GetImage
     handle = Tk_CreateErrorHandler(Tk_Display(tkwin), BadMatch,
 	    X_GetImage, -1, xerrorhandler, (ClientData) tkwin);
+#endif
 
-#ifndef	__WIN32__
+#if !defined(_WIN32)
     /*
      * Generate an XImage from the window.  We can then read pixel
      * values out of the XImage.
@@ -280,7 +338,9 @@ static int ObjRead(interp, data, format, imageHandle,
     ximage = XGetImage(Tk_Display(tkwin), Tk_WindowId(tkwin), srcX, srcY,
 	width, height, AllPlanes, ZPixmap);
 
+#ifdef X_GetImage
     Tk_DeleteErrorHandler(handle);
+#endif
 
     if (ximage == (XImage*) NULL) {
 	Tcl_AppendResult(interp, "Window \"", name,
@@ -291,25 +351,37 @@ static int ObjRead(interp, data, format, imageHandle,
 #else
     ximage = TkWinGetDrawableDC(Tk_Display(tkwin), Tk_WindowId(tkwin), &DCi);
 
+    if ( ! CaptureWindow (&grab, tkwin)) {
+        Tcl_AppendResult(interp, "Window \"", name, "\" cannot be grabbed", (char *) NULL);
+        return TCL_ERROR;
+    }
+
+#ifdef X_GetImage
     Tk_DeleteErrorHandler(handle);
+#endif
 #endif
 
     if (tkimg_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 
-#ifndef	__WIN32__
+#if !defined(_WIN32)
     visual = Tk_Visual(tkwin);
     cmap = Tk_Colormap(tkwin);
 
     /*
      * Obtain information about the colormap, ie the mapping between
-     * pixel values and RGB values.  The code below should work
+     * pixel values and RGB values. The code below should work
      * for all Visual types.
      */
 
     ncolors = visual->map_entries;
-    cdata.colors = (XColor *) ckalloc(sizeof(XColor) * ncolors);
+    cdata.colors = (XColor *) attemptckalloc(sizeof(XColor) * ncolors);
+    if (cdata.colors == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
+
     cdata.ncolors = ncolors;
     if (visual->class == DirectColor || visual->class == TrueColor) {
 	cdata.separated = 1;
@@ -347,13 +419,13 @@ static int ObjRead(interp, data, format, imageHandle,
 
     block.offset[0] = 0;
     block.offset[3] = 0;
-#ifndef	__WIN32__
+#if !defined(_WIN32)
     if (cdata.color) {
 #endif
 	block.pixelSize = 3;
 	block.offset[1] = green = 1;
 	block.offset[2] = blue = 2;
-#ifndef	__WIN32__
+#if !defined(_WIN32)
     } else {
 	block.pixelSize = 1;
 	block.offset[1] = green = 0;
@@ -364,13 +436,17 @@ static int ObjRead(interp, data, format, imageHandle,
     block.height = height;
     block.pitch = block.pixelSize * width;
     nBytes = block.pitch * height;
-    block.pixelPtr = (unsigned char *) ckalloc((unsigned) nBytes);
+    block.pixelPtr = (unsigned char *) attemptckalloc((unsigned) nBytes);
+    if (block.pixelPtr == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        return TCL_ERROR;
+    }
 
     p = block.pixelPtr;
     for (y = 0; y<height; y++) {
 	for (x = 0; x<width; x++) {
+#if !defined(_WIN32)
 	    unsigned long pixel = XGetPixel(ximage, x, y);
-#ifndef	__WIN32__
 	    if (cdata.separated) {
 		int r = (pixel & cdata.red_mask) >> cdata.red_shift;
 		p[0] = cdata.colors[r].red >> 8;
@@ -388,9 +464,12 @@ static int ObjRead(interp, data, format, imageHandle,
 		}
 	    }
 #else
-	    p[0] = GetRValue(pixel);
-	    p[1] = GetGValue(pixel);
-	    p[2] = GetBValue(pixel);
+            /* Bitmap has order ARGB. */
+            #define BITMAP_PIXEL(b, x, y) ((b).pixels[(y) * (b).width + (x)])
+            COLORREF pixel = BITMAP_PIXEL (grab, x, y);
+            p[0] = (pixel & 0xFF0000) >> 16;
+            p[1] = (pixel & 0xFF00)   >>  8;
+            p[2] = (pixel & 0xFF);
 #endif
 	    p += block.pixelSize;
 	}
@@ -400,10 +479,11 @@ static int ObjRead(interp, data, format, imageHandle,
 	result = TCL_ERROR;
     }
 
-#ifndef	__WIN32__
+#if !defined(_WIN32)
     XDestroyImage(ximage);
     ckfree((char *) cdata.colors);
 #else
+    DeleteObject(grab.hbm);
     TkWinReleaseDrawableDC(Tk_WindowId(tkwin), ximage, &DCi);
 #endif
     ckfree((char *) block.pixelPtr);

@@ -13,9 +13,6 @@
  * or fit for any purpose.  Zveno Pty Ltd disclaims any liability for
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
- *
- * $Id: tkimg.h 266 2010-06-03 19:48:13Z nijtmans $
- *
  */
 
 #ifndef __TKIMG_H__
@@ -24,12 +21,31 @@
 #ifdef _MSC_VER
 #pragma warning(disable:4244) /* '=' : conversion from '__int64' to 'int', possible loss of data */
 #pragma warning(disable:4761) /* integral size mismatch in argument; conversion supplied */
+#if _MSC_VER <= 1800 /* VS 2013 and older do not have snprintf/vsnprintf */
+#define tkimg_snprintf  _snprintf
+#define tkimg_vsnprintf _vsnprintf
+#else
+#define tkimg_snprintf  snprintf
+#define tkimg_vsnprintf vsnprintf
+#endif
+#else
+#define tkimg_snprintf  snprintf
+#define tkimg_vsnprintf vsnprintf
+#endif
+
+#if defined(__MINGW32__)
+#define SETJMP(jbuf) __builtin_setjmp(jbuf)
+#define LONGJMP(jbuf, code) __builtin_longjmp(jbuf, code)
+#else
+#define SETJMP(jbuf) setjmp(jbuf)
+#define LONGJMP(jbuf, code) longjmp(jbuf, code)
 #endif
 
 #include <stdio.h> /* stdout, and other definitions */
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <setjmp.h>
 #include <tk.h>
 
 /*
@@ -62,22 +78,26 @@ typedef int boolean;
  */
 #ifndef RC_INVOKED
 
-/* TIP 27 update. If CONST84 is not defined we are compiling against a
- * core before 8.4 and have to disable some CONST'ness.
- */
-
-#ifndef CONST84
-#   define CONST84
-#endif
-#ifndef CONST86
-#   define CONST86
-#endif
-
 #ifndef TK_PHOTO_COMPOSITE_OVERLAY
 #   define TK_PHOTO_COMPOSITE_OVERLAY 0
 #endif
 #ifndef TK_PHOTO_COMPOSITE_SET
 #   define TK_PHOTO_COMPOSITE_SET 1
+#endif
+
+#ifndef JOIN
+#  define JOIN(a,b) JOIN1(a,b)
+#  define JOIN1(a,b) a##b
+#endif
+
+#ifndef TCL_UNUSED
+#   if defined(__cplusplus)
+#	define TCL_UNUSED(T) T
+#   elif defined(__GNUC__) && (__GNUC__ > 2)
+#	define TCL_UNUSED(T) T JOIN(dummy, __LINE__) __attribute__((unused))
+#   else
+#	define TCL_UNUSED(T) T JOIN(dummy, __LINE__)
+#   endif
 #endif
 
 #include "tkimgDecls.h"
@@ -120,6 +140,24 @@ MODULE_SCOPE int tkimg_initialized;
 #define IMG_PERL (1<<11)
 #define IMG_COMPOSITE (1<<14)
 #define IMG_NOPANIC (1<<15)
+
+/* Maximum number of channels storable in a photo image. */
+#define IMG_MAX_CHANNELS     4
+
+/* Definitions for mapping short or float images into unsigned char
+ * photo images. See tkimgMap.c for corresponding functions.
+ */
+
+/* Size of gamma correction table. */
+#define IMG_GAMMA_TABLE_SIZE 257
+
+/* Mapping modes. */
+#define IMG_MAP_NONE   0
+#define IMG_MAP_MINMAX 1
+#define IMG_MAP_AGC    2
+#define IMG_MAP_NONE_STR   "none"
+#define IMG_MAP_MINMAX_STR "minmax"
+#define IMG_MAP_AGC_STR    "agc"
 
 MODULE_SCOPE int TkimgInitUtilities(Tcl_Interp* interp);
 

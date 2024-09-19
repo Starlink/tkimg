@@ -6,9 +6,9 @@
 # files.
 #
 
-# Declare each of the functions in the public BLT interface.  Note that
-# the an index should never be reused for a different function in order
-# to preserve backwards compatibility.
+# Declare each of the functions in the public tkimg interface.
+# Note that an index should never be reused for a different
+# function in order to preserve backwards compatibility.
 
 library tkimg
 
@@ -45,6 +45,12 @@ declare 6 {
 declare 7 {
     void tkimg_ReadBuffer(int onOff)
 }
+declare 8 {
+    size_t tkimg_Read2(tkimg_MFile *handle, char *dst, size_t count)
+}
+declare 9 {
+    size_t tkimg_Write2(tkimg_MFile *handle, const char *src, size_t count)
+}
 
 #########################################################################
 ###  Specialized put block handling transparency
@@ -63,23 +69,6 @@ declare 12 {
 }
 
 #########################################################################
-###  Utilities to help handling the differences in 8.3.2 and 8.2 image
-###  types. Not used any more.
-
-declare 20 {
-    void tkimg_FixChanMatchProc(Tcl_Interp **interp, Tcl_Channel *chan,
-	const char **file, Tcl_Obj **format, int **width, int **height)
-}
-declare 21 {
-    void tkimg_FixObjMatchProc(Tcl_Interp **interp, Tcl_Obj **data,
-	Tcl_Obj **format, int **width, int **height)
-}
-declare 22 {
-    void tkimg_FixStringWriteProc(Tcl_DString *data, Tcl_Interp **interp,
-	Tcl_DString **dataPtr, Tcl_Obj **format, Tk_PhotoImageBlock **blockPtr)
-}
-
-#########################################################################
 ###  Like the core functions, except that they accept objPtr == NULL.
 ###  The byte array function also handles both UTF and non-UTF cores.
 
@@ -91,6 +80,123 @@ declare 31 {
 }
 declare 32 {
     int tkimg_ListObjGetElements(Tcl_Interp *interp, Tcl_Obj *objPtr, int *argc, Tcl_Obj ***argv)
+}
+declare 33 {
+    const char *tkimg_GetStringFromObj2(Tcl_Obj *objPtr, size_t *lengthPtr)
+}
+declare 34 {
+    unsigned char *tkimg_GetByteArrayFromObj2(Tcl_Obj *objPtr, size_t *lengthPtr)
+}
+
+#########################################################################
+###  Specialized functions for handling images containing 
+###  short, int, float or double values.
+
+declare 50 {
+    int tkimg_IsIntel (void)
+}
+declare 51 {
+    void tkimg_CreateGammaTable(double gammaVal, double *gammaTable)
+}
+declare 52 {
+    double tkimg_LookupGammaTable(double val, const double *gammaTable)
+}
+declare 53 {
+    void tkimg_UShortToUByte (int n, const unsigned short *shortIn,
+         const double *gammaTable, unsigned char *ubOut)
+}
+declare 54 {
+    void tkimg_ShortToUByte (int n, const short *shortIn,
+         const double *gammaTable, unsigned char *ubOut)
+}
+declare 55 {
+    void tkimg_FloatToUByte (int n, const float *floatIn,
+         const double *gammaTable, unsigned char *ubOut)
+}
+declare 56 {
+    int tkimg_ReadUByteRow (tkimg_MFile *handle, unsigned char *pixels, int nBytes)
+}
+declare 57 {
+    int tkimg_ReadUShortRow (tkimg_MFile *handle, unsigned short *pixels,
+        int nShorts, char *buf, int swapBytes)
+}
+declare 58 {
+    int tkimg_ReadShortRow (tkimg_MFile *handle, short *pixels,
+        int nShorts, char *buf, int swapBytes)
+}
+declare 59 {
+    int tkimg_ReadFloatRow (tkimg_MFile *handle, float *pixels,
+        int nFloats, char *buf, int swapBytes)
+}
+declare 60 {
+    int tkimg_ReadUByteFile (tkimg_MFile *handle, unsigned char *buf,
+        int width, int height,
+        int nchan, int verbose, int findMinMax,
+        double *minVals, double *maxVals)
+}
+declare 61 {
+    int tkimg_ReadUShortFile (tkimg_MFile *handle, unsigned short *buf,
+        int width, int height,
+        int nchan, int swapBytes, int verbose, int findMinMax,
+        double *minVals, double *maxVals, double saturation)
+}
+declare 62 {
+    int tkimg_ReadFloatFile (tkimg_MFile *handle, float *buf,
+        int width, int height,
+        int nchan, int swapBytes, int verbose, int findMinMax,
+        double *minVals, double *maxVals, double saturation)
+}
+declare 63 {
+    void tkimg_RemapUShortValues (unsigned short *buf, int width, int height,
+         int nchan, double *minVals, double *maxVals, double agcCutOffPercent, int printAgc)
+}
+declare 64 {
+    void tkimg_RemapFloatValues (float *buf, int width, int height, int nchan,
+         double *minVals, double *maxVals, double agcCutOffPercent, int printAgc)
+}
+declare 65 {
+    void tkimg_UIntToUByte (int n, const unsigned int *intIn,
+         const double *gammaTable, unsigned char *ubOut)
+}
+declare 66 {
+    void tkimg_IntToUByte (int n, const int *intIn,
+         const double *gammaTable, unsigned char *ubOut)
+}
+declare 67 {
+    int tkimg_ReadUIntRow (tkimg_MFile *handle, unsigned int *pixels,
+        int nInts, char *buf, int swapBytes)
+}
+declare 68 {
+    int tkimg_ReadIntRow (tkimg_MFile *handle, int *pixels,
+        int nInts, char *buf, int swapBytes)
+}
+declare 69 {
+    int tkimg_ReadUIntFile (tkimg_MFile *handle, unsigned int *buf,
+        int width, int height,
+        int nchan, int swapBytes, int verbose, int findMinMax,
+        double *minVals, double *maxVals, double saturation)
+}
+declare 70 {
+    void tkimg_RemapUIntValues (unsigned int *buf, int width, int height,
+         int nchan, double *minVals, double *maxVals, double agcCutOffPercent, int printAgc)
+}
+declare 71 {
+    void tkimg_DoubleToUByte (int n, const double *doubleIn,
+         const double *gammaTable, unsigned char *ubOut)
+}
+declare 72 {
+    int tkimg_ReadDoubleRow (tkimg_MFile *handle, double *pixels,
+        int nDoubles, char *buf, int swapBytes)
+}
+declare 73 {
+    int tkimg_ReadDoubleFile (tkimg_MFile *handle, double *buf,
+        int width, int height,
+        int nchan, int swapBytes, int verbose, int findMinMax,
+        double *minVals, double *maxVals, double saturation)
+}
+declare 74 {
+    void tkimg_RemapDoubleValues (double *buf, int width, int height, int nchan,
+         double *minVals, double *maxVals, double agcCutOffPercent, int printAgc)
 }
 
 #########################################################################

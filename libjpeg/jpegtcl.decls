@@ -175,5 +175,8 @@ declare 46 {
 declare 47 {
     boolean jpeg_resync_to_restart(j_decompress_ptr cinfo, int desired)
 }
+declare 48 {
+    JHUFF_TBL *jpeg_std_huff_table (j_common_ptr cinfo, boolean isDC, int tblno)
+}
 
 #########################################################################

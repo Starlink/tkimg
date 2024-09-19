@@ -4,6 +4,8 @@
 
 [include format-header.inc]
 
+[include format-package.inc]
+
 This handler provides additional configuration options. See
 section [sectref {PPM OPTIONS}] for more detailed explanations.
 
@@ -50,45 +52,45 @@ The handler provides the following options:
 
 [list_begin definitions]
 
-[lst_item "[option -verbose] [arg bool]"]
+[def "[option -verbose] [arg bool]"]
 
 This option is supported for reading and writing.
-[nl]
+[para]
 If set to [const true], additional information about the loaded/stored image
 is printed to stdout. Default is [const false].
 
-[lst_item "[option -scanorder] [arg string]"]
+[def "[option -scanorder] [arg string]"]
 
 This option is supported for reading only.
-[nl]
+[para]
 Specify the scanline order of the input image.
 Possible values: [const TopDown] or [const BottomUp]. Default is [const TopDown].
 
-[lst_item "[option -gamma] [arg float]"]
+[def "[option -gamma] [arg float]"]
 
 This option is supported for reading only.
-[nl]
+[para]
 Specify a gamma correction to be applied when mapping
 16-bit input data to 8-bit image values.
 Default is [const 1.0].
 
-[lst_item "[option -min] [arg float]"]
+[def "[option -min] [arg float]"]
 
 This option is supported for reading only.
-[nl]
+[para]
 Specify the minimum pixel value to be used for mapping
 16-bit input data to 8-bit image values.
 Default is the minimum value found in the image data.
 
-[lst_item "[option -max] [arg float]"]
+[def "[option -max] [arg float]"]
 
 This option is supported for reading only.
-[nl]
+[para]
 Specify the maximum pixel value to be used for mapping
 16-bit input data to 8-bit image values.
 Default is the maximum value found in the image data.
 
-[lst_item "[option -ascii] [arg bool]"]
+[def "[option -ascii] [arg bool]"]
 
 This option is supported for writing only.
 If set to [const true], the file is written in PPM 8-bit ASCII format (P3).

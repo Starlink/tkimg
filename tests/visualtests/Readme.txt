@@ -26,3 +26,12 @@ The following ways to write image data are tested:
 Write to file:             $ph write $fileName -format $fmt
 Write to uuencoded string: $ph data -format $fmt
 
+ImgPut.tcl: Create an image using the standard Tk method and using the
+            img::raw format handler.
+
+ReadXbm.tcl: Display images from a XBM string using the "image create bitmap"
+             and "image create photo -format XBM" commands. 
+             Both image columns should be identical.
+
+WriteGif.tcl: Create images using 255 and 256 different colors and try to
+              write them as GIF files. The 256 color image generates an error.

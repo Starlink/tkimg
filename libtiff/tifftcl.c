@@ -14,9 +14,17 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: tifftcl.c 290 2010-07-08 08:53:05Z nijtmans $
- *
  */
+
+/*
+ * Macros PACKAGE_NAME and PACKAGE_VERSION are correctly supplied on
+ * the command line, but are overwritten by settings in tif_config.h
+ * when using libtiff version 4.X.
+ * So we save the supplied macro values before including any header
+ * file and use these values in (Tcl_PkgProvideEx.
+*/
+static const char * MY_PACKAGE_NAME    = { PACKAGE_NAME };
+static const char * MY_PACKAGE_VERSION = { PACKAGE_VERSION };
 
 #include "tifftcl.h"
 
@@ -49,19 +57,17 @@ extern DLLEXPORT int Tifftcl_SafeInit(Tcl_Interp *interp);
  */
 
 int
-Tifftcl_Init (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
+Tifftcl_Init (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
   extern const TifftclStubs tifftclStubs;
 
   if (Tcl_InitStubs(interp, "8.3", 0) == NULL) {
     return TCL_ERROR;
   }
-  if (Tcl_PkgProvideEx(interp, PACKAGE_NAME, PACKAGE_VERSION,
+  if (Tcl_PkgProvideEx(interp, MY_PACKAGE_NAME, MY_PACKAGE_VERSION,
 		       (ClientData) &tifftclStubs) != TCL_OK) {
     return TCL_ERROR;
   }
-
   return TCL_OK;
 }
 
@@ -83,8 +89,7 @@ Tifftcl_Init (interp)
  */
 
 int
-Tifftcl_SafeInit (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
+Tifftcl_SafeInit (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
     return Tifftcl_Init(interp);
 }

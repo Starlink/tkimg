@@ -3,14 +3,10 @@
 [manpage_begin img-[vset FORMATNAME] n 1.4]
 [moddesc Img]
 [titledesc "Img, [vset FORMATFULLNAME] ([vset FORMATNAME])"]
-[copyright {1995-2009 Jan Nijtmans <nijtmans@users.sourceforge.net>}]
+[copyright {1995-2023 Jan Nijtmans <nijtmans@users.sourceforge.net>}]
 [require Tk]
 [require img::[vset FORMATNAME] [opt 1.4]]
 [description]
-
-The package [package img::[vset FORMATNAME]] is a sub-package of
-[package Img]. It can be loaded as a part of the complete Img support,
-via [cmd {package require Img}], or on its own, via
 
 [cmd "package require img::[vset FORMATNAME]"].
 

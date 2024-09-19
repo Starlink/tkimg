@@ -14,8 +14,6 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: jpegtcl.h 346 2013-09-10 12:11:43Z nijtmans $
- *
  */
 
 #ifndef __JPEGTCL_H__
@@ -24,27 +22,19 @@
 #include <tcl.h>
 #include <stdio.h>
 
-#define JPEGTCL_MAJOR_VERSION	8
-#define JPEGTCL_MINOR_VERSION	4
+#define JPEGTCL_MAJOR_VERSION	9
+#define JPEGTCL_MINOR_VERSION	5
 #define JPEGTCL_RELEASE_LEVEL	TCL_RELEASE
 #define JPEGTCL_RELEASE_SERIAL	0
 
-#define JPEGTCL_VERSION		"8.4"
-#define JPEGTCL_PATCH_LEVEL	"8.4"
+#define JPEGTCL_VERSION		"9.5.0"
+#define JPEGTCL_PATCH_LEVEL	"9.5.0"
 
 /*
  * Used to block the rest of this header file from resource compilers so
  * we can just get the version info.
  */
 #ifndef RC_INVOKED
-
-/* TIP 27 update. If CONST84 is not defined we are compiling against a
- * core before 8.4 and have to disable some CONST'ness.
- */
-
-#ifndef CONST84
-#   define CONST84
-#endif
 
 /*
  *----------------------------------------------------------------------------

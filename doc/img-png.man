@@ -4,6 +4,8 @@
 
 [include format-header.inc]
 
+[include format-package.inc]
+
 This handler provides new additional configuration options. See
 section [sectref {PNG OPTIONS}] for more detailed explanations.
 
@@ -26,22 +28,38 @@ The handler provides the following options:
 
 [list_begin definitions]
 
-[lst_item "[option -matte] [arg bool]"]
+[def "[option -verbose] [arg bool]"]
 
 This option is supported for reading only.
-[nl]
+[para]
+If set to [const true], additional information about the file format
+is printed to stdout. Default is [const false].
+
+[def "[option -gamma] [arg float]"]
+
+This option is supported for reading only.
+[para]
+Use the specified gamma value when reading an image.
+This option overwrites gamma values specified in the file.
+If this option is not specified and no gamma value is in the file,
+a default value of 1.0 is used.
+
+[def "[option -matte] [arg bool]"]
+
+This option is supported for reading only.
+[para]
 If set to [const false], a matte (alpha) channel is ignored
 during reading or writing. Default is [const true].
 
 
-[lst_item "[option -alpha] [arg float]"]
+[def "[option -alpha] [arg float]"]
 
 This option is supported for reading only.
-[nl]
+[para]
 An additional alpha filtering for the overall image, which
 allows the background on which the image is displayed to show through.
 This usually also has the effect of desaturating the image.
-The alphaValue must be between 0.0 and 1.0. 
+The alphaValue must be between 0.0 and 1.0.
 Specifying an alpha value, overrides the setting of the matte flag,
 i.e. reading a file which has no alpha channel (Greyscale, RGB) will
 add an alpha channel to the image independent of the matte flag setting.

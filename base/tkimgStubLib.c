@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: tkimgStubLib.c 274 2010-06-28 13:23:34Z nijtmans $
  */
 
 #ifndef USE_TCL_STUBS
@@ -48,7 +46,7 @@ Tkimg_InitStubs(
 	const char *result;
 	void *data;
 
-	result = Tcl_PkgRequireEx(interp, PACKAGE_TCLNAME, (CONST84 char *) version, exact, &data);
+	result = Tcl_PkgRequireEx(interp, PACKAGE_TCLNAME, version, exact, &data);
 	if (!result || !data) {
 		return NULL;
 	}

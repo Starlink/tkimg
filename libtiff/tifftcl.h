@@ -14,8 +14,6 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: tifftcl.h 279 2010-06-30 15:03:06Z nijtmans $
- *
  */
 
 #ifndef __TIFFTCL_H__
@@ -23,27 +21,19 @@
 
 #include <tcl.h>
 
-#define TIFFTCL_MAJOR_VERSION	3
-#define TIFFTCL_MINOR_VERSION	9
+#define TIFFTCL_MAJOR_VERSION	4
+#define TIFFTCL_MINOR_VERSION	5
 #define TIFFTCL_RELEASE_LEVEL	TCL_RELEASE
-#define TIFFTCL_RELEASE_SERIAL	4
+#define TIFFTCL_RELEASE_SERIAL	0
 
-#define TIFFTCL_VERSION		"3.9.4"
-#define TIFFTCL_PATCH_LEVEL	"3.9.4"
+#define TIFFTCL_VERSION		"4.5.0"
+#define TIFFTCL_PATCH_LEVEL	"4.5.0"
 
 /*
  * Used to block the rest of this header file from resource compilers so
  * we can just get the version info.
  */
 #ifndef RC_INVOKED
-
-/* TIP 27 update. If CONST84 is not defined we are compiling against a
- * core before 8.4 and have to disable some CONST'ness.
- */
-
-#ifndef CONST84
-#   define CONST84
-#endif
 
 /*
  *----------------------------------------------------------------------------

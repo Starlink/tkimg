@@ -106,6 +106,12 @@ declare 26 {
 declare 27 {
     int uncompress(Bytef *dest, uLongf *destLen, const Bytef *source, uLong sourceLen)
 }
+declare 28 {
+    int inflateReset2(z_streamp strm, int windowBits)
+}
+declare 29 {
+    int inflateValidate(z_streamp strm, int check)
+}
 
 #########################################################################
 ## gz'ip layer
@@ -161,5 +167,6 @@ declare 45 {
 declare 46 {
     const char *gzerror(gzFile file, int *errnum)
 }
+
 
 #########################################################################

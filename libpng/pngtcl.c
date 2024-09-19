@@ -14,8 +14,6 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: pngtcl.c 286 2010-07-07 11:08:08Z nijtmans $
- *
  */
 
 #include "zlibtcl.h"
@@ -39,8 +37,7 @@
  */
 
 int
-Pngtcl_Init (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
+Pngtcl_Init (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
   extern const PngtclStubs pngtclStubs;
 
@@ -77,8 +74,7 @@ Pngtcl_Init (interp)
  */
 
 int
-Pngtcl_SafeInit (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
+Pngtcl_SafeInit (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
     return Pngtcl_Init(interp);
 }

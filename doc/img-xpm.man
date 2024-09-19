@@ -4,6 +4,8 @@
 
 [include format-header.inc]
 
+[include format-package.inc]
+
 This handler does not provide additional configuration options.
 
 [include format-middle.inc]

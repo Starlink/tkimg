@@ -26,7 +26,6 @@
  *                                   Win98 (i.e. FAT32) performance.
  *      - Improve in ChnRead: Better performance by using ReadBuffer.
  *
- * $Id: xpm.c 262 2010-05-31 15:03:33Z nijtmans $
  */
 
 /*
@@ -35,8 +34,8 @@
 
 #include "init.c"
 
-#if defined(__WIN32__) && !defined(__GNUC__)
-#define strncasecmp strnicmp
+#if defined(_WIN32) && !defined(__GNUC__)
+#define strncasecmp _strnicmp
 #endif
 
 #ifndef MAC_TCL
@@ -91,16 +90,16 @@ static char *Gets(tkimg_MFile *handle, char *buffer, int size);
  */
 
 static char *
-Gets(handle, buffer, size)
-    tkimg_MFile *handle;
-    char *buffer;
-    int size;
-{
+Gets(
+    tkimg_MFile *handle,
+    char *buffer,
+    int size
+) {
     char *p;
 
     /* read data from tkimg_MFile */
     p = buffer;
-    while ((tkimg_Read(handle, p, 1) == 1)) {
+    while ((tkimg_Read2(handle, p, 1) == 1)) {
 	if (--size <= 0) {
 	    *p = 0; return buffer;
 	}
@@ -135,14 +134,16 @@ static int ObjMatch(
     Tcl_Obj *data,		/* The data supplied by the image */
     Tcl_Obj *format,		/* User-specified format object, or NULL. */
     int *widthPtr,		/* The dimensions of the image are */
-	int *heightPtr,			/* returned here if the file is a valid
+    int *heightPtr,		/* returned here if the file is a valid
 				 * raw XPM file. */
     Tcl_Interp *interp
 ) {
     int numColors, byteSize;
     tkimg_MFile handle;
+    size_t length;
 
-    handle.data = (char *)tkimg_GetStringFromObj(data, &handle.length);
+    handle.data = (char *)tkimg_GetStringFromObj2(data, &length);
+    handle.length = length;
     handle.state = IMG_STRING;
 
     return ReadXPMFileHeader(&handle, widthPtr, heightPtr, &numColors, &byteSize);
@@ -171,7 +172,7 @@ static int ChnMatch(
     const char *fileName,	/* The name of the image file. */
     Tcl_Obj *format,		/* User-specified format object, or NULL. */
     int *widthPtr,        	/* The dimensions of the image are */
-	int *heightPtr,			/* returned here if the file is a valid
+    int *heightPtr,		/* returned here if the file is a valid
 				 * raw XPM file. */
     Tcl_Interp *interp
 ) {
@@ -204,21 +205,20 @@ static int ChnMatch(
  *----------------------------------------------------------------------
  */
 static int
-CommonRead(interp, handle, format, imageHandle, destX, destY,
-	width, height, srcX, srcY)
-    Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
-    tkimg_MFile *handle;	/* The image channel, open for reading. */
-    Tcl_Obj *format;		/* User-specified format object, or NULL. */
-    Tk_PhotoHandle imageHandle;	/* The photo image to write into. */
-    int destX, destY;		/* Coordinates of top-left pixel in
+CommonRead(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    tkimg_MFile *handle,	/* The image channel, open for reading. */
+    Tcl_Obj *format,		/* User-specified format object, or NULL. */
+    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
+    int destX, int destY,	/* Coordinates of top-left pixel in
 				 * photo image to be written to. */
-    int width, height;		/* Dimensions of block of photo image to
+    int width, int height,	/* Dimensions of block of photo image to
 				 * be written to. */
-    int srcX, srcY;		/* Coordinates of top-left pixel to be used
+    int srcX, int srcY		/* Coordinates of top-left pixel to be used
 				 * in image being read. */
-{
+) {
     int fileWidth = 0, fileHeight = 0, numColors = 0, byteSize = 0;
-    int h, type;
+    int h, retVal;
     int nchan, matte = 1;
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
@@ -228,7 +228,8 @@ CommonRead(interp, handle, format, imageHandle, destX, destY,
     Colormap colormap = Tk_Colormap(tkwin);
     int depth = Tk_Depth(tkwin);
     char *p;
-    char buffer[MAX_BUFFER];
+    char *buffer;
+    int maxBuffer;
     int i, isMono;
     int color1;
     unsigned int data;
@@ -246,9 +247,9 @@ CommonRead(interp, handle, format, imageHandle, destX, destY,
 	isMono = 0;
     }
 
-    type = ReadXPMFileHeader(handle, &fileWidth, &fileHeight, &numColors, &byteSize);
-    if (type == 0) {
-	Tcl_AppendResult(interp, "couldn't read raw XPM header", NULL);
+    retVal = ReadXPMFileHeader(handle, &fileWidth, &fileHeight, &numColors, &byteSize);
+    if (retVal == 0) {
+	Tcl_AppendResult(interp, "couldn't read raw XPM header", (char *)NULL);
 	return TCL_ERROR;
     }
     if ((fileWidth <= 0) || (fileHeight <= 0)) {
@@ -270,9 +271,24 @@ CommonRead(interp, handle, format, imageHandle, destX, destY,
     }
     if ((width <= 0) || (height <= 0)
 	|| (srcX >= fileWidth) || (srcY >= fileHeight)) {
-	return TCL_OK;
+        Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
+	return TCL_ERROR;
     }
 
+    /* buffer must be large enough to hold either the color definitions
+     * as well as the row data. For images with little number of columns,
+     * the calculation done below does not give enough space for the
+     * color descriptions, ex. "  s None c None",
+     */
+    maxBuffer = byteSize * fileWidth + 2;
+    if ( maxBuffer < 30 ) {
+	maxBuffer = 30;
+    }
+    buffer = (char*)attemptckalloc(maxBuffer);
+    if (buffer == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for row data.", (char *) NULL);
+        return TCL_ERROR;
+    }
     for (i=0; i<numColors; i++) {
 	char * colorDefn;		/* the color definition line */
 	char * colorName;		/* temp place to hold the color name
@@ -285,17 +301,29 @@ CommonRead(interp, handle, format, imageHandle, destX, destY,
 	XColor color;
 	int found;
 
-	p = Gets(handle, buffer,MAX_BUFFER);
+	p = Gets(handle, buffer, maxBuffer);
 	while (((p = strchr(p,'\"')) == NULL)) {
-	    p = Gets(handle, buffer,MAX_BUFFER);
+	    p = Gets(handle, buffer, maxBuffer);
 	    if (p == NULL) {
+                ckfree ((char *) buffer);
 		return TCL_ERROR;
 	    }
 	    p = buffer;
 	}
 	colorDefn = p + byteSize + 1;
-	colorName = (char*)ckalloc(strlen(colorDefn)+1);
-	useName   = (char*)ckalloc(strlen(colorDefn)+1);
+	colorName = (char*)attemptckalloc(strlen(colorDefn)+1);
+	useName   = (char*)attemptckalloc(strlen(colorDefn)+1);
+        if (colorDefn == NULL) {
+            ckfree ((char *) buffer);
+            Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+            return TCL_ERROR;
+        }
+        if (useName == NULL) {
+            ckfree ((char *) buffer);
+            ckfree ((char *) colorDefn);
+            Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+            return TCL_ERROR;
+        }
 	found     = 0;
 	color1 = 0;
 	data = 0;
@@ -374,6 +402,7 @@ CommonRead(interp, handle, format, imageHandle, destX, destY,
     Tk_PhotoGetImage(imageHandle, &block);
 
     if (tkimg_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
+        ckfree ((char *) buffer);
 	return TCL_ERROR;
     }
 
@@ -385,14 +414,20 @@ CommonRead(interp, handle, format, imageHandle, destX, destY,
     block.offset[1] = 1;
     block.offset[2] = 2;
     block.offset[3] = (nchan == 4 && matte? 3: 0);
-    block.pixelPtr = (unsigned char *) ckalloc((unsigned) nchan * width);
+    block.pixelPtr = (unsigned char *) attemptckalloc((unsigned) nchan * width);
+    if (block.pixelPtr == NULL) {
+        Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+        ckfree ((char *) buffer);
+        return TCL_ERROR;
+    }
 
     i = srcY;
     while (i-- > 0) {
-	p = Gets(handle, buffer,MAX_BUFFER);
+	p = Gets(handle, buffer, maxBuffer);
 	while (((p = strchr(p,'\"')) == NULL)) {
-	    p = Gets(handle, buffer,MAX_BUFFER);
+	    p = Gets(handle, buffer, maxBuffer);
 	    if (p == NULL) {
+                ckfree ((char *) buffer);
 		return TCL_ERROR;
 	    }
 	    p = buffer;
@@ -401,10 +436,11 @@ CommonRead(interp, handle, format, imageHandle, destX, destY,
 
 
     for (h = height; h > 0; h--) {
-	p = Gets(handle, buffer,MAX_BUFFER);
+	p = Gets(handle, buffer, maxBuffer);
 	while (((p = strchr(p,'\"')) == NULL)) {
-	    p = Gets(handle, buffer,MAX_BUFFER);
+	    p = Gets(handle, buffer, maxBuffer);
 	    if (p == NULL) {
+                ckfree ((char *) buffer);
 		return TCL_ERROR;
 	    }
 	    p = buffer;
@@ -466,6 +502,7 @@ CommonRead(interp, handle, format, imageHandle, destX, destY,
 
     Tcl_DeleteHashTable(&colorTable);
 
+    ckfree ((char *) buffer);
     ckfree((char *) block.pixelPtr);
     return result;
 }
@@ -491,20 +528,19 @@ CommonRead(interp, handle, format, imageHandle, destX, destY,
  */
 
 static int
-ChnRead(interp, chan, fileName, format, imageHandle, destX, destY,
-	width, height, srcX, srcY)
-    Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
-    Tcl_Channel chan;		/* The image channel, open for reading. */
-    const char *fileName;	/* The name of the image file. */
-    Tcl_Obj *format;		/* User-specified format object, or NULL. */
-    Tk_PhotoHandle imageHandle;	/* The photo image to write into. */
-    int destX, destY;		/* Coordinates of top-left pixel in
+ChnRead(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Channel chan,		/* The image channel, open for reading. */
+    const char *fileName,	/* The name of the image file. */
+    Tcl_Obj *format,		/* User-specified format object, or NULL. */
+    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
+    int destX, int destY,	/* Coordinates of top-left pixel in
 				 * photo image to be written to. */
-    int width, height;		/* Dimensions of block of photo image to
+    int width, int height,	/* Dimensions of block of photo image to
 				 * be written to. */
-    int srcX, srcY;		/* Coordinates of top-left pixel to be used
+    int srcX, int srcY		/* Coordinates of top-left pixel to be used
 				 * in image being read. */
-{
+) {
     tkimg_MFile handle;
     int retVal;
 
@@ -539,22 +575,23 @@ ChnRead(interp, chan, fileName, format, imageHandle, destX, destY,
  */
 
 static int
-ObjRead(interp, data, format, imageHandle, destX, destY,
-	width, height, srcX, srcY)
-    Tcl_Interp *interp;		/* Interpreter to use for reporting errors. */
-    Tcl_Obj *data;
-    Tcl_Obj *format;		/* User-specified format object, or NULL. */
-    Tk_PhotoHandle imageHandle;	/* The photo image to write into. */
-    int destX, destY;		/* Coordinates of top-left pixel in
+ObjRead(
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Obj *data,
+    Tcl_Obj *format,		/* User-specified format object, or NULL. */
+    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
+    int destX, int destY,	/* Coordinates of top-left pixel in
 				 * photo image to be written to. */
-    int width, height;		/* Dimensions of block of photo image to
+    int width, int height,	/* Dimensions of block of photo image to
 				 * be written to. */
-    int srcX, srcY;		/* Coordinates of top-left pixel to be used
+    int srcX, int srcY		/* Coordinates of top-left pixel to be used
 				 * in image being read. */
-{
+) {
     tkimg_MFile handle;
+    size_t length;
 
-    handle.data = (char *)tkimg_GetStringFromObj(data, &handle.length);
+    handle.data = (char *)tkimg_GetStringFromObj2(data, &length);
+    handle.length = length;
     handle.state = IMG_STRING;
 
     return CommonRead(interp, &handle, format, imageHandle,
@@ -586,17 +623,17 @@ ObjRead(interp, data, format, imageHandle, destX, destY,
 #define UCHAR(c) ((unsigned char) (c))
 
 static int
-ReadXPMFileHeader(handle, widthPtr, heightPtr, numColors, byteSize)
-    tkimg_MFile *handle;		/* handle to read the header from */
-    int *widthPtr, *heightPtr;	/* The dimensions of the image are
-				 * returned here. */
-    int *numColors;		/* the number of colors is returned here */
-    int *byteSize;		/* number of bytes per pixel */
-{
+ReadXPMFileHeader(
+    tkimg_MFile *handle,		/* handle to read the header from */
+    int *widthPtr, int *heightPtr,	/* The dimensions of the image are
+					 * returned here. */
+    int *numColors,		/* the number of colors is returned here */
+    int *byteSize		/* number of bytes per pixel */
+) {
     char buffer[MAX_BUFFER];
     char *p;
 
-    p = Gets(handle, buffer,MAX_BUFFER);
+    p = Gets(handle, buffer, MAX_BUFFER);
     if (p == NULL) {
 	return 0;
     }
@@ -608,14 +645,14 @@ ReadXPMFileHeader(handle, widthPtr, heightPtr, numColors, byteSize)
 	return 0;
     }
     while ((p = strchr(p,'{')) == NULL) {
-	p = Gets(handle, buffer,MAX_BUFFER);
+	p = Gets(handle, buffer, MAX_BUFFER);
 	if (p == NULL) {
 	    return 0;
 	}
 	p = buffer;
     }
     while ((p = strchr(p,'"')) == NULL) {
-	p = Gets(handle, buffer,MAX_BUFFER);
+	p = Gets(handle, buffer, MAX_BUFFER);
 	if (p == NULL) {
 	    return 0;
 	}
@@ -653,10 +690,10 @@ ReadXPMFileHeader(handle, widthPtr, heightPtr, numColors, byteSize)
     return 1;
 }
 
-static char * GetType(colorDefn, type_ret)
-    char * colorDefn;
-    int  * type_ret;
-{
+static char * GetType(
+    char * colorDefn,
+    int  * type_ret
+) {
     char * p = colorDefn;
 
     /* skip white spaces */
@@ -700,11 +737,11 @@ static char * GetType(colorDefn, type_ret)
 }
 
 /* colorName is guaranteed to be big enough */
-static char * GetColor(colorDefn, colorName, type_ret)
-    char * colorDefn;
-    char * colorName;		/* if found, name is copied to this array */
-    int  * type_ret;
-{
+static char * GetColor(
+    char * colorDefn,
+    char * colorName,		/* if found, name is copied to this array */
+    int  * type_ret
+) {
     int type;
     char * p;
 
@@ -777,12 +814,12 @@ static char * GetColor(colorDefn, colorName, type_ret)
  *----------------------------------------------------------------------
  */
 static int
-ChnWrite(interp, fileName, format, blockPtr)
-    Tcl_Interp *interp;
-    const char *fileName;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
-{
+ChnWrite(
+    Tcl_Interp *interp,
+    const char *fileName,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
     return CommonWrite(interp, fileName, (Tcl_DString *)NULL, format, blockPtr);
 }
 
@@ -848,13 +885,13 @@ static int StringWrite(
  *----------------------------------------------------------------------
  */
 static int
-CommonWrite(interp, fileName, dataPtr, format, blockPtr)
-    Tcl_Interp *interp;
-    const char *fileName;
-    Tcl_DString *dataPtr;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
-{
+CommonWrite(
+    Tcl_Interp *interp,
+    const char *fileName,
+    Tcl_DString *dataPtr,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
     int x, y, i;
     int found;
     Tcl_Channel chan = (Tcl_Channel) NULL;
@@ -894,7 +931,7 @@ CommonWrite(interp, fileName, dataPtr, format, blockPtr)
 
     /* open the output file (if needed) */
     if (!dataPtr) {
-      chan = Tcl_OpenFileChannel(interp, (CONST84 char *) fileName, "w", 0644);
+      chan = Tcl_OpenFileChannel(interp, fileName, "w", 0644);
       if (!chan) {
 	return TCL_ERROR;
       }
@@ -924,7 +961,7 @@ CommonWrite(interp, fileName, dataPtr, format, blockPtr)
     if (p) {
 	*p = 0;
     }
-    sprintf(buffer, "/* XPM */\nstatic char * %s[] = {\n", imgName);
+    tkimg_snprintf(buffer, 256, "/* XPM */\nstatic char * %s[] = {\n", imgName);
     WRITE(buffer);
 
     /*
@@ -935,7 +972,7 @@ CommonWrite(interp, fileName, dataPtr, format, blockPtr)
     col.value = 0;
     for (y = 0; y < blockPtr->height; y++) {
 	pp = blockPtr->pixelPtr + y * blockPtr->pitch + blockPtr->offset[0];
-	for (x = blockPtr->width; x >0; x--) {
+	for (x = blockPtr->width-1; x >=0; x--) {
 	    if (!alphaOffset || pp[alphaOffset]) {
 		col.component[0] = pp[0];
 		col.component[1] = pp[greenOffset];
@@ -959,15 +996,15 @@ CommonWrite(interp, fileName, dataPtr, format, blockPtr)
     }
 
     /* write image info into XPM */
-    sprintf(buffer, "\"%d %d %d %d\",\n", blockPtr->width, blockPtr->height,
-	    ncolors+(alphaOffset != 0), chars_per_pixel);
+    tkimg_snprintf(buffer, 256, "\"%d %d %d %d\",\n", blockPtr->width, blockPtr->height,
+	           ncolors+(alphaOffset != 0), chars_per_pixel);
     WRITE(buffer);
 
     /* write transparent color id if transparency is available*/
     if (alphaOffset) {
 	strcpy(temp.component, "    ");
 	temp.component[chars_per_pixel] = 0;
- 	sprintf(buffer, "\"%s s None c None\",\n", temp.component);
+ 	tkimg_snprintf(buffer, 256, "\"%s s None c None\",\n", temp.component);
 	WRITE(buffer);
     }
 
@@ -986,8 +1023,8 @@ CommonWrite(interp, fileName, dataPtr, format, blockPtr)
 	 */
 	Tcl_SetHashValue(entry, (char *) temp.value);
 	pp = (unsigned char *)&entry->key.oneWordValue;
-	sprintf(buffer, "\"%s c #%02x%02x%02x\",\n",
-		temp.component, pp[0], pp[1], pp[2]);
+	tkimg_snprintf(buffer, 256, "\"%s c #%02x%02x%02x\",\n",
+		       temp.component, pp[0], pp[1], pp[2]);
 	WRITE(buffer);
 	entry = Tcl_NextHashEntry(&search);
     }

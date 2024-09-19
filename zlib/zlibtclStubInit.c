@@ -50,8 +50,8 @@ const ZlibtclStubs zlibtclStubs = {
     inflateSync, /* 25 */
     inflateReset, /* 26 */
     uncompress, /* 27 */
-    0, /* 28 */
-    0, /* 29 */
+    inflateReset2, /* 28 */
+    inflateValidate, /* 29 */
     gzopen, /* 30 */
     gzdopen, /* 31 */
     gzsetparams, /* 32 */

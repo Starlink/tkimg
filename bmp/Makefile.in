@@ -11,8 +11,6 @@
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
-#
-# RCS: @(#) $Id: Makefile.in 367 2013-11-19 12:32:34Z nijtmans $
 
 #========================================================================
 # Add additional lines to handle any additional AC_SUBST cases that
@@ -64,6 +62,8 @@ PKG_HEADERS	= @PKG_HEADERS@
 #========================================================================
 
 PKG_LIB_FILE	= @PKG_LIB_FILE@
+PKG_LIB_FILE8	= @PKG_LIB_FILE8@
+PKG_LIB_FILE9	= @PKG_LIB_FILE9@
 PKG_STUB_LIB_FILE = @PKG_STUB_LIB_FILE@
 
 lib_BINARIES	= $(PKG_LIB_FILE)
@@ -78,7 +78,8 @@ exec_prefix	= @exec_prefix@
 bindir		= @bindir@
 libdir		= @libdir@
 includedir	= @includedir@
-datarootdir     = @datarootdir@
+datarootdir	= @datarootdir@
+runstatedir	= @runstatedir@
 datadir		= @datadir@
 mandir		= @mandir@
 
@@ -144,7 +145,7 @@ TCLSH_ENV	= TCL_LIBRARY=`@CYGPATH@ $(TCL_SRC_DIR)/library` \
 		  TK_LIBRARY=`@CYGPATH@ $(TK_SRC_DIR)/library` \
 		  @LD_LIBRARY_PATH_VAR@="$(EXTRA_PATH):$(@LD_LIBRARY_PATH_VAR@)" \
 		  PATH="$(EXTRA_PATH):$(PATH)" \
-		  TCLLIBPATH="$(top_builddir)"
+		  TCLLIBPATH="$(libdir)"
 TCLSH_PROG	= @TCLSH_PROG@
 WISH_PROG	= @WISH_PROG@
 TCLSH		= $(TCLSH_ENV) $(TCLSH_PROG)
@@ -160,7 +161,7 @@ INCLUDES	= @PKG_INCLUDES@ \
 PKG_CFLAGS	= @PKG_CFLAGS@
 
 # TCL_DEFS is not strictly need here, but if you remove it, then you
-# must make sure that configure.in checks for the necessary components
+# must make sure that configure.ac checks for the necessary components
 # that your library may use.  TCL_DEFS can actually be a problem if
 # you do not compile with a similar machine setup as the Tcl core was
 # compiled with.
@@ -250,7 +251,7 @@ install-doc: doc
 #	done
 
 test: binaries libraries
-	$(WISH) `@CYGPATH@ $(srcdir)/tests/all.tcl` $(TESTFLAGS)
+	cd $(srcdir)/../tests && $(TCLSH) runTest $(PHIMGTYPE)
 
 shell: binaries libraries
 	@$(TCLSH) $(SCRIPT)
@@ -305,13 +306,17 @@ VPATH = $(srcdir):$(srcdir)/generic:$(srcdir)/unix:$(srcdir)/win
 # It is usually easiest to let Tcl do this for you with pkg_mkIndex, but
 # you may find that you need to customize the package.  If so, either
 # modify the -hand version, or create a pkgIndex.tcl.in file and have
-# the configure script output the pkgIndex.tcl by editing configure.in.
+# the configure script output the pkgIndex.tcl by editing configure.ac.
 #========================================================================
 
 pkgIndex.tcl:	$(PKG_LIB_FILE)
-	(echo 'package ifneeded $(PACKAGE_TCLNAME) $(PACKAGE_VERSION) \
-	    [list load [file join $$dir $(PKG_LIB_FILE)]]'\
-	) > pkgIndex.tcl
+	(\
+	    echo "if {[package vsatisfies [package provide Tcl] 9.0-]} {";\
+	    echo "    package ifneeded $(PACKAGE_TCLNAME) $(PACKAGE_VERSION) [list load [file join \$$dir $(PKG_LIB_FILE9)]]";\
+	    echo "} else {";\
+	    echo "    package ifneeded $(PACKAGE_TCLNAME) $(PACKAGE_VERSION) [list load [file join \$$dir $(PKG_LIB_FILE8)]]";\
+	    echo "}";\
+	) > "pkgIndex.tcl"; \
 
 #========================================================================
 # Distribution creation
@@ -328,14 +333,14 @@ dist-clean:
 
 dist: dist-clean doc
 	mkdir -p $(DIST_DIR)
-	cp -p $(srcdir)/ChangeLog $(srcdir)/README* $(srcdir)/doc/license* \
+	cp -p $(srcdir)/ChangeLog $(srcdir)/configure.ac \
 		$(srcdir)/aclocal.m4 $(srcdir)/configure $(srcdir)/*.in \
 		$(DIST_DIR)/
 	chmod 664 $(DIST_DIR)/Makefile.in $(DIST_DIR)/aclocal.m4
-	chmod 775 $(DIST_DIR)/configure $(DIST_DIR)/configure.in
+	chmod 775 $(DIST_DIR)/configure $(DIST_DIR)/configure.ac
 
 	mkdir $(DIST_DIR)/tclconfig
-	cp $(srcdir)/tclconfig/install-sh $(srcdir)/tclconfig/tcl.m4 \
+	cp $(srcdir)/../tclconfig/install-sh $(srcdir)/../tclconfig/tcl.m4 \
 		$(DIST_DIR)/tclconfig/
 	chmod 664 $(DIST_DIR)/tclconfig/tcl.m4
 	chmod +x $(DIST_DIR)/tclconfig/install-sh
@@ -379,7 +384,7 @@ dist_orig:
 
 #========================================================================
 # Don't modify the file to clean here.  Instead, set the "CLEANFILES"
-# variable in configure.in
+# variable in configure.ac
 #========================================================================
 
 clean:
@@ -388,7 +393,7 @@ clean:
 	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
 
 distclean: clean
-	-rm -f *.tab.c
+	-rm -f *.tab.c init.c
 	-rm -f $(CONFIG_CLEAN_FILES)
 	-rm -f config.cache config.log config.status
 

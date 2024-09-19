@@ -4,6 +4,8 @@
 
 [include format-header.inc]
 
+[include format-package.inc]
+
 This handler provides new additional configuration options. See
 section [sectref {JPEG OPTIONS}] for more detailed explanations.
 
@@ -20,28 +22,25 @@ contain any of the special options listed in section
 
 
 [section {JPEG OPTIONS}]
-
-The handler provides six options, two effective when reading from a
-JPEG image, and five influencing the writing of such. One option is
-usable for both reading an writing.
+The handler provides the following options:
 
 [list_begin definitions]
 
-[lst_item [option -fast]]
+[def [option -fast]]
 
-This option is for reading from JPEG data. It usage activates a
+This option is for reading from JPEG data. If specified, it activates a
 processing mode which is fast, but also provides only low-quality
 information.
 
 
-[lst_item [option -grayscale]]
+[def [option -grayscale]]
 
 This option can be used for both reading and writing of JPEG
 data. Usage of this option forces incoming images to grayscale, and
 written images will be monochrome.
 
 
-[lst_item "[option -quality] [arg n]"]
+[def "[option -quality] [arg n]"]
 
 This option is for writing JPEG data. It specifies the compression
 level as a quality percentage. The higher the quality, the less the
@@ -51,7 +50,7 @@ compression. The nominal range for [arg n] is
 [const 5]...[const 95]. The default value is [const 75].
 
 
-[lst_item "[option -smooth] [arg n]"]
+[def "[option -smooth] [arg n]"]
 
 This option is for writing JPEG data. When used the writer will smooth
 the image before performing the compression. Values in the
@@ -60,15 +59,15 @@ the image before performing the compression. Values in the
 i.e no smoothing.
 
 
-[lst_item [option -optimize]]
+[def [option -optimize]]
 
-This option is for writing JPEG data. It usage causes the writer to
-optimize the huffman table used to encode the jpeg coefficients.
+This option is for writing JPEG data. If specified, it causes the writer to
+optimize the Huffman table used to encode the JPEG coefficients.
 
 
-[lst_item [option -progressive]]
+[def [option -progressive]]
 
-This option is for writing JPEG data. It usage causes the creation of
+This option is for writing JPEG data. If specified, it causes the creation of
 a [term progressive] JPEG file.
 
 

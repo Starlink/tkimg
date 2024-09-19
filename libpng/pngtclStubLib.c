@@ -9,8 +9,6 @@
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * RCS: @(#) $Id: pngtclStubLib.c 240 2010-04-09 12:03:28Z nijtmans $
  */
 
 #ifndef USE_TCL_STUBS
@@ -44,15 +42,15 @@ const PngtclStubs *pngtclStubsPtr;
 #endif
 
 MODULE_SCOPE const char *
-Pngtcl_InitStubs(interp, version, exact)
-    Tcl_Interp *interp;
-    const char *version;
-    int exact;
+Pngtcl_InitStubs(
+    Tcl_Interp *interp,
+    const char *version,
+    int exact)
 {
     const char *result;
     ClientData data;
 
-    result = Tcl_PkgRequireEx(interp, PACKAGE_NAME, (CONST84 char *) version, exact, &data);
+    result = Tcl_PkgRequireEx(interp, PACKAGE_NAME, (const char *) version, exact, &data);
     if (!result || !data) {
         return NULL;
     }

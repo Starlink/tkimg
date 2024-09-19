@@ -9,6 +9,7 @@
  * Make sure that all Tk's stub entries are available, no matter what
  * Tcl version we compile against.
  */
+#ifdef USE_TK_STUBS
 #undef Tk_PhotoPutBlock /* 266 */
 #define Tk_PhotoPutBlock ((int (*)(Tcl_Interp *, Tk_PhotoHandle, Tk_PhotoImageBlock *, int, int, int, int, int)) *((&tkStubsPtr->tk_MainLoop)+266))
 #undef Tk_PhotoPutBlock_Panic /* 246 */
@@ -23,6 +24,7 @@
 #define Tk_PhotoSetSize ((int (*)(Tcl_Interp *, Tk_PhotoHandle, int, int)) *((&tkStubsPtr->tk_MainLoop)+268))
 #undef Tk_PhotoSetSize_Panic /* 150 */
 #define Tk_PhotoSetSize_Panic ((int (*)(Tk_PhotoHandle, int, int)) *((&tkStubsPtr->tk_MainLoop)+150))
+#endif
 
 /*
  *----------------------------------------------------------------------

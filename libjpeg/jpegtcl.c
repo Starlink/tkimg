@@ -14,8 +14,6 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: jpegtcl.c 286 2010-07-07 11:08:08Z nijtmans $
- *
  */
 
 #include "jpegtcl.h"
@@ -38,15 +36,15 @@
  */
 
 int
-Jpegtcl_Init (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
+Jpegtcl_Init (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
   extern const JpegtclStubs jpegtclStubs;
 
   if (Tcl_InitStubs(interp, "8.3", 0) == NULL) {
     return TCL_ERROR;
   }
-  if (Tcl_PkgProvideEx(interp, PACKAGE_NAME, PACKAGE_VERSION,
+  /* DO NOT USE PACKAGE_VERSION, USE INFO FROM jpegtcl.h INSTEAD */
+  if (Tcl_PkgProvideEx(interp, PACKAGE_NAME, JPEGTCL_VERSION,
 		       (ClientData) &jpegtclStubs) != TCL_OK) {
     return TCL_ERROR;
   }
@@ -72,8 +70,7 @@ Jpegtcl_Init (interp)
  */
 
 int
-Jpegtcl_SafeInit (interp)
-      Tcl_Interp *interp; /* Interpreter to initialise. */
+Jpegtcl_SafeInit (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
     return Jpegtcl_Init(interp);
 }

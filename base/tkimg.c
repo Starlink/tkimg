@@ -13,12 +13,10 @@
  * or fit for any purpose.  Zveno Pty Ltd disclaims any liability for
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
- *
- * $Id: tkimg.c 274 2010-06-28 13:23:34Z nijtmans $
- *
  */
 
 #include "tkimg.h"
+#include "tkimgUuid.h"
 
 MODULE_SCOPE const TkimgStubs tkimgStubs;
 
@@ -50,9 +48,15 @@ static int fromb64(void *clientData, Tcl_Interp *interp,
  *----------------------------------------------------------------------------
  */
 
+#ifndef STRINGIFY
+#  define STRINGIFY(x) STRINGIFY1(x)
+#  define STRINGIFY1(x) #x
+#endif
+
 int Tkimg_Init(
 	Tcl_Interp *interp /* Interpreter to initialise. */
 ) {
+	Tcl_CmdInfo info;
 
 	if (!Tcl_InitStubs(interp, "8.3", 0)) {
 		return TCL_ERROR;
@@ -70,6 +74,68 @@ int Tkimg_Init(
 			(void *)&tkimgStubs) != TCL_OK
 	) {
 		return TCL_ERROR;
+	}
+	if (Tcl_GetCommandInfo(interp, "::tcl::build-info", &info)) {
+	    Tcl_CreateObjCommand(interp, "::tkimg::build-info",
+	    info.objProc, (void *)(PACKAGE_VERSION
+		    "+" STRINGIFY(TKIMG_VERSION_UUID)
+#ifdef ALLOW_B64 /* Undocumented feature */
+		    ".b64"
+#endif
+#if defined(__clang__) && defined(__clang_major__)
+		    ".clang-" STRINGIFY(__clang_major__)
+#if __clang_minor__ < 10
+		    "0"
+#endif
+		    STRINGIFY(__clang_minor__)
+#endif
+#if defined(__cplusplus) && !defined(__OBJC__)
+		    ".cplusplus"
+#endif
+#ifndef NDEBUG
+		    ".debug"
+#endif
+#ifdef DEBUG_LOCAL
+		    ".debug-local"
+#endif
+#if !defined(__clang__) && !defined(__INTEL_COMPILER) && defined(__GNUC__)
+		    ".gcc-" STRINGIFY(__GNUC__)
+#if __GNUC_MINOR__ < 10
+		    "0"
+#endif
+		    STRINGIFY(__GNUC_MINOR__)
+#endif
+#ifdef __INTEL_COMPILER
+		    ".icc-" STRINGIFY(__INTEL_COMPILER)
+#endif
+#ifdef TCL_MEM_DEBUG
+		    ".memdebug"
+#endif
+#if defined(_MSC_VER)
+		    ".msvc-" STRINGIFY(_MSC_VER)
+#endif
+#ifdef USE_NMAKE
+		    ".nmake"
+#endif
+#ifndef TCL_CFG_OPTIMIZED
+		    ".no-optimize"
+#endif
+#ifdef __OBJC__
+		    ".objective-c"
+#if defined(__cplusplus)
+		    "plusplus"
+#endif
+#endif
+#ifdef TCL_CFG_PROFILED
+		    ".profile"
+#endif
+#ifdef PURIFY
+		    ".purify"
+#endif
+#ifdef STATIC_BUILD
+		    ".static"
+#endif
+	    ), NULL);
 	}
 
 	return TCL_OK;
@@ -124,7 +190,7 @@ int tob64(
 	tkimg_MFile handle;
 	Tcl_Channel chan;
 	char buffer[1024];
-	int len;
+	size_t len;
 
 	if (argc != 2) {
 		Tcl_WrongNumArgs(interp, 1, objv, "filename");
@@ -142,13 +208,13 @@ int tob64(
 	while ((len = Tcl_Read(chan, buffer, 1024)) == 1024) {
 		tkimg_Write(&handle, buffer, 1024);
 	}
-	if (len > 0) {
+	if (len + 1 > 1) {
 		tkimg_Write(&handle, buffer, len);
 	}
 	if ((Tcl_Close(interp, chan) == TCL_ERROR) || (len < 0)) {
 		Tcl_DStringFree(&dstring);
 		Tcl_AppendResult(interp, Tcl_GetStringFromObj(objv[1], &len),
-			": ", Tcl_PosixError(interp), NULL);
+			": ", Tcl_PosixError(interp), (char *)NULL);
 		return TCL_ERROR;
 	}
 	tkimg_Putc(IMG_DONE, &handle);
@@ -181,7 +247,7 @@ int fromb64(
 	tkimg_MFile handle;
 	Tcl_Channel chan;
 	char buffer[1024];
-	int len;
+	size_t len;
 
 	if (argc != 3) {
 		Tcl_WrongNumArgs(interp, 1, objv, "filename data");
@@ -201,8 +267,8 @@ int fromb64(
 			goto writeerror;
 		}
 	}
-	if (len > 0) {
-		if (Tcl_Write(chan, buffer, len) != len) {
+	if (len + 1 > 1) {
+		if ((size_t)Tcl_Write(chan, buffer, len) != len) {
 			goto writeerror;
 		}
 	}
@@ -213,7 +279,7 @@ int fromb64(
 
 writeerror:
 	Tcl_AppendResult(interp, Tcl_GetStringFromObj(objv[1], &len), ": ",
-		Tcl_PosixError(interp), NULL);
+		Tcl_PosixError(interp), (char *)NULL);
 	return TCL_ERROR;
 }
 #endif

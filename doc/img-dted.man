@@ -1,6 +1,6 @@
 [comment {-*- tcl -*- doctools}]
 [vset FORMATNAME dted]
-[vset FORMATFULLNAME {DTED Format}]
+[vset FORMATFULLNAME {Digital Terrain Elevation Data Format}]
 
 [include format-header.inc]
 
@@ -45,39 +45,39 @@ The handler provides the following options:
 
 [list_begin definitions]
 
-[lst_item "[option -verbose] [arg bool]"]
+[def "[option -verbose] [arg bool]"]
 
 If set to [const true], additional information about the loaded image
 is printed to stdout. Default is [const false].
 
-[lst_item "[option -nchan] [arg int]"]
+[def "[option -nchan] [arg int]"]
 
 Specify the number of channels of the generated image.
 Default is [const 1], i.e. generate a grayscale image.
 
-[lst_item "[option -gamma] [arg float]"]
+[def "[option -gamma] [arg float]"]
 
 Specify a gamma correction to be applied when mapping
 the input data to 8-bit image values.
 Default is [const 1.0].
 
-[lst_item "[option -nomap] [arg bool]"]
+[def "[option -nomap] [arg bool]"]
 
 If set to [const true], no mapping of input values is done.
 Use this option, if your elevation file contains
 values in the range of [const 0] .. [const 255] only.
 Default is [const false].
 
-[lst_item "[option -min] [arg short]"]
+[def "[option -min] [arg short]"]
 
 Specify the minimum pixel value to be used for mapping
 the input data to 8-bit image values.
 Default is the minimum value found in the elevation data.
 
-[lst_item "[option -max] [arg short]"]
+[def "[option -max] [arg short]"]
 
 This option is supported for reading only.
-[nl]
+[para]
 Specify the maximum pixel value to be used for mapping
 the input data to 8-bit image values.
 Default is the maximum value found in the elevation data.

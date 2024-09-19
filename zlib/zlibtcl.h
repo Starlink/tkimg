@@ -14,8 +14,6 @@
  * all claims, expenses, losses, damages and costs any user may incur
  * as a result of using, copying or modifying the software.
  *
- * $Id: zlibtcl.h 344 2013-05-13 18:54:38Z nijtmans $
- *
  */
 
 #ifndef __ZLIBTCL_H__
@@ -26,11 +24,11 @@
 #define ZLIBTCL_MAJOR_VERSION	1
 #define ZLIBTCL_MINOR_VERSION	2
 #define ZLIBTCL_RELEASE_LEVEL	TCL_RELEASE
-#define ZLIBTCL_RELEASE_SERIAL	8
+#define ZLIBTCL_RELEASE_SERIAL	13
 
 #ifndef ZLIBTCL_VERSION
-#define ZLIBTCL_VERSION		"1.2.8"
-#define ZLIBTCL_PATCH_LEVEL	"1.2.8"
+#define ZLIBTCL_VERSION		"1.2.13"
+#define ZLIBTCL_PATCH_LEVEL	"1.2.13"
 #endif
 
 /*
@@ -38,14 +36,6 @@
  * we can just get the version info.
  */
 #ifndef RC_INVOKED
-
-/* TIP 27 update. If CONST84 is not defined we are compiling against a
- * core before 8.4 and have to disable some CONST'ness.
- */
-
-#ifndef CONST84
-#   define CONST84
-#endif
 
 /*
  *----------------------------------------------------------------------------

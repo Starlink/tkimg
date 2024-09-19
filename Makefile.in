@@ -107,7 +107,6 @@ all:
 test:	all
 	for sub in $(SUBDIRS) ; \
 	do	\
-		test -d $(srcdir)/$$sub/tests || continue ; \
 		here=`pwd` && \
 		cd $$sub && \
 		$(MAKE) top_builddir=$$here test || exit $$? && \
@@ -150,7 +149,7 @@ collate: all
 			$$p > $$p.1 && mv -f $$p.1 $$p ; \
 	done
 
-install: collate
+install-libraries: collate
 	here=`pwd` ;\
 	mkdir -p    $(INSTALL_ROOT)$(LIB_RUNTIME_DIR) ;\
 	for p in $$DESTDIR/$$here/Img/exec_prefix/lib/Img/* ; do \
@@ -168,6 +167,7 @@ install: collate
 		$(INSTALL_DATA) $$p $(INSTALL_ROOT)$(includedir)/`basename $$p` ; \
 	done; fi
 
+install: install-libraries
 
 bindist:
 

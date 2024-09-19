@@ -1,0 +1,96 @@
+[comment {-*- tcl -*- doctools}]
+[vset FORMATNAME flir]
+[vset FORMATFULLNAME {FLIR FPF Public Image Format}]
+
+[include format-header.inc]
+
+This handler provides new additional configuration options. See
+section [sectref {FLIR OPTIONS}] for more detailed explanations.
+
+
+[include format-middle.inc]
+
+In addition the value for the option is treated as list and may
+contain any of the special options listed in section
+
+[sectref {FLIR OPTIONS}].
+
+[list_end]
+
+
+[section {NOTE}]
+
+This format handler must be loaded explicitly with
+[cmd "package require img::[vset FORMATNAME]"].
+
+
+[section {SUPPORTED FLIR TYPES}]
+
+[example_begin]
+ Interpret FLIR image files as a grayscale image.
+
+ List of currently supported features:
+
+ Type   |     Read      |     Write     |
+        | -file | -data | -file | -data |
+ ----------------------------------------
+ Short  | Yes   | Yes   | No    | No   |
+ Int    | Yes   | Yes   | No    | No   |
+ Float  | Yes   | Yes   | No    | No   |
+ Double | Yes   | Yes   | No    | No   |
+
+[example_end]
+
+
+[section {FLIR OPTIONS}]
+
+The handler provides the following options:
+
+[list_begin definitions]
+
+[def "[option -verbose] [arg bool]"]
+
+If set to [const true], additional information about the loaded image
+is printed to stdout. Default is [const false].
+
+[def "[option -map] [arg string]"]
+
+Specify the mode when mapping the 64, 32 or 16-bit values
+of the image to 8-bit gray scale values for displaying.
+Possible values: [const none], [const minmax], [const agc].
+Default mode is [const minmax].
+
+[def "[option -gamma] [arg float]"]
+
+Specify a gamma correction to be applied when mapping
+the input data to 8-bit image values.
+Valid for mapping modes: [const minmax] and [const agc].
+Default is [const 1.0].
+
+[def "[option -min] [arg float]"]
+
+Specify the minimum pixel value to be used for mapping
+the input data to 8-bit image values.
+Default is the minimum value found in the image data.
+
+[def "[option -max] [arg float]"]
+
+Specify the maximum pixel value to be used for mapping
+the input data to 8-bit image values.
+Default is the maximum value found in the image data.
+
+[def "[option -saturation] [arg float]"]
+
+The supplied value specifies the saturation value, i.e. all
+pixel values greater than the saturation are mapped to white.
+Valid for mapping mode: [const agc]
+
+[def "[option -cutoff] [arg float]"]
+
+The supplied value specifies the cut-off value in percent.
+Valid for mapping mode: [const agc]
+
+[list_end]
+
+[list_begin definitions]
+[include format-footer.inc]

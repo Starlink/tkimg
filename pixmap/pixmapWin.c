@@ -41,10 +41,10 @@ static void CopyTransparent(Display* display,
  */
 
 void
-TkimgInitPixmapInstance(masterPtr, instancePtr)
-    PixmapMaster *masterPtr;	/* Pointer to master for image. */
-    PixmapInstance *instancePtr;/* The pixmap instance. */
-{
+TkimgInitPixmapInstance(
+    PixmapMaster *masterPtr,	/* Pointer to master for image. */
+    PixmapInstance *instancePtr /* The pixmap instance. */
+) {
     PixmapData * dataPtr;
 
     dataPtr = (PixmapData *)ckalloc(sizeof(PixmapData));
@@ -63,12 +63,12 @@ TkimgInitPixmapInstance(masterPtr, instancePtr)
  *----------------------------------------------------------------------
  */
 void
-TkimgXpmAllocTmpBuffer(masterPtr, instancePtr, imagePtr, maskPtr)
-    PixmapMaster * masterPtr;
-    PixmapInstance * instancePtr;
-    XImage ** imagePtr;
-    XImage ** maskPtr;
-{
+TkimgXpmAllocTmpBuffer(
+    PixmapMaster * masterPtr,
+    PixmapInstance * instancePtr,
+    XImage ** imagePtr,
+    XImage ** maskPtr
+) {
     XImage * image = NULL, * mask = NULL;
     Display *display = Tk_Display(instancePtr->tkwin);
     int depth;
@@ -94,12 +94,12 @@ TkimgXpmAllocTmpBuffer(masterPtr, instancePtr, imagePtr, maskPtr)
 
 
 void
-TkimgXpmFreeTmpBuffer(masterPtr, instancePtr, image, mask)
-    PixmapMaster * masterPtr;
-    PixmapInstance * instancePtr;
-    XImage * image;
-    XImage * mask;
-{
+TkimgXpmFreeTmpBuffer(
+    PixmapMaster * masterPtr,
+    PixmapInstance * instancePtr,
+    XImage * image,
+    XImage * mask
+) {
     if (image) {
 	ckfree((char*)image->data);
 	image->data = NULL;
@@ -121,15 +121,15 @@ TkimgXpmFreeTmpBuffer(masterPtr, instancePtr, image, mask)
  *----------------------------------------------------------------------
  */
 void
-TkimgXpmSetPixel(instancePtr, image, mask, x, y, colorPtr, isTranspPtr)
-    PixmapInstance * instancePtr;
-    XImage * image;
-    XImage * mask;
-    int x;
-    int y;
-    XColor * colorPtr;
-    int * isTranspPtr;
-{
+TkimgXpmSetPixel(
+    PixmapInstance * instancePtr,
+    XImage * image,
+    XImage * mask,
+    int x,
+    int y,
+    XColor * colorPtr,
+    int * isTranspPtr
+) {
     char * p;
     int n;
     GC gc;
@@ -164,12 +164,13 @@ TkimgXpmSetPixel(instancePtr, image, mask, x, y, colorPtr, isTranspPtr)
  *----------------------------------------------------------------------
  */
 void
-TkimgXpmRealizePixmap(masterPtr, instancePtr, image, mask, isTransp)
-    PixmapMaster * masterPtr;
-    PixmapInstance * instancePtr;
-    XImage * image;
-    XImage * mask;
-{
+TkimgXpmRealizePixmap(
+    PixmapMaster * masterPtr,
+    PixmapInstance * instancePtr,
+    XImage * image,
+    XImage * mask,
+    int isTransp
+) {
     Display *display = Tk_Display(instancePtr->tkwin);
     PixmapData *dataPtr = (PixmapData*)instancePtr->clientData;
     HDC dc, bitmapDC;
@@ -202,24 +203,24 @@ TkimgXpmRealizePixmap(masterPtr, instancePtr, image, mask, isTransp)
 	BitBlt(bitmapDC, 0, 0, w, h, maskDC, 0, 0, SRCAND);
 	BitBlt(maskDC,   0, 0, w, h, maskDC, 0, 0, NOTSRCCOPY);
 
-	TkWinReleaseDrawableDC(instancePtr->pixmap, dc, &dcState);
 	dataPtr->maskDC = maskDC;
 	dataPtr->maskBm = maskBm;
 	dataPtr->maskBmOld = maskBmOld;
     } else {
 	dataPtr->maskDC = NULL;
     }
+    TkWinReleaseDrawableDC(instancePtr->pixmap, dc, &dcState);
     dataPtr->bitmapDC = bitmapDC;
     dataPtr->bitmap = bitmap;
     dataPtr->bitmapOld = bitmapOld;
 }
 
 void
-TkimgXpmFreeInstanceData(instancePtr, delete)
-    PixmapInstance *instancePtr;	/* Pixmap instance. */
-    int delete;				/* Should the instance data structure
+TkimgXpmFreeInstanceData(
+    PixmapInstance *instancePtr,	/* Pixmap instance. */
+    int delete				/* Should the instance data structure
 					 * be deleted as well? */
-{
+) {
     PixmapData *dataPtr = (PixmapData*)instancePtr->clientData;
 
     if (dataPtr->maskDC != NULL) {
@@ -241,18 +242,17 @@ TkimgXpmFreeInstanceData(instancePtr, delete)
 }
 
 void
-TkimgpXpmDisplay(clientData, display, drawable, imageX, imageY, width,
-	height, drawableX, drawableY)
-    ClientData clientData;	/* Pointer to PixmapInstance structure for
+TkimgpXpmDisplay(
+    ClientData clientData,	/* Pointer to PixmapInstance structure for
 				 * for instance to be displayed. */
-    Display *display;		/* Display on which to draw image. */
-    Drawable drawable;		/* Pixmap or window in which to draw image. */
-    int imageX, imageY;		/* Upper-left corner of region within image
+    Display *display,		/* Display on which to draw image. */
+    Drawable drawable,		/* Pixmap or window in which to draw image. */
+    int imageX, int imageY,	/* Upper-left corner of region within image
 				 * to draw. */
-    int width, height;		/* Dimensions of region within image to draw.*/
-    int drawableX, drawableY;	/* Coordinates within drawable that
+    int width, int height,	/* Dimensions of region within image to draw.*/
+    int drawableX, int drawableY/* Coordinates within drawable that
 				 * correspond to imageX and imageY. */
-{
+) {
     PixmapInstance *instancePtr = (PixmapInstance *) clientData;
     PixmapData *dataPtr = (PixmapData*)instancePtr->clientData;
 
@@ -262,19 +262,18 @@ TkimgpXpmDisplay(clientData, display, drawable, imageX, imageY, width,
 }
 
 static void
-CopyTransparent(display, srcDC, dest, src_x, src_y, width, height, dest_x,
-        dest_y,	maskDC)
-    Display* display;
-    HDC srcDC;
-    Drawable dest;
-    int src_x;
-    int src_y;
-    int width;
-    int height;
-    int dest_x;
-    int dest_y;
-    HDC maskDC;
-{
+CopyTransparent(
+    Display* display,
+    HDC srcDC,
+    Drawable dest,
+    int src_x,
+    int src_y,
+    int width,
+    int height,
+    int dest_x,
+    int dest_y,
+    HDC maskDC
+) {
     HDC destDC;
     TkWinDCState destState;
 

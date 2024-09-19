@@ -6,11 +6,9 @@
  * Copyright (c) 1997-2003 Jan Nijtmans    <nijtmans@users.sourceforge.net>
  * Copyright (c) 2002      Andreas Kupries <andreas_kupries@users.sourceforge.net>
  *
- * $Id: bmp.c 331 2011-11-27 18:29:13Z oehhar $
- *
  * The following format options are available:
  *
- * Write BMP image: "ico -resolution <list>"
+ * Write BMP image: "bmp -resolution <list>"
  *
  * -resolution <list>: Set the resolution property of the output file.
  *                     The default is 74 dpi (no option)
@@ -26,9 +24,12 @@
  * Generic initialization code, parameterized via CPACKAGE and PACKAGE.
  */
 
+#include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include "init.c"
+
+/* #define DEBUG_LOCAL 1 */
 
 /* Compression types */
 #define BI_RGB          0
@@ -71,11 +72,11 @@ static void putint(tkimg_MFile *handle, int i);
 static int
 ChnMatch(
     Tcl_Channel chan,
-    const char *fileName,
-    Tcl_Obj *format,
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(Tcl_Obj *),
     int *widthPtr,
     int *heightPtr,
-    Tcl_Interp *interp
+    TCL_UNUSED(Tcl_Interp *)
 ) {
     tkimg_MFile handle;
 
@@ -89,14 +90,14 @@ ChnMatch(
 static int
 ObjMatch(
     Tcl_Obj *data,
-    Tcl_Obj *format,
+    TCL_UNUSED(Tcl_Obj *),
     int *widthPtr,
     int *heightPtr,
-    Tcl_Interp *interp
+    TCL_UNUSED(Tcl_Interp *)
 ) {
     tkimg_MFile handle;
 
-    if (!tkimg_ReadInit(data, 'B', &handle)) {
+    if (! tkimg_ReadInit(data, 'B', &handle)) {
         return 0;
     }
     return CommonMatch(&handle, widthPtr, heightPtr,
@@ -104,17 +105,16 @@ ObjMatch(
 }
 
 static int
-ChnRead(interp, chan, fileName, format, imageHandle,
-        destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;
-    Tcl_Channel chan;
-    const char *fileName;
-    Tcl_Obj *format;
-    Tk_PhotoHandle imageHandle;
-    int destX, destY;
-    int width, height;
-    int srcX, srcY;
-{
+ChnRead(
+    Tcl_Interp *interp,
+    Tcl_Channel chan,
+    TCL_UNUSED(const char *),
+    TCL_UNUSED(Tcl_Obj *),
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY
+) {
     tkimg_MFile handle;
 
     handle.data = (char *) chan;
@@ -125,30 +125,31 @@ ChnRead(interp, chan, fileName, format, imageHandle,
 }
 
 static int
-ObjRead(interp, data, format, imageHandle,
-        destX, destY, width, height, srcX, srcY)
-    Tcl_Interp *interp;
-    Tcl_Obj *data;
-    Tcl_Obj *format;
-    Tk_PhotoHandle imageHandle;
-    int destX, destY;
-    int width, height;
-    int srcX, srcY;
-{
+ObjRead(
+    Tcl_Interp *interp,
+    Tcl_Obj *data,
+    TCL_UNUSED(Tcl_Obj *),
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY
+) {
     tkimg_MFile handle;
 
-    tkimg_ReadInit(data,'B',&handle);
+    if (! tkimg_ReadInit(data, 'B', &handle)) {
+        return TCL_ERROR;
+    }
     return CommonRead(interp, &handle, imageHandle, destX, destY,
             width, height, srcX, srcY);
 }
 
 static int
-ChnWrite(interp, filename, format, blockPtr)
-    Tcl_Interp *interp;
-    const char *filename;
-    Tcl_Obj *format;
-    Tk_PhotoImageBlock *blockPtr;
-{
+ChnWrite(
+    Tcl_Interp *interp,
+    const char *filename,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
     Tcl_Channel chan;
     tkimg_MFile handle;
     int result;
@@ -191,24 +192,22 @@ static int StringWrite(
 }
 
 static unsigned int
-getUInt32(buf)
-    unsigned char *buf;
+getUInt32(unsigned char *buf)
 {
-    return (buf[0] | buf[1] << 8 | buf[2] << 16 | buf[3] << 24);
+    return (buf[0] | buf[1] << 8 | buf[2] << 16 | (unsigned int)buf[3] << 24);
 }
 
 static unsigned int
-getUInt16(buf)
-    unsigned char *buf;
+getUInt16(unsigned char *buf)
 {
     return (buf[0] | buf[1] << 8);
 }
 
 static void
-GetChannelMasks(intMask, masks)
-    unsigned int *intMask;
-    BitmapChannel *masks;
-{
+GetChannelMasks(
+    unsigned int *intMask,
+    BitmapChannel *masks
+) {
     unsigned int mask;
     int i, nbits, offset, bit;
 
@@ -236,29 +235,29 @@ GetChannelMasks(intMask, masks)
  */
 
 static int
-CommonMatch(handle, widthPtr, heightPtr, colorMap, numBits, numCols, comp, mask)
-    tkimg_MFile *handle;
-    int *widthPtr, *heightPtr;
-    unsigned char **colorMap;
-    int *numBits, *numCols, *comp;
-    unsigned int *mask;
-{
+CommonMatch(
+    tkimg_MFile *handle,
+    int *widthPtr, int *heightPtr,
+    unsigned char **colorMap,
+    int *numBits, int *numCols, int *comp,
+    unsigned int *mask
+) {
     unsigned char buf[28];
     int c,i, compression, nBits, clrUsed, offBits;
 
-    if ((tkimg_Read(handle, (char *) buf, 2) != 2)
+    if ((tkimg_Read2(handle, (char *) buf, 2) != 2)
             || (strncmp("BM", (char *) buf, 2) != 0)
-            || (tkimg_Read(handle, (char *) buf, 24) != 24)
+            || (tkimg_Read2(handle, (char *) buf, 24) != 24)
             || buf[13] || buf[14] || buf[15]) {
         return 0;
     }
 
-    offBits = (buf[11]<<24) + (buf[10]<<16) + (buf[9]<<8) + buf[8];
+    offBits = ((unsigned int)buf[11]<<24) + (buf[10]<<16) + (buf[9]<<8) + buf[8];
     c = buf[12];
     if ((c == 40) || (c == 64)) {
-        *widthPtr = (buf[19]<<24) + (buf[18]<<16) + (buf[17]<<8) + buf[16];
-        *heightPtr = (buf[23]<<24) + (buf[22]<<16) + (buf[21]<<8) + buf[20];
-        if (tkimg_Read(handle, (char *) buf, 24) != 24) {
+        *widthPtr = ((unsigned int)buf[19]<<24) + (buf[18]<<16) + (buf[17]<<8) + buf[16];
+        *heightPtr = ((unsigned int)buf[23]<<24) + (buf[22]<<16) + (buf[21]<<8) + buf[20];
+        if (tkimg_Read2(handle, (char *) buf, 24) != 24) {
             return 0;
         }
         nBits = buf[2];
@@ -274,14 +273,22 @@ CommonMatch(handle, widthPtr, heightPtr, colorMap, numBits, numCols, comp, mask)
     } else {
         return 0;
     }
-    if (*widthPtr <= 0 || *heightPtr <= 0)
+    if (*widthPtr <= 0 || *heightPtr <= 0) {
         return 0;
+    }
+    if (nBits <= 0) {
+        return 0;
+    }
 
     if (colorMap) {
-        if (c > 36) tkimg_Read(handle, (char *) buf, c - 36);
+        if (c > 36) {
+            if (tkimg_Read2(handle, (char *) buf, c - 36) != (size_t)c - 36 )
+                return 0;
+        }
         if (compression == BI_BITFIELDS) {
             /* Read the channel masks. */
-            tkimg_Read(handle, (char *) buf, 3*4);
+            if (tkimg_Read2(handle, (char *) buf, 3*4) != 3*4 )
+                return 0;
             if (mask) {
                 mask[0] = getUInt32((unsigned char *) &buf[0]);
                 mask[1] = getUInt32((unsigned char *) &buf[4]);
@@ -295,18 +302,28 @@ CommonMatch(handle, widthPtr, heightPtr, colorMap, numBits, numCols, comp, mask)
         if (nBits<16) {
             unsigned char colbuf[4], *ptr;
             offBits -= (3+(c!=12)) * clrUsed;
-            *colorMap = ptr = (unsigned char *) ckalloc(3*clrUsed);
+            *colorMap = ptr = (unsigned char *) attemptckalloc(3*clrUsed);
+            if (ptr == NULL) {
+                return 0;
+            }
             for (i = 0; i < clrUsed; i++) {
-                tkimg_Read(handle, (char *) colbuf, 3+(c!=12));
+                if (tkimg_Read2(handle, (char *) colbuf, 3+(c!=12)) != 3+(c!=12))
+                    return 0;
                 *ptr++ = colbuf[0]; *ptr++ = colbuf[1]; *ptr++ = colbuf[2];
-                /*printf("color %d: %d %d %d\n", i, colbuf[2], colbuf[1], colbuf[0]);*/
+#ifdef DEBUG_LOCAL
+                printf("color %d: %d %d %d\n", i, colbuf[2], colbuf[1], colbuf[0]);
+#endif
             }
         }
         while (offBits>28) {
             offBits -= 28;
-            tkimg_Read(handle, (char *) buf, 28);
+            if (tkimg_Read2(handle, (char *) buf, 28) != 28)
+                return 0;
         }
-        if (offBits) tkimg_Read(handle, (char *) buf, offBits);
+        if (offBits > 0) {
+            if (tkimg_Read2(handle, (char *) buf, offBits) != (size_t)offBits)
+                return 0;
+        }
         if (numCols) {
             *numCols = clrUsed;
         }
@@ -321,27 +338,28 @@ CommonMatch(handle, widthPtr, heightPtr, colorMap, numBits, numCols, comp, mask)
 }
 
 static int
-CommonRead(interp, handle, imageHandle, destX, destY,
-        width, height, srcX, srcY)
-    Tcl_Interp *interp;
-    tkimg_MFile *handle;
-    Tk_PhotoHandle imageHandle;
-    int destX, destY;
-    int width, height;
-    int srcX, srcY;
-{
+CommonRead(
+    Tcl_Interp *interp,
+    tkimg_MFile *handle,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY
+) {
     Tk_PhotoImageBlock block;
-    int numBits, bytesPerLine, numCols, comp, x, y;
+    int numBits, bytesPerLine, numCols = 0, comp, x, y;
     int fileWidth, fileHeight;
     unsigned char *colorMap = NULL;
     unsigned int intMask[3];
     BitmapChannel masks[3];
-    char buf[10];
+    char buf[20];
     unsigned char *line = NULL, *expline = NULL;
     unsigned short rgb;
 
-    CommonMatch(handle, &fileWidth, &fileHeight, &colorMap, &numBits,
-                 &numCols, &comp, intMask);
+    if (CommonMatch(handle, &fileWidth, &fileHeight, &colorMap, &numBits,
+                    &numCols, &comp, intMask) == 0) {
+        goto error;
+    }
 
     if (numBits == 16) {
         if (comp == BI_BITFIELDS) {
@@ -359,7 +377,9 @@ CommonRead(interp, handle, imageHandle, destX, destY,
         }
     }
 
-    /* printf("reading %d-bit BMP %dx%d\n", numBits, width, height); */
+#ifdef DEBUG_LOCAL
+    printf("reading %d-bit BMP %dx%d\n", numBits, width, height);
+#endif
     if (comp == BI_RLE8 || comp == BI_RLE4) {
         tkimg_ReadBuffer(1);
     }
@@ -370,9 +390,9 @@ CommonRead(interp, handle, imageHandle, destX, destY,
 
     bytesPerLine = ((numBits * fileWidth + 31)/32)*4;
 
-    /* printf("bytesPerLine = %d numBits=%d (%dx%d)\n", 
-     *        bytesPerLine, numBits, width, height);
-     */ 
+#ifdef DEBUG_LOCAL
+    printf("bytesPerLine = %d numBits=%d (%dx%d)\n", bytesPerLine, numBits, width, height);
+#endif
     block.pixelSize = 3;
     block.pitch = width * 3;
     block.width = width;
@@ -383,15 +403,29 @@ CommonRead(interp, handle, imageHandle, destX, destY,
     block.offset[3] = block.offset[0];
 
     if (comp == BI_RGB || comp == BI_BITFIELDS) {       /* No compression */
-        line = (unsigned char *) ckalloc(bytesPerLine);
+        line = (unsigned char *) attemptckalloc(bytesPerLine);
+        if (line == NULL) {
+            Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+            goto error;
+        }
         for(y=srcY+height; y<fileHeight; y++) {
-            tkimg_Read(handle, (char *)line, bytesPerLine);
+            if (bytesPerLine != tkimg_Read2(handle, (char *)line, bytesPerLine)) {
+                Tcl_AppendResult (interp, "Unable to read pixel row.", (char *) NULL);
+                goto error;
+            }
         }
         switch (numBits) {
             case 32:
-                block.pixelPtr = expline = (unsigned char *) ckalloc(3*width);
+                block.pixelPtr = expline = (unsigned char *) attemptckalloc(3*width);
+                if (expline == NULL) {
+                    Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                    goto error;
+                }
                 for( y = height-1; y>=0; y--) {
-                    tkimg_Read(handle, (char *)line, bytesPerLine);
+                    if (bytesPerLine != tkimg_Read2(handle, (char *)line, bytesPerLine)) {
+                        Tcl_AppendResult (interp, "Unable to read pixel row.", (char *) NULL);
+                        goto error;
+                    }
                     for (x = srcX; x < (srcX+width); x++) {
                         *expline++ = line[x*4 + 0];
                         *expline++ = line[x*4 + 1];
@@ -407,7 +441,10 @@ CommonRead(interp, handle, imageHandle, destX, destY,
             case 24:
                 block.pixelPtr = line + srcX*3;
                 for( y = height-1; y>=0; y--) {
-                    tkimg_Read(handle, (char *)line, bytesPerLine);
+                    if (bytesPerLine != tkimg_Read2(handle, (char *)line, bytesPerLine)) {
+                        Tcl_AppendResult (interp, "Unable to read pixel row.", (char *) NULL);
+                        goto error;
+                    }
                     if (tkimg_PhotoPutBlock(interp, imageHandle, &block,
                             destX, destY+y, width, 1, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
                         goto error;
@@ -415,9 +452,16 @@ CommonRead(interp, handle, imageHandle, destX, destY,
                 }
                 break;
             case 16:
-                block.pixelPtr = expline = (unsigned char *) ckalloc(3*width);
+                block.pixelPtr = expline = (unsigned char *) attemptckalloc(3*width);
+                if (expline == NULL) {
+                    Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                    goto error;
+                }
                 for( y = height-1; y>=0; y--) {
-                    tkimg_Read(handle, (char *)line, bytesPerLine);
+                    if (bytesPerLine != tkimg_Read2(handle, (char *)line, bytesPerLine)) {
+                        Tcl_AppendResult (interp, "Unable to read pixel row.", (char *) NULL);
+                        goto error;
+                    }
                     for (x = srcX; x < (srcX+width); x++) {
                         rgb = getUInt16 (&line[x*2]);
                         *expline++ = ((rgb & masks[2].mask) >> masks[2].shiftin) << masks[2].shiftout;
@@ -432,11 +476,22 @@ CommonRead(interp, handle, imageHandle, destX, destY,
                 }
                 break;
             case 8:
-                block.pixelPtr = expline = (unsigned char *) ckalloc(3*width);
+                block.pixelPtr = expline = (unsigned char *) attemptckalloc(3*width);
+                if (expline == NULL) {
+                    Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                    goto error;
+                }
                 for( y = height-1; y>=0; y--) {
-                    tkimg_Read(handle, (char *)line, bytesPerLine);
+                    if (bytesPerLine != tkimg_Read2(handle, (char *)line, bytesPerLine)) {
+                        Tcl_AppendResult (interp, "Unable to read pixel row.", (char *) NULL);
+                        goto error;
+                    }
                     for (x = srcX; x < (srcX+width); x++) {
-                        memcpy(expline, colorMap+(3*line[x]),3);
+                        if (line[x] > numCols) {
+                            Tcl_AppendResult(interp, "Color index exceeds color map size", (char *) NULL);
+                            goto error;
+                        }
+                        memcpy(expline, colorMap + 3*line[x], 3);
                         expline += 3;
                     }
                     if (tkimg_PhotoPutBlock(interp, imageHandle, &block,
@@ -447,17 +502,28 @@ CommonRead(interp, handle, imageHandle, destX, destY,
                 }
                 break;
             case 4:
-                block.pixelPtr = expline = (unsigned char *) ckalloc(3*width);
+                block.pixelPtr = expline = (unsigned char *) attemptckalloc(3*width);
+                if (expline == NULL) {
+                    Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                    goto error;
+                }
                 for( y = height-1; y>=0; y--) {
                     int c;
-                    tkimg_Read(handle, (char *)line, bytesPerLine);
+                    if (bytesPerLine != tkimg_Read2(handle, (char *)line, bytesPerLine)) {
+                        Tcl_AppendResult (interp, "Unable to read pixel row.", (char *) NULL);
+                        goto error;
+                    }
                     for (x = srcX; x < (srcX+width); x++) {
                         if (x&1) {
                             c = line[x/2] & 0x0f;
                         } else {
                             c = line[x/2] >> 4;
                         }
-                        memcpy(expline, colorMap+(3*c),3);
+                        if (c > numCols) {
+                            Tcl_AppendResult(interp, "Color index exceeds color map size", (char *) NULL);
+                            goto error;
+                        }
+                        memcpy(expline, colorMap + 3*c, 3);
                         expline += 3;
                     }
                     if (tkimg_PhotoPutBlock(interp, imageHandle, &block,
@@ -468,13 +534,24 @@ CommonRead(interp, handle, imageHandle, destX, destY,
                 }
                 break;
             case 1:
-                block.pixelPtr = expline = (unsigned char *) ckalloc(3*width);
+                block.pixelPtr = expline = (unsigned char *) attemptckalloc(3*width);
+                if (expline == NULL) {
+                    Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+                    goto error;
+                }
                 for( y = height-1; y>=0; y--) {
                     int c;
-                    tkimg_Read(handle, (char *)line, bytesPerLine);
+                    if (bytesPerLine != tkimg_Read2(handle, (char *)line, bytesPerLine)) {
+                        Tcl_AppendResult (interp, "Unable to read pixel row.", (char *) NULL);
+                        goto error;
+                    }
                     for (x = srcX; x < (srcX+width); x++) {
                         c = (line[x/8] >> (7-(x%8))) & 1;
-                        memcpy(expline, colorMap+(3*c),3);
+                        if (c > numCols) {
+                            Tcl_AppendResult(interp, "Color index exceeds color map size", (char *) NULL);
+                            goto error;
+                        }
+                        memcpy(expline, colorMap + 3*c, 3);
                         expline += 3;
                     }
                     if (tkimg_PhotoPutBlock(interp, imageHandle, &block,
@@ -485,7 +562,7 @@ CommonRead(interp, handle, imageHandle, destX, destY,
                 }
                 break;
             default:
-                sprintf(buf,"%d", numBits);
+                tkimg_snprintf(buf, 20, "%d", numBits);
                 Tcl_AppendResult(interp, buf,
                         "-bits BMP file not (yet) supported", (char *) NULL);
                 goto error;
@@ -499,27 +576,40 @@ CommonRead(interp, handle, imageHandle, destX, destY,
 
         x = srcX;
         y = fileHeight - 1;
-        block.pixelPtr = expline = (unsigned char *) ckalloc (3*fileWidth);
+        block.pixelPtr = expline = (unsigned char *) attemptckalloc (3*fileWidth);
+        if (expline == NULL) {
+            Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
+            goto error;
+        }
 
         if (numBits != 4 && numBits != 8) {
-            sprintf (buf, "%d", numBits);
+            tkimg_snprintf (buf, 20, "%d", numBits);
             Tcl_AppendResult(interp, "RLE compression not supported for ",
                               buf, "-bit pixel values", (char *) NULL);
             goto error;
         }
 
         while (1) {
-            if (2 != tkimg_Read(handle, (char *)rleBuf, 2)) {
+            if (2 != tkimg_Read2(handle, (char *)rleBuf, 2)) {
                 Tcl_AppendResult(interp, "Unexpected EOF", (char *) NULL);
                 goto error;
             }
-            /* printf("In: (%d %X) --> \n", rleBuf[0], rleBuf[1]); */
+#ifdef DEBUG_LOCAL
+            printf("In: (%d %X) --> \n", rleBuf[0], rleBuf[1]);
+#endif
             if (rleBuf[0] != 0) {
                 howMuch = rleBuf[0];
                 switch (numBits) {
                     case 8: {
                         for (i=0; i<howMuch; i++, x++) {
+                            if (rleBuf[1] > numCols) {
+                                Tcl_AppendResult(interp, "Color index exceeds color map size", (char *) NULL);
+                                goto error;
+                            }
                             memcpy (expline, colorMap + 3*rleBuf[1], 3);
+                            if (x>=srcX+width-1) {
+                                break;
+                            }
                             expline += 3;
                         }
                         break;
@@ -530,6 +620,10 @@ CommonRead(interp, handle, imageHandle, destX, destY,
                                 c = rleBuf[1] & 0x0f;
                             } else {
                                 c = rleBuf[1] >> 4;
+                            }
+                            if (c > numCols) {
+                                Tcl_AppendResult(interp, "Color index exceeds color map size", (char *) NULL);
+                                goto error;
                             }
                             memcpy(expline, colorMap + 3*c, 3);
                             if (x>=srcX+width-1) {
@@ -544,22 +638,31 @@ CommonRead(interp, handle, imageHandle, destX, destY,
                 if (rleBuf[1]>2) {
                     /* uncompressed record */
                     howMuch = rleBuf[1];
-                    /* printf ("Uncompressed: %d\n", howMuch); fflush (stdout); */
+#ifdef DEBUG_LOCAL
+                    printf ("Uncompressed: %d\n", howMuch); fflush (stdout);
+#endif
                     switch (numBits) {
                         case 8: {
                             for (i=0; i<howMuch; i++, x++) {
-                                if (1 != tkimg_Read(handle, (char *)&val, 1)) {
+                                if (1 != tkimg_Read2(handle, (char *)&val, 1)) {
                                     Tcl_AppendResult(interp, "Unexpected EOF", (char *)NULL);
                                     goto error;
                                 }
+                                if (val > numCols) {
+                                    Tcl_AppendResult(interp, "Color index exceeds color map size", (char *) NULL);
+                                    goto error;
+                                }
                                 memcpy(expline, colorMap + 3*val, 3);
+                                if (x>=srcX+width-1) {
+                                    break;
+                                }
                                 expline += 3;
                             }
                             break;
                         }
                         case 4: {
                             for (i=0; i<howMuch; i+=2) {
-                                if (1 != tkimg_Read(handle, (char *)&val, 1)) {
+                                if (1 != tkimg_Read2(handle, (char *)&val, 1)) {
                                     Tcl_AppendResult(interp, "Unexpected EOF", (char *)NULL);
                                     goto error;
                                 }
@@ -568,6 +671,10 @@ CommonRead(interp, handle, imageHandle, destX, destY,
                                         c = val & 0x0f;
                                     } else {
                                         c = val >> 4;
+                                    }
+                                    if (c > numCols) {
+                                        Tcl_AppendResult(interp, "Color index exceeds color map size", (char *) NULL);
+                                        goto error;
                                     }
                                     memcpy(expline, colorMap + 3*c, 3);
                                     if (x>=srcX+width-1) {
@@ -585,14 +692,20 @@ CommonRead(interp, handle, imageHandle, destX, destY,
                     }
 
                     if ((howMuch / (8 / numBits)) % 2) {
-                        if (1 != tkimg_Read(handle, (char *)&val, 1)) {
+                        if (1 != tkimg_Read2(handle, (char *)&val, 1)) {
                             Tcl_AppendResult(interp, "Unexpected EOF", (char *)NULL);
                             goto error;
                         }
                     }
                 } else if (rleBuf[1]==0) {
                     /* End of line */
-                    /* printf("New line: y=%d x=%d\n", y, x); fflush(stdout); */
+#ifdef DEBUG_LOCAL
+                    printf("New line: y=%d x=%d\n", y, x); fflush(stdout);
+#endif
+                    if (destY+y > fileHeight) {
+                        Tcl_AppendResult (interp, "Decoding inconsistency", (char *)NULL);
+                        goto error;
+                    }
                     if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, destY+y,
                             width, 1, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
                         goto error;
@@ -600,13 +713,19 @@ CommonRead(interp, handle, imageHandle, destX, destY,
                     y--;
                     x = srcX;
                     expline = block.pixelPtr;
+                    if (y < 0) {
+                        Tcl_AppendResult (interp, "Decoding inconsistency", (char *)NULL);
+                        goto error;
+                    }
                 } else if (rleBuf[1]==1) {
                     /* End of bitmap */
                     break;
                 } else if (rleBuf[1]==2) {
                     /* Deltarecord */
-                    /* printf("Deltarecord\n"); fflush(stdout); */
-                    if (2 != tkimg_Read(handle, (char *) rleDelta, 2)) {
+#ifdef DEBUG_LOCAL
+                    printf("Deltarecord\n"); fflush(stdout);
+#endif
+                    if (2 != tkimg_Read2(handle, (char *) rleDelta, 2)) {
                         Tcl_AppendResult(interp, "Unexpected EOF", (char *) NULL);
                         goto error;
                     }
@@ -627,7 +746,7 @@ CommonRead(interp, handle, imageHandle, destX, destY,
     if (expline) {
         ckfree((char *) block.pixelPtr);
     }
-    return TCL_OK ;
+    return TCL_OK;
 
 error:
     tkimg_ReadBuffer(0);
@@ -644,12 +763,12 @@ error:
 }
 
 static int
-CommonWrite(interp, format, handle, blockPtr)
-    Tcl_Interp *interp;
-    Tcl_Obj *format;
-    tkimg_MFile *handle;
-    Tk_PhotoImageBlock *blockPtr;
-{
+CommonWrite(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    tkimg_MFile *handle,
+    Tk_PhotoImageBlock *blockPtr
+) {
     int bperline, nbytes, ncolors, i, x, y, greenOffset, blueOffset, alphaOffset;
     unsigned char *imagePtr, *pixelPtr;
     unsigned char buf[4];
@@ -657,7 +776,7 @@ CommonWrite(interp, format, handle, blockPtr)
     int resX=75*39, resY=75*39;
     int objc = 0;
     Tcl_Obj **objv = NULL;
- 
+
     /* Decode resolution parameter -resolution List */
     if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK) {
         return TCL_ERROR;
@@ -672,7 +791,7 @@ CommonWrite(interp, format, handle, blockPtr)
         if ((objc > 3) || ((objc == 3) && ((c[0] != '-') ||
                 (c[1] != 'r') || strncmp(c, "-resolution", strlen(c))))) {
             Tcl_AppendResult(interp, "invalid format: \"",
-                    tkimg_GetStringFromObj(format, NULL), "\"", (char *) NULL);
+                    tkimg_GetStringFromObj2(format, NULL), "\"", (char *) NULL);
             return TCL_ERROR;
         }
         objList = objv[objc-1];
@@ -681,7 +800,7 @@ CommonWrite(interp, format, handle, blockPtr)
         }
         if (!objc || objc > 3) {
             Tcl_AppendResult(interp, "Wrong resolution parameters: \"",
-                    tkimg_GetStringFromObj(objList, NULL), "\"", (char *) NULL);
+                    tkimg_GetStringFromObj2(objList, NULL), "\"", (char *) NULL);
             return TCL_ERROR;
         }
         if (Tcl_GetDoubleFromObj(interp, objv[0], &fResX) != TCL_OK) {
@@ -689,7 +808,7 @@ CommonWrite(interp, format, handle, blockPtr)
         }
         if ( fResX < 0 || fResX > 1e20 ) {
             Tcl_AppendResult(interp, "Wrong resolution: \"",
-                tkimg_GetStringFromObj(objv[0], NULL), "\"", (char *) NULL);
+                tkimg_GetStringFromObj2(objv[0], NULL), "\"", (char *) NULL);
             return TCL_ERROR;
         }
         /* more than xRes value given ? */
@@ -702,7 +821,7 @@ CommonWrite(interp, format, handle, blockPtr)
             }
             if (objc > 2) {
                 Tcl_AppendResult(interp, "Wrong unit: \"",
-                    tkimg_GetStringFromObj(objv[objc-1], NULL), "\"", (char *) NULL);
+                    tkimg_GetStringFromObj2(objv[objc-1], NULL), "\"", (char *) NULL);
                 return TCL_ERROR;
             }
             if (objc > 1) {
@@ -711,7 +830,7 @@ CommonWrite(interp, format, handle, blockPtr)
                 }
                 if ( fResY < 0 || fResY > 1e20 ) {
                     Tcl_AppendResult(interp, "Wrong resolution: \"",
-                        tkimg_GetStringFromObj(objv[0], NULL), "\"", (char *) NULL);
+                        tkimg_GetStringFromObj2(objv[0], NULL), "\"", (char *) NULL);
                     return TCL_ERROR;
                 }
             }
@@ -793,7 +912,7 @@ CommonWrite(interp, format, handle, blockPtr)
 
     bperline = ((blockPtr->width  * nbytes + 3) / 4) * 4;
 
-    tkimg_Write(handle,"BM", 2);
+    tkimg_Write2(handle,"BM", 2);
     putint(handle, 54 + (ncolors*4) + bperline * blockPtr->height);
     putint(handle, 0);
     putint(handle, 54 + (ncolors*4));
@@ -834,25 +953,25 @@ CommonWrite(interp, format, handle, blockPtr)
                 buf[1] = pixelPtr[greenOffset];
                 buf[2] = pixelPtr[0];
             }
-            tkimg_Write(handle, (char *) buf, nbytes);
+            tkimg_Write2(handle, (char *) buf, nbytes);
             pixelPtr += blockPtr->pixelSize;
         }
         if (bperline) {
-            tkimg_Write(handle, "\0\0\0", bperline);
+            tkimg_Write2(handle, "\0\0\0", bperline);
         }
     }
     return(TCL_OK);
 }
 
 static void
-putint(handle, i)
-    tkimg_MFile *handle;
-    int i;
-{
+putint(
+    tkimg_MFile *handle,
+    int i
+) {
     unsigned char buf[4];
     buf[0] = i;
     buf[1] = i>>8;
     buf[2] = i>>16;
     buf[3] = i>>24;
-    tkimg_Write(handle, (char *) buf, 4);
+    tkimg_Write2(handle, (char *) buf, 4);
 }

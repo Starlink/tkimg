@@ -5,8 +5,6 @@
  *
  * Copyright (c) 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
  *
- * $Id: init.c 274 2010-06-28 13:23:34Z nijtmans $
- *
  */
 
 #include "tkimg.h"
@@ -47,14 +45,15 @@ static int ChnWrite(Tcl_Interp *interp, const char *filename,
 static int StringWrite(Tcl_Interp *interp, Tcl_Obj *format,
 	Tk_PhotoImageBlock *blockPtr);
 
-static Tk_PhotoImageFormat format = {
+static Tk_PhotoImageFormat sImageFormat = {
 	(char *) "%PHIMGTYPE%", /* name */
 	ChnMatch, /* fileMatchProc */
 	ObjMatch, /* stringMatchProc */
 	ChnRead, /* fileReadProc */
 	ObjRead, /* stringReadProc */
 	ChnWrite, /* fileWriteProc */
-	StringWrite /* stringWriteProc */
+	StringWrite, /* stringWriteProc */
+	0
 };
 
 #ifdef SECOND_FORMAT
@@ -97,14 +96,15 @@ static int StringWriteBeta(Tcl_Interp *interp, Tcl_Obj *format,
 	Tk_PhotoImageBlock *blockPtr);
 #endif
 
-static Tk_PhotoImageFormat format_beta = {
+static Tk_PhotoImageFormat sImageFormatBeta = {
 	(char *) "%PHIMGTYPE_BETA%", /* name */
 	SECOND_CHNMATCH, /* fileMatchProc */
 	SECOND_OBJMATCH, /* stringMatchProc */
 	SECOND_CHNREAD, /* fileReadProc */
 	SECOND_OBJREAD, /* stringReadProc */
 	SECOND_CHNWRITE, /* fileWriteProc */
-	SECOND_STRWRITE /* stringWriteProc */
+	SECOND_STRWRITE, /* stringWriteProc */
+	0
 };
 
 #endif /* SECOND_FORMAT */
@@ -146,16 +146,16 @@ int
 	 * Register the new photo image type.
 	 */
 
-	Tk_CreatePhotoImageFormat(&format);
+	Tk_CreatePhotoImageFormat(&sImageFormat);
 #ifdef SECOND_FORMAT
-	Tk_CreatePhotoImageFormat(&format_beta);
+	Tk_CreatePhotoImageFormat(&sImageFormatBeta);
 #endif /* SECOND_FORMAT */
 
 	/*
 	 * At last provide the package ...
 	 */
 
-	if (Tcl_PkgProvide(interp, PACKAGE_TCLNAME, PACKAGE_VERSION) != TCL_OK) {
+	if (Tcl_PkgProvide(interp, PACKAGE_TCLNAME, TKIMG_VERSION) != TCL_OK) {
 		return TCL_ERROR;
 	}
 	return TCL_OK;
