@@ -45,9 +45,15 @@ int
 Zlibtcl_Init (
 	Tcl_Interp *interp /* Interpreter to initialise. */
 ) {
+#if TCL_MAJOR_VERSION > 8
+	if (!Tcl_InitStubs(interp, "9.0", 0)) {
+		return TCL_ERROR;
+	}
+#else
 	if (!Tcl_InitStubs(interp, "8.3", 0)) {
 		return TCL_ERROR;
 	}
+#endif
 
 	if (Tcl_PkgProvideEx(interp, PACKAGE_NAME, PACKAGE_VERSION,
 			(void *) &zlibtclStubs) != TCL_OK) {

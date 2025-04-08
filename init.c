@@ -130,12 +130,21 @@ int
 @CPACKAGE@_Init(
 	Tcl_Interp *interp /* Interpreter to initialise. */
 ) {
+#if TCL_MAJOR_VERSION > 8
+	if (!Tcl_InitStubs(interp, "9.0", 0)) {
+		return TCL_ERROR;
+	}
+	if (!Tk_InitStubs(interp, "8.3-", 0)) {
+		return TCL_ERROR;
+	}
+#else
 	if (!Tcl_InitStubs(interp, "8.3", 0)) {
 		return TCL_ERROR;
 	}
 	if (!Tk_InitStubs(interp, "8.3", 0)) {
 		return TCL_ERROR;
 	}
+#endif
 	if (!Tkimg_InitStubs(interp, TKIMG_VERSION, 0)) {
 		return TCL_ERROR;
 	}

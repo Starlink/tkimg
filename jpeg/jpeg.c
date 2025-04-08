@@ -547,7 +547,8 @@ CommonRead(
     int fileWidth, fileHeight, stopY, curY, outY, outWidth, outHeight;
     Tk_PhotoImageBlock block;
     JSAMPARRAY buffer;		/* Output row buffer */
-    int objc, i, index;
+    Tcl_Size objc, i;
+    int index;
     Tcl_Obj **objv = (Tcl_Obj **) NULL;
 
     /* Ready to read header data. */
@@ -827,7 +828,8 @@ CommonWrite(
     int w, h;
     int greenOffset, blueOffset, alphaOffset;
     unsigned char *pixelPtr, *pixLinePtr;
-    int objc, i, index, grayscale = 0;
+    Tcl_Size objc, i;
+    int index, grayscale = 0;
     Tcl_Obj **objv = (Tcl_Obj **) NULL;
 
     greenOffset = blockPtr->offset[1] - blockPtr->offset[0];
@@ -885,7 +887,7 @@ CommonWrite(
 		    int quality = 0;
 		    if (++i >= objc) {
 			Tcl_AppendResult(interp, "No value for option \"",
-				Tcl_GetStringFromObj(objv[--i], (int *) NULL), "\"", (char *) NULL);
+				Tcl_GetString(objv[--i]), "\"", (char *) NULL);
 			return TCL_ERROR;
 		    }
 		    if (Tcl_GetIntFromObj(interp, objv[i], &quality) != TCL_OK) {
@@ -898,7 +900,7 @@ CommonWrite(
 		    int smooth = 0;
 		    if (++i >= objc) {
 			Tcl_AppendResult(interp, "No value for option \"",
-				Tcl_GetStringFromObj(objv[--i], (int *) NULL), "\"", (char *) NULL);
+				Tcl_GetString(objv[--i]), "\"", (char *) NULL);
 			return TCL_ERROR;
 		    }
 		    if (Tcl_GetIntFromObj(interp, objv[i], &smooth) != TCL_OK) {

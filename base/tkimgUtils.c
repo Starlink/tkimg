@@ -82,7 +82,7 @@ int TkimgInitUtilities(
 const char *tkimg_GetStringFromObj(
 	Tcl_Obj *objPtr, /* Object whose string rep byte pointer
 			  * should be returned, or NULL */
-	int *lengthPtr /* If non-NULL, the location where the
+	Tcl_Size *lengthPtr /* If non-NULL, the location where the
 			* string rep's byte array length should be
 			* stored. If NULL, no length is stored. */
 ) {
@@ -193,7 +193,7 @@ const char *tkimg_GetStringFromObj2(
 unsigned char *tkimg_GetByteArrayFromObj(
 	Tcl_Obj *objPtr, /**< Object whose string rep byte pointer
 			  * should be returned, or NULL */
-	int *lengthPtr /**< If non-NULL, the location where the
+	Tcl_Size *lengthPtr /**< If non-NULL, the location where the
 		        * string rep's byte array length should be
 		        * stored. If NULL, no length is stored. */
 ) {
@@ -245,7 +245,7 @@ unsigned char *tkimg_GetByteArrayFromObj2(
 	}
 	return (unsigned char *) string;
 #else /* _LANG */
-	int len;
+	Tcl_Size len;
 	unsigned char *result = Tcl_GetByteArrayFromObj(objPtr, &len);
 	if (lengthPtr) {
 		*lengthPtr = len;
@@ -278,7 +278,7 @@ unsigned char *tkimg_GetByteArrayFromObj2(
 int tkimg_ListObjGetElements(
 	Tcl_Interp *interp,
 	Tcl_Obj *objPtr,
-	int *objc,
+	Tcl_Size *objc,
 	Tcl_Obj ***objv
 ) {
 	if (!objPtr) {

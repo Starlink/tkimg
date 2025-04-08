@@ -439,7 +439,8 @@ static int ParseFormatOpts(
     static const char *const icoOptions[] = {
          "-verbose", "-index", NULL
     };
-    int objc, i, index;
+    Tcl_Size objc, i;
+    int index;
     char *optionStr;
     Tcl_Obj **objv;
     int intVal;
@@ -460,11 +461,11 @@ static int ParseFormatOpts(
             }
             if (++i >= objc) {
                 Tcl_AppendResult(interp, "No value for option \"",
-                        Tcl_GetStringFromObj (objv[--i], (int *) NULL),
+                        Tcl_GetString(objv[--i]),
                         "\"", (char *) NULL);
                 return TCL_ERROR;
             }
-            optionStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
+            optionStr = Tcl_GetString(objv[i]);
             switch (index) {
                 case 0:
                     if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {

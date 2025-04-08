@@ -1,7 +1,12 @@
-We are happy to announce version 1.4.16 of the "tkImg" package
+We are happy to announce version 1.4.17 of the "tkImg" package
 (formerly known as "Img").
 
 This package enhances Tk, adding support for many image formats.
+
+Changes compared to version 1.4.16:
+  - Last release of the 1.4 branch.
+  - Works with Tk 9, but no support of image metadata.
+  - Several security and stability related changes.
 
 Changes compared to version 1.4.15:
   - Several security and stability related changes.

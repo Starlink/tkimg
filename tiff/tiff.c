@@ -170,6 +170,12 @@ _TIFFerr(
         ckfree(errorMessage);
         errorMessage = NULL;
     }
+    if (strstr(buf, "Null count for")) {
+        /* Ignore error messages: Null count for "Tag 34391" (type 1, writecount -3, passcount 1)
+         * which are generated since TIFF version 4.0 and are due to old Photoshop private tags.
+         */
+        return;
+    }
     errorMessage = (char *) ckalloc(strlen(buf)+1);
     strcpy(errorMessage, buf);
 }
@@ -647,7 +653,9 @@ CommonRead(
     uint32_t w, h;
     size_t npixels;
     uint32_t *raster;
-    int nBytes, index = 0, objc = 0;
+    Tcl_Size nBytes;
+    int index = 0;
+    Tcl_Size objc = 0;
     Tcl_Obj **objv = NULL;
 
     if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK) {
@@ -891,7 +899,8 @@ ParseWriteFormat(
       "-byteorder",
       NULL
     };
-    int objc, length, c, i, index;
+    Tcl_Size objc, i, length;
+    int c, index;
     Tcl_Obj **objv;
     const char *compression, *byteorder;
 
@@ -909,15 +918,15 @@ ParseWriteFormat(
             }
             if (++i >= objc) {
                 Tcl_AppendResult(interp, "No value for option \"",
-                        Tcl_GetStringFromObj(objv[--i], (int *) NULL),
+                        Tcl_GetString(objv[--i]),
                         "\"", (char *) NULL);
                 return TCL_ERROR;
             }
             switch(index) {
                 case 0:
-                    compression = Tcl_GetStringFromObj(objv[i], (int *) NULL); break;
+                    compression = Tcl_GetString(objv[i]); break;
                 case 1:
-                    byteorder = Tcl_GetStringFromObj(objv[i], (int *) NULL); break;
+                    byteorder = Tcl_GetString(objv[i]); break;
             }
         }
         c = compression[0]; length = strlen(compression);

@@ -28,13 +28,17 @@
 EXTERN int Tkimg_Init(Tcl_Interp *interp);
 EXTERN int Tkimg_SafeInit(Tcl_Interp *interp);
 
+#if !defined(TCL_SIZE_MAX) && !defined(Tcl_Size)
+    typedef int Tcl_Size;
+#endif
+
 typedef struct tkimg_MFile {
 	Tcl_DString *buffer; /* pointer to dynamical string */
 	char *data; /* mmencoded source string */
 	int c; /* bits left over from previous char */
 	int state; /* decoder state (0-4 or IMG_DONE) */
 #if TCL_MAJOR_VERSION > 8
-	size_t length; /* length of physical line already written */
+	Tcl_Size length; /* length of physical line already written */
 #else
 	unsigned int length; /* length of physical line already written */
 	int notused; /* just to be sure to always allocate more than enough */
@@ -103,13 +107,14 @@ TKIMGAPI int		tkimg_PhotoSetSize(Tcl_Interp *interp,
 /* Slot 29 is reserved */
 /* 30 */
 TKIMGAPI const char *	tkimg_GetStringFromObj(Tcl_Obj *objPtr,
-				int *lengthPtr);
+				Tcl_Size *lengthPtr);
 /* 31 */
 TKIMGAPI unsigned char * tkimg_GetByteArrayFromObj(Tcl_Obj *objPtr,
-				int *lengthPtr);
+				Tcl_Size *lengthPtr);
 /* 32 */
 TKIMGAPI int		tkimg_ListObjGetElements(Tcl_Interp *interp,
-				Tcl_Obj *objPtr, int *argc, Tcl_Obj ***argv);
+				Tcl_Obj *objPtr, Tcl_Size *objc,
+				Tcl_Obj ***objv);
 /* 33 */
 TKIMGAPI const char *	tkimg_GetStringFromObj2(Tcl_Obj *objPtr,
 				size_t *lengthPtr);
@@ -274,9 +279,9 @@ typedef struct TkimgStubs {
     void (*reserved27)(void);
     void (*reserved28)(void);
     void (*reserved29)(void);
-    const char * (*tkimg_GetStringFromObjPtr) (Tcl_Obj *objPtr, int *lengthPtr); /* 30 */
-    unsigned char * (*tkimg_GetByteArrayFromObjPtr) (Tcl_Obj *objPtr, int *lengthPtr); /* 31 */
-    int (*tkimg_ListObjGetElementsPtr) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *argc, Tcl_Obj ***argv); /* 32 */
+    const char * (*tkimg_GetStringFromObjPtr) (Tcl_Obj *objPtr, Tcl_Size *lengthPtr); /* 30 */
+    unsigned char * (*tkimg_GetByteArrayFromObjPtr) (Tcl_Obj *objPtr, Tcl_Size *lengthPtr); /* 31 */
+    int (*tkimg_ListObjGetElementsPtr) (Tcl_Interp *interp, Tcl_Obj *objPtr, Tcl_Size *objc, Tcl_Obj ***objv); /* 32 */
     const char * (*tkimg_GetStringFromObj2Ptr) (Tcl_Obj *objPtr, size_t *lengthPtr); /* 33 */
     unsigned char * (*tkimg_GetByteArrayFromObj2Ptr) (Tcl_Obj *objPtr, size_t *lengthPtr); /* 34 */
     void (*reserved35)(void);

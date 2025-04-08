@@ -774,7 +774,7 @@ CommonWrite(
     unsigned char buf[4];
     int colors[256];
     int resX=75*39, resY=75*39;
-    int objc = 0;
+    Tcl_Size objc = 0;
     Tcl_Obj **objv = NULL;
 
     /* Decode resolution parameter -resolution List */
@@ -784,7 +784,7 @@ CommonWrite(
     /* List parameter given ? */
     if (objc > 1) {
         Tcl_Obj *objList;
-        int nBytes;
+        Tcl_Size nBytes;
         double fResX = -1, fResY = -1, fFactor = 0;
         char unit = '\0';
         char *c = Tcl_GetStringFromObj(objv[1], &nBytes);

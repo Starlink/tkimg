@@ -56,7 +56,9 @@ parseFormat(
      int *zoomx,
      int *zoomy
 ) {
-    int objc, i, length, index = 0;
+    Tcl_Size objc, i;
+    int index = 0;
+    Tcl_Size length;
     Tcl_Obj **objv = NULL;
     char *p;
     double zx = 1.0, zy = 1.0;

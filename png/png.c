@@ -137,7 +137,8 @@ static int ParseFormatOpts(
     static const char *const pngOptions[] = {
         "-matte", "-alpha", "-gamma", "-verbose", NULL
     };
-    int objc, i, index;
+    Tcl_Size objc, i;
+    int index;
     char *optionStr;
     Tcl_Obj **objv;
     int boolVal;
@@ -159,11 +160,11 @@ static int ParseFormatOpts(
             }
             if (++i >= objc) {
                 Tcl_AppendResult(interp, "No value for option \"",
-                        Tcl_GetStringFromObj (objv[--i], (int *) NULL),
+                        Tcl_GetString(objv[--i]),
                         "\"", (char *) NULL);
                 return TCL_ERROR;
             }
-            optionStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
+            optionStr = Tcl_GetString(objv[i]);
             switch(index) {
                 case 0:
                     if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
@@ -676,7 +677,7 @@ CommonWritePNG(
     Tk_PhotoImageBlock *blockPtr
 ) {
     int greenOffset, blueOffset, alphaOffset;
-    int tagcount = 0;
+    Tcl_Size tagcount = 0;
     Tcl_Obj **tags = (Tcl_Obj **) NULL;
     int I, pass, number_passes, color_type;
     int newPixelSize;
@@ -738,9 +739,9 @@ CommonWritePNG(
     if (tagcount > 0) {
         png_text_compat text;
         for(I=0;I<tagcount;I++) {
-            int length;
+            Tcl_Size length;
             memset(&text, 0, sizeof(png_text_compat));
-            text.compat.key = Tcl_GetStringFromObj(tags[2*I+1], (int *) NULL);
+            text.compat.key = Tcl_GetString(tags[2*I+1]);
             text.compat.text = Tcl_GetStringFromObj(tags[2*I+2], &length);
             text.compat.text_length = length;
             if (text.compat.text_length>COMPRESS_THRESHOLD) {

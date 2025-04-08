@@ -269,19 +269,20 @@ size_t tkimg_Read2(
 		/* All bytes already in the buffer. Just copy them to dst. */
 		memcpy(dstPtr, readBuf + bufStart, bytesToRead);
 		bufStart += bytesToRead;
-		if (bufStart > BUFLEN)
+		if (bufStart >= BUFLEN)
 		    bufStart = -1;
 		return bytesRead + bytesToRead;
 	    } else {
+                int copyRest;
+                copyRest = bufEnd - bufStart + 1;
 #ifdef DEBUG_LOCAL
-		    printf("Copy rest of buffer: memcpy %d bytes\n",
-                            bufEnd+1-bufStart);
+		    printf("Copy rest of buffer: memcpy %d bytes\n", copyRest);
 #endif
-		memcpy (dstPtr, readBuf + bufStart, bufEnd+1 - bufStart);
-		bytesRead += (bufEnd +1 - bufStart);
-		bytesToRead -= (bufEnd+1 - bufStart);
+		memcpy (dstPtr, readBuf + bufStart, copyRest);
+		dstPtr      += copyRest;
+                bytesRead   += copyRest;
+                bytesToRead -= copyRest;
 		bufStart = -1;
-		dstPtr += bytesRead;
 	    }
 	}
     }

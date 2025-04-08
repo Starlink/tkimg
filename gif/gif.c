@@ -246,7 +246,8 @@ CommonRead(
                                  * in image being read. */
 ) {
     int fileWidth, fileHeight, imageWidth, imageHeight;
-    int nBytes, index = 0, objc = 0;
+    Tcl_Size nBytes;
+    int index = 0, objc = 0;
     Tcl_Obj **objv = NULL;
     Tk_PhotoImageBlock block;
     unsigned char buf[100];

@@ -302,10 +302,16 @@ CommonRead(
 	int found;
 
 	p = Gets(handle, buffer, maxBuffer);
+        if (p == NULL) {
+            ckfree ((char *) buffer);
+            Tcl_AppendResult (interp, "Unable to read color map.", (char *) NULL);
+            return TCL_ERROR;
+        }
 	while (((p = strchr(p,'\"')) == NULL)) {
 	    p = Gets(handle, buffer, maxBuffer);
 	    if (p == NULL) {
                 ckfree ((char *) buffer);
+                Tcl_AppendResult (interp, "Unable to read color map.", (char *) NULL);
 		return TCL_ERROR;
 	    }
 	    p = buffer;
@@ -424,10 +430,16 @@ CommonRead(
     i = srcY;
     while (i-- > 0) {
 	p = Gets(handle, buffer, maxBuffer);
+        if (p == NULL) {
+            ckfree ((char *) buffer);
+            Tcl_AppendResult (interp, "Unable to read color definition.", (char *) NULL);
+            return TCL_ERROR;
+        }
 	while (((p = strchr(p,'\"')) == NULL)) {
 	    p = Gets(handle, buffer, maxBuffer);
 	    if (p == NULL) {
                 ckfree ((char *) buffer);
+                Tcl_AppendResult (interp, "Unable to read color definition.", (char *) NULL);
 		return TCL_ERROR;
 	    }
 	    p = buffer;
@@ -437,10 +449,16 @@ CommonRead(
 
     for (h = height; h > 0; h--) {
 	p = Gets(handle, buffer, maxBuffer);
+        if (p == NULL) {
+            ckfree ((char *) buffer);
+            Tcl_AppendResult (interp, "Unable to read color definition.", (char *) NULL);
+            return TCL_ERROR;
+        }
 	while (((p = strchr(p,'\"')) == NULL)) {
 	    p = Gets(handle, buffer, maxBuffer);
 	    if (p == NULL) {
                 ckfree ((char *) buffer);
+                Tcl_AppendResult (interp, "Unable to read color definition.", (char *) NULL);
 		return TCL_ERROR;
 	    }
 	    p = buffer;

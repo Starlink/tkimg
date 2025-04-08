@@ -58,12 +58,21 @@ int Tkimg_Init(
 ) {
 	Tcl_CmdInfo info;
 
+#if TCL_MAJOR_VERSION > 8
+	if (!Tcl_InitStubs(interp, "9.0", 0)) {
+		return TCL_ERROR;
+	}
+	if (!Tk_InitStubs(interp, "8.3-", 0)) {
+		return TCL_ERROR;
+	}
+#else
 	if (!Tcl_InitStubs(interp, "8.3", 0)) {
 		return TCL_ERROR;
 	}
 	if (!Tk_InitStubs(interp, "8.3", 0)) {
 		return TCL_ERROR;
 	}
+#endif
 	TkimgInitUtilities(interp);
 #ifdef ALLOW_B64 /* Undocumented feature */
 	Tcl_CreateObjCommand(interp, "img_to_base64", tob64, NULL, NULL);
@@ -190,7 +199,7 @@ int tob64(
 	tkimg_MFile handle;
 	Tcl_Channel chan;
 	char buffer[1024];
-	size_t len;
+	Tcl_Size len;
 
 	if (argc != 2) {
 		Tcl_WrongNumArgs(interp, 1, objv, "filename");
@@ -247,7 +256,7 @@ int fromb64(
 	tkimg_MFile handle;
 	Tcl_Channel chan;
 	char buffer[1024];
-	size_t len;
+	Tcl_Size len;
 
 	if (argc != 3) {
 		Tcl_WrongNumArgs(interp, 1, objv, "filename data");

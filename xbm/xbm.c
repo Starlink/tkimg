@@ -76,7 +76,8 @@ static int ParseFormatOpts(
     static const char *const xbmOptions[] = {
         "-background", "-foreground", NULL
     };
-    int objc, i, index;
+    Tcl_Size objc, i;
+    int index;
     char *optionStr;
     Tcl_Obj **objv;
     Tk_Window tkwin = Tk_MainWindow(interp);
@@ -103,11 +104,11 @@ static int ParseFormatOpts(
             }
             if (++i >= objc) {
                 Tcl_AppendResult(interp, "No value for option \"",
-                        Tcl_GetStringFromObj (objv[--i], (int *) NULL),
+                        Tcl_GetString(objv[--i]),
                         "\"", (char *) NULL);
                 return TCL_ERROR;
             }
-            optionStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
+            optionStr = Tcl_GetString(objv[i]);
             color = NULL;
             switch(index) {
                 case BG:

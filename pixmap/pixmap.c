@@ -36,7 +36,7 @@
  */
 
 static int TkimgXpmCreate(Tcl_Interp *interp,
-	const char *name, int objc, Tcl_Obj *const objv[],
+	const char *name, Tcl_Size objc, Tcl_Obj *const objv[],
 	const Tk_ImageType *typePtr, Tk_ImageMaster master,
 	void **clientDataPtr);
 static void *TkimgXpmGet(Tk_Window tkwin,
@@ -54,7 +54,7 @@ static void TkimgXpmCmdDeletedProc(
 static void TkimgXpmConfigureInstance(
 	PixmapInstance *instancePtr);
 static int TkimgXpmConfigureMaster(
-	PixmapMaster *masterPtr, int objc, Tcl_Obj *const *objv,
+	PixmapMaster *masterPtr, Tcl_Size objc, Tcl_Obj *const *objv,
 	int flags);
 static int TkimgXpmGetData(Tcl_Interp *interp,
 	PixmapMaster *masterPtr);
@@ -119,7 +119,7 @@ TkimgXpmCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing
 				 * image. */
     const char *name,		/* Name to use for image. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument strings for options (doesn't
 				 * include image name or type). */
     const Tk_ImageType *typePtr,/* Pointer to our type record (not used). */
@@ -185,7 +185,7 @@ static int
 TkimgXpmConfigureMaster(
     PixmapMaster *masterPtr,	/* Pointer to data structure describing
 				 * overall pixmap image to (reconfigure). */
-    int objc,			/* Number of entries in argv. */
+    Tcl_Size objc,			/* Number of entries in argv. */
     Tcl_Obj *const *objv,	/* Pairs of configuration options for image. */
     int flags			/* Flags to pass to Tk_ConfigureWidget,
 				 * such as TK_CONFIG_ARGV_ONLY. */
@@ -272,7 +272,7 @@ TkimgXpmGetData(
 ) {
     const char ** data = NULL;
     int  isAllocated = 0;		/* do we need to free "data"? */
-    int listArgc;
+    Tcl_Size listArgc;
     const char ** listArgv = NULL;
     int numLines;
     int size[2];
@@ -369,7 +369,7 @@ TkimgXpmGetDataFromString(
 ) {
     int quoted;
     char * p, * list;
-    int numLines;
+    Tcl_Size numLines;
     const char ** data;
 
     /* skip the leading blanks (leading blanks are not defined in the
@@ -1257,12 +1257,21 @@ Tkimgpixmap_Init(
 ) {
     static int initialized = 0;
 
+#if TCL_MAJOR_VERSION > 8
+    if (Tcl_InitStubs(interp, "9.0", 0) == NULL) {
+        return TCL_ERROR;
+    }
+    if (Tk_InitStubs(interp, "8.3-", 0) == NULL) {
+        return TCL_ERROR;
+    }
+#else
     if (Tcl_InitStubs(interp, "8.3", 0) == NULL) {
         return TCL_ERROR;
     }
     if (Tk_InitStubs(interp, "8.3", 0) == NULL) {
         return TCL_ERROR;
     }
+#endif
     if (Tkimg_InitStubs(interp, TKIMG_VERSION, 0) == NULL) {
         return TCL_ERROR;
     }

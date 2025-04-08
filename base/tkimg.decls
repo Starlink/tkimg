@@ -73,13 +73,13 @@ declare 12 {
 ###  The byte array function also handles both UTF and non-UTF cores.
 
 declare 30 {
-    const char *tkimg_GetStringFromObj(Tcl_Obj *objPtr, int *lengthPtr)
+    const char *tkimg_GetStringFromObj(Tcl_Obj *objPtr, Tcl_Size *lengthPtr)
 }
 declare 31 {
-    unsigned char *tkimg_GetByteArrayFromObj(Tcl_Obj *objPtr, int *lengthPtr)
+    unsigned char *tkimg_GetByteArrayFromObj(Tcl_Obj *objPtr, Tcl_Size *lengthPtr)
 }
 declare 32 {
-    int tkimg_ListObjGetElements(Tcl_Interp *interp, Tcl_Obj *objPtr, int *argc, Tcl_Obj ***argv)
+    int tkimg_ListObjGetElements(Tcl_Interp *interp, Tcl_Obj *objPtr, Tcl_Size *objc, Tcl_Obj ***objv)
 }
 declare 33 {
     const char *tkimg_GetStringFromObj2(Tcl_Obj *objPtr, size_t *lengthPtr)
