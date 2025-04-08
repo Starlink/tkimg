@@ -1,7 +1,7 @@
 package require Tk
 package require img::ico
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::ico [package require img::ico]"
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::ico [package require img::ico]"
 
 set imgFile [file join ".." "sourceimgs" "img.ico"]
 
@@ -33,7 +33,7 @@ proc GetNumPages { fileName fmt } {
 set numPages [GetNumPages $imgFile ICO]
 set img0 [image create photo -file $imgFile -format ICO]
 
-if { [package vsatisfies [package require Tk] "8.7-"] } {
+if { [package vsatisfies $::tk_patchLevel "8.7-"] } {
     set imgDict [$img0 cget -metadata]
     if { [dict exists $imgDict numpages] } {
         if { $numPages != [dict get $imgDict numpages] } {

@@ -205,7 +205,7 @@ TkimgXpmConfigureMaster(
     oldFile = masterPtr->fileString;
 
     if (Tk_ConfigureWidget(masterPtr->interp, Tk_MainWindow(masterPtr->interp),
-            configSpecs, objc, (void *)objv, (char *) masterPtr, flags|TK_CONFIG_OBJS)
+            configSpecs, objc, (void *)objv, (char *)masterPtr, (flags|TK_CONFIG_OBJS))
             != TCL_OK) {
         return TCL_ERROR;
     }
@@ -1265,13 +1265,13 @@ Tkimgpixmap_Init(
 ) {
     static int initialized = 0;
 
-    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
+    if (!Tcl_InitStubs(interp, "8.6-", 0)) {
         return TCL_ERROR;
     }
-    if (Tk_InitStubs(interp, "8.6-", 0) == NULL) {
+    if (!Tk_InitStubs(interp, "8.6-", 0)) {
         return TCL_ERROR;
     }
-    if (Tkimg_InitStubs(interp, TKIMG_VERSION, 0) == NULL) {
+    if (!Tkimg_InitStubs(interp, TKIMG_VERSION, 0)) {
         return TCL_ERROR;
     }
 

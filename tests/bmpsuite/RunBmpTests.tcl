@@ -174,7 +174,7 @@ if { [lsearch $testDirs "all"] >= 0 } {
     set testDirs $dirNames
 }
 
-puts -nonewline "Using [expr 8 * $tcl_platform(pointerSize)]-bit Tcl [info patchlevel], Tk [package version Tk]"
+puts -nonewline "Using [expr 8 * $tcl_platform(pointerSize)]-bit Tcl [info patchlevel], Tk $::tk_patchLevel"
 if { $useImg } {
     package require Img
     puts ", Img [package version Img] "

@@ -31,11 +31,11 @@ namespace eval imgtest {
     }
 
     proc haveTk86 {} {
-        return [expr [_versionCompare "8.6" [package version Tk]] <= 0]
+        return [expr [_versionCompare "8.6" $::tk_patchLevel] <= 0]
     }
 
     proc haveTk87 {} {
-        return [expr [_versionCompare "8.7" [package version Tk]] <= 0]
+        return [expr [_versionCompare "8.7" $::tk_patchLevel] <= 0]
     }
 
     proc haveGs {} {

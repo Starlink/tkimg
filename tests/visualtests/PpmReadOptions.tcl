@@ -1,7 +1,7 @@
 package require Tk
 package require img::ppm
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::ppm [package require img::ppm]"
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::ppm [package require img::ppm]"
 
 set imgFile [file join ".." "sourceimgs" "gray.pgm"]
 # The value range of the PPM file is 0 .. 65535.

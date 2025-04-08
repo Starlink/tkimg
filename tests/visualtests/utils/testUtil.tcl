@@ -47,7 +47,7 @@ proc PrintMachineInfo {} {
     P  "user        : $tcl_platform(user)"
     P  "hostname    : [info hostname]"
     P  "Tcl version : [info patchlevel]"
-    P  "Tk version  : [package version Tk]"
+    P  "Tk version  : $::tk_patchLevel"
     P  "Img version : [package version Img]"
 }
 
@@ -103,5 +103,15 @@ proc CheckImagePixel { phImg x y r g b } {
         P "\nERROR: Image color ($ir, $ig, $ib) does not fit constraint: ($r, $g, $b)"
         IncrErrorCount
     }
+}
+
+proc HaveGhostscript {} {
+    set gsCmds [list "gs" "gswin64c.exe" "gswin32c.exe"]
+    foreach gsCmd $gsCmds {
+        if { [auto_execok $gsCmd] ne "" } {
+            return true
+        }
+    }
+    return false
 }
 

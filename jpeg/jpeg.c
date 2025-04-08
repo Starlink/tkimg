@@ -350,7 +350,7 @@ static int SetupJPegLibrary(
     int i;
 
 #ifdef USE_TCL_STUBS
-    if (Jpegtcl_InitStubs(interp, JPEGTCL_VERSION, 0) == NULL) {
+    if (!Jpegtcl_InitStubs(interp, JPEGTCL_VERSION, 0)) {
         return TCL_ERROR;
     }
 #endif

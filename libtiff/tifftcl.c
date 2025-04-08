@@ -61,7 +61,7 @@ Tifftcl_Init (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
   extern const TifftclStubs tifftclStubs;
 
-  if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
+  if (!Tcl_InitStubs(interp, "8.6-", 0)) {
     return TCL_ERROR;
   }
   if (Tcl_PkgProvideEx(interp, MY_PACKAGE_NAME, MY_PACKAGE_VERSION,

@@ -1,7 +1,7 @@
 package require Tk
 package require img::xbm
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::xbm [package require img::xbm]"
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::xbm [package require img::xbm]"
 
 proc _append {} {
     return {

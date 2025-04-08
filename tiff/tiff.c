@@ -140,7 +140,7 @@ SetupTiffLibrary (Tcl_Interp *interp)
 {
     static int initialized = 0;
 
-    if (Tifftcl_InitStubs(interp, TIFFTCL_VERSION, 0) == NULL) {
+    if (!Tifftcl_InitStubs(interp, TIFFTCL_VERSION, 0)) {
         return TCL_ERROR;
     }
 
@@ -160,19 +160,19 @@ SetupTiffLibrary (Tcl_Interp *interp)
      * with the base TIFF library in this package.
      */
 
-    if (Jpegtcl_InitStubs(interp, JPEGTCL_VERSION, 0) == NULL) {
+    if (!Jpegtcl_InitStubs(interp, JPEGTCL_VERSION, 0)) {
         return TCL_ERROR;
     }
 
     if (!initialized) {
         initialized = 1;
-        if (Zlibtcl_InitStubs(interp, ZLIBTCL_VERSION, 0) == NULL) {
+        if (!Zlibtcl_InitStubs(interp, ZLIBTCL_VERSION, 0)) {
             return TCL_ERROR;
         }
         TIFFRegisterCODEC (COMPRESSION_DEFLATE,  "Deflate",  TkimgTIFFInitZip);
         TIFFRegisterCODEC (COMPRESSION_ADOBE_DEFLATE, "AdobeDeflate", TkimgTIFFInitZip);
 
-        if (Jpegtcl_InitStubs(interp, JPEGTCL_VERSION, 0) == NULL) {
+        if (!Jpegtcl_InitStubs(interp, JPEGTCL_VERSION, 0)) {
             return TCL_ERROR;
         }
         TIFFRegisterCODEC (COMPRESSION_JPEG,     "JPEG",     TkimgTIFFInitJpeg);

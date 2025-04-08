@@ -1,7 +1,7 @@
 package require Tk
 package require img::xpm
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::xpm [package require img::xpm]"
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::xpm [package require img::xpm]"
 catch { file mkdir testOut }
 
 set imgFile [file join ".." "sourceimgs" "fractal.xpm"]

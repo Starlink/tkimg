@@ -1,7 +1,7 @@
 package require Tk
 package require img::tga
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::tga [package require img::tga]"
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::tga [package require img::tga]"
 
 set imgFile [file join ".." "sourceimgs" "tree.tga"]
 

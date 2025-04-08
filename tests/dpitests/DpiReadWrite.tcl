@@ -3,7 +3,7 @@ set ImgVersion [package require Img]
 
 puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $TkVersion, Img $ImgVersion"
 
-if { ! [package vsatisfies [package require Tk] "8.7-"] } {
+if { ! [package vsatisfies $::tk_patchLevel "8.7-"] } {
     puts "Image metadata available only with Tk 8.7 or newer."
     exit 0
 }

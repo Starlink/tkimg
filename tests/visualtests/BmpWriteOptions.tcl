@@ -1,7 +1,7 @@
 package require Tk
 package require img::bmp
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::bmp [package require img::bmp]"
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::bmp [package require img::bmp]"
 catch { file mkdir testOut }
 
 # The BMP file does not contain resolution information.
@@ -17,7 +17,7 @@ set img [image create photo -file $outFile -format [list BMP -verbose true]]
 label .img_nores -image $img -compound top -relief ridge -text "BMP"
 grid .img_nores -row 0 -column 0 -padx 5 -pady 5 -sticky ew
 
-if { [package vsatisfies [package require Tk] "8.7-"] } {
+if { [package vsatisfies $::tk_patchLevel "8.7-"] } {
     # Set resolution metadata and write BMP using no resolution options.
     $imgRGB configure -metadata { DPI 200 aspect 2 }
     set outFile [file join "testOut" "bmp-meta.bmp"]

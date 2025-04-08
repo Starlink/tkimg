@@ -1,7 +1,14 @@
 package require Tk
 package require img::ps
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::ps [package require img::ps]"
+source [file join "utils" "testUtil.tcl"]
+
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::ps [package require img::ps]"
+
+if { ! [HaveGhostscript] } {
+    puts "Skipping test because of missing ghostscript interpeter"
+    exit
+}
 
 set imgFile [file join ".." "sourceimgs" "cawt.ps"]
 
@@ -29,7 +36,7 @@ proc GetNumPages { fileName fmt } {
     return 1
 }
 
-# Determine the number of pages of the animated GIF.
+# Determine the number of pages of the multi-page PostScript file.
 set numPages [GetNumPages $imgFile PS]
 
 # Read a PostScript file into a photo image.

@@ -4,7 +4,7 @@
 package require Tk
 package require img::gif
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::gif [package require img::gif]"
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::gif [package require img::gif]"
 catch { file mkdir testOut }
 
 set imgFile [file join ".." "sourceimgs" "smiley.gif"]

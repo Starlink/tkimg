@@ -41,10 +41,10 @@ Pngtcl_Init (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
   extern const PngtclStubs pngtclStubs;
 
-  if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
+  if (!Tcl_InitStubs(interp, "8.6-", 0)) {
     return TCL_ERROR;
   }
-  if (Zlibtcl_InitStubs(interp, ZLIBTCL_VERSION, 1) == NULL) {
+  if (!Zlibtcl_InitStubs(interp, ZLIBTCL_VERSION, 1)) {
     return TCL_ERROR;
   }
 

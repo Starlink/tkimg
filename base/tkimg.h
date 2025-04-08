@@ -122,7 +122,7 @@ extern "C" {
 /* Default DPI value. */
 #define IMG_DEFAULT_DPI 0
 
-#if TK_MAJOR_VERSION >= 9 || ( TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION >= 7 )
+#if (TK_MAJOR_VERSION > 8) || !defined(TK_MINOR_VERSION) || (TK_MINOR_VERSION > 6)
     #define HAVE_FORMAT_VERSION3 1
 #else
     #define HAVE_FORMAT_VERSION3 0

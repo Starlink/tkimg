@@ -7,7 +7,7 @@
 package require Tk
 package require img::raw
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::raw [package require img::raw]"
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::raw [package require img::raw]"
 
 set w 256
 set h 256

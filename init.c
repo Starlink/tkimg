@@ -25,7 +25,7 @@ extern DLLEXPORT int @CPACKAGE@_SafeInit(Tcl_Interp *interp);
  * Declarations of internal functions.
  */
 
-#if USE_FORMAT_VERSION3 == 1 && HAVE_FORMAT_VERSION3 == 1
+#if defined(USE_FORMAT_VERSION3) && HAVE_FORMAT_VERSION3 == 1
 
 static int FileMatchVersion3(Tcl_Interp *interp,
         Tcl_Channel chan, const char *fileName, Tcl_Obj *format,
@@ -182,16 +182,22 @@ int
     if (!Tcl_InitStubs(interp, "8.6-", 0)) {
         return TCL_ERROR;
     }
+#if defined(USE_FORMAT_VERSION3) && HAVE_FORMAT_VERSION3 == 1
+    if (!Tk_InitStubs(interp, "8.7-", 0)) {
+        return TCL_ERROR;
+    }
+#else
     if (!Tk_InitStubs(interp, "8.6-", 0)) {
         return TCL_ERROR;
     }
+#endif
     if (!Tkimg_InitStubs(interp, TKIMG_VERSION, 0)) {
         return TCL_ERROR;
     }
 
     MORE_INITIALIZATION;
 
-#if USE_FORMAT_VERSION3 == 1 && HAVE_FORMAT_VERSION3 == 1
+#if defined(USE_FORMAT_VERSION3) && HAVE_FORMAT_VERSION3 == 1
     Tk_CreatePhotoImageFormatVersion3(&sImageFormatVersion3);
 #else
     Tk_CreatePhotoImageFormat(&sImageFormat);

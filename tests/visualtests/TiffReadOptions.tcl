@@ -1,7 +1,7 @@
 package require Tk
 package require img::tiff
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::tiff [package require img::tiff]"
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::tiff [package require img::tiff]"
 
 set imgFile [file join ".." "sourceimgs" "multi.tif"]
 
@@ -32,7 +32,7 @@ proc GetNumPages { fileName fmt } {
 # Determine the number of pages of the TIFF file and compare with metadata "numpages".
 set numPages [GetNumPages $imgFile TIFF]
 set img0 [image create photo -file $imgFile -format TIFF]
-if { [package vsatisfies [package require Tk] "8.7-"] } {
+if { [package vsatisfies $::tk_patchLevel "8.7-"] } {
     set imgDict [$img0 cget -metadata]
     if { [dict exists $imgDict numpages] } {
         if { $numPages != [dict get $imgDict numpages] } {

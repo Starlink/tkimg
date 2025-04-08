@@ -1,7 +1,7 @@
 package require Tk
 package require img::flir
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::flir [package require img::flir]"
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::flir [package require img::flir]"
 
 set imgFile [file join ".." "sourceimgs" "flir.fpf"]
 # The value range of the FLIR file is 267.7 .. 294.0.

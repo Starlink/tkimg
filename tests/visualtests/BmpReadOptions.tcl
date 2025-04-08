@@ -1,7 +1,7 @@
 package require Tk
 package require img::bmp
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::bmp [package require img::bmp]"
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::bmp [package require img::bmp]"
 
 # The BMP file does not contain resolution information.
 set imgFile [file join ".." "sourceimgs" "fractal.bmp"]

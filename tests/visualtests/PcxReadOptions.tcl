@@ -1,7 +1,7 @@
 package require Tk
 package require img::pcx
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::pcx [package require img::pcx]"
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::pcx [package require img::pcx]"
 
 set imgFile [file join ".." "sourceimgs" "fractal.pcx"]
 

@@ -1,7 +1,7 @@
 package require Tk
 package require img::raw
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::raw [package require img::raw]"
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::raw [package require img::raw]"
 
 set imgFile [file join ".." "sourceimgs" "gray-WithHeader.raw"]
 # The value range of the RAW file is 0.0 .. 65535.0.

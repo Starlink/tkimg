@@ -1,7 +1,9 @@
 The test environment of the Img extension consists of the following test suites:
 
 1. Standard tcltests for all supported image formats.
-   This test suite can be executed by calling "tclsh all.tcl".
+   This test suite is located in this directory and can be executed by
+   calling "tclsh all.tcl".
+
    Each format test contains the following test cases:
    1.X: Read image from file or binary string.
    2.X: Read image using metadata information.
@@ -20,6 +22,9 @@ The test environment of the Img extension consists of the following test suites:
 
 4. Test suite for AFL (American Fuzzy Lop) fuzzed images.
    See Readme.txt in directory afltests.
+   Note, that directory afltests is not included in the tarball
+   distribution files, as it contains image files triggering
+   virus alarms at VirusTotal.
 
 5. Test suite for BMP files.
    See Readme.txt in directory bmpsuite.

@@ -358,7 +358,7 @@ static int ParseFormatOpts(
 static int SetupPngLibrary(
     Tcl_Interp *interp
 ) {
-    if (Pngtcl_InitStubs(interp, PNGTCL_VERSION, 0) == NULL) {
+    if (!Pngtcl_InitStubs(interp, PNGTCL_VERSION, 0)) {
         return TCL_ERROR;
     }
     return TCL_OK;

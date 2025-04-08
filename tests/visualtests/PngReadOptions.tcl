@@ -1,7 +1,7 @@
 package require Tk
 package require img::png
 
-puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk [package require Tk], img::png [package require img::png]"
+puts "Using [expr $tcl_platform(pointerSize) *8]-bit Tcl [info patchlevel], Tk $::tk_patchLevel, img::png [package require img::png]"
 
 set imgFile [file join ".." "sourceimgs" "tree.png"]
 
