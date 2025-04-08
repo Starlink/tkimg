@@ -3,11 +3,10 @@ dnl Process this file with autoconf to produce a configure script.
 dnl
 
 #--------------------------------------------------------------------
-# Configure script for package 'tkimg', as distributed at November 20, 2001.
-# TEA compliant.
+# TEA compliant configure script for package 'tkimg'.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimg],[1.4.17])
+AC_INIT([tkimg],[2.0.0])
 
 TEA_INIT([3.9])
 
@@ -52,7 +51,7 @@ TEA_SETUP_COMPILER
 # and PKG_TCL_SOURCES.
 #-----------------------------------------------------------------------
 
-TEA_ADD_SOURCES([tkimg.c tkimgIO.c tkimgPPB.c tkimgUtils.c tkimgMap.c tkimgStubInit.c])
+TEA_ADD_SOURCES([tkimg.c tkimgIO.c tkimgUtils.c tkimgMap.c tkimgStubInit.c])
 TEA_ADD_HEADERS([tkimg.h tkimgDecls.h])
 TEA_ADD_INCLUDES([])
 TEA_ADD_LIBS([])
@@ -62,9 +61,8 @@ TEA_ADD_SOURCES([tkimgStubLib.c])
 TEA_ADD_TCL_SOURCES([])
 
 #--------------------------------------------------------------------
-# __CHANGE__
 # Choose which headers you need.  Extension authors should try very
-# hard to only rely on the Tcl public header files.  Internal headers
+# hard to only rely on the Tcl public header files. Internal headers
 # contain private data structures and are subject to change without
 # notice.
 # This MUST be called after TEA_LOAD_TCLCONFIG / TEA_LOAD_TKCONFIG

@@ -1,38 +1,18 @@
 /*
- * gif.c --
+ * gif.c
  *
- *  GIF photo image type, Tcl/Tk package
+ * GIF photo image type, Tcl/Tk package.
  *
- *  A photo image file handler for GIF files. Reads 87a and 89a GIF
- *  files. At present, there only is a file write function. GIF images may be
- *  read using the -data option of the photo image.  The data may be
- *  given as a binary string in a Tcl_Obj or by representing
- *  the data as BASE64 encoded ascii.  Derived from the giftoppm code
- *  found in the pbmplus package and tkImgFmtPPM.c in the tk4.0b2
- *  distribution.
+ * A photo image handler for GIF 87a and 89a image data.
  *
- * Copyright (c) 2002 Andreas Kupries    <andreas_kupries@users.sourceforge.net>
- * Copyright (c) 1997-2003 Jan Nijtmans  <nijtmans@users.sourceforge.net>
+ * For a list of available format options see function ParseFormatOpts
+ * and the documentation img-gif.
  *
- * Copyright (c) Reed Wade (wade@cs.utk.edu), University of Tennessee
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1997 Australian National University
+ * Copyright (c) 2002-2024 Andreas Kupries <andreas_kupries@users.sourceforge.net>
+ * Copyright (c) 1997-2024 Jan Nijtmans    <nijtmans@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
- *
- * This file also contains code from the giftoppm program, which is
- * copyrighted as follows:
- *
- * +-------------------------------------------------------------------+
- * | Copyright 1990, David Koblas.                                     |
- * |   Permission to use, copy, modify, and distribute this software   |
- * |   and its documentation for any purpose and without fee is hereby |
- * |   granted, provided that the above copyright notice appear in all |
- * |   copies and that both that copyright notice and this permission  |
- * |   notice appear in supporting documentation.  This software is    |
- * |   provided "as is" without express or implied warranty.           |
- * +-------------------------------------------------------------------+
  *
  */
 
@@ -79,8 +59,14 @@ typedef struct {
     unsigned int window;
     int bitsInWindow;
     unsigned char *c;
-    tkimg_MFile handle;
+    tkimg_Stream handle;
 } GIFImageConfig;
+
+/* Format options structure for use with ParseFormatOpts */
+typedef struct {
+    int verbose;    /* Read/Write option -verbose */
+    int pageIndex;  /* Read option -index */
+} FMTOPT;
 
 /*
  * The format record for the GIF file format:
@@ -92,7 +78,8 @@ static int CommonRead(Tcl_Interp *interp,
     int width, int height, int srcX, int srcY);
 
 static int CommonWrite(Tcl_Interp *interp,
-    tkimg_MFile *handle, Tcl_Obj *format,
+    const char *fileName,
+    tkimg_Stream *handle, Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr);
 
 #define INTERLACE           0x40
@@ -106,7 +93,7 @@ static int CommonWrite(Tcl_Interp *interp,
 #define MAX_LWZ_BITS        12
 #define LM_to_uint(a,b)     (((b)<<8)|(a))
 
-#define ReadOK(handle,buf,len)  (tkimg_Read2(handle, (char *)(buf), len) == len)
+#define ReadOK(handle,buf,len)  (tkimg_Read(handle, (char *)(buf), len) == len)
 
 /*
  * Prototypes for local procedures defined in this file:
@@ -129,10 +116,121 @@ static int ReadImage(Tcl_Interp *interp,
     int width, int height, int srcX, int srcY,
     int interlace, int transparent);
 
+static void printImgInfo(
+    int width, int height,
+    int pageIndex,
+    const char *fileName,
+    const char *msg
+) {
+    Tcl_Channel outChan;
+    char str[256];
+
+    outChan = Tcl_GetStdChannel (TCL_STDOUT);
+    if (!outChan) {
+        return;
+    }
+
+    tkimg_snprintf(str, 256, "%s %s\n", msg, fileName);                     IMGOUT;
+    tkimg_snprintf(str, 256, "\tSize in pixel: %d x %d\n", width, height);  IMGOUT;
+    tkimg_snprintf(str, 256, "\tPage index   : %d\n",      pageIndex);      IMGOUT;
+    Tcl_Flush(outChan);
+}
+
+static int ParseFormatOpts(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    FMTOPT *opts,
+    int mode
+) {
+    static const char *const readOptions[] = {
+        "-verbose", "-index", NULL
+    };
+    enum readEnums {
+        R_VERBOSE, R_INDEX
+    };
+    static const char *const writeOptions[] = {
+        "-verbose", NULL
+    };
+    enum writeEnums {
+        W_VERBOSE
+    };
+    Tcl_Size objc, i;
+    int index;
+    char *optionStr;
+    Tcl_Obj **objv;
+    int boolVal;
+    int intVal;
+
+    /* Initialize options with default values. */
+    opts->verbose   = 0;
+    opts->pageIndex = 0;
+
+    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) == TCL_ERROR) {
+        return TCL_ERROR;
+    }
+    for (i=1; i<objc; i++) {
+        if (mode == IMG_READ) {
+            if (Tcl_GetIndexFromObj(interp, objv[i], readOptions,
+                    "format option", 0, &index) == TCL_ERROR) {
+                return TCL_ERROR;
+            }
+        } else {
+            if (Tcl_GetIndexFromObj(interp, objv[i], writeOptions,
+                    "format option", 0, &index) == TCL_ERROR) {
+                return TCL_ERROR;
+            }
+        }
+        if (++i >= objc) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "No value specified for option \"%s\".", Tcl_GetString(objv[--i])));
+            return TCL_ERROR;
+        }
+        optionStr = Tcl_GetString(objv[i]);
+        if (mode == IMG_READ) {
+            switch (index) {
+               case R_VERBOSE: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid verbose mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->verbose = boolVal;
+                    break;
+                }
+                case R_INDEX: {
+                    if (Tcl_GetInt (interp, optionStr, &intVal) == TCL_ERROR || intVal < 0) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid index value \"%s\": must be an integer value greater or equal to zero.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->pageIndex = intVal;
+                    break;
+                }
+            }
+        } else {
+            switch (index) {
+                case W_VERBOSE: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid verbose mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->verbose = boolVal;
+                    break;
+                }
+            }
+        }
+    }
+    return TCL_OK;
+}
+
 /*
  *----------------------------------------------------------------------
  *
- * ChnMatch --
+ * FileMatch --
  *
  *  This procedure is invoked by the photo image type to see if
  *  a channel contains image data in GIF format.
@@ -148,7 +246,7 @@ static int ReadImage(Tcl_Interp *interp,
  */
 
 static int
-ChnMatch(
+FileMatch(
     Tcl_Channel chan,       /* The image channel, open for reading. */
     const char *fileName,   /* The name of the image file. */
     Tcl_Obj *format,        /* User-specified format object, or NULL. */
@@ -157,11 +255,9 @@ ChnMatch(
     Tcl_Interp *interp      /* interpreter */
 ) {
     GIFImageConfig gifConf;
-
     memset(&gifConf, 0, sizeof(GIFImageConfig));
 
-    gifConf.handle.data = (char *) chan;
-    gifConf.handle.state = IMG_CHAN;
+    tkimg_ReadInitFile(&gifConf.handle, chan);
 
     return ReadGIFHeader(&gifConf, widthPtr, heightPtr);
 }
@@ -169,7 +265,7 @@ ChnMatch(
 /*
  *----------------------------------------------------------------------
  *
- * ChnRead --
+ * FileRead --
  *
  *  This procedure is called by the photo image type to read
  *  GIF format data from a channel and write it into a given
@@ -187,7 +283,7 @@ ChnMatch(
  */
 
 static int
-ChnRead(
+FileRead(
     Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
     Tcl_Channel chan,           /* The image channel, open for reading. */
     const char *fileName,       /* The name of the image file. */
@@ -201,11 +297,9 @@ ChnRead(
                                  * in image being read. */
 ) {
     GIFImageConfig gifConf;
-
     memset(&gifConf, 0, sizeof(GIFImageConfig));
 
-    gifConf.handle.data = (char *) chan;
-    gifConf.handle.state = IMG_CHAN;
+    tkimg_ReadInitFile(&gifConf.handle, chan);
 
     return CommonRead(interp, &gifConf, fileName, format,
                       imageHandle, destX, destY, width, height, srcX, srcY);
@@ -246,9 +340,8 @@ CommonRead(
                                  * in image being read. */
 ) {
     int fileWidth, fileHeight, imageWidth, imageHeight;
+    int pageIndex;
     Tcl_Size nBytes;
-    int index = 0, objc = 0;
-    Tcl_Obj **objv = NULL;
     Tk_PhotoImageBlock block;
     unsigned char buf[100];
     char *trashBuffer = NULL;
@@ -256,22 +349,12 @@ CommonRead(
     int bitPixel;
     unsigned char colorMap[MAXCOLORMAPSIZE][4];
     int transparent = -1;
+    FMTOPT opts;
 
-    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK) {
+    if (ParseFormatOpts(interp, format, &opts, IMG_READ) == TCL_ERROR) {
         return TCL_ERROR;
     }
-    if (objc > 1) {
-        char *c = Tcl_GetStringFromObj(objv[1], &nBytes);
-        if ((objc > 3) || ((objc == 3) && ((c[0] != '-') ||
-            (c[1] != 'i') || strncmp(c, "-index", strlen(c))))) {
-            Tcl_AppendResult(interp, "Invalid format: \"",
-                tkimg_GetStringFromObj2(format, NULL), "\"", (char *) NULL);
-            return TCL_ERROR;
-        }
-        if (Tcl_GetIntFromObj(interp, objv[objc-1], &index) != TCL_OK) {
-            return TCL_ERROR;
-        }
-    }
+    pageIndex = opts.pageIndex;
 
     if (!ReadGIFHeader(gifConfPtr, &fileWidth, &fileHeight)) {
         Tcl_AppendResult(interp, "Could not read GIF header from file \"", fileName, "\"", (char *)NULL);
@@ -283,7 +366,7 @@ CommonRead(
         return TCL_ERROR;
     }
 
-    if (tkimg_Read2(&gifConfPtr->handle, (char *)buf, 3) != 3) {
+    if (tkimg_Read(&gifConfPtr->handle, (char *)buf, 3) != 3) {
         Tcl_AppendResult(interp, "Inconsistent decoding", (char *) NULL);
         return TCL_ERROR;
     }
@@ -308,7 +391,7 @@ CommonRead(
         return TCL_ERROR;
     }
 
-    if (tkimg_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
+    if (Tk_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
         return TCL_ERROR;
     }
 
@@ -320,7 +403,7 @@ CommonRead(
     block.pixelPtr = NULL;
 
     while (1) {
-        if (tkimg_Read2(&gifConfPtr->handle, (char *)buf, 1) != 1) {
+        if (tkimg_Read(&gifConfPtr->handle, (char *)buf, 1) != 1) {
             /*
              * Premature end of image.
              */
@@ -341,7 +424,7 @@ CommonRead(
              * This is a GIF extension.
              */
 
-            if (tkimg_Read2(&gifConfPtr->handle, (char *)buf, 1) != 1) {
+            if (tkimg_Read(&gifConfPtr->handle, (char *)buf, 1) != 1) {
                 Tcl_AppendResult(interp,
                     "Error reading extension function code in GIF image",
                     (char *) NULL);
@@ -361,7 +444,7 @@ CommonRead(
             continue;
         }
 
-        if (tkimg_Read2(&gifConfPtr->handle, (char *)buf, 9) != 9) {
+        if (tkimg_Read(&gifConfPtr->handle, (char *)buf, 9) != 9) {
             Tcl_AppendResult(interp,
                 "Could not read left/top/width/height in GIF image",
                 (char *) NULL);
@@ -370,13 +453,9 @@ CommonRead(
 
         imageWidth = LM_to_uint(buf[4],buf[5]);
         imageHeight = LM_to_uint(buf[6],buf[7]);
-	if (imageWidth != fileWidth || imageHeight != fileHeight) {
-            Tcl_AppendResult(interp, "File and image width are not identical", (char *) NULL);
-            goto error;
-	}
         bitPixel = 2<<(buf[8]&0x07);
 
-        if (index--) {
+        if (pageIndex--) {
             /* this is not the image we want to read: skip it. */
             if (BitSet(buf[8], LOCALCOLORMAP)) {
                 if (!ReadColorMap(gifConfPtr, bitPixel, colorMap)) {
@@ -430,8 +509,8 @@ CommonRead(
             }
         }
 
-        index = LM_to_uint(buf[0],buf[1]);
-        srcX -= index;
+        pageIndex = LM_to_uint(buf[0],buf[1]);
+        srcX -= pageIndex;
         if (srcX<0) {
             destX -= srcX; width += srcX;
             srcX = 0;
@@ -441,9 +520,9 @@ CommonRead(
             width = imageWidth;
         }
 
-        index = LM_to_uint(buf[2],buf[3]);
-        srcY -= index;
-        if (index > srcY) {
+        pageIndex = LM_to_uint(buf[2],buf[3]);
+        srcY -= pageIndex;
+        if (pageIndex > srcY) {
             destY -= srcY; height += srcY;
             srcY = 0;
         }
@@ -473,11 +552,17 @@ CommonRead(
                       BitSet(buf[8], INTERLACE), transparent) != TCL_OK) {
             goto error;
         }
+
+        if (opts.verbose) {
+            printImgInfo (imageWidth, imageHeight,
+                          opts.pageIndex, fileName, "Reading image:");
+        }
+
         break;
     }
 
     block.pixelPtr = pixBuf + srcY * block.pitch + srcX * block.pixelSize;
-    if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, destY, width, height,
+    if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, destY, width, height,
         (transparent == -1)? TK_PHOTO_COMPOSITE_SET: TK_PHOTO_COMPOSITE_OVERLAY) == TCL_ERROR) {
         goto error;
     }
@@ -492,13 +577,16 @@ error:
     if (pixBuf) {
         ckfree((char *) pixBuf);
     }
+    if (trashBuffer != NULL) {
+        ckfree((char *)trashBuffer);
+    }
     return TCL_ERROR;
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * ObjMatch --
+ * StringMatch --
  *
  *  This procedure is invoked by the photo image type to see if
  *  an object contains image data in GIF format.
@@ -514,18 +602,17 @@ error:
  */
 
 static int
-ObjMatch(
-    Tcl_Obj *data,      /* the object containing the image data */
+StringMatch(
+    Tcl_Obj *dataObj,   /* the object containing the image data */
     Tcl_Obj *format,    /* the image format object */
     int *widthPtr,      /* where to put the image width */
     int *heightPtr,     /* where to put the image height */
     Tcl_Interp *interp  /* interpreter */
 ) {
     GIFImageConfig gifConf;
-
     memset(&gifConf, 0, sizeof(GIFImageConfig));
 
-    if (!tkimg_ReadInit(data, 'G', &gifConf.handle)) {
+    if (!tkimg_ReadInitString(&gifConf.handle, dataObj)) {
         return 0;
     }
     return ReadGIFHeader(&gifConf, widthPtr, heightPtr);
@@ -534,10 +621,10 @@ ObjMatch(
 /*
  *----------------------------------------------------------------------
  *
- * ObjRead --
+ * StringRead --
  *
  *  This procedure is called by the photo image type to read
- *  GIF format data from a base64 encoded string, and give it to
+ *  GIF format data from a binary string, and give it to
  *  the photo image.
  *
  * Results:
@@ -553,9 +640,9 @@ ObjMatch(
  */
 
 static int
-ObjRead(
+StringRead(
     Tcl_Interp *interp,         /* interpreter for reporting errors in */
-    Tcl_Obj *data,              /* object containing the image */
+    Tcl_Obj *dataObj,           /* object containing the image */
     Tcl_Obj *format,            /* format object if any */
     Tk_PhotoHandle imageHandle, /* the image to write this data into */
     int destX, int destY,       /* The rectangular region of the  */
@@ -563,10 +650,11 @@ ObjRead(
     int srcX, int srcY
 ) {
     GIFImageConfig gifConf;
-
     memset(&gifConf, 0, sizeof(GIFImageConfig));
 
-    tkimg_ReadInit(data, 'G', &gifConf.handle);
+    if (!tkimg_ReadInitString(&gifConf.handle, dataObj)) {
+        return 0;
+    }
     return CommonRead(interp, &gifConf, "inline data", format,
                       imageHandle, destX, destY, width, height, srcX, srcY);
 }
@@ -599,13 +687,13 @@ ReadGIFHeader(
 ) {
     unsigned char buf[7];
 
-    if ((tkimg_Read2(&gifConfPtr->handle, (char *)buf, 6) != 6)
+    if ((tkimg_Read(&gifConfPtr->handle, (char *)buf, 6) != 6)
                     || ((strncmp(GIF87a, (char *) buf, 6) != 0)
                     && (strncmp(GIF89a, (char *) buf, 6) != 0))) {
         return 0;
     }
 
-    if (tkimg_Read2(&gifConfPtr->handle, (char *)buf, 4) != 4) {
+    if (tkimg_Read(&gifConfPtr->handle, (char *)buf, 4) != 4) {
         return 0;
     }
 
@@ -1034,7 +1122,7 @@ GetCode(
 
 
 /*
- * ChnWrite - writes a image in GIF format.
+ * FileWrite - writes a image in GIF format.
  *-------------------------------------------------------------------------
  * Author:                  Lolo
  *                              Engeneering Projects Area
@@ -1094,7 +1182,7 @@ typedef int (* ifunptr) (GifWriterState *statePtr);
 
 static int ColorNumber(GifWriterState *statePtr, int red, int green, int blue);
 
-static void Compress(GifWriterState *statePtr, int init_bits, tkimg_MFile *handle,
+static void Compress(GifWriterState *statePtr, int init_bits, tkimg_Stream *handle,
                      ifunptr readValue);
 
 static int IsNewColor(GifWriterState *statePtr, int red, int green ,int blue);
@@ -1104,25 +1192,25 @@ static void SaveMap(GifWriterState *statePtr, Tk_PhotoImageBlock *blockPtr);
 static int ReadValue(GifWriterState *statePtr);
 
 static int
-ChnWrite (
+FileWrite (
     Tcl_Interp *interp,     /* Interpreter to use for reporting errors. */
-    const char  *filename,
+    const char  *fileName,
     Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr
 ) {
     Tcl_Channel chan = NULL;
-    tkimg_MFile handle;
     int result;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    chan = tkimg_OpenFileChannel(interp, filename, 0644);
+    chan = tkimg_OpenFileChannel(interp, fileName, "w");
     if (!chan) {
         return TCL_ERROR;
     }
 
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
+    tkimg_WriteInitFile(&handle, chan);
 
-    result = CommonWrite(interp, &handle, format, blockPtr);
+    result = CommonWrite(interp, fileName, &handle, format, blockPtr);
     if (Tcl_Close(interp, chan) == TCL_ERROR) {
         return TCL_ERROR;
     }
@@ -1135,20 +1223,15 @@ static int StringWrite(
     Tk_PhotoImageBlock *blockPtr
 ) {
     int result;
-    tkimg_MFile handle;
-    Tcl_DString data;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    Tcl_DStringInit(&data);
-    Tcl_DStringSetLength(&data, 1024);
-    tkimg_WriteInit(&data, &handle);
+    tkimg_WriteInitString(&handle);
 
-    result = CommonWrite(interp, &handle, format, blockPtr);
-    tkimg_Putc(IMG_DONE, &handle);
+    result = CommonWrite(interp, "InlineData", &handle, format, blockPtr);
 
     if (result == TCL_OK) {
-        Tcl_DStringResult(interp, &data);
-    } else {
-        Tcl_DStringFree(&data);
+        Tcl_SetObjResult(interp, handle.byteObj);
     }
     return result;
 }
@@ -1156,7 +1239,8 @@ static int StringWrite(
 static int
 CommonWrite(
     Tcl_Interp *interp,
-    tkimg_MFile *handle,
+    const char *fileName,
+    tkimg_Stream *handle,
     Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr
 ) {
@@ -1165,6 +1249,11 @@ CommonWrite(
     long width, height, x;
     unsigned char c;
     unsigned int top, left;
+    FMTOPT opts;
+
+    if (ParseFormatOpts(interp, format, &opts, IMG_WRITE) == TCL_ERROR) {
+        return TCL_ERROR;
+    }
 
     top  = 0;
     left = 0;
@@ -1205,36 +1294,40 @@ CommonWrite(
         state.num = 2;
     }
 
-    tkimg_Write2(handle, (const char *) (state.alphaOffset ? GIF89a: GIF87a), 6);
+    tkimg_Write(handle, (const char *) (state.alphaOffset ? GIF89a: GIF87a), 6);
+
+    if (opts.verbose) {
+        printImgInfo (width, height, 0, fileName, "Saving image:");
+    }
 
     c=LSB(width);
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
     c=MSB(width);
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
     c=LSB(height);
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
     c=MSB(height);
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
 
     resolution = 0;
     while (state.num >> resolution) {
         resolution++;
     }
     c = 111 + resolution * 17;
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
 
     state.num = 1 << resolution;
 
     /*  background color */
-    tkimg_Putc(0, handle);
+    tkimg_Putc(handle, 0);
 
     /*  zero for future expansion  */
-    tkimg_Putc(0, handle);
+    tkimg_Putc(handle, 0);
 
     for (x=0; x<state.num ;x++) {
-        tkimg_Putc(state.mapa[x][CM_RED], handle);
-        tkimg_Putc(state.mapa[x][CM_GREEN], handle);
-        tkimg_Putc(state.mapa[x][CM_BLUE], handle);
+        tkimg_Putc(handle, state.mapa[x][CM_RED]);
+        tkimg_Putc(handle, state.mapa[x][CM_GREEN]);
+        tkimg_Putc(handle, state.mapa[x][CM_BLUE]);
     }
 
     /*
@@ -1243,43 +1336,43 @@ CommonWrite(
 
     if (state.alphaOffset) {
         c = GIF_EXTENSION;
-        tkimg_Putc(c, handle);
-        tkimg_Write2(handle, "\371\4\1\0\0\0", 7);
+        tkimg_Putc(handle, c);
+        tkimg_Write(handle, "\371\4\1\0\0\0", 7);
     }
 
     c = GIF_START;
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
     c=LSB(top);
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
     c=MSB(top);
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
     c=LSB(left);
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
     c=MSB(left);
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
 
     c=LSB(width);
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
     c=MSB(width);
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
 
     c=LSB(height);
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
     c=MSB(height);
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
 
     c=0;
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
     c=resolution;
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
 
     state.ssize = state.rsize = blockPtr->width;
     state.csize = blockPtr->height;
     Compress(&state, resolution+1, handle, ReadValue);
 
-    tkimg_Putc(0, handle);
+    tkimg_Putc(handle, 0);
     c = GIF_TERMINATOR;
-    tkimg_Putc(c, handle);
+    tkimg_Putc(handle, c);
 
     return TCL_OK;
 }
@@ -1448,7 +1541,7 @@ typedef struct {
      * questions about this implementation to ames!jaw.
      */
     int g_init_bits;
-    tkimg_MFile *g_outfile;
+    tkimg_Stream *g_outfile;
 
     int ClearCode;
     int EOFCode;
@@ -1477,7 +1570,7 @@ static void flush_char(GIFState_t *statePtr);
 static void Compress(
     GifWriterState *statePtr,
     int init_bits,
-    tkimg_MFile *handle,
+    tkimg_Stream *handle,
     ifunptr readValue
 ) {
     long fcode;
@@ -1749,8 +1842,8 @@ flush_char(GIFState_t *statePtr)
 
     if (statePtr->a_count > 0) {
         c = statePtr->a_count;
-        tkimg_Write2(statePtr->g_outfile, (const char *) &c, 1);
-        tkimg_Write2(statePtr->g_outfile, (const char *) statePtr->accum, statePtr->a_count);
+        tkimg_Write(statePtr->g_outfile, (const char *) &c, 1);
+        tkimg_Write(statePtr->g_outfile, (const char *) statePtr->accum, statePtr->a_count);
         statePtr->a_count = 0;
     }
 }

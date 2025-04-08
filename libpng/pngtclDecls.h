@@ -1,7 +1,7 @@
 /*
  * pngtclDecls.h --
  *
- *	Declarations of functions in the platform independent public PNGTCL API.
+ * Declarations of functions in the platform independent public PNGTCL API.
  *
  */
 

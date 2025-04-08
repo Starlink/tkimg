@@ -1,20 +1,19 @@
 /*
- * imgXBM.c --
+ * xbm.c
  *
- *	A photo image file handler for XBM files.
+ * XBM photo image type, Tcl/Tk package.
  *
- * Written by:
- *	Jan Nijtmans
- *	email: nijtmans@users.sourceforge.net
- *	url:   http://purl.oclc.org/net/nijtmans/
+ * A photo image handler for X Windows Bitmap image format.
  *
- * <paul@poSoft.de> Paul Obermeier
- * Feb 2001:
- *      - Bugfix  in CommonWrite: const char *fileName was overwritten.
+ * For a list of available format options see function ParseFormatOpts
+ * and the documentation img-xbm.
  *
- * The following format options are available:
+ * Copyright (c) 1995-2024 Jan Nijtmans    <nijtmans@users.sourceforge.net>
+ * Copyright (c) 2001-2024 Paul Obermeier  <obermeier@users.sourceforge.net>
  *
- * Read XBM image: "xbm -foreground <ColorString> -background <ColorString>"
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ *
  */
 
 /*
@@ -36,17 +35,18 @@
 
 #define MAX_WORD_LENGTH 100
 typedef struct ParseInfo {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
     char word[MAX_WORD_LENGTH+1];
-				/* Current word of bitmap data, NULL
-				 * terminated. */
-    int wordLength;		/* Number of non-NULL bytes in word. */
+                                /* Current word of bitmap data, NULL
+                                 * terminated. */
+    int wordLength;             /* Number of non-NULL bytes in word. */
 } ParseInfo;
 
 /* Format options structure for use with ParseFormatOpts */
 #define BG 0
 #define FG 1
 typedef struct {
+    int verbose;
     int red[2], green[2], blue[2];
 } FMTOPT;
 
@@ -54,30 +54,55 @@ typedef struct {
  * Prototypes for local procedures defined in this file:
  */
 
-static int ParseFormatOpts(Tcl_Interp *interp, Tcl_Obj *format, FMTOPT *opts);
 static int CommonRead(Tcl_Interp *interp,
-	ParseInfo *parseInfo,
-	Tcl_Obj *format, Tk_PhotoHandle imageHandle,
-	int destX, int destY, int width, int height,
-	int srcX, int srcY);
+        ParseInfo *parseInfo,
+        const char *fileName,
+        Tcl_Obj *format, Tk_PhotoHandle imageHandle,
+        int destX, int destY, int width, int height,
+        int srcX, int srcY);
 static int CommonWrite(Tcl_Interp *interp,
-	const char *fileName, Tcl_DString *dataPtr,
-	Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr);
+        const char *fileName, Tcl_Obj *format,
+        tkimg_Stream *handle, Tk_PhotoImageBlock *blockPtr);
 
-static int ReadXBMFileHeader(ParseInfo *parseInfo,
-	int *widthPtr, int *heightPtr);
-static int NextBitmapWord(ParseInfo *parseInfoPtr);
+static int ReadXBMFileHeader(Tcl_Interp *interp, ParseInfo *parseInfo,
+        int *widthPtr, int *heightPtr);
+static int NextBitmapWord(Tcl_Interp *interp, ParseInfo *parseInfoPtr);
+
+static void printImgInfo (int width, int height, const char *fileName, const char *msg)
+{
+    Tcl_Channel outChan;
+    char str[256];
+
+    outChan = Tcl_GetStdChannel (TCL_STDOUT);
+    if (!outChan) {
+        return;
+    }
+    tkimg_snprintf(str, 256, "%s %s\n", msg, fileName);                    IMGOUT;
+    tkimg_snprintf(str, 256, "\tSize in pixel: %d x %d\n", width, height); IMGOUT;
+    Tcl_Flush(outChan);
+}
 
 static int ParseFormatOpts(
     Tcl_Interp *interp,
     Tcl_Obj *format,
-    FMTOPT *opts)
+    FMTOPT *opts,
+    int mode)
 {
-    static const char *const xbmOptions[] = {
-        "-background", "-foreground", NULL
+    static const char *const readOptions[] = {
+        "-verbose", "-background", "-foreground", NULL
+    };
+    enum readEnums {
+        R_VERBOSE, R_BACKGROUND, R_FOREGROUND
+    };
+    static const char *const writeOptions[] = {
+        "-verbose", NULL
+    };
+    enum writeEnums {
+        W_VERBOSE
     };
     Tcl_Size objc, i;
     int index;
+    int boolVal;
     char *optionStr;
     Tcl_Obj **objv;
     Tk_Window tkwin = Tk_MainWindow(interp);
@@ -86,6 +111,7 @@ static int ParseFormatOpts(
     /* Initialize options with default values. 
      * Background color is set to transparent. Foreground color is set to black.
      */
+    opts->verbose   =  0;
     opts->red[BG]   = -1;
     opts->green[BG] = -1;
     opts->blue[BG]  = -1;
@@ -93,37 +119,79 @@ static int ParseFormatOpts(
     opts->green[FG] =  0;
     opts->blue[FG]  =  0;
 
-    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK) {
+    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) == TCL_ERROR) {
         return TCL_ERROR;
     }
-    if (objc) {
-        for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)xbmOptions,
-                    "format option", 0, &index) != TCL_OK) {
+    for (i=1; i<objc; i++) {
+        if (mode == IMG_READ) {
+            if (Tcl_GetIndexFromObj(interp, objv[i], readOptions,
+                    "format option", 0, &index) == TCL_ERROR) {
                 return TCL_ERROR;
             }
-            if (++i >= objc) {
-                Tcl_AppendResult(interp, "No value for option \"",
-                        Tcl_GetString(objv[--i]),
-                        "\"", (char *) NULL);
+        } else {
+            if (Tcl_GetIndexFromObj(interp, objv[i], writeOptions,
+                    "format option", 0, &index) == TCL_ERROR) {
                 return TCL_ERROR;
             }
-            optionStr = Tcl_GetString(objv[i]);
-            color = NULL;
+        }
+        if (++i >= objc) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "No value specified for option \"%s\".", Tcl_GetString(objv[--i])));
+            return TCL_ERROR;
+        }
+        optionStr = Tcl_GetString(objv[i]);
+        color = NULL;
+        if (mode == IMG_READ) {
             switch(index) {
-                case BG:
-                case FG: {
+                case R_VERBOSE: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid verbose mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->verbose = boolVal;
+                    break;
+                }
+                case R_BACKGROUND: {
                     if (strlen (optionStr) > 0) {
                         color = Tk_GetColor (interp, tkwin, optionStr);
                         if (color) {
-                            opts->red[index]   = color->red>>8;
-                            opts->green[index] = color->green>>8;
-                            opts->blue[index]  = color->blue>>8;
+                            opts->red[BG]   = color->red>>8;
+                            opts->green[BG] = color->green>>8;
+                            opts->blue[BG]  = color->blue>>8;
                             Tk_FreeColor (color);
                         } else {
                             return TCL_ERROR;
-			}
+                        }
                     }
+                    break;
+                }
+                case R_FOREGROUND: {
+                    if (strlen (optionStr) > 0) {
+                        color = Tk_GetColor (interp, tkwin, optionStr);
+                        if (color) {
+                            opts->red[FG]   = color->red>>8;
+                            opts->green[FG] = color->green>>8;
+                            opts->blue[FG]  = color->blue>>8;
+                            Tk_FreeColor (color);
+                        } else {
+                            return TCL_ERROR;
+                        }
+                    }
+                    break;
+                }
+            }
+        } else {
+            switch(index) {
+                case W_VERBOSE: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid verbose mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->verbose = boolVal;
                     break;
                 }
             }
@@ -135,72 +203,71 @@ static int ParseFormatOpts(
 /*
  *----------------------------------------------------------------------
  *
- * ObjMatch --
+ * StringMatch --
  *
- *	This procedure is invoked by the photo image type to see if
- *	a datastring contains image data in XBM format.
+ *      This procedure is invoked by the photo image type to see if
+ *      a datastring contains image data in XBM format.
  *
  * Results:
- *	The return value is >0 if the first characters in data look
- *	like XBM data, and 0 otherwise.
+ *      The return value is >0 if the first characters in data look
+ *      like XBM data, and 0 otherwise.
  *
  * Side effects:
- *	none
+ *      none
  *
  *----------------------------------------------------------------------
  */
-static int ObjMatch(
-    Tcl_Obj *data,		/* The data supplied by the image */
-    Tcl_Obj *format,		/* User-specified format string, or NULL. */
-    int *widthPtr,		/* The dimensions of the image are */
-	int *heightPtr,			 /* returned here if the file is a valid
-				 * raw XBM file. */
+static int StringMatch(
+    Tcl_Obj *dataObj,           /* The data supplied by the image */
+    Tcl_Obj *format,            /* User-specified format string, or NULL. */
+    int *widthPtr,              /* The dimensions of the image are */
+        int *heightPtr,                  /* returned here if the file is a valid
+                                 * raw XBM file. */
     Tcl_Interp *interp
 ) {
     ParseInfo parseInfo;
-    size_t length;
+    memset(&parseInfo, 0, sizeof (ParseInfo));
 
-    parseInfo.handle.data = (char *)tkimg_GetStringFromObj2(data, &length);
-    parseInfo.handle.length = length;
-    parseInfo.handle.state = IMG_STRING;
-
-    return ReadXBMFileHeader(&parseInfo, widthPtr, heightPtr);
+    if (!tkimg_ReadInitString(&parseInfo.handle, dataObj)) {
+        return 0;
+    }
+    return ReadXBMFileHeader(interp, &parseInfo, widthPtr, heightPtr);
 }
 
 
 /*
  *----------------------------------------------------------------------
  *
- * ChnMatch --
+ * FileMatch --
  *
- *	This procedure is invoked by the photo image type to see if
- *	a channel contains image data in XBM format.
+ *      This procedure is invoked by the photo image type to see if
+ *      a channel contains image data in XBM format.
  *
  * Results:
- *	The return value is >0 if the first characters in channel "chan"
- *	look like XBM data, and 0 otherwise.
+ *      The return value is >0 if the first characters in channel "chan"
+ *      look like XBM data, and 0 otherwise.
  *
  * Side effects:
- *	The access position in chan may change.
+ *      The access position in chan may change.
  *
  *----------------------------------------------------------------------
  */
 
-static int ChnMatch(
-    Tcl_Channel chan,		/* The image channel, open for reading. */
-    const char *fileName,	/* The name of the image file. */
-    Tcl_Obj *format,		/* User-specified format object, or NULL. */
-    int *widthPtr,		/* The dimensions of the image are */
-	int *heightPtr,			/* returned here if the file is a valid
-				 * raw XBM file. */
+static int FileMatch(
+    Tcl_Channel chan,           /* The image channel, open for reading. */
+    const char *fileName,       /* The name of the image file. */
+    Tcl_Obj *format,            /* User-specified format object, or NULL. */
+    int *widthPtr,              /* The dimensions of the image are */
+    int *heightPtr,             /* returned here if the file is a valid
+                                 * raw XBM file. */
     Tcl_Interp *interp
 ) {
     ParseInfo parseInfo;
+    memset(&parseInfo, 0, sizeof (ParseInfo));
 
-    parseInfo.handle.data = (char *) chan;
-    parseInfo.handle.state = IMG_CHAN;
+    tkimg_ReadInitFile(&parseInfo.handle, chan);
 
-    return ReadXBMFileHeader(&parseInfo, widthPtr, heightPtr);
+    return ReadXBMFileHeader(interp, &parseInfo, widthPtr, heightPtr);
 }
 
 /*
@@ -208,32 +275,33 @@ static int ChnMatch(
  *
  * CommonRead --
  *
- *	This procedure is called by the photo image type to read
- *	XBM format data from a file or string and write it into a
- *	given photo image.
+ *      This procedure is called by the photo image type to read
+ *      XBM format data from a file or string and write it into a
+ *      given photo image.
  *
  * Results:
- *	A standard TCL completion code.  If TCL_ERROR is returned
- *	then an error message is left in interp->result.
+ *      A standard TCL completion code.  If TCL_ERROR is returned
+ *      then an error message is left in interp->result.
  *
  * Side effects:
- *	The access position in file f is changed (if read from file)
- *	and new data is added to the image given by imageHandle.
+ *      The access position in file f is changed (if read from file)
+ *      and new data is added to the image given by imageHandle.
  *
  *----------------------------------------------------------------------
  */
 static int
 CommonRead(
-    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
     ParseInfo *parseInfo,
-    Tcl_Obj *format,		/* User-specified format string, or NULL. */
-    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
-    int destX, int destY,	/* Coordinates of top-left pixel in
-				 * photo image to be written to. */
-    int width, int height,	/* Dimensions of block of photo image to
-				 * be written to. */
-    int srcX, int srcY		/* Coordinates of top-left pixel to be used
-				 * in image being read. */
+    const char *fileName,
+    Tcl_Obj *format,            /* User-specified format string, or NULL. */
+    Tk_PhotoHandle imageHandle, /* The photo image to write into. */
+    int destX, int destY,       /* Coordinates of top-left pixel in
+                                 * photo image to be written to. */
+    int width, int height,      /* Dimensions of block of photo image to
+                                 * be written to. */
+    int srcX, int srcY          /* Coordinates of top-left pixel to be used
+                                 * in image being read. */
 ) {
     Tk_PhotoImageBlock block;
     FMTOPT opts;
@@ -243,26 +311,30 @@ CommonRead(
     char *end;
     int result = TCL_OK;
 
-    if (ParseFormatOpts (interp, format, &opts) != TCL_OK) {
+    if (ParseFormatOpts (interp, format, &opts, IMG_READ) == TCL_ERROR) {
         return TCL_ERROR;
     }
 
-    ReadXBMFileHeader(parseInfo, &fileWidth, &fileHeight);
+    ReadXBMFileHeader(interp, parseInfo, &fileWidth, &fileHeight);
+
+    if (opts.verbose) {
+        printImgInfo (fileWidth, fileHeight, fileName, "Reading image:");
+    }
 
     if ((srcX + width) > fileWidth) {
-	width = fileWidth - srcX;
+        width = fileWidth - srcX;
     }
     if ((srcY + height) > fileHeight) {
-	height = fileHeight - srcY;
+        height = fileHeight - srcY;
     }
     if ((width <= 0) || (height <= 0)
-	|| (srcX >= fileWidth) || (srcY >= fileHeight)) {
+        || (srcX >= fileWidth) || (srcY >= fileHeight)) {
         Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
 
-    if (tkimg_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
-	return TCL_ERROR;
+    if (Tk_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
+        return TCL_ERROR;
     }
 
     numBytes = ((fileWidth+7)/8)*32;
@@ -281,18 +353,18 @@ CommonRead(
     }
     block.pixelPtr = data + srcX*4;
     for (row = 0; row < srcY + height; row++) {
-	pixelPtr = data;
+        pixelPtr = data;
         for (col = 0; col<(numBytes/32); col++) {
-	    if (NextBitmapWord(parseInfo) != TCL_OK) {
-		ckfree((char *) data);
-		return TCL_ERROR;
-	    }
-	    value = (int) strtol(parseInfo->word, &end, 0);
-	    if (end == parseInfo->word) {
-	    	ckfree((char *) data);
-	    	return TCL_ERROR;
-	    }
-	    for (i=0; i<8; i++) {
+            if (NextBitmapWord(interp, parseInfo) != TCL_OK) {
+                ckfree((char *) data);
+                return TCL_ERROR;
+            }
+            value = (int) strtol(parseInfo->word, &end, 0);
+            if (end == parseInfo->word) {
+                ckfree((char *) data);
+                return TCL_ERROR;
+            }
+            for (i=0; i<8; i++) {
                 if( value & 0x1 ) {
                     *pixelPtr++ = opts.red[FG];
                     *pixelPtr++ = opts.green[FG];
@@ -308,15 +380,15 @@ CommonRead(
                         *pixelPtr++ = 255;
                     }
                 }
-	  	value >>= 1;
-	    }
-	}
-	if (row >= srcY) {
-	    if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, destY++, width, 1, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
-		result = TCL_ERROR;
-		break;
-	    }
-	}
+                value >>= 1;
+            }
+        }
+        if (row >= srcY) {
+            if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, destY++, width, 1, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
+                result = TCL_ERROR;
+                break;
+            }
+        }
     }
     ckfree((char *) data);
     return result;
@@ -325,87 +397,86 @@ CommonRead(
 /*
  *----------------------------------------------------------------------
  *
- * ChnRead --
+ * FileRead --
  *
- *	This procedure is called by the photo image type to read
- *	XBM format data from a channel and write it into a given
- *	photo image.
+ *      This procedure is called by the photo image type to read
+ *      XBM format data from a channel and write it into a given
+ *      photo image.
  *
  * Results:
- *	A standard TCL completion code.  If TCL_ERROR is returned
- *	then an error message is left in interp->result.
+ *      A standard TCL completion code.  If TCL_ERROR is returned
+ *      then an error message is left in interp->result.
  *
  * Side effects:
- *	The access position in channel chan is changed, and new data is
- *	added to the image given by imageHandle.
+ *      The access position in channel chan is changed, and new data is
+ *      added to the image given by imageHandle.
  *
  *----------------------------------------------------------------------
  */
 
 static int
-ChnRead(
-    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
-    Tcl_Channel chan,		/* The image channel, open for reading. */
-    const char *fileName,	/* The name of the image file. */
-    Tcl_Obj *format,		/* User-specified format object, or NULL. */
-    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
-    int destX, int destY,	/* Coordinates of top-left pixel in
-				 * photo image to be written to. */
-    int width, int height,	/* Dimensions of block of photo image to
-				 * be written to. */
-    int srcX, int srcY		/* Coordinates of top-left pixel to be used
-				 * in image being read. */
+FileRead(
+    Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
+    Tcl_Channel chan,           /* The image channel, open for reading. */
+    const char *fileName,       /* The name of the image file. */
+    Tcl_Obj *format,            /* User-specified format object, or NULL. */
+    Tk_PhotoHandle imageHandle, /* The photo image to write into. */
+    int destX, int destY,       /* Coordinates of top-left pixel in
+                                 * photo image to be written to. */
+    int width, int height,      /* Dimensions of block of photo image to
+                                 * be written to. */
+    int srcX, int srcY          /* Coordinates of top-left pixel to be used
+                                 * in image being read. */
 ) {
     ParseInfo parseInfo;
+    memset(&parseInfo, 0, sizeof (ParseInfo));
 
-    parseInfo.handle.data = (char *) chan;
-    parseInfo.handle.state = IMG_CHAN;
+    tkimg_ReadInitFile(&parseInfo.handle, chan);
 
-    return CommonRead(interp, &parseInfo, format, imageHandle,
-		destX, destY, width, height, srcX, srcY);
+    return CommonRead(interp, &parseInfo, fileName, format, imageHandle,
+                destX, destY, width, height, srcX, srcY);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * ObjRead --
+ * StringRead --
  *
- *	This procedure is called by the photo image type to read
- *	XBM format data from a string and write it into a given
- *	photo image.
+ *      This procedure is called by the photo image type to read
+ *      XBM format data from a string and write it into a given
+ *      photo image.
  *
  * Results:
- *	A standard TCL completion code.  If TCL_ERROR is returned
- *	then an error message is left in interp->result.
+ *      A standard TCL completion code.  If TCL_ERROR is returned
+ *      then an error message is left in interp->result.
  *
  * Side effects:
- *	New data is added to the image given by imageHandle.
+ *      New data is added to the image given by imageHandle.
  *
  *----------------------------------------------------------------------
  */
 
 static int
-ObjRead(
-    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
-    Tcl_Obj *data,
-    Tcl_Obj *format,		/* User-specified format string, or NULL. */
-    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
-    int destX, int destY,	/* Coordinates of top-left pixel in
-				 * photo image to be written to. */
-    int width, int height,	/* Dimensions of block of photo image to
-				 * be written to. */
-    int srcX, int srcY		/* Coordinates of top-left pixel to be used
-				 * in image being read. */
+StringRead(
+    Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
+    Tcl_Obj *dataObj,
+    Tcl_Obj *format,            /* User-specified format string, or NULL. */
+    Tk_PhotoHandle imageHandle, /* The photo image to write into. */
+    int destX, int destY,       /* Coordinates of top-left pixel in
+                                 * photo image to be written to. */
+    int width, int height,      /* Dimensions of block of photo image to
+                                 * be written to. */
+    int srcX, int srcY          /* Coordinates of top-left pixel to be used
+                                 * in image being read. */
 ) {
     ParseInfo parseInfo;
-    size_t length;
+    memset(&parseInfo, 0, sizeof (ParseInfo));
 
-    parseInfo.handle.data = (char *)tkimg_GetStringFromObj2(data, &length);
-    parseInfo.handle.length = length;
-    parseInfo.handle.state = IMG_STRING;
-
-    return CommonRead(interp, &parseInfo, format, imageHandle,
-		destX, destY, width, height, srcX, srcY);
+    if (!tkimg_ReadInitString(&parseInfo.handle, dataObj)) {
+        return 0;
+    }
+    return CommonRead(interp, &parseInfo, "InlineData", format, imageHandle,
+                destX, destY, width, height, srcX, srcY);
 }
 
 /*
@@ -413,18 +484,18 @@ ObjRead(
  *
  * ReadXBMFileHeader --
  *
- *	This procedure reads the XBM header from the beginning of a
- *	XBM file and returns information from the header.
+ *      This procedure reads the XBM header from the beginning of a
+ *      XBM file and returns information from the header.
  *
  * Results:
- *	The return value is 1 if file "f" appears to start with a valid
+ *      The return value is 1 if file "f" appears to start with a valid
  *      XBM header, and 0 otherwise.  If the header is valid,
- *	then *widthPtr and *heightPtr are modified to hold the
- *	dimensions of the image and *numColors holds the number of
- *	colors and byteSize the number of bytes used for 1 pixel.
+ *      then *widthPtr and *heightPtr are modified to hold the
+ *      dimensions of the image and *numColors holds the number of
+ *      colors and byteSize the number of bytes used for 1 pixel.
  *
  * Side effects:
- *	The access position in f advances.
+ *      The access position in f advances.
  *
  *----------------------------------------------------------------------
  */
@@ -436,24 +507,25 @@ ObjRead(
  *
  * NextBitmapWord --
  *
- *	This procedure retrieves the next word of information (stuff
- *	between commas or white space) from a bitmap description.
+ *      This procedure retrieves the next word of information (stuff
+ *      between commas or white space) from a bitmap description.
  *
  * Results:
- *	Returns TCL_OK if all went well.  In this case the next word,
- *	and its length, will be availble in *parseInfoPtr.  If the end
- *	of the bitmap description was reached then TCL_ERROR is returned.
+ *      Returns TCL_OK if all went well. In this case the next word,
+ *      and its length, will be availble in *parseInfoPtr. If the end
+ *      of the bitmap description was reached then TCL_ERROR is returned.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
 static int
 NextBitmapWord(
-    ParseInfo *parseInfoPtr		/* Describes what we're reading
-					 * and where we are in it. */
+    Tcl_Interp *interp,
+    ParseInfo *parseInfoPtr             /* Describes what we're reading
+                                         * and where we are in it. */
 ) {
     char *dst, buf;
     int num;
@@ -462,24 +534,27 @@ NextBitmapWord(
     parseInfoPtr->wordLength = 0;
     dst = parseInfoPtr->word;
 
-    for (num=tkimg_Read2(&parseInfoPtr->handle,&buf,1); isspace(UCHAR(buf)) || (buf == ',');
-	    num=tkimg_Read2(&parseInfoPtr->handle,&buf,1)) {
-	if (num == 0) {
-	    return TCL_ERROR;
-	}
+    for (num=tkimg_Read(&parseInfoPtr->handle,&buf,1); isspace(UCHAR(buf)) || (buf == ',');
+            num=tkimg_Read(&parseInfoPtr->handle,&buf,1)) {
+        if (num == 0) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf("Cannot read next word."));
+            return TCL_ERROR;
+        }
     }
     for ( ; !isspace(UCHAR(buf)) && (buf != ',') && (num != 0);
-	    num=tkimg_Read2(&parseInfoPtr->handle,&buf,1)) {
-	*dst = buf;
-	dst++;
-	parseInfoPtr->wordLength++;
-	if (num == 0 || parseInfoPtr->wordLength > MAX_WORD_LENGTH) {
-	    return TCL_ERROR;
-	}
+            num=tkimg_Read(&parseInfoPtr->handle,&buf,1)) {
+        *dst = buf;
+        dst++;
+        parseInfoPtr->wordLength++;
+        if (num == 0 || parseInfoPtr->wordLength > MAX_WORD_LENGTH) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf("Cannot read next word."));
+            return TCL_ERROR;
+        }
     }
 
     if (parseInfoPtr->wordLength == 0) {
-	return TCL_ERROR;
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf("Cannot read next word."));
+        return TCL_ERROR;
     }
     parseInfoPtr->word[parseInfoPtr->wordLength] = 0;
     return TCL_OK;
@@ -487,9 +562,10 @@ NextBitmapWord(
 
 static int
 ReadXBMFileHeader(
+    Tcl_Interp *interp,
     ParseInfo *pi,
-    int *widthPtr, int *heightPtr	/* The dimensions of the image are
-					 * returned here. */
+    int *widthPtr, int *heightPtr       /* The dimensions of the image are
+                                         * returned here. */
 ) {
     int width, height;
     char *end;
@@ -500,11 +576,11 @@ ReadXBMFileHeader(
      * the name of a data variable but doesn't include any actual
      * data).  These lines look something like the following:
      *
-     *		#define foo_width 16
-     *		#define foo_height 16
-     *		#define foo_x_hot 3
-     *		#define foo_y_hot 3
-     *		static char foo_bits[] = {
+     *          #define foo_width 16
+     *          #define foo_height 16
+     *          #define foo_x_hot 3
+     *          #define foo_y_hot 3
+     *          static char foo_bits[] = {
      *
      * The x_hot and y_hot lines may or may not be present.  It's
      * important to check for "char" in the last line, in order to
@@ -513,58 +589,58 @@ ReadXBMFileHeader(
     width = 0;
     height = 0;
     while (1) {
-	if (NextBitmapWord(pi) != TCL_OK) {
-	    return 0;
-	}
-	if ((pi->wordLength >= 6) && (pi->word[pi->wordLength-6] == '_')
-		&& (strcmp(pi->word+pi->wordLength-6, "_width") == 0)) {
-	    if (NextBitmapWord(pi) != TCL_OK) {
-		return 0;
-	    }
-	    width = strtol(pi->word, &end, 0);
-	    if ((end == pi->word) || (*end != 0)) {
-		return 0;
-	    }
-	} else if ((pi->wordLength >= 7) && (pi->word[pi->wordLength-7] == '_')
-		&& (strcmp(pi->word+pi->wordLength-7, "_height") == 0)) {
-	    if (NextBitmapWord(pi) != TCL_OK) {
-		return 0;
-	    }
-	    height = strtol(pi->word, &end, 0);
-	    if ((end == pi->word) || (*end != 0)) {
-		return 0;
-	    }
-	} else if ((pi->wordLength >= 6) && (pi->word[pi->wordLength-6] == '_')
-		&& (strcmp(pi->word+pi->wordLength-6, "_x_hot") == 0)) {
-	    if (NextBitmapWord(pi) != TCL_OK) {
-		return 0;
-	    }
-	    strtol(pi->word, &end, 0);
-	    if ((end == pi->word) || (*end != 0)) {
-		return 0;
-	    }
-	} else if ((pi->wordLength >= 6) && (pi->word[pi->wordLength-6] == '_')
-		&& (strcmp(pi->word+pi->wordLength-6, "_y_hot") == 0)) {
-	    if (NextBitmapWord(pi) != TCL_OK) {
-		return 0;
-	    }
-	    strtol(pi->word, &end, 0);
-	    if ((end == pi->word) || (*end != 0)) {
-		return 0;
-	    }
-	} else if ((pi->word[0] == 'c') && (strcmp(pi->word, "char") == 0)) {
-	    while (1) {
-		if (NextBitmapWord(pi) != TCL_OK) {
-		    return 0;
-		}
-		if ((pi->word[0] == '{') && (pi->word[1] == 0)) {
-		    goto getData;
-		}
-	    }
-	} else if ((pi->word[0] == '{') && (pi->word[1] == 0)) {
+        if (NextBitmapWord(interp, pi) != TCL_OK) {
+            return 0;
+        }
+        if ((pi->wordLength >= 6) && (pi->word[pi->wordLength-6] == '_')
+                && (strcmp(pi->word+pi->wordLength-6, "_width") == 0)) {
+            if (NextBitmapWord(interp, pi) != TCL_OK) {
+                return 0;
+            }
+            width = strtol(pi->word, &end, 0);
+            if ((end == pi->word) || (*end != 0)) {
+                return 0;
+            }
+        } else if ((pi->wordLength >= 7) && (pi->word[pi->wordLength-7] == '_')
+                && (strcmp(pi->word+pi->wordLength-7, "_height") == 0)) {
+            if (NextBitmapWord(interp, pi) != TCL_OK) {
+                return 0;
+            }
+            height = strtol(pi->word, &end, 0);
+            if ((end == pi->word) || (*end != 0)) {
+                return 0;
+            }
+        } else if ((pi->wordLength >= 6) && (pi->word[pi->wordLength-6] == '_')
+                && (strcmp(pi->word+pi->wordLength-6, "_x_hot") == 0)) {
+            if (NextBitmapWord(interp, pi) != TCL_OK) {
+                return 0;
+            }
+            strtol(pi->word, &end, 0);
+            if ((end == pi->word) || (*end != 0)) {
+                return 0;
+            }
+        } else if ((pi->wordLength >= 6) && (pi->word[pi->wordLength-6] == '_')
+                && (strcmp(pi->word+pi->wordLength-6, "_y_hot") == 0)) {
+            if (NextBitmapWord(interp, pi) != TCL_OK) {
+                return 0;
+            }
+            strtol(pi->word, &end, 0);
+            if ((end == pi->word) || (*end != 0)) {
+                return 0;
+            }
+        } else if ((pi->word[0] == 'c') && (strcmp(pi->word, "char") == 0)) {
+            while (1) {
+                if (NextBitmapWord(interp, pi) != TCL_OK) {
+                    return 0;
+                }
+                if ((pi->word[0] == '{') && (pi->word[1] == 0)) {
+                    goto getData;
+                }
+            }
+        } else if ((pi->word[0] == '{') && (pi->word[1] == 0)) {
 
-	    return 0;
-	}
+            return 0;
+        }
     }
 
 getData:
@@ -580,27 +656,44 @@ getData:
 /*
  *----------------------------------------------------------------------
  *
- * ChnWrite
+ * FileWrite
  *
- *	Writes a XBM image to a file. Just calls CommonWrite
+ *      Writes a XBM image to a file. Just calls CommonWrite
  *      with appropriate arguments.
  *
  * Results:
- *	Returns the return value of CommonWrite
+ *      Returns the return value of CommonWrite
  *
  * Side effects:
- *	A file is (hopefully) created on success.
+ *      A file is (hopefully) created on success.
  *
  *----------------------------------------------------------------------
  */
 static int
-ChnWrite(
+FileWrite(
     Tcl_Interp *interp,
     const char *fileName,
     Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr
 ) {
-    return CommonWrite(interp, fileName, (Tcl_DString *)NULL, format, blockPtr);
+    Tcl_Channel chan;
+    int result;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
+    
+    chan = tkimg_OpenFileChannel(interp, fileName, "w");
+    if (!chan) {
+        return TCL_ERROR;
+    }
+
+    tkimg_WriteInitFile(&handle, chan);
+
+    result = CommonWrite(interp, fileName, format, &handle, blockPtr);
+
+    if (Tcl_Close(interp, chan) == TCL_ERROR) {
+        return TCL_ERROR;
+    }
+    return result;
 }
 
 
@@ -609,14 +702,14 @@ ChnWrite(
  *
  * StringWrite
  *
- *	Writes a XBM image to a string. Just calls CommonWrite
+ *      Writes a XBM image to a string. Just calls CommonWrite
  *      with appropriate arguments.
  *
  * Results:
- *	Returns the return value of CommonWrite
+ *      Returns the return value of CommonWrite
  *
  * Side effects:
- *	The Tcl_DString dataPtr is modified on success.
+ *      TODO dataPtr is modified on success.
  *
  *----------------------------------------------------------------------
  */
@@ -626,38 +719,31 @@ static int StringWrite(
     Tk_PhotoImageBlock *blockPtr
 ) {
     int result;
-    Tcl_DString data;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    Tcl_DStringInit(&data);
-    result = CommonWrite(interp, "InlineData", &data, format, blockPtr);
+    tkimg_WriteInitString(&handle);
+    result = CommonWrite(interp, "InlineData", format, &handle, blockPtr);
 
     if (result == TCL_OK) {
-	Tcl_DStringResult(interp, &data);
-    } else {
-	Tcl_DStringFree(&data);
+        Tcl_SetObjResult(interp, handle.byteObj);
     }
     return result;
 }
-
-
-/*
- * Yes, I know these macros are dangerous. But it should work fine
- */
-#define WRITE(buf) { if (chan) Tcl_Write(chan, buf, -1); else Tcl_DStringAppend(dataPtr, buf, -1);}
 
 /*
  *----------------------------------------------------------------------
  *
  * CommonWrite
  *
- *	This procedure writes a XBM image to the file filename
- *      (if filename != NULL) or to dataPtr.
+ *      This procedure writes a XBM image to the file fileName
+ *      (if fileName != NULL) or to dataPtr.
  *
  * Results:
- *	Returns TCL_OK on success, or TCL_ERROR on error.
+ *      Returns TCL_OK on success, or TCL_ERROR on error.
  *
  * Side effects:
- *	varies (see StringWrite and ChnWrite)
+ *      varies (see StringWrite and FileWrite)
  *
  *----------------------------------------------------------------------
  */
@@ -665,11 +751,10 @@ static int
 CommonWrite(
     Tcl_Interp *interp,
     const char *fileName,
-    Tcl_DString *dataPtr,
     Tcl_Obj *format,
+    tkimg_Stream *handle,
     Tk_PhotoImageBlock *blockPtr
 ) {
-    Tcl_Channel chan = (Tcl_Channel) NULL;
     char buffer[256];
     unsigned char *pp;
     int x, y, value, mask;
@@ -677,26 +762,27 @@ CommonWrite(
     int alphaOffset;
     char *p = (char *) NULL;
     char *imgName;
+    FMTOPT opts;
     static const char header[] =
 "#define %s_width %d\n\
 #define %s_height %d\n\
 static char %s_bits[] = {\n";
 
+    if (ParseFormatOpts (interp, format, &opts, IMG_WRITE) == TCL_ERROR) {
+        return TCL_ERROR;
+    }
+
+    if (opts.verbose) {
+        printImgInfo (blockPtr->width, blockPtr->height, fileName, "Saving image:");
+    }
+
     alphaOffset = blockPtr->offset[0];
     if (alphaOffset < blockPtr->offset[1]) alphaOffset = blockPtr->offset[1];
     if (alphaOffset < blockPtr->offset[2]) alphaOffset = blockPtr->offset[2];
     if (++alphaOffset < blockPtr->pixelSize) {
-	alphaOffset -= blockPtr->offset[0];
+        alphaOffset -= blockPtr->offset[0];
     } else {
-	alphaOffset = 0;
-    }
-
-    /* open the output file (if needed) */
-    if (!dataPtr) {
-      chan = Tcl_OpenFileChannel(interp, fileName, "w", 0644);
-      if (!chan) {
-	return TCL_ERROR;
-      }
+        alphaOffset = 0;
     }
 
     /* compute image name */
@@ -704,64 +790,59 @@ static char %s_bits[] = {\n";
     memcpy (imgName, fileName, strlen(fileName)+1);
     p = strrchr(imgName, '/');
     if (p) {
-	imgName = p+1;
+        imgName = p+1;
     }
     p = strrchr(imgName, '\\');
     if (p) {
-	imgName = p+1;
+        imgName = p+1;
     }
     p = strrchr(imgName, ':');
     if (p) {
-	imgName = p+1;
+        imgName = p+1;
     }
     p = strchr(imgName, '.');
     if (p) {
-	*p = 0;
+        *p = 0;
     }
 
     tkimg_snprintf(buffer, 256, header, imgName, blockPtr->width, imgName,
-	           blockPtr->height, imgName);
-    WRITE(buffer);
+                   blockPtr->height, imgName);
+    tkimg_Write(handle, buffer, (Tcl_Size)strlen(buffer));
 
     /* write image itself */
     pp = blockPtr->pixelPtr + blockPtr->offset[0];
     sep = ' ';
     for (y = 0; y < blockPtr->height; y++) {
-	value = 0;
-	mask  = 1;
-	for (x = 0; x < blockPtr->width; x++) {
-	    if (!alphaOffset || pp[alphaOffset]) {
-		value |= mask;
-	    } else {
-		/* make transparent pixel */
-	    }
-	    pp += blockPtr->pixelSize;
-	    mask <<= 1;
-	    if (mask >= 256)
+        value = 0;
+        mask  = 1;
+        for (x = 0; x < blockPtr->width; x++) {
+            if (!alphaOffset || pp[alphaOffset]) {
+                value |= mask;
+            } else {
+                /* make transparent pixel */
+            }
+            pp += blockPtr->pixelSize;
+            mask <<= 1;
+            if (mask >= 256)
              {
-	      tkimg_snprintf(buffer, 256, "%c 0x%02x",sep,value);
-	      WRITE(buffer);
+              tkimg_snprintf(buffer, 256, "%c 0x%02x",sep,value);
+              tkimg_Write(handle, buffer, (Tcl_Size)strlen(buffer));
               value = 0;
-	      mask = 1;
-	      sep = ',';
+              mask = 1;
+              sep = ',';
              }
-	}
-	if (mask != 1) {
-	      tkimg_snprintf(buffer, 256, "%c 0x%02x",sep, value);
-	      WRITE(buffer);
-	}
+        }
+        if (mask != 1) {
+              tkimg_snprintf(buffer, 256, "%c 0x%02x",sep, value);
+              tkimg_Write(handle, buffer, (Tcl_Size)strlen(buffer));
+        }
 
-	if (y == blockPtr->height - 1) {
-	    WRITE("};\n");
-	} else {
-	    WRITE(",\n");
-	    sep = ' ';
-	}
-    }
-
-    /* close the channel */
-    if (chan) {
-	Tcl_Close(interp, chan);
+        if (y == blockPtr->height - 1) {
+            tkimg_Write(handle, "};", 2);
+        } else {
+            tkimg_Write(handle, ",\n", 2);
+            sep = ' ';
+        }
     }
     return TCL_OK;
 }

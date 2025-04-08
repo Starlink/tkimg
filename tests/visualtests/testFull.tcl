@@ -22,15 +22,15 @@ cd [file dirname [info script]]
 
 source [file join "utils" "testUtil.tcl"]
 source [file join "utils" "testGUI.tcl"]
-# We get the global variable ui_enable_tk from above Tcl module.
 
 source [file join "utils" "testImgs.tcl"]
 source [file join "utils" "testReadWrite.tcl"]
 
-if { $argc != 1 } {
-    set testMode [expr $modeFile | $modeBin | $modeUU]
-} else {
-    set testMode [lindex $argv 0]
+set autoMode false
+if { $argc >= 1 } {
+    if { [lindex $argv 0] eq "auto" } {
+        set autoMode true
+    }
 }
 
 PH "Image Read/Write (Full Images)"
@@ -40,13 +40,8 @@ P "using all file formats available in the tkImg package."
 P "After writing we try to read the image back into a photo by using the"
 P "auto-detect mechanism of tkImg. If that fails, we use the \"-format\" option."
 P ""
-if { $ui_enable_tk } {
-    P "Set the environment variable UI_TK to 0 before running this test,"
-    P "to run this test in batch mode without displaying the images."
-    P ""
-}
 
-if { $tcl_platform(platform) eq "windows" && $ui_enable_tk } {
+if { $tcl_platform(platform) eq "windows" } {
     catch { console show }
 }
 
@@ -56,11 +51,8 @@ SetFileTypes
 set canvId [drawTestCanvas $version]
 
 P ""
-set sep ""
-if { $ui_enable_tk } {
-    set sep "\n\t"
-}
-set errors 0
+StartErrorCount
+set sep "\n\t"
 set count  1
 set phCanvas [getCanvasPhoto $canvId]
 foreach elem $fmtList {
@@ -68,68 +60,92 @@ foreach elem $fmtList {
     set fmt [lindex $elem 1]
     set opt [lindex $elem 2]
     catch { file mkdir testOut }
-    set fname [file join testOut testFull$ext]
-    set msg "Image $count: $fname Format: $fmt $sep (Options: $opt)"
+    set fname1 [file join "testOut" "testFullFile$ext"]
+    set fname2 [file join "testOut" "testFullString$ext"]
+    set msg "Image $count: $fname1 Format: $fmt $sep (Options: $opt)"
     P $msg
 
     PN "\t"
-    writePhotoFile $phCanvas $fname "$fmt $opt" 0
-    if { $testMode & $modeFile } {
-        set ph [readPhotoFile1 $fname "$fmt $opt"]
-        if { $ph eq "" } {
-            set ph [createErrImg]
-            incr errors
-        }
-        set msg "Image $count.1: $fname Format: $fmt $sep (Read from file 1)"
-        ui_addphoto $ph $msg
 
-        set ph [readPhotoFile2 $fname "$fmt $opt" -1 -1]
-        if { $ph eq "" } {
-            set ph [createErrImg]
-            incr errors
-        }
-        set msg "Image $count.2: $fname Format: $fmt $sep (Read from file 2)"
-        ui_addphoto $ph $msg
-    }
-    if { $testMode & $modeBin } {
-        set ph [readPhotoBinary1 $fname "$fmt $opt"]
-        if { $ph eq "" } {
-            set ph [createErrImg]
-            incr errors
-        }
-        set msg "Image $count.3: $fname Format: $fmt $sep (Read as binary 1)"
-        ui_addphoto $ph $msg
+    # Read and write from file.
+    writePhotoToFile $phCanvas $fname1 "$fmt $opt" 0
 
-        set ph [readPhotoBinary2 $fname "$fmt $opt" -1 -1]
-        if { $ph eq "" } {
-            set ph [createErrImg]
-            incr errors
+    set ph [readPhotoFromFile1 $fname1 "$fmt $opt"]
+    if { $ph eq "" } {
+        set ph [createErrImg]
+    } else {
+        CheckImageSize $ph 250 230
+        if { $fmt ne "xbm" } {
+            CheckImagePixel $ph 52 52  0 0 255
         }
-        set msg "Image $count.4: $fname Format: $fmt $sep (Read as binary 2)"
-        ui_addphoto $ph $msg
     }
-    if { $testMode & $modeUU } {
-        set str [writePhotoString $phCanvas "$fmt $opt" 0]
-        if { $str eq "" } {
-            set ph [createErrImg]
-            incr errors
-        } else {
-            set ph [readPhotoString $str "$fmt $opt" -1 -1]
-            if { $ph eq "" } {
-                set ph [createErrImg]
-                incr errors
-            }
+    set msg "Image $count.1: $fname1 Format: $fmt $sep (Read from file 1)"
+    ui_addphoto $ph $msg
+
+    set ph [readPhotoFromFile2 $fname1 "$fmt $opt" -1 -1]
+    if { $ph eq "" } {
+        set ph [createErrImg]
+    } else {
+        CheckImageSize $ph 250 230
+        if { $fmt ne "xbm" } {
+            CheckImagePixel $ph 52 52  0 0 255
         }
-        set msg "Image $count.5: $fname Format: $fmt $sep (Read as uuencoded string)"
-        ui_addphoto $ph $msg
     }
+    set msg "Image $count.2: $fname1 Format: $fmt $sep (Read from file 2)"
+    ui_addphoto $ph $msg
+
+    # Read and write from string.
+    set str [writePhotoToString $phCanvas "$fmt $opt" 0]
+    writeFile $str $fname2
+
+    set ph [readPhotoFromString1 $str "$fmt $opt"]
+    if { $ph eq "" } {
+        set ph [createErrImg]
+    } else {
+        CheckImageSize $ph 250 230
+        if { $fmt ne "xbm" } {
+            CheckImagePixel $ph 52 52  0 0 255
+        }
+    }
+    set msg "Image $count.3: $fname2 Format: $fmt $sep (Read from string 1)"
+    ui_addphoto $ph $msg
+
+    set ph [readPhotoFromString2 $str "$fmt $opt" -1 -1]
+    if { $ph eq "" } {
+        set ph [createErrImg]
+    } else {
+        CheckImageSize $ph 250 230
+        if { $fmt ne "xbm" } {
+            CheckImagePixel $ph 52 52  0 0 255
+        }
+    }
+    set msg "Image $count.4: $fname2 Format: $fmt $sep (Read from string 2)"
+    ui_addphoto $ph $msg
+
+    set imgData [readFile $fname2]
+    set ph [readPhotoFromString2 $imgData "$fmt $opt" -1 -1]
+    if { $ph eq "" } {
+        set ph [createErrImg]
+    } else {
+        CheckImageSize $ph 250 230
+        if { $fmt ne "xbm" } {
+            CheckImagePixel $ph 52 52  0 0 255
+        }
+    }
+    set msg "Image $count.5: $fname2 Format: $fmt $sep (Read from string 3)"
+    ui_addphoto $ph $msg
 
     P ""
     incr count
 }
 
 PS
-P "End of test (Errors: $errors)"
+P "End of test (Errors: [GetErrorCount])"
 
 P ""
-ui_show
+PrintMachineInfo
+if { $autoMode } {
+    ui_exit [GetErrorCount]
+} else {
+    ui_show
+}

@@ -25,7 +25,7 @@
 --  covered by the  GNU Public License.                                     --
 ------------------------------------------------------------------------------
 
---  $Id: zlib.ads,v 1.26 2004/09/06 06:53:19 vagul Exp $
+--  $Id: zlib.ads 815 2024-01-31 21:05:52Z obermeier $
 
 with Ada.Streams;
 
@@ -114,7 +114,7 @@ package ZLib is
    -- Compression strategy constants --
    ------------------------------------
 
-   --  RLE stategy could be used only in version 1.2.0 and later.
+   --  RLE strategy could be used only in version 1.2.0 and later.
 
    Filtered         : constant Strategy_Type;
    Huffman_Only     : constant Strategy_Type;

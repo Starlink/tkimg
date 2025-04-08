@@ -6,7 +6,7 @@
 --  Open source license information is in the zlib.ads file.  --
 ----------------------------------------------------------------
 
---  $Id: test.adb,v 1.17 2003/08/12 12:13:30 vagul Exp $
+--  $Id: test.adb 815 2024-01-31 21:05:52Z obermeier $
 
 --  The program has a few aims.
 --  1. Test ZLib.Ada95 thick binding functionality.
@@ -65,12 +65,12 @@ procedure Test is
    Time_Stamp : Ada.Calendar.Time;
 
    procedure Generate_File;
-   --  Generate file of spetsified size with some random data.
+   --  Generate file of specified size with some random data.
    --  The random data is repeatable, for the good compression.
 
    procedure Compare_Streams
      (Left, Right : in out Root_Stream_Type'Class);
-   --  The procedure compearing data in 2 streams.
+   --  The procedure comparing data in 2 streams.
    --  It is for compare data before and after compression/decompression.
 
    procedure Compare_Files (Left, Right : String);

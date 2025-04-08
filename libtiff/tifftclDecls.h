@@ -1,7 +1,7 @@
 /*
  * tifftclDecls.h --
  *
- *	Declarations of functions in the platform independent public TIFFTCL API.
+ * Declarations of functions in the platform independent public TIFFTCL API.
  *
  */
 

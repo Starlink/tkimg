@@ -40,18 +40,12 @@ Jpegtcl_Init (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
   extern const JpegtclStubs jpegtclStubs;
 
-#if TCL_MAJOR_VERSION > 8
-	if (!Tcl_InitStubs(interp, "9.0", 0)) {
-		return TCL_ERROR;
-	}
-#else
-  if (Tcl_InitStubs(interp, "8.3", 0) == NULL) {
+  if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
     return TCL_ERROR;
   }
-#endif
   /* DO NOT USE PACKAGE_VERSION, USE INFO FROM jpegtcl.h INSTEAD */
   if (Tcl_PkgProvideEx(interp, PACKAGE_NAME, JPEGTCL_VERSION,
-		       (ClientData) &jpegtclStubs) != TCL_OK) {
+                       (ClientData) &jpegtclStubs) != TCL_OK) {
     return TCL_ERROR;
   }
 

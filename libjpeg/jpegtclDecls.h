@@ -1,7 +1,7 @@
 /*
  * jpegtclDecls.h --
  *
- *	Declarations of functions in the platform independent public JPEGTCL API.
+ * Declarations of functions in the platform independent public JPEGTCL API.
  *
  */
 
@@ -30,6 +30,7 @@ EXTERN int Jpegtcl_SafeInit(Tcl_Interp *interp);
 
 /* undef Tcl macros that conflict with libjpeg stuff (sigh) */
 #undef EXTERN
+
 #include "../compat/libjpeg/jpeglib.h"
 #include "../compat/libjpeg/jerror.h"
 

@@ -26,6 +26,8 @@
  * DEALINGS IN THE SOFTWARE.
  ****************************************************************************/
 
+#include "tif_config.h"
+
 #include "tif_hash_set.h"
 
 #include <assert.h>
@@ -144,7 +146,7 @@ TIFFHashSet *TIFFHashSetNew(TIFFHashSetHashFunc fnHashFunc,
     set->fnEqualFunc = fnEqualFunc ? fnEqualFunc : TIFFHashSetEqualPointer;
     set->fnFreeEltFunc = fnFreeEltFunc;
     set->nSize = 0;
-    set->tabList = (TIFFList **)(calloc(sizeof(TIFFList *), 53));
+    set->tabList = (TIFFList **)(calloc(53, sizeof(TIFFList *)));
     if (set->tabList == NULL)
     {
         free(set);
@@ -161,7 +163,6 @@ TIFFHashSet *TIFFHashSetNew(TIFFHashSetHashFunc fnHashFunc,
     return set;
 }
 
-#ifdef notdef
 /************************************************************************/
 /*                          TIFFHashSetSize()                            */
 /************************************************************************/
@@ -181,7 +182,6 @@ int TIFFHashSetSize(const TIFFHashSet *set)
     assert(set != NULL);
     return set->nSize;
 }
-#endif
 
 /************************************************************************/
 /*                       TIFFHashSetGetNewListElt()                      */
@@ -226,8 +226,7 @@ static void TIFFHashSetReturnListElt(TIFFHashSet *set, TIFFList *psList)
 static void TIFFHashSetClearInternal(TIFFHashSet *set, bool bFinalize)
 {
     assert(set != NULL);
-    int i;
-    for (i = 0; i < set->nAllocatedSize; i++)
+    for (int i = 0; i < set->nAllocatedSize; i++)
     {
         TIFFList *cur = set->tabList[i];
         while (cur)
@@ -346,8 +345,7 @@ void TIFFHashSetForeach(TIFFHashSet *set, TIFFHashSetIterEltFunc fnIterFunc,
     if (!fnIterFunc)
         return;
 
-    int i;
-    for (i = 0; i < set->nAllocatedSize; i++)
+    for (int i = 0; i < set->nAllocatedSize; i++)
     {
         TIFFList *cur = set->tabList[i];
         while (cur)
@@ -369,7 +367,7 @@ static bool TIFFHashSetRehash(TIFFHashSet *set)
 {
     int nNewAllocatedSize = anPrimes[set->nIndiceAllocatedSize];
     TIFFList **newTabList =
-        (TIFFList **)(calloc(sizeof(TIFFList *), nNewAllocatedSize));
+        (TIFFList **)(calloc(nNewAllocatedSize, sizeof(TIFFList *)));
     if (newTabList == NULL)
         return false;
 #ifdef HASH_DEBUG
@@ -380,8 +378,7 @@ static bool TIFFHashSetRehash(TIFFHashSet *set)
               set->nCollisions * 100.0 / set->nSize);
     set->nCollisions = 0;
 #endif
-    int i;
-    for (i = 0; i < set->nAllocatedSize; i++)
+    for (int i = 0; i < set->nAllocatedSize; i++)
     {
         TIFFList *cur = set->tabList[i];
         while (cur)

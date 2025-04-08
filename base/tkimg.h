@@ -1,47 +1,40 @@
 /*
  * tkimg.h --
  *
- *  Interface to tkimg Base package.
+ *  Interface to tkimg base package.
  *
  * Copyright (c) 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
- *
- * Zveno Pty Ltd makes this software and associated documentation
- * available free of charge for any purpose.  You may make copies
- * of the software but you must include all of this notice on any copy.
- *
- * Zveno Pty Ltd does not warrant that this software is error free
- * or fit for any purpose.  Zveno Pty Ltd disclaims any liability for
- * all claims, expenses, losses, damages and costs any user may incur
- * as a result of using, copying or modifying the software.
  */
 
 #ifndef __TKIMG_H__
 #define __TKIMG_H__
 
 #ifdef _MSC_VER
-#pragma warning(disable:4244) /* '=' : conversion from '__int64' to 'int', possible loss of data */
-#pragma warning(disable:4761) /* integral size mismatch in argument; conversion supplied */
-#if _MSC_VER <= 1800 /* VS 2013 and older do not have snprintf/vsnprintf */
-#define tkimg_snprintf  _snprintf
-#define tkimg_vsnprintf _vsnprintf
+#    pragma warning(disable:4244) /* '=' : conversion from '__int64' to 'int', possible loss of data */
+#    pragma warning(disable:4761) /* integral size mismatch in argument; conversion supplied */
+#if _MSC_VER <= 1800 /* VS 2013 and older do not have snprintf */
+#    define tkimg_snprintf  _snprintf
+#    define tkimg_vsnprintf _vsnprintf
 #else
-#define tkimg_snprintf  snprintf
-#define tkimg_vsnprintf vsnprintf
+#    define tkimg_snprintf  snprintf
+#    define tkimg_vsnprintf vsnprintf
 #endif
 #else
-#define tkimg_snprintf  snprintf
-#define tkimg_vsnprintf vsnprintf
-#endif
+#    define tkimg_snprintf  snprintf
+#    define tkimg_vsnprintf vsnprintf
+#endif /* _MSC_VER_ */
 
 #if defined(__MINGW32__)
-#define SETJMP(jbuf) __builtin_setjmp(jbuf)
-#define LONGJMP(jbuf, code) __builtin_longjmp(jbuf, code)
+#    define SETJMP(jbuf)        __builtin_setjmp(jbuf)
+#    define LONGJMP(jbuf, code) __builtin_longjmp(jbuf, code)
 #else
-#define SETJMP(jbuf) setjmp(jbuf)
-#define LONGJMP(jbuf, code) longjmp(jbuf, code)
+#    define SETJMP(jbuf)        setjmp(jbuf)
+#    define LONGJMP(jbuf, code) longjmp(jbuf, code)
 #endif
 
-#include <stdio.h> /* stdout, and other definitions */
+#define IMGOUT Tcl_WriteChars (outChan, str, -1)
+
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -90,13 +83,20 @@ typedef int boolean;
 #  define JOIN1(a,b) a##b
 #endif
 
+#if !defined(INT2PTR)
+#   define INT2PTR(p) ((void *)(ptrdiff_t)(p))
+#endif
+#if !defined(PTR2INT)
+#   define PTR2INT(p) ((ptrdiff_t)(p))
+#endif
+
 #ifndef TCL_UNUSED
 #   if defined(__cplusplus)
-#	define TCL_UNUSED(T) T
+#       define TCL_UNUSED(T) T
 #   elif defined(__GNUC__) && (__GNUC__ > 2)
-#	define TCL_UNUSED(T) T JOIN(dummy, __LINE__) __attribute__((unused))
+#       define TCL_UNUSED(T) T JOIN(dummy, __LINE__) __attribute__((unused))
 #   else
-#	define TCL_UNUSED(T) T JOIN(dummy, __LINE__)
+#       define TCL_UNUSED(T) T JOIN(dummy, __LINE__)
 #   endif
 #endif
 
@@ -104,7 +104,7 @@ typedef int boolean;
 
 #ifdef __cplusplus
 extern "C" {
-#endif /* __cplusplus */
+#endif
 
 /*
  *----------------------------------------------------------------------------
@@ -113,33 +113,20 @@ extern "C" {
  */
 
 #define IMG_SPECIAL (1<<8)
-#define IMG_PAD     (IMG_SPECIAL+1)
-#define IMG_SPACE   (IMG_SPECIAL+2)
-#define IMG_BAD     (IMG_SPECIAL+3)
-#define IMG_DONE    (IMG_SPECIAL+4)
-#define IMG_CHAN    (IMG_SPECIAL+5)
-#define IMG_STRING  (IMG_SPECIAL+6)
+#define IMG_CHAN    (IMG_SPECIAL+1)
+#define IMG_STRING  (IMG_SPECIAL+2)
 
-/*
- * The variable "tkimg_initialized" contains flags indicating which
- * version of Tcl or Perl we are running:
- *
- *  IMG_TCL    Tcl
- *  IMG_PERL   perl
- *  IMG_COMPOSITE Tcl 8.4 or higher
- *  IMG_NOPANIC Tcl 8.5 or higher
- *
- * These flags will be determined at runtime (except the IMG_PERL
- * flag, for now), so we can use the same dynamic library for all
- * Tcl/Tk versions (and for Perl/Tk in the future).
- */
+#define IMG_READ    (IMG_SPECIAL+3)
+#define IMG_WRITE   (IMG_SPECIAL+4)
 
-MODULE_SCOPE int tkimg_initialized;
+/* Default DPI value. */
+#define IMG_DEFAULT_DPI 0
 
-#define IMG_TCL (1<<9)
-#define IMG_PERL (1<<11)
-#define IMG_COMPOSITE (1<<14)
-#define IMG_NOPANIC (1<<15)
+#if TK_MAJOR_VERSION >= 9 || ( TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION >= 7 )
+    #define HAVE_FORMAT_VERSION3 1
+#else
+    #define HAVE_FORMAT_VERSION3 0
+#endif
 
 /* Maximum number of channels storable in a photo image. */
 #define IMG_MAX_CHANNELS     4
@@ -159,8 +146,6 @@ MODULE_SCOPE int tkimg_initialized;
 #define IMG_MAP_MINMAX_STR "minmax"
 #define IMG_MAP_AGC_STR    "agc"
 
-MODULE_SCOPE int TkimgInitUtilities(Tcl_Interp* interp);
-
 /*
  *----------------------------------------------------------------------------
  * Function prototypes for stub initialization.
@@ -174,6 +159,6 @@ Tkimg_InitStubs(Tcl_Interp *interp, const char *version, int exact);
 
 #ifdef __cplusplus
 }
-#endif /* __cplusplus */
+#endif
 
 #endif /* __TKIMG_H__ */

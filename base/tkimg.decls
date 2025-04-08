@@ -1,9 +1,9 @@
 # tkimg.decls -- -*- tcl -*-
 #
 # This file contains the declarations for all supported public functions
-# that are exported by the TKIMG library via the stubs table. This file
-# is used to generate the tkimgDecls.h/tkimgStubsLib.c/tkimgStubsInit.c
-# files.
+# that are exported by the tkimg library via the stubs table. This file
+# is used to generate the tkimgDecls.h, tkimgStubsLib.c and
+# tkimgStubsInit.c files.
 #
 
 # Declare each of the functions in the public tkimg interface.
@@ -18,79 +18,72 @@ interface tkimg
 scspec TKIMGAPI
 
 #########################################################################
-###  Reading and writing image data from channels and/or strings.
+###  Reading and writing image data from channels or strings.
+###  Functions are implemented in file tkimgIO.c.
 
 declare 0 {
     Tcl_Channel tkimg_OpenFileChannel(Tcl_Interp *interp,
-	const char *fileName, int permissions)
+        const char *fileName, const char *mode)
 }
 declare 1 {
-    int tkimg_ReadInit(Tcl_Obj *data, int c, tkimg_MFile *handle)
+    void tkimg_ReadInitFile(tkimg_Stream *handle, Tcl_Channel chan)
 }
 declare 2 {
-    void tkimg_WriteInit(Tcl_DString *buffer, tkimg_MFile *handle)
+    int tkimg_ReadInitString(tkimg_Stream *handle, Tcl_Obj *data)
 }
 declare 3 {
-    int tkimg_Getc(tkimg_MFile *handle)
+    void tkimg_WriteInitFile(tkimg_Stream *handle, Tcl_Channel chan)
 }
 declare 4 {
-    int tkimg_Read(tkimg_MFile *handle, char *dst, int count)
+    void tkimg_WriteInitString(tkimg_Stream *handle)
 }
 declare 5 {
-    int tkimg_Putc(int c, tkimg_MFile *handle)
+    void tkimg_EnableReadBuffer(tkimg_Stream *handle, int onOff)
 }
 declare 6 {
-    int tkimg_Write(tkimg_MFile *handle, const char *src, int count)
+    Tcl_Size tkimg_Read(tkimg_Stream *handle, char *dst, Tcl_Size count)
 }
 declare 7 {
-    void tkimg_ReadBuffer(int onOff)
+    Tcl_Size tkimg_Write(tkimg_Stream *handle, const char *src, Tcl_Size count)
 }
 declare 8 {
-    size_t tkimg_Read2(tkimg_MFile *handle, char *dst, size_t count)
+    int tkimg_Putc(tkimg_Stream *handle, int c)
 }
 declare 9 {
-    size_t tkimg_Write2(tkimg_MFile *handle, const char *src, size_t count)
+    void tkimg_GetTemporaryFileName(Tcl_DString * fileName)
 }
-
-#########################################################################
-###  Specialized put block handling transparency
-
 declare 10 {
-    int tkimg_PhotoPutBlock(Tcl_Interp *interp, Tk_PhotoHandle handle,
-	Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int flags)
-}
-declare 11 {
-    int tkimg_PhotoExpand(Tcl_Interp *interp, Tk_PhotoHandle handle,
-	int width, int height)
-}
-declare 12 {
-    int tkimg_PhotoSetSize(Tcl_Interp *interp, Tk_PhotoHandle handle,
-	int width, int height)
+    void tkimg_DeleteFile( const char * fileName )
 }
 
 #########################################################################
 ###  Like the core functions, except that they accept objPtr == NULL.
 ###  The byte array function also handles both UTF and non-UTF cores.
+###  Functions are implemented in file tkimgUtils.c.
 
 declare 30 {
-    const char *tkimg_GetStringFromObj(Tcl_Obj *objPtr, Tcl_Size *lengthPtr)
+    int tkimg_GetDistanceValue(Tcl_Interp *interp, const char *string, double *doublePtr)
 }
 declare 31 {
-    unsigned char *tkimg_GetByteArrayFromObj(Tcl_Obj *objPtr, Tcl_Size *lengthPtr)
+    int tkimg_SetResolution(Tcl_Obj *metadataDict, double xdpi, double ydpi)
 }
 declare 32 {
-    int tkimg_ListObjGetElements(Tcl_Interp *interp, Tcl_Obj *objPtr, Tcl_Size *objc, Tcl_Obj ***objv)
+    int tkimg_GetResolution(Tcl_Interp *interp, Tcl_Obj *metadataDict, double * xdpi, double * ydpi)
 }
 declare 33 {
-    const char *tkimg_GetStringFromObj2(Tcl_Obj *objPtr, size_t *lengthPtr)
+    int tkimg_SetNumPages(Tcl_Obj *metadataDict, int numImages)
 }
 declare 34 {
-    unsigned char *tkimg_GetByteArrayFromObj2(Tcl_Obj *objPtr, size_t *lengthPtr)
+    int tkimg_GetNumPages(Tcl_Interp *interp, Tcl_Obj *metadataDict, int * numImages)
+}
+declare 35 {
+    int tkimg_ListObjGetElements(Tcl_Interp *interp, Tcl_Obj *objPtr, Tcl_Size *argc, Tcl_Obj ***argv)
 }
 
 #########################################################################
 ###  Specialized functions for handling images containing 
 ###  short, int, float or double values.
+###  Functions are implemented in file tkimgMap.c.
 
 declare 50 {
     int tkimg_IsIntel (void)
@@ -114,34 +107,34 @@ declare 55 {
          const double *gammaTable, unsigned char *ubOut)
 }
 declare 56 {
-    int tkimg_ReadUByteRow (tkimg_MFile *handle, unsigned char *pixels, int nBytes)
+    int tkimg_ReadUByteRow (tkimg_Stream *handle, unsigned char *pixels, int nBytes)
 }
 declare 57 {
-    int tkimg_ReadUShortRow (tkimg_MFile *handle, unsigned short *pixels,
+    int tkimg_ReadUShortRow (tkimg_Stream *handle, unsigned short *pixels,
         int nShorts, char *buf, int swapBytes)
 }
 declare 58 {
-    int tkimg_ReadShortRow (tkimg_MFile *handle, short *pixels,
+    int tkimg_ReadShortRow (tkimg_Stream *handle, short *pixels,
         int nShorts, char *buf, int swapBytes)
 }
 declare 59 {
-    int tkimg_ReadFloatRow (tkimg_MFile *handle, float *pixels,
+    int tkimg_ReadFloatRow (tkimg_Stream *handle, float *pixels,
         int nFloats, char *buf, int swapBytes)
 }
 declare 60 {
-    int tkimg_ReadUByteFile (tkimg_MFile *handle, unsigned char *buf,
+    int tkimg_ReadUByteFile (tkimg_Stream *handle, unsigned char *buf,
         int width, int height,
         int nchan, int verbose, int findMinMax,
         double *minVals, double *maxVals)
 }
 declare 61 {
-    int tkimg_ReadUShortFile (tkimg_MFile *handle, unsigned short *buf,
+    int tkimg_ReadUShortFile (tkimg_Stream *handle, unsigned short *buf,
         int width, int height,
         int nchan, int swapBytes, int verbose, int findMinMax,
         double *minVals, double *maxVals, double saturation)
 }
 declare 62 {
-    int tkimg_ReadFloatFile (tkimg_MFile *handle, float *buf,
+    int tkimg_ReadFloatFile (tkimg_Stream *handle, float *buf,
         int width, int height,
         int nchan, int swapBytes, int verbose, int findMinMax,
         double *minVals, double *maxVals, double saturation)
@@ -163,15 +156,15 @@ declare 66 {
          const double *gammaTable, unsigned char *ubOut)
 }
 declare 67 {
-    int tkimg_ReadUIntRow (tkimg_MFile *handle, unsigned int *pixels,
+    int tkimg_ReadUIntRow (tkimg_Stream *handle, unsigned int *pixels,
         int nInts, char *buf, int swapBytes)
 }
 declare 68 {
-    int tkimg_ReadIntRow (tkimg_MFile *handle, int *pixels,
+    int tkimg_ReadIntRow (tkimg_Stream *handle, int *pixels,
         int nInts, char *buf, int swapBytes)
 }
 declare 69 {
-    int tkimg_ReadUIntFile (tkimg_MFile *handle, unsigned int *buf,
+    int tkimg_ReadUIntFile (tkimg_Stream *handle, unsigned int *buf,
         int width, int height,
         int nchan, int swapBytes, int verbose, int findMinMax,
         double *minVals, double *maxVals, double saturation)
@@ -185,11 +178,11 @@ declare 71 {
          const double *gammaTable, unsigned char *ubOut)
 }
 declare 72 {
-    int tkimg_ReadDoubleRow (tkimg_MFile *handle, double *pixels,
+    int tkimg_ReadDoubleRow (tkimg_Stream *handle, double *pixels,
         int nDoubles, char *buf, int swapBytes)
 }
 declare 73 {
-    int tkimg_ReadDoubleFile (tkimg_MFile *handle, double *buf,
+    int tkimg_ReadDoubleFile (tkimg_Stream *handle, double *buf,
         int width, int height,
         int nchan, int swapBytes, int verbose, int findMinMax,
         double *minVals, double *maxVals, double saturation)

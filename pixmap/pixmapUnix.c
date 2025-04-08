@@ -1,8 +1,8 @@
 /*
  * tkUnixPmap.c --
  *
- *	Implement the Unix specific function calls for the pixmap
- *	image type.
+ * Implement the Unix specific function calls for the pixmap
+ * image type.
  *
  * Copyright (c) 1996, Expert Interface Technologies
  *
@@ -17,26 +17,26 @@
 #include "X11/Xutil.h"
 
 typedef struct PixmapData {
-    Pixmap mask;		/* Mask: only display pixmap pixels where
-				 * there are 1's here. */
-    GC gc;			/* Graphics context for displaying pixmap.
-				 * None means there was an error while
-				 * setting up the instance, so it cannot
-				 * be displayed. */
+    Pixmap mask;                /* Mask: only display pixmap pixels where
+                                 * there are 1's here. */
+    GC gc;                      /* Graphics context for displaying pixmap.
+                                 * None means there was an error while
+                                 * setting up the instance, so it cannot
+                                 * be displayed. */
 } PixmapData;
 
 
 /*----------------------------------------------------------------------
  * TkimgInitPixmapInstance --
  *
- *	Initializes the platform-specific data of a pixmap instance
+ *      Initializes the platform-specific data of a pixmap instance
  *
  *----------------------------------------------------------------------
  */
 
 void
 TkimgInitPixmapInstance(
-    PixmapMaster *masterPtr,	/* Pointer to master for image. */
+    PixmapMaster *masterPtr,    /* Pointer to master for image. */
     PixmapInstance *instancePtr /* The pixmap instance. */
 ) {
     PixmapData * dataPtr;
@@ -51,7 +51,7 @@ TkimgInitPixmapInstance(
 /*----------------------------------------------------------------------
  * TkimgXpmAllocTmpBuffer --
  *
- *	Allocate a temporary space to draw the image.
+ *      Allocate a temporary space to draw the image.
  *
  *----------------------------------------------------------------------
  */
@@ -71,27 +71,27 @@ TkimgXpmAllocTmpBuffer(
     depth = Tk_Depth(instancePtr->tkwin);
 
     if (depth > 16) {
-	pad = 32;
+        pad = 32;
     } else if (depth > 8) {
-	pad = 16;
+        pad = 16;
     } else {
-	pad = 8;
+        pad = 8;
     }
 
     /*
      * Create the XImage structures to store the temporary image
      */
     image = XCreateImage(display,
-	Tk_Visual(instancePtr->tkwin),
-	depth, ZPixmap, 0, 0,
-	masterPtr->size[0], masterPtr->size[1], pad, 0);
+        Tk_Visual(instancePtr->tkwin),
+        depth, ZPixmap, 0, 0,
+        masterPtr->size[0], masterPtr->size[1], pad, 0);
     image->data =
       (char *)ckalloc(image->bytes_per_line * masterPtr->size[1]);
 
     mask  = XCreateImage(display,
-	Tk_Visual(instancePtr->tkwin),
-	1, XYPixmap, 0, 0,
-	masterPtr->size[0], masterPtr->size[1], pad, 0);
+        Tk_Visual(instancePtr->tkwin),
+        1, XYPixmap, 0, 0,
+        masterPtr->size[0], masterPtr->size[1], pad, 0);
 
     mask->data =
       (char *)ckalloc(mask->bytes_per_line  * masterPtr->size[1]);
@@ -108,22 +108,22 @@ TkimgXpmFreeTmpBuffer(
     XImage * mask
 ) {
     if (image) {
-	ckfree((char*)image->data);
-	image->data = NULL;
-	XDestroyImage(image);
+        ckfree((char*)image->data);
+        image->data = NULL;
+        XDestroyImage(image);
     }
     if (mask) {
-	ckfree((char*)mask->data);
-	mask->data = NULL;
-	XDestroyImage(mask);
+        ckfree((char*)mask->data);
+        mask->data = NULL;
+        XDestroyImage(mask);
     }
 }
 
 /*----------------------------------------------------------------------
  * TkimgXpmSetPixel --
  *
- *	Sets the pixel at the given (x,y) coordinate to be the given
- *	color.
+ *      Sets the pixel at the given (x,y) coordinate to be the given
+ *      color.
  *----------------------------------------------------------------------
  */
 void
@@ -137,19 +137,19 @@ TkimgXpmSetPixel(
     int * isTranspPtr
 ) {
     if (colorPtr != NULL) {
-	XPutPixel(image, x, y, colorPtr->pixel);
-	XPutPixel(mask,  x, y, 1);
+        XPutPixel(image, x, y, colorPtr->pixel);
+        XPutPixel(mask,  x, y, 1);
     } else {
-	XPutPixel(mask,  x, y, 0);
-	*isTranspPtr = 1;
+        XPutPixel(mask,  x, y, 0);
+        *isTranspPtr = 1;
     }
 }
 
 /*----------------------------------------------------------------------
  * TkimgXpmRealizePixmap --
  *
- *	On Unix: 	Create the pixmap from the buffer.
- *	On Windows:	Free the mask if there are no transparent pixels.
+ *      On Unix:        Create the pixmap from the buffer.
+ *      On Windows:     Free the mask if there are no transparent pixels.
  *----------------------------------------------------------------------
  */
 
@@ -169,29 +169,29 @@ TkimgXpmRealizePixmap(
     GC gc;
 
     instancePtr->pixmap = Tk_GetPixmap(display,
-	Tk_WindowId(instancePtr->tkwin),
-	masterPtr->size[0], masterPtr->size[1], depth);
+        Tk_WindowId(instancePtr->tkwin),
+        masterPtr->size[0], masterPtr->size[1], depth);
 
     gc = Tk_GetGC(instancePtr->tkwin, 0, NULL);
 
     XPutImage(display, instancePtr->pixmap,
-	gc, image, 0, 0, 0, 0, masterPtr->size[0], masterPtr->size[1]);
+        gc, image, 0, 0, 0, 0, masterPtr->size[0], masterPtr->size[1]);
 
     Tk_FreeGC(display, gc);
 
     if (isTransp) {
-	/*
-	 * There are transparent pixels. We need a mask.
-	 */
-	dataPtr->mask = Tk_GetPixmap(display,
-	    Tk_WindowId(instancePtr->tkwin),
-	    masterPtr->size[0], masterPtr->size[1], 1);
-	gc = XCreateGC(display, dataPtr->mask, 0, NULL);
-	XPutImage(display, dataPtr->mask,
-	    gc, mask,  0, 0, 0, 0, masterPtr->size[0], masterPtr->size[1]);
-	XFreeGC(display, gc);
+        /*
+         * There are transparent pixels. We need a mask.
+         */
+        dataPtr->mask = Tk_GetPixmap(display,
+            Tk_WindowId(instancePtr->tkwin),
+            masterPtr->size[0], masterPtr->size[1], 1);
+        gc = XCreateGC(display, dataPtr->mask, 0, NULL);
+        XPutImage(display, dataPtr->mask,
+            gc, mask,  0, 0, 0, 0, masterPtr->size[0], masterPtr->size[1]);
+        XFreeGC(display, gc);
     } else {
-	dataPtr->mask = None;
+        dataPtr->mask = None;
     }
 
     /*
@@ -199,9 +199,9 @@ TkimgXpmRealizePixmap(
      * is no transparent pixels inside the image).
      */
     if (dataPtr->mask != None) {
-	gcMask = GCGraphicsExposures|GCClipMask;
+        gcMask = GCGraphicsExposures|GCClipMask;
     } else {
-	gcMask = GCGraphicsExposures;
+        gcMask = GCGraphicsExposures;
     }
     gcValues.graphics_exposures = False;
     gcValues.clip_mask = dataPtr->mask;
@@ -212,37 +212,37 @@ TkimgXpmRealizePixmap(
 
 void
 TkimgXpmFreeInstanceData(
-    PixmapInstance *instancePtr,	/* Pixmap instance. */
-    int delete				/* Should the instance data structure
-					 * be deleted as well? */
+    PixmapInstance *instancePtr,        /* Pixmap instance. */
+    int delete                          /* Should the instance data structure
+                                         * be deleted as well? */
 ) {
     PixmapData *dataPtr = (PixmapData*)instancePtr->clientData;
 
     if (dataPtr->mask != None) {
-	Tk_FreePixmap(Tk_Display(instancePtr->tkwin), dataPtr->mask);
-	dataPtr->mask = None;
+        Tk_FreePixmap(Tk_Display(instancePtr->tkwin), dataPtr->mask);
+        dataPtr->mask = None;
     }
     if (dataPtr->gc != NULL) {
-	Tk_FreeGC(Tk_Display(instancePtr->tkwin), dataPtr->gc);
-	dataPtr->gc = NULL;
+        Tk_FreeGC(Tk_Display(instancePtr->tkwin), dataPtr->gc);
+        dataPtr->gc = NULL;
     }
     if (delete) {
-	ckfree((char*)dataPtr);
-	instancePtr->clientData = NULL;
+        ckfree((char*)dataPtr);
+        instancePtr->clientData = NULL;
     }
 }
 
 void
 TkimgpXpmDisplay(
-    ClientData clientData,	/* Pointer to PixmapInstance structure for
-				 * for instance to be displayed. */
-    Display *display,		/* Display on which to draw image. */
-    Drawable drawable,		/* Pixmap or window in which to draw image. */
-    int imageX, int imageY,	/* Upper-left corner of region within image
-				 * to draw. */
-    int width, int height,	/* Dimensions of region within image to draw.*/
+    ClientData clientData,      /* Pointer to PixmapInstance structure for
+                                 * for instance to be displayed. */
+    Display *display,           /* Display on which to draw image. */
+    Drawable drawable,          /* Pixmap or window in which to draw image. */
+    int imageX, int imageY,     /* Upper-left corner of region within image
+                                 * to draw. */
+    int width, int height,      /* Dimensions of region within image to draw.*/
     int drawableX, int drawableY/* Coordinates within drawable that
-				 * correspond to imageX and imageY. */
+                                 * correspond to imageX and imageY. */
 ) {
     PixmapInstance *instancePtr = (PixmapInstance *) clientData;
     PixmapData *dataPtr = (PixmapData*)instancePtr->clientData;
@@ -252,7 +252,7 @@ TkimgpXpmDisplay(
      * while creating the image instance so it can't be displayed.
      */
     if (dataPtr->gc == NULL) {
-	return;
+        return;
     }
 
     /*
@@ -261,10 +261,10 @@ TkimgpXpmDisplay(
      * Then draw the image and reset the clip origin.
      */
     XSetClipOrigin(display, dataPtr->gc, drawableX - imageX,
-	drawableY - imageY);
+        drawableY - imageY);
     XCopyArea(display, instancePtr->pixmap, drawable, dataPtr->gc,
-	imageX, imageY, (unsigned) width, (unsigned) height,
-	drawableX, drawableY);
+        imageX, imageY, (unsigned) width, (unsigned) height,
+        drawableX, drawableY);
     XSetClipOrigin(display, dataPtr->gc, 0, 0);
 }
 

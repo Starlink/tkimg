@@ -82,8 +82,7 @@ static void _TIFFPrintField(FILE *fd, const TIFFField *fip,
     const char *field_name = fip->field_name;
     if (TIFFFieldIsAnonymous(fip))
     {
-        size_t i;
-        for (i = 0; i < NTAGS; ++i)
+        for (size_t i = 0; i < NTAGS; ++i)
         {
             if (fip->field_tag == tagnames[i].tag)
             {

@@ -1,8 +1,8 @@
 /*
  * pngtclStubLib.c --
  *
- *	Stub object that will be statically linked into extensions that wish
- *	to access the PNGTCL API.
+ * Stub object that will be statically linked into extensions that wish
+ * to access the PNGTCL API.
  *
  * Copyright (c) 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
  * Copyright (c) 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
@@ -24,15 +24,15 @@ const PngtclStubs *pngtclStubsPtr;
  *
  * Pngtcl_InitStubs --
  *
- *	Checks that the correct version of Blt is loaded and that it
- *	supports stubs. It then initialises the stub table pointers.
+ * Checks that the correct version of Blt is loaded and that it
+ * supports stubs. It then initialises the stub table pointers.
  *
  * Results:
- *	The actual version of BLT that satisfies the request, or
- *	NULL to indicate that an error occurred.
+ *      The actual version of BLT that satisfies the request, or
+ *      NULL to indicate that an error occurred.
  *
  * Side effects:
- *	Sets the stub table pointers.
+ *      Sets the stub table pointers.
  *
  *----------------------------------------------------------------------
  */
@@ -50,7 +50,7 @@ Pngtcl_InitStubs(
     const char *result;
     ClientData data;
 
-    result = Tcl_PkgRequireEx(interp, PACKAGE_NAME, (const char *) version, exact, &data);
+    result = Tcl_PkgRequireEx(interp, PACKAGE_NAME, version, exact, &data);
     if (!result || !data) {
         return NULL;
     }

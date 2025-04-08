@@ -1,34 +1,35 @@
 [comment {-*- tcl -*- doctools}]
 [vset FORMATNAME sun]
-[vset FORMATFULLNAME {Sun Raster Format}]
+[vset FORMATFULLNAME {Sun raster format}]
+[manpage_begin img-[vset FORMATNAME] n 2.0]
 
 [include format-header.inc]
 
-[include format-package.inc]
-
 This handler provides new additional configuration options. See
-section [sectref {SUN OPTIONS}] for more detailed explanations.
-
+section [sectref {Options}] for more detailed explanations.
 
 [include format-middle.inc]
 
-In addition the value for the option is treated as list and may
-contain any of the special options listed in section
+In addition the value of option [option -format] is treated as a list and may
+contain any of the special options listed in section [sectref {Options}].
 
-[sectref {SUN OPTIONS}].
+[include format-package.inc]
 
+
+[section {Supported Types}]
+
+This format handler supports the following image types:
+
+[list_begin itemized]
+[item]  1-bit pixels: Black and White.
+[item]  8-bit pixels: Grayscale or indexed.
+[item] 24-bit pixels: Truecolor (RGB, 8-bit channels).
+[item] 32-bit pixels: Truecolor with alpha channel (RGBA, 8-bit channels).
 [list_end]
 
-
-[section {SUPPORTED SUN TYPES}]
+All images types may be either uncompressed or run-length encoded.
 
 [example_begin]
-  1-bit pixels: Black and White.
-  8-bit pixels: Grayscale or indexed.
- 24-bit pixels: True-color (RGB, each channel 8 bit).
- 32-bit pixels: True-color with alpha channel (RGBA, each channel 8 bit).
-
- List of currently supported features:
 
  Type   |     Read      |     Write     |
         | -file | -data | -file | -data |
@@ -38,11 +39,10 @@ contain any of the special options listed in section
  24-bit | Yes   | Yes   | Yes   | Yes   |
  32-bit | Yes   | Yes   | Yes   | Yes   |
 
- All images types may be either uncompressed or run-length encoded.
 [example_end]
 
 
-[section {SUN OPTIONS}]
+[section {Options}]
 
 The handler provides the following options:
 
@@ -50,26 +50,32 @@ The handler provides the following options:
 
 [def "[option -verbose] [arg bool]"]
 
-This option is supported for reading and writing.
+This option is supported for reading and writing. Available since version 1.3.
 [para]
-If set to [const true], additional information about the loaded/stored image
+
+If set to [const true], additional information about the read or written image
 is printed to stdout. Default is [const false].
+
+
+[def "[option -withalpha] [arg bool]"]
+
+This option is supported for reading and writing. Available since version 1.3.
+[para]
+
+If set to [const false], an alpha channel is ignored
+during reading or writing. Default is [const true].
+[para]
+[emph Note:] This option was named [option -matte] in previous versions and is still recognized.
+
 
 [def "[option -compression] [arg string]"]
 
-This option is supported for writing only.
+This option is supported for writing only. Available since version 1.3.
 [para]
+
 Set the compression mode to either [const none] or [const rle].
 Default is [const rle].
 
-[def "[option -matte] [arg bool]"]
-
-This option is supported for reading and writing.
-[para]
-If set to [const false], a matte (alpha) channel is ignored
-during reading or writing. Default is [const true].
-
 [list_end]
 
-[list_begin definitions]
 [include format-footer.inc]

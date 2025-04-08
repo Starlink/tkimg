@@ -1,119 +1,214 @@
 /*
- * ps.c --
+ * ps.c
  *
- *  PS + PDF photo image type, Tcl/Tk package
+ * PS and PDF photo image type, Tcl/Tk package.
  *
- * Author : Jan Nijtmans *
- * Date   : 7/24/97        *
+ * A photo image handler for PostScipt and PDF data interpreted as images.
  *
- * Copyright (c) 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
+ * For a list of available format options see function ParseFormatOpts
+ * and the documentation img-ps.
+ *
+ * Copyright (c) 1997-2024 Jan Nijtmans    <nijtmans@users.sourceforge.net>
+ * Copyright (c) 2002-2024 Andreas Kupries <andreas_kupries@users.sourceforge.net>
+ *
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  */
+
+/*
+ * Activate second 'format' definition in init.c.
+ * Share read functions.
+ */
+#define SECOND_FORMAT
+#define SECOND_FILEREAD    FileRead
+#define SECOND_STRINGREAD  StringRead
 
 /*
  * Generic initialization code, parameterized via CPACKAGE and PACKAGE.
  */
 
-/*
- * Activate second 'format' definition in init.c
- * share all functions except for the matching
- */
-#define SECOND_FORMAT
-#define SECOND_CHNREAD	ChnRead
-#define SECOND_OBJREAD	ObjRead
-#define SECOND_CHNWRITE	ChnWrite
-#define SECOND_STRWRITE	StringWrite
-
 #include "init.c"
-
 
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
+
+/* Format options structure for use with ParseFormatOpts */
+typedef struct {
+    int    verbose;
+    int    pageIndex;
+    double xzoom;
+    double yzoom;
+    double xzoomDpi;
+    double yzoomDpi;
+    char   gsCmd[1024];
+} FMTOPT;
 
 /*
  * Prototypes for local procedures defined in this file:
  */
 
-static int CommonMatchPS(tkimg_MFile *handle, Tcl_Obj *format,
-	int *widthPtr, int *heightPtr);
+static int CommonMatchPS(Tcl_Interp *interp, tkimg_Stream *handle, Tcl_Obj *format,
+        int *widthPtr, int *heightPtr);
 
-static int CommonMatchPDF(tkimg_MFile *handle, Tcl_Obj *format,
-	int *widthPtr, int *heightPtr);
+static int CommonMatchPDF(Tcl_Interp *interp, tkimg_Stream *handle, Tcl_Obj *format,
+        int *widthPtr, int *heightPtr);
 
-static int parseFormat(Tcl_Obj *format, int *zoomx,
-	int *zoomy);
+static int CommonRead(Tcl_Interp *interp, tkimg_Stream *handle, const char *fileName,
+        Tcl_Obj *format, Tk_PhotoHandle imageHandle, int destX, int destY,
+        int width, int height, int srcX, int srcY);
 
-static int CommonRead(Tcl_Interp *interp, tkimg_MFile *handle,
-	Tcl_Obj *format, Tk_PhotoHandle imageHandle, int destX, int destY,
-	int width, int height, int srcX, int srcY);
-
-static int CommonWrite(Tcl_Interp *interp, tkimg_MFile *handle,
-	Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr);
-
-static int
-parseFormat(
-     Tcl_Obj *format,
-     int *zoomx,
-     int *zoomy
+static void printImgInfo(
+    int width, int height,
+    int pageIndex,
+    double xzoom, double yzoom,
+    const char **argv,
+    int argc,
+    const char *fileName,
+    const char *msg
 ) {
-    Tcl_Size objc, i;
-    int index = 0;
-    Tcl_Size length;
-    Tcl_Obj **objv = NULL;
-    char *p;
-    double zx = 1.0, zy = 1.0;
+    int i;
+    Tcl_Channel outChan;
+    char str[256];
 
-    if (!format) {
-	*zoomx = (int) (72 * zx + 0.5);
-	*zoomy = (int) (72 * zy + 0.5);
+    outChan = Tcl_GetStdChannel (TCL_STDOUT);
+    if (!outChan) {
+        return;
     }
 
-    if (tkimg_ListObjGetElements((Tcl_Interp*) NULL, format, &objc, &objv) != TCL_OK) {
-	return -1;
+    tkimg_snprintf(str, 256, "%s %s\n", msg, fileName);                           IMGOUT;
+    tkimg_snprintf(str, 256, "  Page            : %d\n", pageIndex);              IMGOUT;
+    tkimg_snprintf(str, 256, "  Size in pixel   : %d x %d\n", width, height);     IMGOUT;
+    tkimg_snprintf(str, 256, "  Zoom            : %.2f x %.2f\n", xzoom, yzoom);  IMGOUT;
+    tkimg_snprintf(str, 256, "  Ghostscript call:");                              IMGOUT;
+    for (i=0; i<argc; i++) {
+        tkimg_snprintf(str, 256, " %s", argv[i]);                                 IMGOUT;
     }
-    for (i=1; i<objc; i++) {
-	p = Tcl_GetStringFromObj(objv[i], &length);
-	if ((p[0] == '-') && ((i+1)<objc)) {
-	    if (length < 2) {
-		index = -1; break;
-	    }
-	    if (!strncmp(p,"-index", length)) {
-		if (Tcl_GetIntFromObj((Tcl_Interp *) NULL, objv[++i], &index) != TCL_OK) {
-		    index = -1; break;
-		}
-	    } else if (!strncmp(p, "-zoom", length)) {
-		if (Tcl_GetDoubleFromObj((Tcl_Interp *) NULL, objv[++i], &zx) != TCL_OK) {
-		    index = -1; break;
-		}
-		if (i > objc) {
-		    zy = zx;
-		} else {
-		    p = Tcl_GetStringFromObj(objv[i+1], &length);
-		    if (p[0] != '-') {
-			if (Tcl_GetDoubleFromObj((Tcl_Interp *) NULL, objv[++i], &zy) != TCL_OK) {
-			    index = -1; break;
-			}
-		    } else {
-			zy = zx;
-		    }
-		}
-	    } else {
-		index = -1; break;
-	    }
-	} else {
-	    if (Tcl_GetIntFromObj((Tcl_Interp *) NULL, objv[++i], &index) != TCL_OK) {
-		index = -1; break;
-	    }
-	}
-    }
-    if (!index) {
-	*zoomx = (int) (72 * zx + 0.5);
-	*zoomy = (int) (72 * zy + 0.5);
-    }
-    return index;
+    tkimg_snprintf(str, 256, "\n");                                               IMGOUT;
+    Tcl_Flush(outChan);
 }
 
-static int ChnMatch(
+static int
+ParseFormatOpts(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    FMTOPT *opts,
+    int mode
+) {
+    static const char *const readOptions[] = {
+         "-verbose", "-index", "-zoom", "-gs", NULL
+    };
+    enum readEnums {
+        R_VERBOSE, R_INDEX, R_ZOOM, R_GS
+    };
+    Tcl_Size objc, i;
+    int index;
+    char *optionStr;
+    Tcl_Obj **objv;
+    int boolVal;
+    int intVal;
+    double doubleVal;
+
+    /* Initialize format options with default values. */
+    opts->verbose   = 0;
+    opts->pageIndex = 0;
+    opts->xzoom     = 1.0;
+    opts->yzoom     = 1.0;
+    opts->xzoomDpi  = 72.5;
+    opts->yzoomDpi  = 72.5;
+
+#ifdef _WIN32
+    strcpy (opts->gsCmd, "gswin64c.exe");
+#else
+    strcpy (opts->gsCmd, "gs");
+#endif
+
+    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) == TCL_ERROR) {
+        return TCL_ERROR;
+    }
+    for (i=1; i<objc; i++) {
+        if (mode == IMG_READ) {
+            if (Tcl_GetIndexFromObj(interp, objv[i], readOptions,
+                    "format option", 0, &index) == TCL_ERROR) {
+                return TCL_ERROR;
+            }
+        } else {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf("No write functionality available."));
+            return TCL_ERROR;
+        }
+        if (++i >= objc) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "No value specified for option \"%s\".", Tcl_GetString(objv[--i])));
+            return TCL_ERROR;
+        }
+        optionStr = Tcl_GetString(objv[i]);
+        if (mode == IMG_READ) {
+            switch(index) {
+                case R_VERBOSE: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid verbose mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->verbose = boolVal;
+                    break;
+                }
+                case R_INDEX: {
+                    if (Tcl_GetInt(interp, optionStr, &intVal) == TCL_ERROR || intVal < 0) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid index value \"%s\": must be an integer value greater or equal to zero.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->pageIndex = intVal;
+                    break;
+                }
+                case R_ZOOM: {
+                    if (Tcl_GetDouble(interp, optionStr, &doubleVal) == TCL_ERROR || doubleVal <= 0.0) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid x zoom value \"%s\": must be a double value greater than zero.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->xzoom    = doubleVal;
+                    opts->yzoom    = doubleVal;
+                    opts->xzoomDpi = 72.0 * doubleVal + 0.5;
+                    opts->yzoomDpi = 72.0 * doubleVal + 0.5;
+                    if (i+1 >= objc) {
+                        /* No more parameters available. */
+                        break;
+                    }
+                    optionStr = Tcl_GetString(objv[i+1]);
+                    if (optionStr[0] == '-' ) {
+                        /* Next parameter is an option. */
+                        break;
+                    }
+                    if (Tcl_GetDouble(interp, optionStr, &doubleVal) == TCL_ERROR || doubleVal <= 0.0) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid y zoom value \"%s\": must be a double value greater than zero.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->yzoom    = doubleVal;
+                    opts->yzoomDpi = 72.0 * doubleVal + 0.5;
+                    i++;
+                    break;
+                }
+                case R_GS: {
+                    tkimg_snprintf(opts->gsCmd, 1024, "%s", optionStr);
+                    break;
+                }
+            }
+        } else {
+            /* No write functionality. */
+        }
+    }
+    return TCL_OK;
+}
+
+static int FileMatch(
     Tcl_Channel chan,
     const char *fileName,
     Tcl_Obj *format,
@@ -121,72 +216,75 @@ static int ChnMatch(
     int *heightPtr,
     Tcl_Interp *interp
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
+    tkimg_ReadInitFile(&handle, chan);
 
-    return CommonMatchPS(&handle, format, widthPtr, heightPtr);
+    return CommonMatchPS(interp, &handle, format, widthPtr, heightPtr);
 }
 
-static int ObjMatch(
-    Tcl_Obj *data,
+static int StringMatch(
+    Tcl_Obj *dataObj,
     Tcl_Obj *format,
     int *widthPtr,
     int *heightPtr,
     Tcl_Interp *interp
 ) {
-    tkimg_MFile handle;
-    size_t length;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    handle.data = (char *)tkimg_GetStringFromObj2(data, &length);
-    handle.length = length;
-    handle.state = IMG_STRING;
-
-    return CommonMatchPS(&handle, format, widthPtr, heightPtr);
+    if (!tkimg_ReadInitString(&handle, dataObj)) {
+        return 0;
+    }
+    return CommonMatchPS(interp, &handle, format, widthPtr, heightPtr);
 }
 
 static int
 CommonMatchPS(
-    tkimg_MFile *handle,
+    Tcl_Interp *interp,
+    tkimg_Stream *handle,
     Tcl_Obj *format,
     int *widthPtr, int *heightPtr
 ) {
     char buf[41];
+    FMTOPT opts;
 
-    if ((tkimg_Read2(handle, buf, 11) != 11)
-	    || (strncmp("%!PS-Adobe-", buf, 11) != 0)) {
-	return 0;
+    if ((tkimg_Read(handle, buf, 11) != 11)
+            || (strncmp("%!PS-Adobe-", buf, 11) != 0)) {
+        return 0;
     }
-    while (tkimg_Read2(handle,buf, 1) == 1) {
-	if (buf[0] == '%' &&
-		(tkimg_Read2(handle, buf, 2) == 2) &&
-		(!memcmp(buf, "%B", 2) &&
-		(tkimg_Read2(handle, buf, 11) == 11) &&
-		(!memcmp(buf, "oundingBox:", 11)) &&
-		(tkimg_Read2(handle, buf, 40) == 40))) {
-	    int w, h, zoomx, zoomy;
-	    char *p = buf;
-	    buf[40] = 0;
-	    w = - (int) strtoul(p, &p, 0);
-	    h = - (int) strtoul(p, &p, 0);
-	    w += strtoul(p, &p, 0);
-	    h += strtoul(p, &p, 0);
-	    if (parseFormat(format, &zoomx, &zoomy) >= 0) {
-		w = (w * zoomx + 36) / 72;
-		h = (h * zoomy + 36) / 72;
-	    }
-	    if ((w <= 0) || (h <= 0)) return 0;
-	    *widthPtr = w;
-	    *heightPtr = h;
-	    return 1;
-	}
+    while (tkimg_Read(handle,buf, 1) == 1) {
+        if (buf[0] == '%' &&
+                (tkimg_Read(handle, buf, 2) == 2) &&
+                (!memcmp(buf, "%B", 2) &&
+                (tkimg_Read(handle, buf, 11) == 11) &&
+                (!memcmp(buf, "oundingBox:", 11)) &&
+                (tkimg_Read(handle, buf, 40) == 40))) {
+            int w, h;
+            char *p = buf;
+            buf[40] = 0;
+            w = - (int) strtoul(p, &p, 0);
+            h = - (int) strtoul(p, &p, 0);
+            w += strtoul(p, &p, 0);
+            h += strtoul(p, &p, 0);
+            if (ParseFormatOpts(interp, format, &opts, IMG_READ) == TCL_OK) {
+                w = (w * (int)opts.xzoomDpi + 36) / 72;
+                h = (h * (int)opts.yzoomDpi + 36) / 72;
+            }
+            if ((w <= 0) || (h <= 0)) {
+                return 0;
+            }
+            *widthPtr = w;
+            *heightPtr = h;
+            return 1;
+        }
     }
     return 0;
 }
 
 static int
-ChnRead(
+FileRead(
     Tcl_Interp *interp,
     Tcl_Channel chan,
     const char *fileName,
@@ -196,156 +294,201 @@ ChnRead(
     int width, int height,
     int srcX, int srcY
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
+    tkimg_ReadInitFile(&handle, chan);
 
-    return CommonRead(interp, &handle, format, imageHandle, destX, destY,
-	    width, height, srcX, srcY);
+    return CommonRead(interp, &handle, fileName, format, imageHandle, destX, destY,
+            width, height, srcX, srcY);
 }
 
 static int
-ObjRead(
+StringRead(
     Tcl_Interp *interp,
-    Tcl_Obj *data,
+    Tcl_Obj *dataObj,
     Tcl_Obj *format,
     Tk_PhotoHandle imageHandle,
     int destX, int destY,
     int width, int height,
     int srcX, int srcY
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    tkimg_ReadInit(data,'%',&handle);
+    if (!tkimg_ReadInitString(&handle, dataObj)) {
+        return 0;
+    }
 
-    return CommonRead(interp, &handle, format, imageHandle,
-	    destX, destY, width, height, srcX, srcY);
+    return CommonRead(interp, &handle, "InlineData", format, imageHandle,
+            destX, destY, width, height, srcX, srcY);
 }
 
 static int
 CommonRead(
     Tcl_Interp *interp,
-    tkimg_MFile *handle,
+    tkimg_Stream *handle,
+    const char *fileName,
     Tcl_Obj *format,
     Tk_PhotoHandle imageHandle,
     int destX, int destY,
     int width, int height,
     int srcX, int srcY
 ) {
-#ifndef MAC_TCL
     const char *argv[10];
-    size_t len;
-    int i, j, fileWidth, fileHeight, maxintensity, index;
+    Tcl_Size len;
+    int i, j, fileWidth, fileHeight, maxintensity;
     char *p, type;
     char buffer[1025];
     unsigned char *line = NULL, *line3 = NULL;
-	char zoom[64], papersize[64];
+    Tcl_DString tempFileName;
+    Tcl_DString outFileParam;
+    char zoomParam[64], papersizeParam[64];
+    char pageParam[64];
     Tcl_Channel chan;
     Tcl_DString dstring;
     Tk_PhotoImageBlock block;
-    int zoomx, zoomy;
+    int xzoom, yzoom;
     int result = TCL_OK;
+    FMTOPT opts;
 
-    index = parseFormat(format, &zoomx, &zoomy);
-    if (index < 0) {
-	Tcl_AppendResult(interp, "invalid format: \"",
-		tkimg_GetStringFromObj2(format, NULL), "\"", (char *) NULL);
-	return TCL_ERROR;
+    if (ParseFormatOpts(interp, format, &opts, IMG_READ) == TCL_ERROR) {
+        return TCL_ERROR;
     }
-    tkimg_snprintf(zoom, 64, "-r%dx%d", zoomx, zoomy);
+    xzoom = (int)opts.xzoomDpi;
+    yzoom = (int)opts.yzoomDpi;
+    tkimg_snprintf(zoomParam, 64, "-r%dx%d", xzoom, yzoom);
 
-    len = (size_t)tkimg_Read2(handle, buffer, 1024);
+    Tcl_DStringInit (&tempFileName);
+    Tcl_DStringInit (&outFileParam);
+    tkimg_GetTemporaryFileName (&tempFileName);
+    Tcl_DStringAppend( &outFileParam, "-sOutputFile=", (Tcl_Size)strlen ("-sOutputFile="));
+    Tcl_DStringAppend( &outFileParam, Tcl_DStringValue (&tempFileName), (Tcl_Size)strlen (Tcl_DStringValue (&tempFileName)));
+
+    tkimg_snprintf(pageParam, 64, "-dFirstPage=%d -dLastPage=%d", opts.pageIndex+1, opts.pageIndex+1);
+
+    len = tkimg_Read(handle, buffer, 1024);
     buffer[1024] = 0;
     p = strstr(buffer,"%%BoundingBox:");
     fileHeight = height + srcY;
     if (p) {
-	/* postscript */
-	p += 14;
-	srcX += (strtoul(p, &p, 0) * zoomx + 36) / 72;
-	fileHeight += (strtoul(p, &p, 0) * zoomy + 36) / 72;
-	i = strtoul(p, &p, 0);
-	srcY -= (strtoul(p, &p, 0) * zoomy + 36) / 72;
+        /* Postscript */
+        p += 14;
+        srcX += (strtoul(p, &p, 0) * xzoom + 36) / 72;
+        fileHeight += (strtoul(p, &p, 0) * yzoom + 36) / 72;
+        i = strtoul(p, &p, 0);
+        srcY -= (strtoul(p, &p, 0) * yzoom + 36) / 72;
     } else {
-	/* pdf */
+        /* PDF */
 
-	/*
-	 * Extract the pixel position of the upper left corner
-	 * of the image from the file. How to do that????
-	 * For now I just assume A4-size with 72 pixels/inch.
-	 */
-	srcX += (0 * zoomx + 36) / 72;
-	srcY -= (792 * zoomy + 36) /72;
+        /*
+         * Extract the pixel position of the upper left corner
+         * of the image from the file. How to do that????
+         * For now I just assume A4-size with 72 pixels/inch.
+         */
+        int h;
+        h = (int) round ((29.7 / 2.54 * 72.0));
+        srcX += (0 * xzoom + 36) / 72;
+        srcY -= (h * yzoom + 36) / 72;
     }
 
-    tkimg_snprintf(papersize, 64, "-g%dx%d", srcX+width, fileHeight);
+    tkimg_snprintf(papersizeParam, 64, "-g%dx%d", srcX+width, fileHeight);
 
-    argv[0] = "gs";
+    argv[0] = opts.gsCmd;
     argv[1] = "-sDEVICE=ppmraw";
-    argv[2] = zoom;
-    argv[3] = papersize;
-    argv[4] = "-q";
-    argv[5] = "-dNOPAUSE";
-    argv[6] = "-sOutputFile=-";
-    argv[7] = "-";
+    argv[2] = zoomParam;
+    argv[3] = pageParam;
+    argv[4] = papersizeParam;
+    argv[5] = "-q";
+    argv[6] = "-dNOPAUSE";
+    argv[7] = Tcl_DStringValue (&outFileParam);
+    argv[8] = "-";
+    #define NUM_PARAMS 9
 
-    chan = Tcl_OpenCommandChannel(interp, 8, (const char **) argv,
-	    TCL_STDIN|TCL_STDOUT|TCL_STDERR|TCL_ENFORCE_MODE);
+    tkimg_DeleteFile(Tcl_DStringValue (&tempFileName));
+
+    chan = Tcl_OpenCommandChannel(interp, NUM_PARAMS, (const char **) argv,
+            TCL_STDIN|TCL_STDOUT|TCL_STDERR|TCL_ENFORCE_MODE);
     if (!chan) {
-	return TCL_ERROR;
+        Tcl_DStringFree (&outFileParam);
+        Tcl_DStringFree (&tempFileName);
+        return TCL_ERROR;
     }
     if (Tcl_SetChannelOption(interp, chan, "-translation", "binary") != TCL_OK) {
-	return TCL_ERROR;
+        Tcl_DStringFree (&outFileParam);
+        Tcl_DStringFree (&tempFileName);
+        return TCL_ERROR;
     }
 
-    while (len + 1 > 1) {
-	Tcl_Write(chan, (char *) buffer, 1024);
-	len = (size_t)tkimg_Read2(handle, buffer, 1024);
+    while (len > 0) {
+        Tcl_Write(chan, (char *) buffer, 1024);
+        len = tkimg_Read(handle, buffer, 1024);
     }
     Tcl_Write(chan,"\nquit\n", 6);
     Tcl_Flush(chan);
+    Tcl_Close(interp, chan);
+
+    chan = tkimg_OpenFileChannel(interp, Tcl_DStringValue (&tempFileName), "r");
+    if (!chan) {
+        Tcl_DStringFree (&outFileParam);
+        Tcl_DStringFree (&tempFileName);
+        return TCL_ERROR;
+    }
 
     Tcl_DStringInit(&dstring);
-    len = (size_t)Tcl_Gets(chan, &dstring);
+    len = Tcl_Gets(chan, &dstring);
     p = Tcl_DStringValue(&dstring);
     type = p[1];
     if ((p[0] != 'P') || (type < '4') || (type > '6')) {
-	Tcl_AppendResult(interp, "gs error: \"",
-		p, "\"",(char *) NULL);
-	return TCL_ERROR;
+        Tcl_AppendResult(interp, "gs error: \"", p, "\"",(char *) NULL);
+        tkimg_DeleteFile(Tcl_DStringValue (&tempFileName));
+        Tcl_DStringFree (&outFileParam);
+        Tcl_DStringFree (&tempFileName);
+        return TCL_ERROR;
     }
     do {
-	Tcl_DStringSetLength(&dstring, 0);
-	Tcl_Gets(chan, &dstring);
-	p = Tcl_DStringValue(&dstring);
+        Tcl_DStringSetLength(&dstring, 0);
+        Tcl_Gets(chan, &dstring);
+        p = Tcl_DStringValue(&dstring);
     } while (p[0] == '#');
     fileWidth = strtoul(p, &p, 0);
     srcY += (fileHeight = strtoul(p, &p, 0));
 
     if ((srcX + width) > fileWidth) {
-	width = fileWidth - srcX;
+        width = fileWidth - srcX;
     }
     if ((srcY + height) > fileHeight) {
-	height = fileHeight - srcY;
+        height = fileHeight - srcY;
     }
     if ((width <= 0) || (height <= 0)) {
-	Tcl_Close(interp, chan);
-	Tcl_DStringFree(&dstring);
+        Tcl_Close(interp, chan);
+        tkimg_DeleteFile(Tcl_DStringValue (&tempFileName));
+        Tcl_DStringFree (&outFileParam);
+        Tcl_DStringFree (&tempFileName);
+        Tcl_DStringFree(&dstring);
         Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
-    if (tkimg_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
-	Tcl_Close(interp, chan);
-	Tcl_DStringFree(&dstring);
-	return TCL_ERROR;
+
+    if (opts.verbose) {
+        printImgInfo (width, height, opts.pageIndex, opts.xzoom, opts.yzoom, argv, NUM_PARAMS, fileName, "Reading image:");
+    }
+
+    if (Tk_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
+        Tcl_Close(interp, chan);
+        tkimg_DeleteFile(Tcl_DStringValue (&tempFileName));
+        Tcl_DStringFree (&outFileParam);
+        Tcl_DStringFree (&tempFileName);
+        Tcl_DStringFree(&dstring);
+        return TCL_ERROR;
     }
 
     maxintensity = strtoul(p, &p, 0);
     if ((type != '4') && !maxintensity) {
-	Tcl_DStringSetLength(&dstring, 0);
-	Tcl_Gets(chan, &dstring);
-	p = Tcl_DStringValue(&dstring);
-	maxintensity = strtoul(p, &p, 0);
+        Tcl_DStringSetLength(&dstring, 0);
+        Tcl_Gets(chan, &dstring);
+        p = Tcl_DStringValue(&dstring);
+        maxintensity = strtoul(p, &p, 0);
     }
     Tcl_DStringFree(&dstring);
     line3 = (unsigned char *) ckalloc(3 * fileWidth);
@@ -357,109 +500,93 @@ CommonRead(
     block.offset[2] = 0;
     block.offset[3] = 0;
     switch(type) {
-	case '4':
-	    i = (fileWidth+7)/8;
-	    line = (unsigned char *) ckalloc(i);
-	    while (srcY-- > 0) {
-		Tcl_Read(chan,(char *) line, i);
-	    }
-	    block.pixelPtr = line3;
-	    while (height--) {
-	        Tcl_Read(chan, (char *) line, i);
-	        for (j = 0; j < width; j++) {
-		    line3[j] = ((line[(j+srcX)/8]>>(7-(j+srcX)%8) & 1)) ? 0 : 255;
-	        }
-		if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, destY++, width, 1, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
-		    result = TCL_ERROR;
-		    break;
-		}
-	    }
-	    break;
-	case '5':
-	    line = (unsigned char *) ckalloc(fileWidth);
-	    while (srcY-- > 0) {
-		Tcl_Read(chan, (char *) line, fileWidth);
-	    }
-	    block.pixelPtr = line + srcX;
-	    while (height--) {
-		unsigned char *c = block.pixelPtr;
-		Tcl_Read(chan, (char *) line, fileWidth);
-		if (maxintensity != 255) {
-		    for (j = width; j > 0; j--) {
-			*c = (((int)*c) * maxintensity) / 255;
-			c++;
-		    }
-		}
-		if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, destY++, width, 1, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
-		    result = TCL_ERROR;
-		    break;
-		}
-	    }
-	    break;
-	case '6':
-	    i = 3 * fileWidth;
-	    line = NULL;
-	    while (srcY-- > 0) {
-		Tcl_Read(chan, (char *) line3, i);
-	    }
-	    block.pixelPtr = line3 + (3 * srcX);
-	    block.pixelSize = 3;
-	    block.offset[1] = 1;
-	    block.offset[2] = 2;
-	    while (height--) {
-		unsigned char *c = block.pixelPtr;
-		Tcl_Read(chan, (char *) line3, i);
-		if (maxintensity != 255) {
-		    for (j = (3 * width - 1); j >= 0; j--) {
-			*c = (((int)*c) * maxintensity) / 255;
-			c++;
-		    }
-		}
-		if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, destY++, width, 1, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
-		    result = TCL_ERROR;
-		    break;
-		}
-	    }
-	    break;
+        case '4':
+            i = (fileWidth+7)/8;
+            line = (unsigned char *) ckalloc(i);
+            while (srcY-- > 0) {
+                Tcl_Read(chan,(char *) line, i);
+            }
+            block.pixelPtr = line3;
+            while (height--) {
+                Tcl_Read(chan, (char *) line, i);
+                for (j = 0; j < width; j++) {
+                    line3[j] = ((line[(j+srcX)/8]>>(7-(j+srcX)%8) & 1)) ? 0 : 255;
+                }
+                if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, destY++, width, 1, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
+                    result = TCL_ERROR;
+                    break;
+                }
+            }
+            break;
+        case '5':
+            line = (unsigned char *) ckalloc(fileWidth);
+            while (srcY-- > 0) {
+                Tcl_Read(chan, (char *) line, fileWidth);
+            }
+            block.pixelPtr = line + srcX;
+            while (height--) {
+                unsigned char *c = block.pixelPtr;
+                Tcl_Read(chan, (char *) line, fileWidth);
+                if (maxintensity != 255) {
+                    for (j = width; j > 0; j--) {
+                        *c = (((int)*c) * maxintensity) / 255;
+                        c++;
+                    }
+                }
+                if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, destY++, width, 1, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
+                    result = TCL_ERROR;
+                    break;
+                }
+            }
+            break;
+        case '6':
+            i = 3 * fileWidth;
+            line = NULL;
+            while (srcY-- > 0) {
+                Tcl_Read(chan, (char *) line3, i);
+            }
+            block.pixelPtr = line3 + (3 * srcX);
+            block.pixelSize = 3;
+            block.offset[1] = 1;
+            block.offset[2] = 2;
+            while (height--) {
+                unsigned char *c = block.pixelPtr;
+                Tcl_Read(chan, (char *) line3, i);
+                if (maxintensity != 255) {
+                    for (j = (3 * width - 1); j >= 0; j--) {
+                        *c = (((int)*c) * maxintensity) / 255;
+                        c++;
+                    }
+                }
+                if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, destY++, width, 1, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
+                    result = TCL_ERROR;
+                    break;
+                }
+            }
+            break;
     }
     if (line) {
-	ckfree((char *) line);
+        ckfree((char *) line);
     }
-    ckfree((char *) line3);
+    if (line3) {
+        ckfree((char *) line3);
+    }
     Tcl_Close(interp, chan);
-    Tcl_ResetResult(interp);
+    tkimg_DeleteFile(Tcl_DStringValue (&tempFileName));
+    Tcl_DStringFree (&outFileParam);
+    Tcl_DStringFree (&tempFileName);
     return result;
-#else
-    Tcl_AppendResult(interp, "Cannot read postscript file: not implemented",
-	    (char *) NULL);
-    return TCL_ERROR;
-#endif
 }
 
 static int
-ChnWrite(
+FileWrite(
     Tcl_Interp *interp,
     const char *filename,
     Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr
 ) {
-    Tcl_Channel chan;
-    tkimg_MFile handle;
-    int result;
-
-    chan = tkimg_OpenFileChannel(interp, filename, 0644);
-    if (!chan) {
-	return TCL_ERROR;
-    }
-
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
-
-    result = CommonWrite(interp, &handle, format, blockPtr);
-    if (Tcl_Close(interp, chan) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-    return result;
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Writing not supported for format %s", sImageFormat.name));
+    return TCL_ERROR;
 }
 
 static int StringWrite(
@@ -467,35 +594,13 @@ static int StringWrite(
     Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr
 ) {
-    tkimg_MFile handle;
-    int result;
-    Tcl_DString data;
-
-    Tcl_DStringInit(&data);
-    tkimg_WriteInit(&data, &handle);
-    result = CommonWrite(interp, &handle, format, blockPtr);
-    tkimg_Putc(IMG_DONE, &handle);
-    if (result == TCL_OK) {
-	Tcl_DStringResult(interp, &data);
-    } else {
-	Tcl_DStringFree(&data);
-    }
-    return result;
-}
-
-static int
-CommonWrite(
-    Tcl_Interp *interp,
-    tkimg_MFile *handle,
-    Tcl_Obj *format,
-    Tk_PhotoImageBlock *blockPtr
-) {
-    return TCL_OK;
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Writing not supported for format %s", sImageFormat.name));
+    return TCL_ERROR;
 }
 
 
 static int
-ChnMatchBeta( /* PDF */
+FileMatchBeta( /* PDF */
     Tcl_Channel chan,
     const char *fileName,
     Tcl_Obj *format,
@@ -503,43 +608,46 @@ ChnMatchBeta( /* PDF */
     int *heightPtr,
     Tcl_Interp *interp
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
+    tkimg_ReadInitFile(&handle, chan);
 
-    return CommonMatchPDF(&handle, format, widthPtr, heightPtr);
+    return CommonMatchPDF(interp, &handle, format, widthPtr, heightPtr);
 }
 
 static int
-ObjMatchBeta( /* PDF */
-    Tcl_Obj *data,
+StringMatchBeta( /* PDF */
+    Tcl_Obj *dataObj,
     Tcl_Obj *format,
     int *widthPtr,
     int *heightPtr,
     Tcl_Interp *interp
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    if (!tkimg_ReadInit(data, '%', &handle)) {
-	return 0;
+    if (!tkimg_ReadInitString(&handle, dataObj)) {
+        return 0;
     }
 
-    return CommonMatchPDF(&handle, format, widthPtr, heightPtr);
+    return CommonMatchPDF(interp, &handle, format, widthPtr, heightPtr);
 }
 
 static int
 CommonMatchPDF(
-    tkimg_MFile *handle,
+    Tcl_Interp *interp,
+    tkimg_Stream *handle,
     Tcl_Obj *format,
     int *widthPtr, int *heightPtr
 ) {
     unsigned char buf[41];
-    int zoomx, zoomy, w, h;
+    int w, h;
+    FMTOPT opts;
 
-    if ((tkimg_Read2(handle, (char *) buf, 5) != 5)
-	    || (strncmp("%PDF-", (char *) buf, 5) != 0)) {
-	return 0;
+    if ((tkimg_Read(handle, (char *) buf, 5) != 5) ||
+        (strncmp("%PDF-", (char *) buf, 5) != 0)) {
+        return 0;
     }
 
     /* Here w and h should be set to the bounding box of the pdf
@@ -548,15 +656,38 @@ CommonMatchPDF(
      * has a better idea, please mail to <nijtmans@users.sourceforge.net>.
      */
 
-    w = 612/10;
-    h = 792/10;
+    /* A4 size is 21.0 x 29.7 cm */
+    w = (int) round ((21.0 / 2.54 * 72.0));
+    h = (int) round ((29.7 / 2.54 * 72.0));
 
-    if (parseFormat(format, &zoomx, &zoomy) >= 0) {
-	w = (w * zoomx + 36) / 72;
-	h = (h * zoomy + 36) / 72;
+    if (ParseFormatOpts(interp, format, &opts, IMG_READ) == TCL_OK) {
+        w = (w * (int)opts.xzoomDpi + 36) / 72;
+        h = (h * (int)opts.yzoomDpi + 36) / 72;
     }
-    if ((w <= 0) || (h <= 0)) return 0;
-    *widthPtr = w;
+    if ((w <= 0) || (h <= 0)) {
+        return 0;
+    }
+    *widthPtr  = w;
     *heightPtr = h;
     return 1;
+}
+
+static int
+FileWriteBeta(
+    Tcl_Interp *interp,
+    const char *filename,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Writing not supported for format %s", sImageFormatBeta.name));
+    return TCL_ERROR;
+}
+
+static int StringWriteBeta(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Writing not supported for format %s", sImageFormatBeta.name));
+    return TCL_ERROR;
 }

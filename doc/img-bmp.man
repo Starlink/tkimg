@@ -1,108 +1,73 @@
 [comment {-*- tcl -*- doctools}]
 [vset FORMATNAME bmp]
-[vset FORMATFULLNAME {Windows Bitmap Format}]
+[vset FORMATFULLNAME {Windows bitmap format}]
+[manpage_begin img-[vset FORMATNAME] n 2.0]
 
 [include format-header.inc]
 
-[include format-package.inc]
-
 This handler provides new additional configuration options. See
-section [sectref {BMP OPTIONS}] for more detailed explanations.
-
+section [sectref {Options}] for more detailed explanations.
 
 [include format-middle.inc]
 
+In addition the value of option [option -format] is treated as a list and may
+contain any of the special options listed in section [sectref {Options}].
 
-In addition the value for the option is treated as list and may
-contain any of the special options listed in section
+[include format-package.inc]
 
-[sectref {BMP OPTIONS}].
+
+[section {Notes}]
+
+[list_begin enum]
+[enum]
+Chapter [emph "Image Metadata"] of the [package Img] manual page
+describes the parameters of the resolution related options.
 
 [list_end]
 
 
-
-[section {BMP OPTIONS}]
+[section {Options}]
 
 The handler provides the following options:
 
 [list_begin definitions]
 
-[def "[option -resolution] [arg res]"]
+[def "[option -verbose] [arg bool]"]
 
-The display resulation and/or aspect ratio property of the outputted bmp
-file may be set using this option.
-The default values are an x and y resolution of 74 dpi.
+This option is supported for reading and writing. Available since version 2.0.
+[para]
+If set to [const true], additional information about the read or written image
+is printed to stdout. Default is [const false].
 
-[arg res] is a list of 2 or 3 elements and may have one of the following formats.
-The values [arg xres], [arg yres] and [arg unit] are specified after the formats.
 
-[list_begin definitions]
+[def "[option -resolution] [arg xres] [opt [arg yres]]"]
 
-[def "[arg res] = [arg xres] [arg unit]"]
+This option is supported for writing only. Available since version 2.0.
+An incompatible version of this option was introduced in version 1.4.1.
+[para]
 
-Set the same resolution for x and y.
+Set the resolution values of the written image file.
+If [arg yres] is not specified, it is set to the value of [arg xres].
+[para]
+If option is not specified, the [emph DPI] and [emph aspect] values of the metadata dictionary are written.
+If no metadata values are available, no resolution values are written.
 
-Example: Write image with a resolution of 300dpi:
-[example_begin]
-img write out.bmp -format {bmp -resolution {300 i}}
-[example_end]
 
-[def "[arg res] = [arg xres] [arg yres]"]
+[def "[option -xresolution] [arg xres]"]
 
-Set the aspect ratio only.
-The x resolution remains to the default value 74dpi, as the bmp format does not allow to specify the aspect ratio only. The y resolution is set to 74*[arg yres]/[arg xres].
+This option is supported for writing only. Available since version 2.0.
+[para]
 
-Example: Write image with an aspect ratio of 1/3:
-[example_begin]
-img write out.bmp -format {bmp -resolution {1 3}}
-[example_end]
+Set the horizontal resolution value of the written image file. 
 
-[def "[arg res] = [arg xres] [arg yres] [arg unit]"]
 
-Set an independent resolution for x and y direction.
+[def "[option -yresolution] [arg yres]"]
 
-Example: Write image with a resolution of x=300dpi and y=150dpi:
-[example_begin]
-img write out.bmp -format {bmp -resolution {300 100 i}}
-[example_end]
+This option is supported for writing only. Available since version 2.0.
+[para]
+
+Set the vertical resolution value of the written image file.
 
 [list_end]
 
-
-The used parameters are:
-
-[list_begin arguments]
-
-[arg_def float xres input]
-
-The output resolution in x direction as a float number.
-
-[arg_def float yres input]
-
-The output resolution in x direction as a float number.
-
-[arg_def string unit input]
-
-Unit of the given resolution numbers similar to Tk_GetPixel.
-Possible units are:
-
-[list_begin definitions]
-
-[def "c"]
-pixel per centimeter.
-[def "m"]
-pixel per meter.
-[def "i"]
-pixel per inch.
-[def "p"]
-pixel per inch/72 (Printer points).
-
-[list_end]
-
-[list_end]
-
-[list_end]
-
-[list_begin definitions]
 [include format-footer.inc]

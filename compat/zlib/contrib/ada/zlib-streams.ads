@@ -6,7 +6,7 @@
 --  Open source license information is in the zlib.ads file.  --
 ----------------------------------------------------------------
 
---  $Id: zlib-streams.ads,v 1.12 2004/05/31 10:53:40 vagul Exp $
+--  $Id: zlib-streams.ads 815 2024-01-31 21:05:52Z obermeier $
 
 package ZLib.Streams is
 
@@ -62,7 +62,7 @@ package ZLib.Streams is
                                     := Default_Buffer_Size;
       Write_Buffer_Size : in     Ada.Streams.Stream_Element_Offset
                                     := Default_Buffer_Size);
-   --  Create the Comression/Decompression stream.
+   --  Create the Compression/Decompression stream.
    --  If mode is In_Stream then Write operation is disabled.
    --  If mode is Out_Stream then Read operation is disabled.
 

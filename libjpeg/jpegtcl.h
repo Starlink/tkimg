@@ -1,7 +1,7 @@
 /*
  * jpegtcl.h --
  *
- *	Interface to libjpeg.
+ * Interface to libjpeg.
  *
  * Copyright (c) 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
  *
@@ -22,13 +22,13 @@
 #include <tcl.h>
 #include <stdio.h>
 
-#define JPEGTCL_MAJOR_VERSION	9
-#define JPEGTCL_MINOR_VERSION	5
-#define JPEGTCL_RELEASE_LEVEL	TCL_RELEASE
-#define JPEGTCL_RELEASE_SERIAL	0
+#define JPEGTCL_MAJOR_VERSION   9
+#define JPEGTCL_MINOR_VERSION   6
+#define JPEGTCL_RELEASE_LEVEL   TCL_RELEASE
+#define JPEGTCL_RELEASE_SERIAL  0
 
-#define JPEGTCL_VERSION		"9.5.0"
-#define JPEGTCL_PATCH_LEVEL	"9.5.0"
+#define JPEGTCL_VERSION         "9.6.0"
+#define JPEGTCL_PATCH_LEVEL     "9.6.0"
 
 /*
  * Used to block the rest of this header file from resource compilers so

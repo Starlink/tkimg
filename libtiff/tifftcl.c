@@ -61,17 +61,11 @@ Tifftcl_Init (Tcl_Interp *interp) /* Interpreter to initialise. */
 {
   extern const TifftclStubs tifftclStubs;
 
-#if TCL_MAJOR_VERSION > 8
-	if (!Tcl_InitStubs(interp, "9.0", 0)) {
-		return TCL_ERROR;
-	}
-#else
-  if (Tcl_InitStubs(interp, "8.3", 0) == NULL) {
+  if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
     return TCL_ERROR;
   }
-#endif
   if (Tcl_PkgProvideEx(interp, MY_PACKAGE_NAME, MY_PACKAGE_VERSION,
-		       (ClientData) &tifftclStubs) != TCL_OK) {
+                       (ClientData) &tifftclStubs) != TCL_OK) {
     return TCL_ERROR;
   }
   return TCL_OK;

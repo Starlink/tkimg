@@ -1,7 +1,7 @@
 /*
  * zlibtclDecls.h --
  *
- *	Declarations of functions in the platform independent public ZLIBTCL API.
+ * Declarations of functions in the platform independent public ZLIBTCL API.
  *
  */
 

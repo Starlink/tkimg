@@ -16,7 +16,7 @@
 #define IMG_HISTOGRAM_SIZE  256
 #define IMG_HISTOGRAM_SCALE 255.0
 
-/* This function determines at runtime, whether we are on an Intel system. */
+/* This function determines at runtime, whether we are on an Intel (little-endian) system. */
 
 int tkimg_IsIntel (void)
 {
@@ -25,36 +25,6 @@ int tkimg_IsIntel (void)
        On big-endian systems this value equals "\00\00\02\01" */
     return memcmp(&val, "\01\02", 2) == 0;
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * tkimg_CreateGammaTable --
- *
- *  Returns the string representation's byte array pointer and length
- *  for an object.
- *
- * Results:
- *  Returns a pointer to the string representation of objPtr.  If
- *  lengthPtr isn't NULL, the length of the string representation is
- *  stored at *lengthPtr. The byte array referenced by the returned
- *  pointer must not be modified by the caller. Furthermore, the
- *  caller must copy the bytes if they need to retain them since the
- *  object's string rep can change as a result of other operations.
- *      REMARK: This function reacts a little bit different than
- *  Tcl_GetStringFromObj():
- *  - objPtr is allowed to be NULL. In that case the NULL pointer
- *    will be returned, and the length will be reported to be 0;
- *  In the tkimg_ code there is never a distinction between en empty
- *  string and a NULL pointer, while the latter is easier to check
- *  for. That's the reason for this difference.
- *
- * Side effects:
- *  May call the object's updateStringProc to update the string
- *  representation from the internal representation.
- *
- *----------------------------------------------------------------------
- */
 
 void tkimg_CreateGammaTable (double gammaVal, double *gammaTable)
 {
@@ -305,18 +275,18 @@ void tkimg_DoubleToUByte (int n, const double *doubleIn,
     return;
 }
 
-int tkimg_ReadUByteRow (tkimg_MFile *handle, unsigned char *pixels, int nBytes)
+int tkimg_ReadUByteRow (tkimg_Stream *handle, unsigned char *pixels, int nBytes)
 {
 #if DEBUG_READ == 1
     printf ("Reading %d UBytes\n", nBytes); fflush (stdout);
 #endif
-    if ((size_t)nBytes != tkimg_Read2(handle, (char *)pixels, nBytes)) {
+    if (nBytes != (int)tkimg_Read(handle, (char *)pixels, nBytes)) {
         return 0;
     }
     return 1;
 }
 
-int tkimg_ReadUShortRow (tkimg_MFile *handle, unsigned short *pixels, int nShorts,
+int tkimg_ReadUShortRow (tkimg_Stream *handle, unsigned short *pixels, int nShorts,
                          char *buf, int swapBytes)
 {
     int i;
@@ -326,7 +296,7 @@ int tkimg_ReadUShortRow (tkimg_MFile *handle, unsigned short *pixels, int nShort
 #if DEBUG_READ == 1
     printf ("Reading %d UShorts\n", nShorts); fflush (stdout);
 #endif
-    if (2 * (size_t)nShorts != tkimg_Read2(handle, buf, 2 * nShorts)) {
+    if (2 * nShorts != (int)tkimg_Read(handle, buf, 2 * nShorts)) {
         return 0;
     }
 
@@ -348,7 +318,7 @@ int tkimg_ReadUShortRow (tkimg_MFile *handle, unsigned short *pixels, int nShort
     return 1;
 }
 
-int tkimg_ReadShortRow (tkimg_MFile *handle, short *pixels, int nShorts,
+int tkimg_ReadShortRow (tkimg_Stream *handle, short *pixels, int nShorts,
                         char *buf, int swapBytes)
 {
     int i;
@@ -358,7 +328,7 @@ int tkimg_ReadShortRow (tkimg_MFile *handle, short *pixels, int nShorts,
 #if DEBUG_READ == 1
     printf ("Reading %d Shorts\n", nShorts); fflush (stdout);
 #endif
-    if (2 * (size_t)nShorts != tkimg_Read2(handle, buf, 2 * nShorts)) {
+    if (2 * nShorts != (int)tkimg_Read(handle, buf, 2 * nShorts)) {
         return 0;
     }
 
@@ -380,7 +350,7 @@ int tkimg_ReadShortRow (tkimg_MFile *handle, short *pixels, int nShorts,
     return 1;
 }
 
-int tkimg_ReadUIntRow (tkimg_MFile *handle, unsigned int *pixels, int nInts,
+int tkimg_ReadUIntRow (tkimg_Stream *handle, unsigned int *pixels, int nInts,
                        char *buf, int swapBytes)
 {
     int i;
@@ -390,7 +360,7 @@ int tkimg_ReadUIntRow (tkimg_MFile *handle, unsigned int *pixels, int nInts,
 #if DEBUG_READ == 1
     printf ("Reading %d UInts\n", nInts); fflush (stdout);
 #endif
-    if (4 * (size_t)nInts != tkimg_Read2(handle, buf, 4 * nInts)) {
+    if (4 * nInts != (int)tkimg_Read(handle, buf, 4 * nInts)) {
         return 0;
     }
 
@@ -416,7 +386,7 @@ int tkimg_ReadUIntRow (tkimg_MFile *handle, unsigned int *pixels, int nInts,
     return 1;
 }
 
-int tkimg_ReadIntRow (tkimg_MFile *handle, int *pixels, int nInts,
+int tkimg_ReadIntRow (tkimg_Stream *handle, int *pixels, int nInts,
                       char *buf, int swapBytes)
 {
     int i;
@@ -426,7 +396,7 @@ int tkimg_ReadIntRow (tkimg_MFile *handle, int *pixels, int nInts,
 #if DEBUG_READ == 1
     printf ("Reading %d Ints\n", nInts); fflush (stdout);
 #endif
-    if (4 * (size_t)nInts != tkimg_Read2(handle, buf, 4 * nInts)) {
+    if (4 * nInts != (int)tkimg_Read(handle, buf, 4 * nInts)) {
         return 0;
     }
 
@@ -452,7 +422,7 @@ int tkimg_ReadIntRow (tkimg_MFile *handle, int *pixels, int nInts,
     return 1;
 }
 
-int tkimg_ReadFloatRow (tkimg_MFile *handle, float *pixels, int nFloats,
+int tkimg_ReadFloatRow (tkimg_Stream *handle, float *pixels, int nFloats,
                         char *buf, int swapBytes)
 {
     int i;
@@ -462,7 +432,7 @@ int tkimg_ReadFloatRow (tkimg_MFile *handle, float *pixels, int nFloats,
 #if DEBUG_READ == 1
     printf ("Reading %d floats\n", nFloats); fflush (stdout);
 #endif
-    if (4 * (size_t)nFloats != tkimg_Read2(handle, buf, 4 * nFloats)) {
+    if (4 * nFloats != (int)tkimg_Read(handle, buf, 4 * nFloats)) {
         return 0;
     }
 
@@ -488,7 +458,7 @@ int tkimg_ReadFloatRow (tkimg_MFile *handle, float *pixels, int nFloats,
     return 1;
 }
 
-int tkimg_ReadDoubleRow (tkimg_MFile *handle, double *pixels, int nDoubles,
+int tkimg_ReadDoubleRow (tkimg_Stream *handle, double *pixels, int nDoubles,
                          char *buf, int swapBytes)
 {
     int i;
@@ -498,7 +468,7 @@ int tkimg_ReadDoubleRow (tkimg_MFile *handle, double *pixels, int nDoubles,
 #if DEBUG_READ == 1
     printf ("Reading %d doubles\n", nDoubles); fflush (stdout);
 #endif
-    if (8 * (size_t)nDoubles != tkimg_Read2(handle, buf, 8 * nDoubles)) {
+    if (8 * nDoubles != (int)tkimg_Read(handle, buf, 8 * nDoubles)) {
         return 0;
     }
 
@@ -532,7 +502,7 @@ int tkimg_ReadDoubleRow (tkimg_MFile *handle, double *pixels, int nDoubles,
     return 1;
 }
 
-int tkimg_ReadUByteFile (tkimg_MFile *handle, unsigned char *buf, int width, int height,
+int tkimg_ReadUByteFile (tkimg_Stream *handle, unsigned char *buf, int width, int height,
                          int nchan, int verbose, int findMinMax,
                          double *minVals, double *maxVals)
 {
@@ -580,7 +550,7 @@ int tkimg_ReadUByteFile (tkimg_MFile *handle, unsigned char *buf, int width, int
     return 1;
 }
 
-int tkimg_ReadUShortFile (tkimg_MFile *handle, unsigned short *buf, int width, int height,
+int tkimg_ReadUShortFile (tkimg_Stream *handle, unsigned short *buf, int width, int height,
                           int nchan, int swapBytes, int verbose, int findMinMax,
                           double *minVals, double *maxVals, double saturation)
 {
@@ -636,7 +606,7 @@ int tkimg_ReadUShortFile (tkimg_MFile *handle, unsigned short *buf, int width, i
     return 1;
 }
 
-int tkimg_ReadUIntFile (tkimg_MFile *handle, unsigned int *buf, int width, int height,
+int tkimg_ReadUIntFile (tkimg_Stream *handle, unsigned int *buf, int width, int height,
                         int nchan, int swapBytes, int verbose, int findMinMax,
                         double *minVals, double *maxVals, double saturation)
 {
@@ -692,7 +662,7 @@ int tkimg_ReadUIntFile (tkimg_MFile *handle, unsigned int *buf, int width, int h
     return 1;
 }
 
-int tkimg_ReadFloatFile (tkimg_MFile *handle, float *buf, int width, int height,
+int tkimg_ReadFloatFile (tkimg_Stream *handle, float *buf, int width, int height,
                          int nchan, int swapBytes, int verbose, int findMinMax,
                          double *minVals, double *maxVals, double saturation)
 {
@@ -748,7 +718,7 @@ int tkimg_ReadFloatFile (tkimg_MFile *handle, float *buf, int width, int height,
     return 1;
 }
 
-int tkimg_ReadDoubleFile (tkimg_MFile *handle, double *buf, int width, int height,
+int tkimg_ReadDoubleFile (tkimg_Stream *handle, double *buf, int width, int height,
                           int nchan, int swapBytes, int verbose, int findMinMax,
                           double *minVals, double *maxVals, double saturation)
 {

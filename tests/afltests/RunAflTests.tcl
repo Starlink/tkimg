@@ -26,13 +26,17 @@ proc PrintUsageAndExit { progName } {
     puts "--proc   : Specify read procedure. Default: 1"
     puts "           1: Uses \"image create photo -file \$fileName\""
     puts "           2: Uses \"set ph \[image create photo\] \; \$ph read \$fileName\""
+    puts "           3: Uses \"image create photo -data \$imgData\""
+    puts "           4: Uses \"set ph \[image create photo\] \; \$ph put \$imgData\""
     exit 1
 }
 
 proc GetReadProc { readProcNum } {
     switch -exact $readProcNum {
-        1 { set readProc "ReadPhotoFile1" }
-        2 { set readProc "ReadPhotoFile2" }
+        1 { set readProc "ReadPhotoFromFile1" }
+        2 { set readProc "ReadPhotoFromFile2" }
+        3 { set readProc "ReadPhotoFromString1" }
+        4 { set readProc "ReadPhotoFromString2" }
         default { puts "Unknown read proc $readProcNum" ; exit 1 }
     }
     return $readProc
@@ -40,7 +44,7 @@ proc GetReadProc { readProcNum } {
 
 # Load image data directly from a file into a photo image.
 # Uses command: image create photo -file "fileName"
-proc ReadPhotoFile1 { fileName } {
+proc ReadPhotoFromFile1 { fileName } {
     set phImg ""
     set err   ""
     set sTime [clock clicks -milliseconds]
@@ -53,13 +57,62 @@ proc ReadPhotoFile1 { fileName } {
 
 # Load image data directly from a file into a photo image.
 # Uses commands: set ph [image create photo] ; $ph read "fileName"
-proc ReadPhotoFile2 { fileName } {
+proc ReadPhotoFromFile2 { fileName } {
     set phImg ""
     set err   ""
     set sTime [clock clicks -milliseconds]
 
     set phImg [image create photo]
     set retVal [catch { $phImg read $fileName } err]
+    if { $retVal != 0 } {
+        image delete $phImg
+        set phImg ""
+    }
+
+    set eTime [clock clicks -milliseconds]
+    return [list $retVal $phImg $err [expr {($eTime - $sTime) / 1.0E3}]]
+}
+
+# Load binary image data from a variable into a photo image.
+# Uses command: image create photo -data $imgData
+proc ReadPhotoFromString1 { fileName } {
+    set phImg ""
+    set err   ""
+    set sTime [clock clicks -milliseconds]
+
+    set retVal [catch {open $fileName r} fp]
+    if { $retVal != 0 } {
+        set err "Cannot open image file $fileName for binary reading."
+        return [list $retVal $phImg $err 0.0]
+    }
+    fconfigure $fp -translation binary
+    set imgData [read $fp [file size $fileName]]
+    close $fp
+
+    set retVal [catch { set phImg [image create photo -data $imgData] } err]
+
+    set eTime [clock clicks -milliseconds]
+    return [list $retVal $phImg $err [expr {($eTime - $sTime) / 1.0E3}]]
+}
+
+# Load binary image data from a variable into a photo image.
+# Uses commands: set ph [image create photo] ; $ph put $imgData
+proc ReadPhotoFromString2 { fileName } {
+    set phImg ""
+    set err   ""
+    set sTime [clock clicks -milliseconds]
+
+    set retVal [catch {open $fileName r} fp]
+    if { $retVal != 0 } {
+        set err "Cannot open image file $fileName for binary reading."
+        return [list $retVal $phImg $err 0.0]
+    }
+    fconfigure $fp -translation binary
+    set imgData [read $fp [file size $fileName]]
+    close $fp
+
+    set phImg [image create photo]
+    set retVal [catch {$phImg put $imgData} err]
     if { $retVal != 0 } {
         image delete $phImg
         set phImg ""
@@ -145,7 +198,7 @@ foreach testDir $testDirs {
             puts stderr "Error: Directory $pathName does not exist."
             continue
         }
-        set fileNames [lsort -dictionary [glob [file join $pathName "*"]]]
+        set fileNames [lsort -dictionary [glob -nocomplain [file join $pathName "*"]]]
         foreach fileName $fileNames {
             if { $useVerbose } {
                 puts "Checking file $fileName"

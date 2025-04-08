@@ -1,51 +1,18 @@
-/* STARTHEADER
+/*
+ * dted.c
  *
- * File :       dted.c
+ * DTED photo image type, Tcl/Tk package.
  *
- * Author :     Paul Obermeier (paul@poSoft.de)
+ * A photo image handler for Digital Elevation Data interpreted
+ * as grayscale images.
  *
- * Date :       2001 / 11 / 20
+ * For a list of available format options see function ParseFormatOpts
+ * and the documentation img-dted.
  *
- * Copyright :  (C) 2001-2019 Paul Obermeier
+ * Copyright (c) 2001-2024 Paul Obermeier <obermeier@users.sourceforge.net>
  *
- * Description :
- *
- * A photo image handler for DTED elevation data interpreted as image files.
- *
- * The following image types are supported:
- *
- * Grayscale image: Load DTED data as grayscale image.
- *
- * List of currently supported features:
- *
- * Type   |     Read      |     Write     |
- *        | -file | -data | -file | -data |
- * ----------------------------------------
- * Gray   | Yes   | Yes   | No    | No   |
- *
- * The following format options are available:
- *
- * Read  DTED image: "dted -verbose <bool> -gamma <float>
- *                         -min <float> -max <float>"
- *
- * -verbose <bool>:     If set to true, additional information about the file
- *                      format is printed to stdout. Default is false.
- * -gamma <float>:      Specify a gamma correction to be applied when mapping
- *                      the input data to 8-bit image values.
- *                      Default is 1.0.
- * -min <short>:        Specify the minimum pixel value to be used for mapping
- *                      the input data to 8-bit image values.
- *                      Default is the minimum value found in the image data.
- * -max <short>:        Specify the maximum pixel value to be used for mapping
- *                      the input data to 8-bit image values.
- *                      Default is the maximum value found in the image data.
- *
- * Notes:               Currently only reading DTED files as grayscale images
- *                      is implemented. Color mapped images and writing will be
- *                      implemented when needed.
- *                      Syntax checking of DTED files is rudimentary, too.
- *
- * ENDHEADER
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  */
 
@@ -177,10 +144,10 @@ typedef struct {
 
 /* DTED file format options structure for use with ParseFormatOpts */
 typedef struct {
-    Short minVal;
-    Short maxVal;
-    Float gamma;
-    Boln  verbose;
+    Short  minVal;
+    Short  maxVal;
+    Double gamma;
+    Boln   verbose;
 } FMTOPT;
 
 /* Structure to hold information about the DTED file being processed. */
@@ -199,10 +166,10 @@ static void dtedClose (DTEDFILE *tf)
 
 /*  Read 2 bytes representing a signed 16-bit integer stored in big-endian order. */
 
-static Boln readShort (tkimg_MFile *handle, Short *s)
+static Boln readShort (tkimg_Stream *handle, Short *s)
 {
     unsigned char buf[2];
-    if (2 != tkimg_Read2(handle, (char *)buf, 2))
+    if (2 != tkimg_Read(handle, (char *)buf, 2))
         return FALSE;
     *s = (buf[0] << 8) | buf[1];
     return TRUE;
@@ -210,16 +177,15 @@ static Boln readShort (tkimg_MFile *handle, Short *s)
 
 /* Read 4 bytes representing a signed 32-bit integer stored in big-endian order. */
 
-static Boln readInt (tkimg_MFile *handle, Int *i)
+static Boln readInt (tkimg_Stream *handle, Int *i)
 {
     unsigned char buf[4];
-    if (4 != tkimg_Read2(handle, (char *)buf, 4))
+    if (4 != tkimg_Read(handle, (char *)buf, 4))
         return FALSE;
     *i = ((unsigned int)buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
     return TRUE;
 }
 
-#define OUT Tcl_WriteChars (outChan, str, -1)
 static void printImgInfo (DTEDHEADER *th, FMTOPT *opts,
                           TCL_UNUSED(const char *), const char *msg)
 {
@@ -230,29 +196,28 @@ static void printImgInfo (DTEDHEADER *th, FMTOPT *opts,
     if (!outChan) {
         return;
     }
-    tkimg_snprintf (str, 256, "%s\n", msg);                                              OUT;
-    tkimg_snprintf (str, 256, "\tLongitude of origin  : %.8s\n", th->uhl.origin_long);   OUT;
-    tkimg_snprintf (str, 256, "\tLatitude of origin   : %.8s\n", th->uhl.origin_lat);    OUT;
-    tkimg_snprintf (str, 256, "\tEast-West interval   : %.4s\n", th->uhl.ew_interval);   OUT;
-    tkimg_snprintf (str, 256, "\tNorth-South interval : %.4s\n", th->uhl.ns_interval);   OUT;
-    tkimg_snprintf (str, 256, "\tVertical accuracy    : %.4s\n", th->uhl.accuracy);      OUT;
-    tkimg_snprintf (str, 256, "\tSecurity Code        : %.3s\n", th->uhl.security);      OUT;
-    tkimg_snprintf (str, 256, "\tDTED level           : %.5s\n", th->dsi.level);         OUT;
-    tkimg_snprintf (str, 256, "\tNumber of rows       : %.4s\n", th->dsi.rows);          OUT;
-    tkimg_snprintf (str, 256, "\tNumber of columns    : %.4s\n", th->dsi.cols);          OUT;
-    tkimg_snprintf (str, 256, "\tCell coverage        : %.2s\n", th->dsi.cell_coverage); OUT;
-    tkimg_snprintf (str, 256, "\tGamma correction     : %f\n", opts->gamma);             OUT;
-    tkimg_snprintf (str, 256, "\tMinimum map value    : %d\n", opts->minVal);            OUT;
-    tkimg_snprintf (str, 256, "\tMaximum map value    : %d\n", opts->maxVal);            OUT;
+    tkimg_snprintf (str, 256, "%s\n", msg);                                              IMGOUT;
+    tkimg_snprintf (str, 256, "\tLongitude of origin  : %.8s\n", th->uhl.origin_long);   IMGOUT;
+    tkimg_snprintf (str, 256, "\tLatitude of origin   : %.8s\n", th->uhl.origin_lat);    IMGOUT;
+    tkimg_snprintf (str, 256, "\tEast-West interval   : %.4s\n", th->uhl.ew_interval);   IMGOUT;
+    tkimg_snprintf (str, 256, "\tNorth-South interval : %.4s\n", th->uhl.ns_interval);   IMGOUT;
+    tkimg_snprintf (str, 256, "\tVertical accuracy    : %.4s\n", th->uhl.accuracy);      IMGOUT;
+    tkimg_snprintf (str, 256, "\tSecurity Code        : %.3s\n", th->uhl.security);      IMGOUT;
+    tkimg_snprintf (str, 256, "\tDTED level           : %.5s\n", th->dsi.level);         IMGOUT;
+    tkimg_snprintf (str, 256, "\tNumber of rows       : %.4s\n", th->dsi.rows);          IMGOUT;
+    tkimg_snprintf (str, 256, "\tNumber of columns    : %.4s\n", th->dsi.cols);          IMGOUT;
+    tkimg_snprintf (str, 256, "\tCell coverage        : %.2s\n", th->dsi.cell_coverage); IMGOUT;
+    tkimg_snprintf (str, 256, "\tGamma correction     : %f\n", opts->gamma);             IMGOUT;
+    tkimg_snprintf (str, 256, "\tMinimum map value    : %d\n", opts->minVal);            IMGOUT;
+    tkimg_snprintf (str, 256, "\tMaximum map value    : %d\n", opts->maxVal);            IMGOUT;
     tkimg_snprintf (str, 256, "\tHost byte order      : %s\n", tkimg_IsIntel ()?
-                                                               strIntel: strMotorola);   OUT;
+                                                               strIntel: strMotorola);   IMGOUT;
     Tcl_Flush (outChan);
 }
-#undef OUT
 
-static Boln readHeader (tkimg_MFile *handle, DTEDHEADER *th)
+static Boln readHeader (tkimg_Stream *handle, DTEDHEADER *th)
 {
-    if (sizeof (DTEDHEADER) != tkimg_Read2(handle, (char *)th, sizeof(DTEDHEADER))) {
+    if (sizeof (DTEDHEADER) != tkimg_Read(handle, (char *)th, sizeof(DTEDHEADER))) {
         return FALSE;
     }
     if (strncmp ((char *)th->uhl.uhl_tag, "UHL", 3) != 0) {
@@ -263,7 +228,7 @@ static Boln readHeader (tkimg_MFile *handle, DTEDHEADER *th)
     return TRUE;
 }
 
-static Boln readDtedColumn (Tcl_Interp *interp, tkimg_MFile *handle, Short *pixels,
+static Boln readDtedColumn (Tcl_Interp *interp, tkimg_Stream *handle, Short *pixels,
                             Int nRows, Int nCols, Int curCol, char *buf, Boln hostIsIntel)
 {
     Int   i, nBytes;
@@ -297,7 +262,7 @@ static Boln readDtedColumn (Tcl_Interp *interp, tkimg_MFile *handle, Short *pixe
     if (recognition_sentinel != 170) {
         char msg[100];
         tkimg_snprintf(msg, sizeof(msg),
-                       "Invalid column recognition sentinel 0x%02hhX.",
+                       "Invalid column recognition sentinel %d.",
                        recognition_sentinel);
         Tcl_AppendResult (interp, msg, (char *) NULL);
         return FALSE;
@@ -305,7 +270,7 @@ static Boln readDtedColumn (Tcl_Interp *interp, tkimg_MFile *handle, Short *pixe
 
     /* Read the elevation data into the supplied column buffer "buf". */
     nBytes = sizeof (Short) * nRows;
-    if ((size_t)nBytes != tkimg_Read2(handle, buf, nBytes)) {
+    if (nBytes != (int)tkimg_Read(handle, buf, nBytes)) {
         Tcl_AppendResult (interp, "Error reading elevation data.", (char *) NULL);
         return FALSE;
     }
@@ -344,7 +309,7 @@ static Boln readDtedColumn (Tcl_Interp *interp, tkimg_MFile *handle, Short *pixe
     return TRUE;
 }
 
-static Boln readDtedFile (Tcl_Interp *interp, tkimg_MFile *handle,
+static Boln readDtedFile (Tcl_Interp *interp, tkimg_Stream *handle,
                           Short *buf, Int width, Int height,
                           Int nchan, Boln hostIsIntel, Boln verbose,
                           Short minVals[], Short maxVals[])
@@ -369,8 +334,8 @@ static Boln readDtedFile (Tcl_Interp *interp, tkimg_MFile *handle,
 
     /* Read the elevation data column by column. */
     for (x=0; x<width; x++) {
-        if (! readDtedColumn (interp, handle, buf, height, width,
-                              x, colBuf, hostIsIntel)) {
+        if (!readDtedColumn (interp, handle, buf, height, width,
+                             x, colBuf, hostIsIntel)) {
             return FALSE;
         }
     }
@@ -456,11 +421,10 @@ static Boln remapShortValues (Short *buf, Int width, Int height, Int nchan,
  * Prototypes for local procedures defined in this file:
  */
 
-static int ParseFormatOpts(Tcl_Interp *interp, Tcl_Obj *format, FMTOPT *opts);
-static int CommonMatch(Tcl_Interp *interp, tkimg_MFile *handle,
+static int CommonMatch(Tcl_Interp *interp, tkimg_Stream *handle,
         Tcl_Obj *format, int *widthPtr, int *heightPtr,
         DTEDHEADER *dtedHeaderPtr);
-static int CommonRead(Tcl_Interp *interp, tkimg_MFile *handle,
+static int CommonRead(Tcl_Interp *interp, tkimg_Stream *handle,
         const char *filename, Tcl_Obj *format,
         Tk_PhotoHandle imageHandle, int destX, int destY,
         int width, int height, int srcX, int srcY);
@@ -468,12 +432,17 @@ static int CommonRead(Tcl_Interp *interp, tkimg_MFile *handle,
 static int ParseFormatOpts(
     Tcl_Interp *interp,
     Tcl_Obj *format,
-    FMTOPT *opts
+    FMTOPT *opts,
+    int mode
 ) {
-    static const char *const dtedOptions[] = {
+    static const char *const readOptions[] = {
          "-verbose", "-min", "-max", "-gamma", NULL
     };
-    Tcl_Size objc, i, index;
+    enum readEnums {
+        R_VERBOSE, R_MIN, R_MAX, R_GAMMA
+    };
+    Tcl_Size objc, i;
+    int index;
     char *optionStr;
     Tcl_Obj **objv;
     int boolVal;
@@ -482,69 +451,86 @@ static int ParseFormatOpts(
 
     /* Initialize format options with default values. */
     opts->verbose = FALSE;
-    opts->minVal  = 0;
-    opts->maxVal  = 0;
+    opts->minVal  = -1;
+    opts->maxVal  = -1;
     opts->gamma   = 1.0;
 
-    if (tkimg_ListObjGetElements (interp, format, &objc, &objv) != TCL_OK)
+    if (tkimg_ListObjGetElements (interp, format, &objc, &objv) == TCL_ERROR) {
         return TCL_ERROR;
-    if (objc) {
-        for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj (interp, objv[i], (const char * const *)dtedOptions,
-                    "format option", 0, &index) != TCL_OK) {
+    }
+    for (i=1; i<objc; i++) {
+        if (mode == IMG_READ) {
+            if (Tcl_GetIndexFromObj(interp, objv[i], readOptions,
+                    "format option", 0, &index) == TCL_ERROR) {
                 return TCL_ERROR;
             }
-            i++;
-            if (i >= objc) {
-                Tcl_AppendResult (interp, "No value for option \"",
-                        Tcl_GetString(objv[--i]),
-                        "\"", (char *) NULL);
-                return TCL_ERROR;
-            }
-            optionStr = Tcl_GetString(objv[i]);
+        } else {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf("No write functionality available."));
+            return TCL_ERROR;
+        }
+        if (++i >= objc) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "No value specified for option \"%s\".", Tcl_GetString(objv[--i])));
+            return TCL_ERROR;
+        }
+        optionStr = Tcl_GetString(objv[i]);
+        if (mode == IMG_READ) {
             switch(index) {
-                case 0:
+                case R_VERBOSE: {
                     if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid verbose mode \"", optionStr,
-                                          "\": should be 1 or 0, on or off, true or false",
-                                          (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid verbose mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     opts->verbose = boolVal;
                     break;
-                case 1:
+                }
+                case R_MIN: {
                     if (Tcl_GetInt(interp, optionStr, &intVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid min value \"", optionStr,
-                                          "\": Must be a valid short value.", (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid minimum map value \"%s\": must be a short value.",
+                            optionStr));
                         return TCL_ERROR;
                     }
-                    opts->minVal = intVal;
+                    if (intVal >= 0) {
+                        opts->minVal = intVal;
+                    }
                     break;
-                case 2:
+                }
+                case R_MAX: {
                     if (Tcl_GetInt(interp, optionStr, &intVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid max value \"", optionStr,
-                                          "\": Must be a valid short value.", (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid maximum map value \"%s\": must be a short value.",
+                            optionStr));
                         return TCL_ERROR;
                     }
-                    opts->maxVal = intVal;
+                    if (intVal >= 0) {
+                        opts->maxVal = intVal;
+                    }
                     break;
-                case 3:
-                    if (Tcl_GetDouble(interp, optionStr, &doubleVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid gamma value \"", optionStr,
-                                          "\": Must be greater than or equal to zero.", (char *) NULL);
+                }
+                case R_GAMMA: {
+                    if (Tcl_GetDouble(interp, optionStr, &doubleVal) == TCL_ERROR || doubleVal < 0) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid gamma value \"%s\": must be a double value greater or equal to zero.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     if (doubleVal >= 0.0) {
                         opts->gamma = doubleVal;
                     }
                     break;
+                }
             }
+        } else {
+            /* No write functionality. */
         }
     }
     return TCL_OK;
 }
 
-static int ChnMatch(
+static int FileMatch(
     Tcl_Channel chan,
     TCL_UNUSED(const char *),
     Tcl_Obj *format,
@@ -552,44 +538,42 @@ static int ChnMatch(
     int *heightPtr,
     Tcl_Interp *interp
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
+    tkimg_ReadInitFile(&handle, chan);
 
     return CommonMatch(interp, &handle, format, widthPtr, heightPtr, NULL);
 }
 
-static int ObjMatch(
-    Tcl_Obj *data,
+static int StringMatch(
+    Tcl_Obj *dataObj,
     Tcl_Obj *format,
     int *widthPtr,
     int *heightPtr,
     Tcl_Interp *interp
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    tkimg_ReadInit(data, 'U', &handle);
+    if (!tkimg_ReadInitString(&handle, dataObj)) {
+        return 0;
+    }
     return CommonMatch (interp, &handle, format, widthPtr, heightPtr, NULL);
 }
 
 static int CommonMatch(
     Tcl_Interp *interp,
-    tkimg_MFile *handle,
+    tkimg_Stream *handle,
     Tcl_Obj *format,
     int *widthPtr,
     int *heightPtr,
     DTEDHEADER *dtedHeaderPtr
 ) {
     DTEDHEADER th;
-    FMTOPT opts;
     Int nRows, nCols;
     Byte buf[5];
     buf[4] = '\0';
-
-    if (ParseFormatOpts (interp, format, &opts) == TCL_ERROR) {
-        return FALSE;
-    }
 
     if (!readHeader (handle, &th)) {
         return FALSE;
@@ -607,7 +591,7 @@ static int CommonMatch(
     return TRUE;
 }
 
-static int ChnRead(
+static int FileRead(
     Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
     Tcl_Channel chan,           /* The image channel, open for reading. */
     const char *filename,       /* The name of the image file. */
@@ -620,34 +604,37 @@ static int ChnRead(
     int srcX, int srcY          /* Coordinates of top-left pixel to be used
                                  * in image being read. */
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
+    tkimg_ReadInitFile(&handle, chan);
 
     return CommonRead (interp, &handle, filename, format, imageHandle,
                        destX, destY, width, height, srcX, srcY);
 }
 
-static int ObjRead(
+static int StringRead(
     Tcl_Interp *interp,
-    Tcl_Obj *data,
+    Tcl_Obj *dataObj,
     Tcl_Obj *format,
     Tk_PhotoHandle imageHandle,
     int destX, int destY,
     int width, int height,
     int srcX, int srcY
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    tkimg_ReadInit (data, 'U', &handle);
+    if (!tkimg_ReadInitString(&handle, dataObj)) {
+        return 0;
+    }
     return CommonRead (interp, &handle, "InlineData", format, imageHandle,
                        destX, destY, width, height, srcX, srcY);
 }
 
 static int CommonRead(
     Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
-    tkimg_MFile *handle,              /* The image file, open for reading. */
+    tkimg_Stream *handle,              /* The image file, open for reading. */
     const char *filename,       /* The name of the image file. */
     Tcl_Obj *format,            /* User-specified format object, or NULL. */
     Tk_PhotoHandle imageHandle, /* The photo image to write into. */
@@ -666,7 +653,6 @@ static int CommonRead(
     DTEDFILE tf;
     FMTOPT   opts;
     Boln hostIsIntel;
-    Int matte = 0;
     UByte *pixbufPtr;
     Short *rawbufPtr;
     Double gtable[IMG_GAMMA_TABLE_SIZE];
@@ -675,7 +661,7 @@ static int CommonRead(
     memset (&tf, 0, sizeof (DTEDFILE));
     CommonMatch (interp, handle, format, &fileWidth, &fileHeight, &tf.th);
 
-    if (ParseFormatOpts (interp, format, &opts) != TCL_OK) {
+    if (ParseFormatOpts (interp, format, &opts, IMG_READ) == TCL_ERROR) {
         return TCL_ERROR;
     }
 
@@ -712,15 +698,19 @@ static int CommonRead(
                        hostIsIntel, opts.verbose, minVals, maxVals)) {
         return TCL_ERROR;
     }
-    if (opts.minVal != 0 || opts.maxVal != 0) {
+    if (opts.minVal >= 0) {
         for (c=0; c<nchan; c++) {
             minVals[c] = opts.minVal;
+        }
+    }
+    if (opts.maxVal >= 0) {
+        for (c=0; c<nchan; c++) {
             maxVals[c] = opts.maxVal;
         }
     }
     remapShortValues (tf.rawbuf, fileWidth, fileHeight, nchan, minVals, maxVals);
 
-    if (tkimg_PhotoExpand(interp, imageHandle, destX + outWidth, destY + outHeight) == TCL_ERROR) {
+    if (Tk_PhotoExpand(interp, imageHandle, destX + outWidth, destY + outHeight) == TCL_ERROR) {
         dtedClose(&tf);
         return TCL_ERROR;
     }
@@ -737,8 +727,8 @@ static int CommonRead(
     block.height = 1;
     block.offset[0] = 0;
     block.offset[1] = (nchan > 1? 1: 0);
-    block.offset[2] = (nchan > 1? 2: 0);
-    block.offset[3] = (nchan == 4 && matte? 3: 0);
+    block.offset[2] = (nchan > 2? 2: 0);
+    block.offset[3] = (nchan > 3? 3: 0);
     block.pixelPtr = tf.pixbuf + srcX * nchan;
 
     stopY = srcY + outHeight;
@@ -751,8 +741,8 @@ static int CommonRead(
                             opts.gamma != 1.0? gtable: NULL, pixbufPtr);
         rawbufPtr += fileWidth * nchan;
         if (y >= srcY) {
-            if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, outY,
-                width, 1, TK_PHOTO_COMPOSITE_OVERLAY) == TCL_ERROR) {
+            if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, outY,
+                width, 1, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
                 dtedClose(&tf);
                 return TCL_ERROR;
             }
@@ -763,13 +753,13 @@ static int CommonRead(
     return TCL_OK;
 }
 
-static int ChnWrite(
+static int FileWrite(
     Tcl_Interp *interp,
     TCL_UNUSED(const char *),
     TCL_UNUSED(Tcl_Obj *),
     TCL_UNUSED(Tk_PhotoImageBlock *)
 ) {
-    Tcl_AppendResult (interp, "Writing not supported for format ", sImageFormat.name, (char *)NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Writing not supported for format %s", sImageFormat.name));
     return TCL_ERROR;
 }
 
@@ -778,6 +768,6 @@ static int StringWrite(
     TCL_UNUSED(Tcl_Obj *),
     TCL_UNUSED(Tk_PhotoImageBlock *)
 ) {
-    Tcl_AppendResult (interp, "Writing not supported for format ", sImageFormat.name, (char *)NULL);
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("Writing not supported for format %s", sImageFormat.name));
     return TCL_ERROR;
 }
