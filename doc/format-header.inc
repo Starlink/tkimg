@@ -2,10 +2,10 @@
 
 [moddesc Img]
 [titledesc "[vset FORMATFULLNAME] ([vset FORMATNAME])"]
-[copyright {1995-2024 Jan Nijtmans <nijtmans@users.sourceforge.net>}]
-[copyright {2002-2024 Andreas Kupries <andreas_kupries@users.sourceforge.net>}]
-[copyright {2003-2024 Paul Obermeier <obermeier@users.sourceforge.net>}]
-[require img::[vset FORMATNAME] [opt 2.0]]
+[copyright {1995-2025 Jan Nijtmans <nijtmans@users.sourceforge.net>}]
+[copyright {2002-2025 Andreas Kupries <andreas_kupries@users.sourceforge.net>}]
+[copyright {2003-2025 Paul Obermeier <obermeier@users.sourceforge.net>}]
+[require img::[vset FORMATNAME] [opt 2.1]]
 [description]
 
 [cmd "package require img::[vset FORMATNAME]"]

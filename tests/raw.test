@@ -13,7 +13,7 @@ namespace eval ::raw::test {
     namespace import ::tcltest::*
 
     set fmt     "raw"
-    set fmtDef  "-useheader true -nchan 3"
+    set fmtDef  "-useheader true -withalpha false"
     set ext     "raw"
     set inFile  "testimgs/img.$ext"
     set outFile "testimgs/img_out.$ext"
@@ -112,7 +112,7 @@ namespace eval ::raw::test {
             image create photo i -file $inFile -format [list $fmt -invalidoption 1]
         } -returnCodes {
             error
-        } -result "bad format option \"-invalidoption\": must be -verbose, -useheader, -width, -height, -nchan, -byteorder, -scanorder, -pixeltype, -skipbytes, -map, -min, -max, -gamma, -saturation, -cutoff, -printagc, -uuencode, or -nomap"
+        } -result "bad format option \"-invalidoption\": must be -verbose, -useheader, -withalpha, -width, -height, -numchan, -byteorder, -scanorder, -pixeltype, -skipbytes, -map, -min, -max, -gamma, -saturation, -cutoff, -printagc, -uuencode, -nomap, or -nchan"
 
         test raw-5.2 {Read photo from file using option without value} -setup {
             catch {image delete i}
@@ -140,7 +140,7 @@ namespace eval ::raw::test {
             file delete -force $outFile
         } -returnCodes {
             error
-        } -result "bad format option \"-invalidoption\": must be -verbose, -useheader, -nchan, or scanorder"
+        } -result "bad format option \"-invalidoption\": must be -verbose, -useheader, -nchan, -withalpha, or -scanorder"
 
         test raw-5.5 {Write photo to file using option without value} -setup {
             catch {image delete i}

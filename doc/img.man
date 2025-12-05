@@ -1,12 +1,12 @@
 [comment {-*- tcl -*- doctools}]
-[manpage_begin img n 2.0]
+[manpage_begin img n 2.1]
 
 [moddesc Img]
 [titledesc {Introduction to Img}]
-[copyright {1995-2024 Jan Nijtmans <nijtmans@users.sourceforge.net>}]
-[copyright {2002-2024 Andreas Kupries <andreas_kupries@users.sourceforge.net>}]
-[copyright {2003-2024 Paul Obermeier <obermeier@users.sourceforge.net>}]
-[require Img [opt 2.0]]
+[copyright {1995-2025 Jan Nijtmans <nijtmans@users.sourceforge.net>}]
+[copyright {2002-2025 Andreas Kupries <andreas_kupries@users.sourceforge.net>}]
+[copyright {2003-2025 Paul Obermeier <obermeier@users.sourceforge.net>}]
+[require Img [opt 2.1]]
 [description]
 
 [package Img] is a collection of format handlers for the [package Tk] [uri https://www.tcl.tk/man/tcl9.0/TkCmd/photo.html photo] image type.
@@ -40,7 +40,7 @@ Windows icon format.
 See [cmd img-ico].
 
 [def [term jpeg]]
-Joint Picture Experts Group format.
+Joint Picture Experts Group format. Based on libjpeg 9f.
 See [cmd img-jpeg].
 
 [def [term pcx]]
@@ -54,7 +54,7 @@ type, this is a new image type for [package Tk].
 See [cmd img-pixmap].
 
 [def [term png]]
-Portable Network Graphics format.
+Portable Network Graphics format. Based on libpng 1.6.47.
 See [cmd img-png].
 
 [def [term ppm]]
@@ -83,7 +83,7 @@ Truevision Targa format.
 See [cmd img-tga].
 
 [def [term tiff]]
-Tagged Image File Format.
+Tagged Image File Format. Based on libtiff 4.7.0.
 See [cmd img-tiff].
 
 [def [term window]]
@@ -234,7 +234,7 @@ img write out.png -format {png -resolution 300i 200c}
 Some image formats support pixel values greater than storable in 8-bit integers.
 [list_begin itemized]
 [item]
-The following formats support 16-bit integer pixel values: [cmd img-dted], [cmd img-ppm].
+The following formats support 16-bit integer pixel values: [cmd img-dted], [cmd img-ppm] [cmd img-raw].
 [item]
 The following formats support floating point pixel values: [cmd img-flir], [cmd img-raw].
 [list_end]
