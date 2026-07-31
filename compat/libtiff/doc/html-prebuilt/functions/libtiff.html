@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>libtiff &#8212; LibTIFF 4.7.0 documentation</title>
+    <title>libtiff &#8212; LibTIFF 4.7.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b849a4e9" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinxdoc.css?v=0a676766" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=9f25de62"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=3b5d5a7b"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -28,7 +28,7 @@
         <li class="right" >
           <a href="../functions.html" title="TIFF Functions Overview"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../functions.html" accesskey="U">TIFF Functions Overview</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">libtiff</a></li> 
       </ul>
@@ -88,23 +88,28 @@ fields are defined differently on a per-sample basis
 tag is not defined on a per-sample basis, so this is immaterial).</p>
 </section>
 <section id="data-types">
-<h2>Data types<a class="headerlink" href="#data-types" title="Permalink to this heading">¶</a></h2>
+<span id="datatypes"></span><h2>Data types<a class="headerlink" href="#data-types" title="Permalink to this heading">¶</a></h2>
 <p>The library makes extensive use of C typedefs to promote portability.
 Two sets of typedefs are used, one for communication with clients
 of the library and one for internal data structures and parsing of the
 TIFF format.
 The following typedefs are exposed to users either through function
 definitions or through parameters passed through the varargs interfaces.</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ttag_t</span><span class="p">;</span><span class="w">    </span><span class="c1">// directory tag</span>
-<span class="k">typedef</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">tdir_t</span><span class="p">;</span><span class="w">    </span><span class="c1">// directory index</span>
-<span class="k">typedef</span><span class="w"> </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">tsample_t</span><span class="p">;</span><span class="w"> </span><span class="c1">// sample number</span>
-<span class="k">typedef</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">tstrip_t</span><span class="p">;</span><span class="w">  </span><span class="c1">// strip number</span>
-<span class="k">typedef</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ttile_t</span><span class="p">;</span><span class="w">   </span><span class="c1">// tile number</span>
-<span class="k">typedef</span><span class="w"> </span><span class="kt">int64_t</span><span class="w"> </span><span class="n">tmsize_t</span><span class="p">;</span><span class="w">   </span><span class="c1">// signed size type (int32_t on 32-bit platforms)</span>
-<span class="k">typedef</span><span class="w"> </span><span class="n">tmsize_t</span><span class="w"> </span><span class="n">tsize_t</span><span class="p">;</span><span class="w">   </span><span class="c1">// i/o size in bytes</span>
-<span class="k">typedef</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">tdata_t</span><span class="p">;</span><span class="w">      </span><span class="c1">// image data ref</span>
-<span class="k">typedef</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">thandle_t</span><span class="p">;</span><span class="w">    </span><span class="c1">// client data handle</span>
-<span class="k">typedef</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">toff_t</span><span class="p">;</span><span class="w">    </span><span class="c1">// file offset</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="kt">int64_t</span><span class="w"> </span><span class="n">tmsize_t</span><span class="p">;</span><span class="w">   </span><span class="cm">/* signed size type (int32_t on 32-bit platforms) */</span>
+<span class="k">typedef</span><span class="w"> </span><span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">thandle_t</span><span class="p">;</span><span class="w">    </span><span class="cm">/* client data handle */</span>
+<span class="k">typedef</span><span class="w"> </span><span class="kt">uint64_t</span><span class="w"> </span><span class="n">toff_t</span><span class="p">;</span><span class="w">    </span><span class="cm">/* file offset */</span>
+<span class="k">typedef</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">tdir_t</span><span class="p">;</span><span class="w">    </span><span class="cm">/* directory index */</span>
+</pre></div>
+</div>
+<p>The following typedefs are deprecated and should be replaced by their
+defining counterparts.</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">ttag_t</span><span class="p">;</span><span class="w">    </span><span class="cm">/* directory tag */</span>
+<span class="k">typedef</span><span class="w"> </span><span class="kt">uint16_t</span><span class="w"> </span><span class="n">tsample_t</span><span class="p">;</span><span class="w"> </span><span class="cm">/* sample number */</span>
+<span class="k">typedef</span><span class="w"> </span><span class="kt">uint32_t</span><span class="w"> </span><span class="n">tstrile_t</span><span class="p">;</span><span class="w"> </span><span class="cm">/* strip or tile number */</span>
+<span class="k">typedef</span><span class="w"> </span><span class="n">tstrile_t</span><span class="w"> </span><span class="n">tstrip_t</span><span class="p">;</span><span class="w"> </span><span class="cm">/* strip number */</span>
+<span class="k">typedef</span><span class="w"> </span><span class="n">tstrile_t</span><span class="w"> </span><span class="n">ttile_t</span><span class="p">;</span><span class="w">  </span><span class="cm">/* tile number */</span>
+<span class="k">typedef</span><span class="w"> </span><span class="n">tmsize_t</span><span class="w"> </span><span class="n">tsize_t</span><span class="p">;</span><span class="w">   </span><span class="cm">/* i/o size in bytes */</span>
+<span class="k">typedef</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">tdata_t</span><span class="p">;</span><span class="w">      </span><span class="cm">/* image data ref */</span>
 </pre></div>
 </div>
 <p>Note that
@@ -743,7 +748,7 @@ containing the pointer to a user-specific data object</p></td>
 </tbody>
 </table>
 <table class="docutils align-default" id="id3">
-<caption><span class="caption-text"><em>Libtiff auxillary functions</em></span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
+<caption><span class="caption-text"><em>Libtiff auxiliary functions</em></span><a class="headerlink" href="#id3" title="Permalink to this table">¶</a></caption>
 <colgroup>
 <col style="width: 20.0%" />
 <col style="width: 80.0%" />
@@ -1151,13 +1156,13 @@ that is organized with more than one row per tile or strip.</p></li>
         <li class="right" >
           <a href="../functions.html" title="TIFF Functions Overview"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../functions.html" >TIFF Functions Overview</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">libtiff</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-    &#169; Copyright 1988-2022, LibTIFF contributors.
+    &#169; Copyright 1988-2025, LibTIFF contributors.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
     </div>
   </body>

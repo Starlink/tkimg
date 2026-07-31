@@ -19,6 +19,13 @@ namespace eval ::raw::test {
     set outFile "testimgs/img_out.$ext"
 
     set imgdata [readFile $inFile]
+    if { $::tcl_platform(byteOrder) eq "bigEndian" } {
+        # RAW images are always written in native byte-order.
+        # Reference images are in Intel (little-endian) byte-order,
+        # so we change the byte-order string for comparison on
+        # big-endian machines.
+        set imgdata [string map {"Intel   " "Motorola"} $imgdata]
+    }
 
     test raw-0.1 {package require img::raw} -setup {
     } -body {
@@ -85,7 +92,7 @@ namespace eval ::raw::test {
         } -cleanup {
             image delete i
         } -constraints {
-            Tk87
+            Tk9
         } -result {0 0}
 
 
@@ -101,7 +108,7 @@ namespace eval ::raw::test {
             image delete j
             file delete -force $outFile
         } -constraints {
-            Tk87
+            Tk9
         } -result 1
 
         # Write photo to string using "i data -format" already tested in raw-1.X tests.

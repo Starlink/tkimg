@@ -437,6 +437,7 @@ rst_sources = \
 	releases/v4.5.1.rst \
 	releases/v4.6.0.rst \
 	releases/v4.7.0.rst \
+	releases/v4.7.1.rst \
 	rfcs/index.rst \
 	rfcs/rfc1_psc.rst \
 	rfcs/rfc2_restoring_needed_tools.rst \
@@ -532,9 +533,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign doc/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu doc/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign doc/Makefile
+	  $(AUTOMAKE) --gnu doc/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -722,10 +723,10 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
-@TIFF_DOCS_FALSE@uninstall-local:
-@TIFF_DOCS_FALSE@install-data-local:
 @SPHINX_FALSE@clean-local:
 @TIFF_DOCS_FALSE@clean-local:
+@TIFF_DOCS_FALSE@install-data-local:
+@TIFF_DOCS_FALSE@uninstall-local:
 clean: clean-am
 
 clean-am: clean-generic clean-libtool clean-local mostlyclean-am

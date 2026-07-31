@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>TIFFWriteDirectory &#8212; LibTIFF 4.7.0 documentation</title>
+    <title>TIFFWriteDirectory &#8212; LibTIFF 4.7.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b849a4e9" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinxdoc.css?v=0a676766" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=9f25de62"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=3b5d5a7b"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -28,7 +28,7 @@
         <li class="right" >
           <a href="TIFFWarning.html" title="TIFFWarning"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../functions.html" accesskey="U">TIFF Functions Overview</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">TIFFWriteDirectory</a></li> 
       </ul>
@@ -105,7 +105,9 @@ worst get a tiff read error for the first strip/tile encountered that
 is incomplete, but you will at least get all the valid data in the file
 before that.  When the file is complete, just use
 <a class="reference internal" href="#c.TIFFWriteDirectory" title="TIFFWriteDirectory"><code class="xref c c-func docutils literal notranslate"><span class="pre">TIFFWriteDirectory()</span></code></a> as usual to finish it off cleanly.</p>
-<p>The <a class="reference internal" href="#c.TIFFSetWriteOffset" title="TIFFSetWriteOffset"><code class="xref c c-func docutils literal notranslate"><span class="pre">TIFFSetWriteOffset()</span></code></a> sets the current write offset.
+<p>The <a class="reference internal" href="#c.TIFFSetWriteOffset" title="TIFFSetWriteOffset"><code class="xref c c-func docutils literal notranslate"><span class="pre">TIFFSetWriteOffset()</span></code></a> sets the current write offset for image data
+(i.e.pixels). The offset for writing the directory (<a class="reference internal" href="../terms.html#imagefiledirectory"><span class="std std-ref">IFD</span></a>)
+data is not affected.
 This should only be used to set the offset to a known previous location
 (very carefully), or to 0 so that the next write gets appended to the end
 of the file.</p>
@@ -250,13 +252,13 @@ written.</p>
         <li class="right" >
           <a href="TIFFWarning.html" title="TIFFWarning"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../functions.html" >TIFF Functions Overview</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">TIFFWriteDirectory</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-    &#169; Copyright 1988-2022, LibTIFF contributors.
+    &#169; Copyright 1988-2025, LibTIFF contributors.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
     </div>
   </body>

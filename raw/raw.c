@@ -363,7 +363,7 @@ static void initHeader (RAWHEADER *th)
     th->width     = 128;
     th->height    = 128;
     th->scanOrder = TOP_DOWN;
-    th->byteOrder = INTEL;
+    th->byteOrder = tkimg_IsIntel ()? INTEL: MOTOROLA;
     th->pixelType = TYPE_UBYTE;
     return;
 }

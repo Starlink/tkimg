@@ -87,6 +87,11 @@ static int fsdither(TIFF *in, TIFF *out)
         fprintf(stderr, "Out of memory.\n");
         goto skip_on_error;
     }
+    if (imagewidth > TIFFScanlineSize(in))
+    {
+        fprintf(stderr, "Image width exceeds scanline size.\n");
+        goto skip_on_error;
+    }
 
     /*
      * Get first line
@@ -98,7 +103,7 @@ static int fsdither(TIFF *in, TIFF *out)
     nextptr = nextline;
     for (j = 0; j < imagewidth; ++j)
         *nextptr++ = *inptr++;
-    for (i = 1; i < imagelength; ++i)
+    for (i = 0; i < imagelength; ++i)
     {
         tmpptr = thisline;
         thisline = nextline;
@@ -146,7 +151,7 @@ static int fsdither(TIFF *in, TIFF *out)
                     nextptr[0] += v / 16;
             }
         }
-        if (TIFFWriteScanline(out, outline, i - 1, 0) < 0)
+        if (TIFFWriteScanline(out, outline, i, 0) < 0)
             goto skip_on_error;
     }
     goto exit_label;
@@ -289,39 +294,46 @@ int main(int argc, char *argv[])
         TIFFClose(in);
         return (EXIT_FAILURE);
     }
-    CopyField(TIFFTAG_IMAGEWIDTH, imagewidth);
-    TIFFGetField(in, TIFFTAG_IMAGELENGTH, &imagelength);
-    TIFFSetField(out, TIFFTAG_IMAGELENGTH, imagelength - 1);
-    TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 1);
-    TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 1);
-    TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
-    TIFFSetField(out, TIFFTAG_COMPRESSION, compression);
-    if (fillorder)
-        TIFFSetField(out, TIFFTAG_FILLORDER, fillorder);
-    else
-        CopyField(TIFFTAG_FILLORDER, shortv);
-    snprintf(thing, sizeof(thing), "Dithered B&W version of %s", argv[optind]);
-    TIFFSetField(out, TIFFTAG_IMAGEDESCRIPTION, thing);
-    CopyField(TIFFTAG_PHOTOMETRIC, shortv);
-    CopyField(TIFFTAG_ORIENTATION, shortv);
-    CopyField(TIFFTAG_XRESOLUTION, floatv);
-    CopyField(TIFFTAG_YRESOLUTION, floatv);
-    CopyField(TIFFTAG_RESOLUTIONUNIT, shortv);
-    rowsperstrip = TIFFDefaultStripSize(out, rowsperstrip);
-    TIFFSetField(out, TIFFTAG_ROWSPERSTRIP, rowsperstrip);
-    switch (compression)
+
+    do
     {
-        case COMPRESSION_CCITTFAX3:
-            TIFFSetField(out, TIFFTAG_GROUP3OPTIONS, group3options);
-            break;
-        case COMPRESSION_LZW:
-        case COMPRESSION_ADOBE_DEFLATE:
-        case COMPRESSION_DEFLATE:
-            if (predictor)
-                TIFFSetField(out, TIFFTAG_PREDICTOR, predictor);
-            break;
-    }
-    fsdither(in, out);
+        CopyField(TIFFTAG_IMAGEWIDTH, imagewidth);
+        TIFFGetField(in, TIFFTAG_IMAGELENGTH, &imagelength);
+        TIFFSetField(out, TIFFTAG_IMAGELENGTH, imagelength - 1);
+        TIFFSetField(out, TIFFTAG_BITSPERSAMPLE, 1);
+        TIFFSetField(out, TIFFTAG_SAMPLESPERPIXEL, 1);
+        TIFFSetField(out, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+        TIFFSetField(out, TIFFTAG_COMPRESSION, compression);
+        if (fillorder)
+            TIFFSetField(out, TIFFTAG_FILLORDER, fillorder);
+        else
+            CopyField(TIFFTAG_FILLORDER, shortv);
+        snprintf(thing, sizeof(thing), "Dithered B&W version of %s",
+                 argv[optind]);
+        TIFFSetField(out, TIFFTAG_IMAGEDESCRIPTION, thing);
+        CopyField(TIFFTAG_PHOTOMETRIC, shortv);
+        CopyField(TIFFTAG_ORIENTATION, shortv);
+        CopyField(TIFFTAG_XRESOLUTION, floatv);
+        CopyField(TIFFTAG_YRESOLUTION, floatv);
+        CopyField(TIFFTAG_RESOLUTIONUNIT, shortv);
+        rowsperstrip = TIFFDefaultStripSize(out, rowsperstrip);
+        TIFFSetField(out, TIFFTAG_ROWSPERSTRIP, rowsperstrip);
+        switch (compression)
+        {
+            case COMPRESSION_CCITTFAX3:
+                TIFFSetField(out, TIFFTAG_GROUP3OPTIONS, group3options);
+                break;
+            case COMPRESSION_LZW:
+            case COMPRESSION_ADOBE_DEFLATE:
+            case COMPRESSION_DEFLATE:
+                if (predictor)
+                    TIFFSetField(out, TIFFTAG_PREDICTOR, predictor);
+                break;
+        }
+        fsdither(in, out);
+        TIFFWriteDirectory(out);
+    } while (TIFFReadDirectory(in));
+
     TIFFClose(in);
     TIFFClose(out);
     return (EXIT_SUCCESS);

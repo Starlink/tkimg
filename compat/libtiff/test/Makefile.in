@@ -126,8 +126,9 @@ XFAIL_TESTS =
 @TIFF_TESTS_TRUE@	test_open_options$(EXEEXT) \
 @TIFF_TESTS_TRUE@	test_append_to_strip$(EXEEXT) \
 @TIFF_TESTS_TRUE@	test_ifd_loop_detection$(EXEEXT) \
-@TIFF_TESTS_TRUE@	testtypes$(EXEEXT) test_signed_tags$(EXEEXT) \
-@TIFF_TESTS_TRUE@	$(am__EXEEXT_1) $(am__EXEEXT_2)
+@TIFF_TESTS_TRUE@	test_RGBAImage$(EXEEXT) testtypes$(EXEEXT) \
+@TIFF_TESTS_TRUE@	test_signed_tags$(EXEEXT) $(am__EXEEXT_1) \
+@TIFF_TESTS_TRUE@	$(am__EXEEXT_2)
 subdir = test
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/acinclude.m4 \
@@ -199,6 +200,9 @@ strip_rw_DEPENDENCIES = $(LIBTIFF)
 am_test_IFD_enlargement_OBJECTS = test_IFD_enlargement.$(OBJEXT)
 test_IFD_enlargement_OBJECTS = $(am_test_IFD_enlargement_OBJECTS)
 test_IFD_enlargement_DEPENDENCIES = $(LIBTIFF)
+am_test_RGBAImage_OBJECTS = test_RGBAImage.$(OBJEXT)
+test_RGBAImage_OBJECTS = $(am_test_RGBAImage_OBJECTS)
+test_RGBAImage_DEPENDENCIES = $(LIBTIFF)
 am_test_append_to_strip_OBJECTS = test_append_to_strip.$(OBJEXT)
 test_append_to_strip_OBJECTS = $(am_test_append_to_strip_OBJECTS)
 test_append_to_strip_DEPENDENCIES = $(LIBTIFF)
@@ -268,6 +272,7 @@ am__depfiles_remade = ./$(DEPDIR)/ascii_tag.Po \
 	./$(DEPDIR)/raw_decode.Po ./$(DEPDIR)/rewrite_tag.Po \
 	./$(DEPDIR)/short_tag.Po ./$(DEPDIR)/strip.Po \
 	./$(DEPDIR)/strip_rw.Po ./$(DEPDIR)/test_IFD_enlargement.Po \
+	./$(DEPDIR)/test_RGBAImage.Po \
 	./$(DEPDIR)/test_append_to_strip.Po ./$(DEPDIR)/test_arrays.Po \
 	./$(DEPDIR)/test_directory.Po \
 	./$(DEPDIR)/test_ifd_loop_detection-test_ifd_loop_detection.Po \
@@ -299,7 +304,7 @@ SOURCES = $(ascii_tag_SOURCES) $(custom_dir_SOURCES) \
 	$(defer_strile_writing_SOURCES) $(long_tag_SOURCES) \
 	$(rational_precision2double_SOURCES) $(raw_decode_SOURCES) \
 	$(rewrite_SOURCES) $(short_tag_SOURCES) $(strip_rw_SOURCES) \
-	$(test_IFD_enlargement_SOURCES) \
+	$(test_IFD_enlargement_SOURCES) $(test_RGBAImage_SOURCES) \
 	$(test_append_to_strip_SOURCES) $(test_directory_SOURCES) \
 	$(test_ifd_loop_detection_SOURCES) \
 	$(test_open_options_SOURCES) $(test_signed_tags_SOURCES) \
@@ -311,8 +316,8 @@ DIST_SOURCES = $(ascii_tag_SOURCES) $(custom_dir_SOURCES) \
 	$(am__rational_precision2double_SOURCES_DIST) \
 	$(raw_decode_SOURCES) $(rewrite_SOURCES) $(short_tag_SOURCES) \
 	$(strip_rw_SOURCES) $(test_IFD_enlargement_SOURCES) \
-	$(test_append_to_strip_SOURCES) $(test_directory_SOURCES) \
-	$(test_ifd_loop_detection_SOURCES) \
+	$(test_RGBAImage_SOURCES) $(test_append_to_strip_SOURCES) \
+	$(test_directory_SOURCES) $(test_ifd_loop_detection_SOURCES) \
 	$(test_open_options_SOURCES) $(test_signed_tags_SOURCES) \
 	$(am__test_transferfunction_write_read_SOURCES_DIST) \
 	$(am__test_write_read_tags_SOURCES_DIST) testtypes.c
@@ -830,6 +835,7 @@ BASE_TESTSCRIPTS = \
 	tiff2rgba-rgb-3c-8b.sh \
 	testfax4.sh \
 	testfax3_bug_513.sh \
+	testfax3_bug54_1dnoEOL.sh \
 	testdeflatelaststripextradata.sh
 
 TESTSCRIPTS = $(BASE_TESTSCRIPTS) \
@@ -851,6 +857,7 @@ REFFILES = \
 	refs/o-tiff2ps-PS3.ps \
 	refs/o-testfax4.tiff \
 	refs/o-testfax3_bug_513.tiff \
+	refs/o-testfax3_bug54_1dnoEOL.tiff \
 	refs/o-deflate-last-strip-extra-data.tiff
 
 
@@ -902,6 +909,7 @@ IMAGES_EXTRA_DIST = \
 	images/test_ifd_loop_subifd.tif \
 	images/webp_lossless_rgba_alpha_fully_opaque.tif \
 	images/32bpp-None-jpeg.tiff \
+	images/testfax3_bug54_1dnoEOL.tif \
 	$(PNMIMAGES) \
 	$(TIFFIMAGES)
 
@@ -948,6 +956,8 @@ test_append_to_strip_LDADD = $(LIBTIFF)
 test_ifd_loop_detection_CFLAGS = -DSOURCE_DIR=\"@srcdir@\"
 test_ifd_loop_detection_SOURCES = test_ifd_loop_detection.c
 test_ifd_loop_detection_LDADD = $(LIBTIFF)
+test_RGBAImage_SOURCES = test_RGBAImage.c
+test_RGBAImage_LDADD = $(LIBTIFF)
 AM_CPPFLAGS = -I$(top_srcdir)/libtiff
 all: all-am
 
@@ -1040,6 +1050,10 @@ test_IFD_enlargement$(EXEEXT): $(test_IFD_enlargement_OBJECTS) $(test_IFD_enlarg
 	@rm -f test_IFD_enlargement$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(test_IFD_enlargement_OBJECTS) $(test_IFD_enlargement_LDADD) $(LIBS)
 
+test_RGBAImage$(EXEEXT): $(test_RGBAImage_OBJECTS) $(test_RGBAImage_DEPENDENCIES) $(EXTRA_test_RGBAImage_DEPENDENCIES) 
+	@rm -f test_RGBAImage$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(test_RGBAImage_OBJECTS) $(test_RGBAImage_LDADD) $(LIBS)
+
 test_append_to_strip$(EXEEXT): $(test_append_to_strip_OBJECTS) $(test_append_to_strip_DEPENDENCIES) $(EXTRA_test_append_to_strip_DEPENDENCIES) 
 	@rm -f test_append_to_strip$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(test_append_to_strip_OBJECTS) $(test_append_to_strip_LDADD) $(LIBS)
@@ -1092,6 +1106,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strip.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/strip_rw.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_IFD_enlargement.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_RGBAImage.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_append_to_strip.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_arrays.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_directory.Po@am__quote@ # am--include-marker
@@ -1436,6 +1451,13 @@ test_append_to_strip.log: test_append_to_strip$(EXEEXT)
 test_ifd_loop_detection.log: test_ifd_loop_detection$(EXEEXT)
 	@p='test_ifd_loop_detection$(EXEEXT)'; \
 	b='test_ifd_loop_detection'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+test_RGBAImage.log: test_RGBAImage$(EXEEXT)
+	@p='test_RGBAImage$(EXEEXT)'; \
+	b='test_RGBAImage'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -2028,6 +2050,13 @@ testfax3_bug_513.sh.log: testfax3_bug_513.sh
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testfax3_bug54_1dnoEOL.sh.log: testfax3_bug54_1dnoEOL.sh
+	@p='testfax3_bug54_1dnoEOL.sh'; \
+	b='testfax3_bug54_1dnoEOL.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 testdeflatelaststripextradata.sh.log: testdeflatelaststripextradata.sh
 	@p='testdeflatelaststripextradata.sh'; \
 	b='testdeflatelaststripextradata.sh'; \
@@ -2199,6 +2228,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/strip.Po
 	-rm -f ./$(DEPDIR)/strip_rw.Po
 	-rm -f ./$(DEPDIR)/test_IFD_enlargement.Po
+	-rm -f ./$(DEPDIR)/test_RGBAImage.Po
 	-rm -f ./$(DEPDIR)/test_append_to_strip.Po
 	-rm -f ./$(DEPDIR)/test_arrays.Po
 	-rm -f ./$(DEPDIR)/test_directory.Po
@@ -2267,6 +2297,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/strip.Po
 	-rm -f ./$(DEPDIR)/strip_rw.Po
 	-rm -f ./$(DEPDIR)/test_IFD_enlargement.Po
+	-rm -f ./$(DEPDIR)/test_RGBAImage.Po
 	-rm -f ./$(DEPDIR)/test_append_to_strip.Po
 	-rm -f ./$(DEPDIR)/test_arrays.Po
 	-rm -f ./$(DEPDIR)/test_directory.Po

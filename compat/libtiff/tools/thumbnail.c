@@ -538,7 +538,7 @@ static void initScale()
 }
 
 /*
- * Calculate the horizontal accumulation parameteres
+ * Calculate the horizontal accumulation parameters
  * according to the widths of the src and dst images.
  */
 static void setupStepTables(uint32_t sw)
@@ -620,7 +620,15 @@ static void setrow(uint8_t *row, uint32_t nrows, const uint8_t *rows[])
             }
             acc += bits[*src & mask1];
         }
-        *row++ = cmap[(255 * acc) / area];
+        if (255 * acc / area < 256)
+        {
+            *row++ = cmap[(255 * acc) / area];
+        }
+        else
+        {
+            fprintf(stderr, "acc=%d, area=%d\n", acc, area);
+            *row++ = cmap[0];
+        }
     }
 }
 

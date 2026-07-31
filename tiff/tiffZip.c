@@ -619,7 +619,7 @@ static void ZipFree( voidpf opaque, voidpf address)
 }
 
 static const TIFFField zipFields[] = {
-    { TIFFTAG_ZIPQUALITY, 0, 0, TIFF_ANY, 0, TIFF_SETGET_INT, TIFF_SETGET_UNDEFINED, FIELD_PSEUDO, TRUE, FALSE, "", NULL },
+    { TIFFTAG_ZIPQUALITY, 0, 0, TIFF_ANY, 0, TIFF_SETGET_INT, FIELD_PSEUDO, TRUE, FALSE, "", NULL },
 };
 
 int

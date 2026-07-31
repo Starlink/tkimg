@@ -5,15 +5,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>DRAFT TIFF Technical Note #2 &#8212; LibTIFF 4.7.0 documentation</title>
+    <title>DRAFT TIFF Technical Note #2 &#8212; LibTIFF 4.7.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b849a4e9" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinxdoc.css?v=0a676766" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=9f25de62"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=3b5d5a7b"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="BigTIFF Design" href="bigtiff.html" />
+    <link rel="next" title="LibTIFF Coverage of the TIFF 6.0 Specification" href="coverage.html" />
     <link rel="prev" title="TIFF File Format Specification" href="index.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -23,12 +23,12 @@
           <a href="../genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
-          <a href="bigtiff.html" title="BigTIFF Design"
+          <a href="coverage.html" title="LibTIFF Coverage of the TIFF 6.0 Specification"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="TIFF File Format Specification"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">TIFF File Format Specification</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">DRAFT TIFF Technical Note #2</a></li> 
       </ul>
@@ -157,7 +157,7 @@ JPEG markers from the TIFF fields to feed the codec (when reading).  This
 means that the control logic must know a great deal more about JPEG details
 than we would like.  The parsing and reconstruction of the markers also
 represents a fair amount of unnecessary work.</p>
-<p>Quite a few implementors have proposed writing &quot;TIFF/JPEG&quot; files in which
+<p>Quite a few implementers have proposed writing &quot;TIFF/JPEG&quot; files in which
 a standard JPEG datastream is simply dumped into the file and pointed to
 by JPEGInterchangeFormat.  To avoid parsing the JPEG datastream, they
 suggest not writing the JPEG auxiliary fields (JPEGxxTables etc) nor even
@@ -168,7 +168,7 @@ is arguably not TIFF at all, since <em>all</em> TIFF-reading applications expect
 to find strip or tile pointers.  A subset implementation that is not
 upward-compatible with the full spec is clearly unacceptable.  However,
 the frequency with which this idea has come up makes it clear that
-implementors find the existing Section 22 too complex.</p>
+implementers find the existing Section 22 too complex.</p>
 </section>
 </section>
 <section id="overview-of-the-solution">
@@ -261,7 +261,7 @@ YCbCr is to apply downsampling!)  It is likely that future versions of TIFF
 will provide additional <code class="docutils literal notranslate"><span class="pre">PhotometricInterpretation</span></code> values and a more general
 way of defining subsampling, so as to allow more flexibility in
 JPEG-compressed files.  But that issue is not addressed in this Tech Note.</p>
-<p>Implementors should note that many popular JPEG codecs
+<p>Implementers should note that many popular JPEG codecs
 (compressor/decompressors) provide automatic color conversion and
 downsampling, so that the application may supply full-size RGB data which
 is nonetheless converted to downsampled YCbCr.  This is an implementation
@@ -526,8 +526,8 @@ files and the optional <code class="docutils literal notranslate"><span class="p
 single-datastream files.  Support for tiled TIFF files is strongly
 recommended but not required.</p>
 </section>
-<section id="other-recommendations-for-implementors">
-<h3>Other recommendations for implementors<a class="headerlink" href="#other-recommendations-for-implementors" title="Permalink to this heading">¶</a></h3>
+<section id="other-recommendations-for-implementers">
+<h3>Other recommendations for implementers<a class="headerlink" href="#other-recommendations-for-implementers" title="Permalink to this heading">¶</a></h3>
 <p>The TIFF tag <code class="docutils literal notranslate"><span class="pre">Compression=7</span></code> guarantees only that the compressed data is
 represented as ISO JPEG datastreams.  Since JPEG is a large and evolving
 standard, readers should apply careful error checking to the JPEG markers
@@ -581,7 +581,7 @@ Compression Standard&quot;, Van Nostrand Reinhold, 1993, ISBN 0-442-01272-1.
 638pp.</p>
 <p>This textbook is by far the most complete exposition of JPEG in existence.
 It includes the full text of the ISO JPEG standards (DIS 10918-1 and draft
-DIS 10918-2).  No would-be JPEG implementor should be without it.</p>
+DIS 10918-2).  No would-be JPEG implementer should be without it.</p>
 <p>[3] ISO/IEC IS 10918-1, &quot;Digital Compression and Coding of Continuous-tone
 Still Images, Part 1: Requirements and guidelines&quot;, February 1994.
 ISO/IEC DIS 10918-2, &quot;Digital Compression and Coding of Continuous-tone
@@ -691,7 +691,7 @@ downsampled by default!</p>
 <li><a class="reference internal" href="#jpegtables-field">JPEGTables field</a></li>
 <li><a class="reference internal" href="#special-considerations-for-planarconfiguration-2">Special considerations for PlanarConfiguration 2</a></li>
 <li><a class="reference internal" href="#minimum-requirements-for-tiff-jpeg">Minimum requirements for TIFF/JPEG</a></li>
-<li><a class="reference internal" href="#other-recommendations-for-implementors">Other recommendations for implementors</a></li>
+<li><a class="reference internal" href="#other-recommendations-for-implementers">Other recommendations for implementers</a></li>
 <li><a class="reference internal" href="#references">References</a></li>
 </ul>
 </li>
@@ -708,8 +708,8 @@ downsampled by default!</p>
   </div>
   <div>
     <h4>Next topic</h4>
-    <p class="topless"><a href="bigtiff.html"
-                          title="next chapter">BigTIFF Design</a></p>
+    <p class="topless"><a href="coverage.html"
+                          title="next chapter">LibTIFF Coverage of the TIFF 6.0 Specification</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
@@ -739,18 +739,18 @@ downsampled by default!</p>
           <a href="../genindex.html" title="General Index"
              >index</a></li>
         <li class="right" >
-          <a href="bigtiff.html" title="BigTIFF Design"
+          <a href="coverage.html" title="LibTIFF Coverage of the TIFF 6.0 Specification"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="TIFF File Format Specification"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" >TIFF File Format Specification</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">DRAFT TIFF Technical Note #2</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-    &#169; Copyright 1988-2022, LibTIFF contributors.
+    &#169; Copyright 1988-2025, LibTIFF contributors.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
     </div>
   </body>

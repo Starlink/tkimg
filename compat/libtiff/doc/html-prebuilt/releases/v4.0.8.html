@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changes in TIFF v4.0.8 &#8212; LibTIFF 4.7.0 documentation</title>
+    <title>Changes in TIFF v4.0.8 &#8212; LibTIFF 4.7.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b849a4e9" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinxdoc.css?v=0a676766" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=9f25de62"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=3b5d5a7b"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -28,7 +28,7 @@
         <li class="right" >
           <a href="v4.0.9.html" title="Changes in TIFF v4.0.9"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Release history</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Changes in TIFF v4.0.8</a></li> 
       </ul>
@@ -254,12 +254,12 @@ allocation when <code class="docutils literal notranslate"><span class="pre">Row
 Credit to OSS-Fuzz (locally run, on GDAL)</p></li>
 <li><p><code class="file docutils literal notranslate"><span class="pre">libtiff/tif_lzw.c</span></code>: update dec_bitsleft at beginning of
 LZWDecode(), and update tif_rawcc at end of LZWDecode(). This
-is needed to properly work with the latest chnges in
+is needed to properly work with the latest changes in
 tif_read.c in CHUNKY_STRIP_READ_SUPPORT mode.</p></li>
 <li><p><code class="file docutils literal notranslate"><span class="pre">libtiff/tif_pixarlog.c</span></code>: <code class="xref c c-func docutils literal notranslate"><span class="pre">PixarLogDecode()</span></code>: resync <code class="xref c c-member docutils literal notranslate"><span class="pre">tif_rawcp</span></code>
 with <code class="xref c c-member docutils literal notranslate"><span class="pre">next_in</span></code> and <code class="xref c c-member docutils literal notranslate"><span class="pre">tif_rawcc</span></code> with <code class="xref c c-member docutils literal notranslate"><span class="pre">avail_in</span></code> at beginning and end
 of function, similarly to what is done in <code class="xref c c-func docutils literal notranslate"><span class="pre">LZWDecode()</span></code>. Likely
-needed so that it works properly with latest chnges in
+needed so that it works properly with latest changes in
 <code class="file docutils literal notranslate"><span class="pre">tif_read.c</span></code> in <code class="xref c c-macro docutils literal notranslate"><span class="pre">CHUNKY_STRIP_READ_SUPPORT</span></code> mode. But untested...</p></li>
 <li><p><code class="file docutils literal notranslate"><span class="pre">libtiff/tif_getimage.c</span></code>: <code class="xref c c-func docutils literal notranslate"><span class="pre">initYCbCrConversion()</span></code>: add basic
 validation of <code class="xref c c-var docutils literal notranslate"><span class="pre">luma</span></code> and <code class="xref c c-var docutils literal notranslate"><span class="pre">refBlackWhite</span></code> coefficients (just check
@@ -435,13 +435,13 @@ is empty. Patch by Alan Coopersmith.  Fixes
         <li class="right" >
           <a href="v4.0.9.html" title="Changes in TIFF v4.0.9"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" >Release history</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Changes in TIFF v4.0.8</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-    &#169; Copyright 1988-2022, LibTIFF contributors.
+    &#169; Copyright 1988-2025, LibTIFF contributors.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
     </div>
   </body>

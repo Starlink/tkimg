@@ -675,10 +675,12 @@ static const char RGBcolorimage[] = "\
  *
  * It is claimed to be part of some future revision of the EPS spec.
  */
-static void PhotoshopBanner(FILE *fd, uint32_t w, uint32_t h, int bs, int nc,
-                            const char *startline)
+static void PhotoshopBanner(FILE *fd, uint32_t w, uint32_t h, tmsize_t bs,
+                            int nc, const char *startline)
 {
-    fprintf(fd, "%%ImageData: %" PRIu32 " %" PRIu32 " %" PRIu16 " %d 0 %d 2 \"",
+    fprintf(fd,
+            "%%ImageData: %" PRIu32 " %" PRIu32 " %" PRIu16
+            " %d 0 %" TIFF_SSIZE_FORMAT " 2 \"",
             w, h, bitspersample, nc, bs);
     fprintf(fd, startline, nc);
     fprintf(fd, "\"\n");
@@ -2432,12 +2434,22 @@ int PS_Lvl2page(FILE *fd, TIFF *tif, uint32_t w, uint32_t h)
     if (tiled_image)
     {
         num_chunks = TIFFNumberOfTiles(tif);
-        TIFFGetField(tif, TIFFTAG_TILEBYTECOUNTS, &bc);
+        if (!TIFFGetField(tif, TIFFTAG_TILEBYTECOUNTS, &bc))
+        {
+            TIFFError(filename,
+                      "Can't read bytecounts of tiles at PS_Lvl2page()");
+            return (FALSE);
+        }
     }
     else
     {
         num_chunks = TIFFNumberOfStrips(tif);
-        TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &bc);
+        if (!TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &bc))
+        {
+            TIFFError(filename,
+                      "Can't read bytecounts of strips at PS_Lvl2page()");
+            return (FALSE);
+        }
     }
 
     if (use_rawdata)
@@ -2694,7 +2706,6 @@ void PSColorContigPreamble(FILE *fd, uint32_t w, uint32_t h, int nc)
 void PSColorSeparatePreamble(FILE *fd, uint32_t w, uint32_t h, int nc)
 {
     int i;
-
     PhotoshopBanner(fd, w, h, ps_bytesperrow, nc, "true %d colorimage");
     for (i = 0; i < nc; i++)
         fprintf(fd, "/line%d %" TIFF_SSIZE_FORMAT " string def\n", i,
@@ -3107,7 +3118,11 @@ void PSRawDataBW(FILE *fd, TIFF *tif, uint32_t w, uint32_t h)
     (void)w;
     (void)h;
     TIFFGetFieldDefaulted(tif, TIFFTAG_FILLORDER, &fillorder);
-    TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &bc);
+    if (!TIFFGetField(tif, TIFFTAG_STRIPBYTECOUNTS, &bc))
+    {
+        TIFFError(filename, "Can't read bytecounts of strips at PSRawDataBW()");
+        return;
+    }
 
     /*
      * Find largest strip:

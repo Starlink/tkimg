@@ -127,6 +127,7 @@ host_triplet = @host@
 EXTRA_PROGRAMS = rgb2ycbcr$(EXEEXT) thumbnail$(EXEEXT)
 @TIFF_TESTS_TRUE@check_PROGRAMS = rgb2ycbcr$(EXEEXT) \
 @TIFF_TESTS_TRUE@	thumbnail$(EXEEXT)
+noinst_PROGRAMS = mkg3states$(EXEEXT)
 subdir = tools
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/acinclude.m4 \
@@ -145,7 +146,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 @HAVE_OPENGL_TRUE@@TIFF_TOOLS_TRUE@am__EXEEXT_1 = tiffgt$(EXEEXT)
 am__installdirs = "$(DESTDIR)$(bindir)"
-PROGRAMS = $(bin_PROGRAMS)
+PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am_fax2ps_OBJECTS = fax2ps.$(OBJEXT)
 fax2ps_OBJECTS = $(am_fax2ps_OBJECTS)
 fax2ps_DEPENDENCIES = $(LIBTIFF) $(LIBPORT)
@@ -156,6 +157,9 @@ am__v_lt_1 =
 am_fax2tiff_OBJECTS = fax2tiff.$(OBJEXT)
 fax2tiff_OBJECTS = $(am_fax2tiff_OBJECTS)
 fax2tiff_DEPENDENCIES = $(LIBTIFF) $(LIBPORT)
+am_mkg3states_OBJECTS = mkg3states.$(OBJEXT)
+mkg3states_OBJECTS = $(am_mkg3states_OBJECTS)
+mkg3states_DEPENDENCIES = $(LIBPORT)
 am_pal2rgb_OBJECTS = pal2rgb.$(OBJEXT)
 pal2rgb_OBJECTS = $(am_pal2rgb_OBJECTS)
 pal2rgb_DEPENDENCIES = $(LIBTIFF) $(LIBPORT)
@@ -234,16 +238,16 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)/config -I$(top_builddir)/libt
 depcomp = $(SHELL) $(top_srcdir)/config/depcomp
 am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/fax2ps.Po ./$(DEPDIR)/fax2tiff.Po \
-	./$(DEPDIR)/pal2rgb.Po ./$(DEPDIR)/ppm2tiff.Po \
-	./$(DEPDIR)/raw2tiff.Po ./$(DEPDIR)/rgb2ycbcr.Po \
-	./$(DEPDIR)/thumbnail.Po ./$(DEPDIR)/tiff2bw.Po \
-	./$(DEPDIR)/tiff2pdf.Po ./$(DEPDIR)/tiff2ps.Po \
-	./$(DEPDIR)/tiff2rgba.Po ./$(DEPDIR)/tiffcmp.Po \
-	./$(DEPDIR)/tiffcp.Po ./$(DEPDIR)/tiffcrop.Po \
-	./$(DEPDIR)/tiffdither.Po ./$(DEPDIR)/tiffdump.Po \
-	./$(DEPDIR)/tiffgt-tiffgt.Po ./$(DEPDIR)/tiffinfo.Po \
-	./$(DEPDIR)/tiffmedian.Po ./$(DEPDIR)/tiffset.Po \
-	./$(DEPDIR)/tiffsplit.Po
+	./$(DEPDIR)/mkg3states.Po ./$(DEPDIR)/pal2rgb.Po \
+	./$(DEPDIR)/ppm2tiff.Po ./$(DEPDIR)/raw2tiff.Po \
+	./$(DEPDIR)/rgb2ycbcr.Po ./$(DEPDIR)/thumbnail.Po \
+	./$(DEPDIR)/tiff2bw.Po ./$(DEPDIR)/tiff2pdf.Po \
+	./$(DEPDIR)/tiff2ps.Po ./$(DEPDIR)/tiff2rgba.Po \
+	./$(DEPDIR)/tiffcmp.Po ./$(DEPDIR)/tiffcp.Po \
+	./$(DEPDIR)/tiffcrop.Po ./$(DEPDIR)/tiffdither.Po \
+	./$(DEPDIR)/tiffdump.Po ./$(DEPDIR)/tiffgt-tiffgt.Po \
+	./$(DEPDIR)/tiffinfo.Po ./$(DEPDIR)/tiffmedian.Po \
+	./$(DEPDIR)/tiffset.Po ./$(DEPDIR)/tiffsplit.Po
 am__mv = mv -f
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
@@ -263,14 +267,7 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(fax2ps_SOURCES) $(fax2tiff_SOURCES) $(pal2rgb_SOURCES) \
-	$(ppm2tiff_SOURCES) $(raw2tiff_SOURCES) $(rgb2ycbcr_SOURCES) \
-	$(thumbnail_SOURCES) $(tiff2bw_SOURCES) $(tiff2pdf_SOURCES) \
-	$(tiff2ps_SOURCES) $(tiff2rgba_SOURCES) $(tiffcmp_SOURCES) \
-	$(tiffcp_SOURCES) $(tiffcrop_SOURCES) $(tiffdither_SOURCES) \
-	$(tiffdump_SOURCES) $(tiffgt_SOURCES) $(tiffinfo_SOURCES) \
-	$(tiffmedian_SOURCES) $(tiffset_SOURCES) $(tiffsplit_SOURCES)
-DIST_SOURCES = $(fax2ps_SOURCES) $(fax2tiff_SOURCES) \
+SOURCES = $(fax2ps_SOURCES) $(fax2tiff_SOURCES) $(mkg3states_SOURCES) \
 	$(pal2rgb_SOURCES) $(ppm2tiff_SOURCES) $(raw2tiff_SOURCES) \
 	$(rgb2ycbcr_SOURCES) $(thumbnail_SOURCES) $(tiff2bw_SOURCES) \
 	$(tiff2pdf_SOURCES) $(tiff2ps_SOURCES) $(tiff2rgba_SOURCES) \
@@ -278,6 +275,14 @@ DIST_SOURCES = $(fax2ps_SOURCES) $(fax2tiff_SOURCES) \
 	$(tiffdither_SOURCES) $(tiffdump_SOURCES) $(tiffgt_SOURCES) \
 	$(tiffinfo_SOURCES) $(tiffmedian_SOURCES) $(tiffset_SOURCES) \
 	$(tiffsplit_SOURCES)
+DIST_SOURCES = $(fax2ps_SOURCES) $(fax2tiff_SOURCES) \
+	$(mkg3states_SOURCES) $(pal2rgb_SOURCES) $(ppm2tiff_SOURCES) \
+	$(raw2tiff_SOURCES) $(rgb2ycbcr_SOURCES) $(thumbnail_SOURCES) \
+	$(tiff2bw_SOURCES) $(tiff2pdf_SOURCES) $(tiff2ps_SOURCES) \
+	$(tiff2rgba_SOURCES) $(tiffcmp_SOURCES) $(tiffcp_SOURCES) \
+	$(tiffcrop_SOURCES) $(tiffdither_SOURCES) $(tiffdump_SOURCES) \
+	$(tiffgt_SOURCES) $(tiffinfo_SOURCES) $(tiffmedian_SOURCES) \
+	$(tiffset_SOURCES) $(tiffsplit_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -511,6 +516,8 @@ tiffgt_SOURCES = tiffgt.c
 tiffgt_CFLAGS = $(CFLAGS) $(GLUT_CFLAGS) $(AM_CFLAGS)
 tiffgt_LDADD = $(LIBTIFF) $(LIBPORT) $(X_LIBS) $(GLUT_LIBS)
 AM_CPPFLAGS = -I$(top_srcdir)/libtiff -I$(top_srcdir)/port
+mkg3states_SOURCES = mkg3states.c ../libtiff/tif_fax3.h
+mkg3states_LDADD = $(LIBPORT)
 all: all-am
 
 .SUFFIXES:
@@ -524,9 +531,9 @@ $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__confi
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign tools/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu tools/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --foreign tools/Makefile
+	  $(AUTOMAKE) --gnu tools/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -603,6 +610,15 @@ clean-checkPROGRAMS:
 	echo " rm -f" $$list; \
 	rm -f $$list
 
+clean-noinstPROGRAMS:
+	@list='$(noinst_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
+
 fax2ps$(EXEEXT): $(fax2ps_OBJECTS) $(fax2ps_DEPENDENCIES) $(EXTRA_fax2ps_DEPENDENCIES) 
 	@rm -f fax2ps$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(fax2ps_OBJECTS) $(fax2ps_LDADD) $(LIBS)
@@ -610,6 +626,10 @@ fax2ps$(EXEEXT): $(fax2ps_OBJECTS) $(fax2ps_DEPENDENCIES) $(EXTRA_fax2ps_DEPENDE
 fax2tiff$(EXEEXT): $(fax2tiff_OBJECTS) $(fax2tiff_DEPENDENCIES) $(EXTRA_fax2tiff_DEPENDENCIES) 
 	@rm -f fax2tiff$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(fax2tiff_OBJECTS) $(fax2tiff_LDADD) $(LIBS)
+
+mkg3states$(EXEEXT): $(mkg3states_OBJECTS) $(mkg3states_DEPENDENCIES) $(EXTRA_mkg3states_DEPENDENCIES) 
+	@rm -f mkg3states$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(mkg3states_OBJECTS) $(mkg3states_LDADD) $(LIBS)
 
 pal2rgb$(EXEEXT): $(pal2rgb_OBJECTS) $(pal2rgb_DEPENDENCIES) $(EXTRA_pal2rgb_DEPENDENCIES) 
 	@rm -f pal2rgb$(EXEEXT)
@@ -695,6 +715,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fax2ps.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fax2tiff.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mkg3states.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pal2rgb.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ppm2tiff.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/raw2tiff.Po@am__quote@ # am--include-marker
@@ -888,11 +909,12 @@ maintainer-clean-generic:
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
-	clean-libtool mostlyclean-am
+	clean-libtool clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/fax2ps.Po
 	-rm -f ./$(DEPDIR)/fax2tiff.Po
+	-rm -f ./$(DEPDIR)/mkg3states.Po
 	-rm -f ./$(DEPDIR)/pal2rgb.Po
 	-rm -f ./$(DEPDIR)/ppm2tiff.Po
 	-rm -f ./$(DEPDIR)/raw2tiff.Po
@@ -959,6 +981,7 @@ installcheck-am:
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/fax2ps.Po
 	-rm -f ./$(DEPDIR)/fax2tiff.Po
+	-rm -f ./$(DEPDIR)/mkg3states.Po
 	-rm -f ./$(DEPDIR)/pal2rgb.Po
 	-rm -f ./$(DEPDIR)/ppm2tiff.Po
 	-rm -f ./$(DEPDIR)/raw2tiff.Po
@@ -1000,15 +1023,15 @@ uninstall-am: uninstall-binPROGRAMS
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--depfiles check check-am clean \
 	clean-binPROGRAMS clean-checkPROGRAMS clean-generic \
-	clean-libtool cscopelist-am ctags ctags-am distclean \
-	distclean-compile distclean-generic distclean-libtool \
-	distclean-tags distdir dvi dvi-am html html-am info info-am \
-	install install-am install-binPROGRAMS install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-pdf install-pdf-am \
-	install-ps install-ps-am install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
+	clean-libtool clean-noinstPROGRAMS cscopelist-am ctags \
+	ctags-am distclean distclean-compile distclean-generic \
+	distclean-libtool distclean-tags distdir dvi dvi-am html \
+	html-am info info-am install install-am install-binPROGRAMS \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
 	tags tags-am uninstall uninstall-am uninstall-binPROGRAMS
@@ -1022,6 +1045,9 @@ echo:
 	(echo $(GL_CFLAGS))
 	(echo $(GLU_CFLAGS))
 	(echo $(GLUT_CFLAGS))
+
+faxtable: mkg3states
+	(rm -f ../libtiff/tif_fax3sm.c && ./mkg3states -b -c const ../libtiff/tif_fax3sm.c)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

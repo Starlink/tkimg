@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>TIFFcolor &#8212; LibTIFF 4.7.0 documentation</title>
+    <title>TIFFcolor &#8212; LibTIFF 4.7.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b849a4e9" />
     <link rel="stylesheet" type="text/css" href="../_static/sphinxdoc.css?v=0a676766" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=9f25de62"></script>
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=3b5d5a7b"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -28,7 +28,7 @@
         <li class="right" >
           <a href="TIFFcodec.html" title="TIFFcodec"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../functions.html" accesskey="U">TIFF Functions Overview</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">TIFFcolor</a></li> 
       </ul>
@@ -81,9 +81,16 @@ simplify this task <code class="docutils literal notranslate"><span class="pre">
 itself. In particular, these routines used in the <a class="reference internal" href="TIFFRGBAImage.html"><span class="doc">TIFFRGBAImage</span></a>
 interface.</p>
 <p><a class="reference internal" href="#c.TIFFYCbCrToRGBInit" title="TIFFYCbCrToRGBInit"><code class="xref c c-func docutils literal notranslate"><span class="pre">TIFFYCbCrToRGBInit()</span></code></a> used to initialize <em>YCbCr</em> to <em>RGB</em>
-conversion state. Allocating and freeing of the <em>ycbcr</em> structure
-belongs to programmer.  <code class="xref c c-struct docutils literal notranslate"><span class="pre">TIFFYCbCrToRGB</span></code> is defined in
-<code class="file docutils literal notranslate"><span class="pre">tiffio.h</span></code> as:</p>
+conversion state.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The calling program is responsible for allocating and releasing the required
+buffer for the structure <code class="xref c c-struct docutils literal notranslate"><span class="pre">TIFFYCbCrToRGB</span></code> and its required tables,
+pointed to by <em>ycbcr</em>. The pointers to these tables are stored in the
+structure <code class="xref c c-struct docutils literal notranslate"><span class="pre">TIFFYCbCrToRGB</span></code>, which is located at the beginning
+of that buffer. Thus, this memory has to be allocated as shown in the example below.</p>
+</div>
+<p><code class="xref c c-struct docutils literal notranslate"><span class="pre">TIFFYCbCrToRGB</span></code> is defined in <code class="file docutils literal notranslate"><span class="pre">tiffio.h</span></code> as:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w">                </span><span class="cm">/* YCbCr-&gt;RGB support */</span>
 <span class="w">        </span><span class="n">TIFFRGBValue</span><span class="o">*</span><span class="w"> </span><span class="n">clamptab</span><span class="p">;</span><span class="w"> </span><span class="cm">/* range clamping table */</span>
 <span class="w">        </span><span class="kt">int</span><span class="o">*</span><span class="w">          </span><span class="n">Cr_r_tab</span><span class="p">;</span>
@@ -109,7 +116,7 @@ understand the the technique:</p>
 <span class="kt">uint16_t</span><span class="w"> </span><span class="n">hs</span><span class="p">,</span><span class="w"> </span><span class="n">vs</span><span class="p">;</span>
 
 <span class="cm">/* Initialize structures */</span>
-<span class="n">ycbcr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">TIFFYCbCrToRGB</span><span class="o">*</span><span class="p">)</span>
+<span class="n">TIFFYCbCrToRGB</span><span class="w"> </span><span class="o">*</span><span class="n">ycbcr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">TIFFYCbCrToRGB</span><span class="o">*</span><span class="p">)</span>
 <span class="w">    </span><span class="n">_TIFFmalloc</span><span class="p">(</span><span class="n">TIFFroundup</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="n">TIFFYCbCrToRGB</span><span class="p">),</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="kt">long</span><span class="p">))</span>
 <span class="w">        </span><span class="o">+</span><span class="w"> </span><span class="mi">4</span><span class="o">*</span><span class="mi">256</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="n">TIFFRGBValue</span><span class="p">)</span>
 <span class="w">        </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="o">*</span><span class="mi">256</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span>
@@ -310,13 +317,13 @@ and at the second step we will convert <em>CIE XYZ</em> to <em>RGB</em> using
         <li class="right" >
           <a href="TIFFcodec.html" title="TIFFcodec"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.0 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">LibTIFF 4.7.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="../functions.html" >TIFF Functions Overview</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">TIFFcolor</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
-    &#169; Copyright 1988-2022, LibTIFF contributors.
+    &#169; Copyright 1988-2025, LibTIFF contributors.
       Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.2.
     </div>
   </body>

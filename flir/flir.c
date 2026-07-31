@@ -25,6 +25,15 @@
 
 #include "init.c"
 
+#define SWAP_2BYTES_INPLACE(var) \
+{                                \
+    UByte tmp[2];                \
+    tmp[0] = ((UByte *)var)[1];    \
+    tmp[1] = ((UByte *)var)[0];    \
+    ((UByte *)var)[0] = tmp[0];    \
+    ((UByte *)var)[1] = tmp[1];    \
+}
+
 /* Header fields possible values. */
 #define strShort   "short"
 #define strInt     "int"
@@ -197,8 +206,15 @@ static void printImgInfo (FPF_HEADER *th, FMTOPT *opts,
 
 static Boln readHeader (Tcl_Interp *interp, tkimg_Stream *handle, FPF_HEADER *th)
 {
+    Boln swapBytes = ! tkimg_IsIntel ();
+
     if (tkimg_Read (handle, (char *)th, sizeof(FPF_HEADER)) != sizeof(FPF_HEADER)) {
         return FALSE;
+    }
+    if (swapBytes) {
+        SWAP_2BYTES_INPLACE (&th->imgData.width);
+        SWAP_2BYTES_INPLACE (&th->imgData.height);
+        SWAP_2BYTES_INPLACE (&th->imgData.pixelType);
     }
 
     if (strncmp (th->imgData.fpfId, FPF_ID, strlen (FPF_ID)) != 0) {
@@ -530,7 +546,7 @@ static int CommonRead(
     Double gtable[IMG_GAMMA_TABLE_SIZE];
     int result = TCL_OK;
     int nChans = 1;
-    Boln swapBytes = FALSE;
+    Boln swapBytes = ! tkimg_IsIntel ();
 
     memset (&tf, 0, sizeof (FPF_FILE));
 
