@@ -24,10 +24,15 @@
 # LIABILITY, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
 # OF THIS SOFTWARE.
 
-cmake_minimum_required(VERSION 3.9.0)
+cmake_minimum_required(VERSION 3.10)
 
-# Default policy is from 3.9.0
-cmake_policy(VERSION 3.9.0)
+# Default policy is from 3.10
+cmake_policy(VERSION 3.10)
+
+if(POLICY CMP0074)
+  # Allow find_package() to use the ZLIB_ROOT variable, if available.
+  cmake_policy(SET CMP0074 NEW)
+endif()
 
 # Find CMake modules in cmake/
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -35,9 +40,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 # Read version information from configure.ac.
 include(AutotoolsVersion)
 message(STATUS "Building tiff version ${LIBTIFF_VERSION_FULL}")
-message(STATUS "libtiff library version ${SO_VERSION}")
-string(TIMESTAMP BUILD_DATE "%Y%m%d")
-message(STATUS "libtiff build date: ${BUILD_DATE}")
 
 # Project definition
 set(CMAKE_C_STANDARD 99)
@@ -53,12 +55,25 @@ else()
   option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 endif()
 
+if (BUILD_SHARED_LIBS)
+  set(TIFF_STATIC_LIBS_DEFAULT FALSE)
+else()
+  set(TIFF_STATIC_LIBS_DEFAULT TRUE)
+ endif()
+
+option(tiff-static "build TIFF static libraries" ${TIFF_STATIC_LIBS_DEFAULT})
 option(tiff-tools "build TIFF tools" ON)
 option(tiff-tests "build TIFF tests" ON)
 option(tiff-contrib "build TIFF contrib" ON)
 option(tiff-docs "build TIFF documentation" ON)
 option(tiff-deprecated "build TIFF deprecated features" OFF)
 option(tiff-install "install TIFF targets" ${TIFF_INSTALL_DEFAULT})
+
+if (tiff-static)
+  set(TIFF_BUILD_LIB_VALUE STATIC)
+else()
+  set(TIFF_BUILD_LIB_VALUE SHARED)
+endif()
 
 # Disable deprecated features to ensure clean build
 if (tiff-deprecated)
@@ -166,6 +181,13 @@ include(PkgConfig)
 message(STATUS "")
 message(STATUS "Libtiff is now configured for ${CMAKE_SYSTEM}")
 message(STATUS "")
+if (NOT LIBTIFF_RELEASE_VERSION STREQUAL LIBTIFF_VERSION_FULL)
+  message(STATUS "  Libtiff release version      ${LIBTIFF_RELEASE_VERSION} is not equal to build version!")
+endif()
+message(STATUS "  Libtiff build version:       ${LIBTIFF_VERSION_FULL}")
+message(STATUS "  Libtiff library version:     ${SO_VERSION}")
+message(STATUS "  Libtiff release date:        ${LIBTIFF_RELEASE_DATE}")
+message(STATUS "")
 message(STATUS "  Installation directory:             ${prefix}")
 message(STATUS "  Documentation directory:            ${LIBTIFF_DOCDIR}")
 message(STATUS "  C compiler:                         ${CMAKE_C_COMPILER}")
@@ -207,7 +229,7 @@ else()
   message(STATUS "  Old JPEG support:                   Requested:${old-jpeg} Availability:${JPEG_SUPPORT} Support:${OJPEG_SUPPORT} (Depends on JPEG Support)")
 endif()
 if(JPEG_SUPPORT AND HAVE_JPEGTURBO_DUAL_MODE_8_12)
-  message(STATUS "  JPEG 8/12 bit dual mode:            Support: yes (libjpeg turbo >= 2.2 dual mode)")
+  message(STATUS "  JPEG 8/12 bit dual mode:            Support: yes (libjpeg turbo >= 3.0 dual mode)")
 else()
   message(STATUS "  JPEG 8/12 bit dual mode:            Requested:${jpeg12} Availability:${JPEG12_FOUND} Support:${JPEG_DUAL_MODE_8_12}")
 endif()
@@ -217,11 +239,11 @@ if(ZLIB_SUPPORT)
 else()
   message(STATUS "  LERC support:                       Requested:${lerc} Availability:${LERC_FOUND} Support:${LERC_SUPPORT} (Depends on ZLIB Support)")
 endif()
-message(STATUS "  LZMA2 support:                      Requested:${lzma} Availability:${LIBLZMA_FOUND} Support:${LZMA_SUPPORT}")
+message(STATUS "  LZMA2 support:                      Requested:${lzma} Availability:${liblzma_FOUND} Support:${LZMA_SUPPORT}")
 message(STATUS "  ZSTD support:                       Requested:${zstd} Availability:${ZSTD_USABLE} Support:${ZSTD_SUPPORT}")
-message(STATUS "  WEBP support:                       Requested:${webp} Availability:${WEBP_FOUND} Support:${WEBP_SUPPORT}")
+message(STATUS "  WEBP support:                       Requested:${webp} Availability:${WebP_FOUND} Support:${WEBP_SUPPORT}")
 message(STATUS "")
-message(STATUS "  C++ support:                        ${cxx} (requested) ${CXX_SUPPORT} (availability)")
+message(STATUS "  C++ support:                        ${tiff-cxx} (requested) ${CXX_SUPPORT} (availability)")
 message(STATUS "")
 # message(STATUS "  X Athena Widgets support:           ${HAVE_XAW}")
 message(STATUS "  OpenGL support:                     Requested:${tiff-opengl} Availability:${HAVE_OPENGL} Support:${OPENGL_SUPPORT}")

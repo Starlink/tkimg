@@ -214,3 +214,11 @@ LIBTIFF_4.5 {
     TIFFOpenOptionsSetErrorHandlerExtR;
     TIFFOpenOptionsSetWarningHandlerExtR;
 } LIBTIFF_4.4;
+
+LIBTIFF_4.6.1 {
+    TIFFOpenOptionsSetMaxCumulatedMemAlloc;
+} LIBTIFF_4.5;
+
+LIBTIFF_4.7.1 {
+    TIFFOpenOptionsSetWarnAboutUnknownTags;
+} LIBTIFF_4.6.1;

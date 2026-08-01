@@ -24,9 +24,12 @@ Description
 -----------
 
 :c:func:`TIFFWriteDirectory` will write the contents of the current
-directory to the file and setup to create a new subfile in the same
-file. Applications only need to call :c:func:`TIFFWriteDirectory`
-when writing multiple subfiles to a single TIFF file.
+directory (IFD) to the file and setup to create a new directory (IFD)
+using :c:func:`TIFFCreateDirectory`.
+Applications only need to call :c:func:`TIFFWriteDirectory`
+when writing multiple subfiles (images) to a single TIFF file.
+This is called "multi-page TIFF" or "multi-image TIFF"
+(see :doc:`/multi_page`).
 :c:func:`TIFFWriteDirectory` is automatically called by
 :c:func:`TIFFClose` and :c:func:`TIFFFlush` to write a modified
 directory if the file is open for writing.
@@ -35,7 +38,8 @@ The :c:func:`TIFFRewriteDirectory` function operates similarly to
 :c:func:`TIFFWriteDirectory`, but can be called with directories
 previously read or written that already have an established location
 in the file.  It will rewrite the directory, but instead of placing it
-at its old location (as :c:func:`TIFFWriteDirectory` would) it will
+at its old location (as :c:func:`TIFFWriteDirectory` would, if the size
+of the directory has not grown) it will
 place them at the end of the file, correcting the pointer from the
 preceding directory or file header to point to it's new location.  This
 is particularly important in cases where the size of the directory and
@@ -53,7 +57,9 @@ is incomplete, but you will at least get all the valid data in the file
 before that.  When the file is complete, just use
 :c:func:`TIFFWriteDirectory` as usual to finish it off cleanly.
 
-The :c:func:`TIFFSetWriteOffset` sets the current write offset.
+The :c:func:`TIFFSetWriteOffset` sets the current write offset for image data
+(i.e.pixels). The offset for writing the directory (:ref:`IFD <ImageFileDirectory>`)
+data is not affected.
 This should only be used to set the offset to a known previous location
 (very carefully), or to 0 so that the next write gets appended to the end
 of the file.
@@ -133,4 +139,5 @@ See also
 :doc:`TIFFSetDirectory` (3tiff),
 :doc:`TIFFReadDirectory` (3tiff),
 :doc:`TIFFError` (3tiff),
+:doc:`/multi_page`,
 :doc:`libtiff` (3tiff)

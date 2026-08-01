@@ -25,21 +25,47 @@
 #   define USE_TKIMG_STUBS 1
 #endif
 
+/* Check, if Tcl version supports Tcl_Size,
+   which was introduced in Tcl 8.7 and 9.
+*/
+#ifndef TCL_SIZE_MAX
+    #include <limits.h>
+    #define TCL_SIZE_MAX INT_MAX
+
+    #ifndef Tcl_Size
+        typedef int Tcl_Size;
+    #endif
+
+    #define TCL_SIZE_MODIFIER ""
+    #define Tcl_GetSizeIntFromObj Tcl_GetIntFromObj
+#endif
+
 EXTERN int Tkimg_Init(Tcl_Interp *interp);
 EXTERN int Tkimg_SafeInit(Tcl_Interp *interp);
 
-typedef struct tkimg_MFile {
-	Tcl_DString *buffer; /* pointer to dynamical string */
-	char *data; /* mmencoded source string */
-	int c; /* bits left over from previous char */
-	int state; /* decoder state (0-4 or IMG_DONE) */
-#if TCL_MAJOR_VERSION > 8
-	size_t length; /* length of physical line already written */
-#else
-	unsigned int length; /* length of physical line already written */
-	int notused; /* just to be sure to always allocate more than enough */
-#endif
-} tkimg_MFile;
+/* Using a read buffer for RLE compressed files is appr. 2 times
+ * faster than parsing without the buffer.
+ * Larger sizes for the buffer make no substantial difference.
+ * Note, that the read buffer only works and is needed when
+ * reading from a channel (state == IMG_CHAN).
+ */
+#define READBUFLEN 512
+typedef struct tkimg_FileReadBuffer {
+    int useReadBuf;
+    int bufStart;
+    int bufEnd;
+    char *readBuf;
+} tkimg_FileReadBuffer;
+
+typedef struct tkimg_Stream {
+    Tcl_Channel channel; /* Channel identifier for state == IMG_CHAN */
+    Tcl_Obj *byteObj;    /* ByteArray object for state == IMG_STRING */
+    unsigned char *data; /* Pointer to ByteArray content. */
+    int state;           /* Stream state: IMG_CHAN or IMG_STRING */
+    Tcl_Size position;
+    Tcl_Size length;     /* length of physical line already written */
+    tkimg_FileReadBuffer readBuffer;
+} tkimg_Stream;
 
 /* !BEGIN!: Do not edit below this line. */
 
@@ -49,41 +75,35 @@ typedef struct tkimg_MFile {
 
 /* 0 */
 TKIMGAPI Tcl_Channel	tkimg_OpenFileChannel(Tcl_Interp *interp,
-				const char *fileName, int permissions);
+				const char *fileName, const char *mode);
 /* 1 */
-TKIMGAPI int		tkimg_ReadInit(Tcl_Obj *data, int c,
-				tkimg_MFile *handle);
+TKIMGAPI void		tkimg_ReadInitFile(tkimg_Stream *handle,
+				Tcl_Channel chan);
 /* 2 */
-TKIMGAPI void		tkimg_WriteInit(Tcl_DString *buffer,
-				tkimg_MFile *handle);
+TKIMGAPI int		tkimg_ReadInitString(tkimg_Stream *handle,
+				Tcl_Obj *data);
 /* 3 */
-TKIMGAPI int		tkimg_Getc(tkimg_MFile *handle);
+TKIMGAPI void		tkimg_WriteInitFile(tkimg_Stream *handle,
+				Tcl_Channel chan);
 /* 4 */
-TKIMGAPI int		tkimg_Read(tkimg_MFile *handle, char *dst, int count);
+TKIMGAPI void		tkimg_WriteInitString(tkimg_Stream *handle);
 /* 5 */
-TKIMGAPI int		tkimg_Putc(int c, tkimg_MFile *handle);
+TKIMGAPI void		tkimg_EnableReadBuffer(tkimg_Stream *handle,
+				int onOff);
 /* 6 */
-TKIMGAPI int		tkimg_Write(tkimg_MFile *handle, const char *src,
-				int count);
+TKIMGAPI Tcl_Size	tkimg_Read(tkimg_Stream *handle, char *dst,
+				Tcl_Size count);
 /* 7 */
-TKIMGAPI void		tkimg_ReadBuffer(int onOff);
+TKIMGAPI Tcl_Size	tkimg_Write(tkimg_Stream *handle, const char *src,
+				Tcl_Size count);
 /* 8 */
-TKIMGAPI size_t		tkimg_Read2(tkimg_MFile *handle, char *dst,
-				size_t count);
+TKIMGAPI int		tkimg_Putc(tkimg_Stream *handle, int c);
 /* 9 */
-TKIMGAPI size_t		tkimg_Write2(tkimg_MFile *handle, const char *src,
-				size_t count);
+TKIMGAPI void		tkimg_GetTemporaryFileName(Tcl_DString *fileName);
 /* 10 */
-TKIMGAPI int		tkimg_PhotoPutBlock(Tcl_Interp *interp,
-				Tk_PhotoHandle handle,
-				Tk_PhotoImageBlock *blockPtr, int x, int y,
-				int width, int height, int flags);
-/* 11 */
-TKIMGAPI int		tkimg_PhotoExpand(Tcl_Interp *interp,
-				Tk_PhotoHandle handle, int width, int height);
-/* 12 */
-TKIMGAPI int		tkimg_PhotoSetSize(Tcl_Interp *interp,
-				Tk_PhotoHandle handle, int width, int height);
+TKIMGAPI void		tkimg_DeleteFile(const char *fileName);
+/* Slot 11 is reserved */
+/* Slot 12 is reserved */
 /* Slot 13 is reserved */
 /* Slot 14 is reserved */
 /* Slot 15 is reserved */
@@ -102,21 +122,25 @@ TKIMGAPI int		tkimg_PhotoSetSize(Tcl_Interp *interp,
 /* Slot 28 is reserved */
 /* Slot 29 is reserved */
 /* 30 */
-TKIMGAPI const char *	tkimg_GetStringFromObj(Tcl_Obj *objPtr,
-				int *lengthPtr);
+TKIMGAPI int		tkimg_GetDistanceValue(Tcl_Interp *interp,
+				const char *string, double *doublePtr);
 /* 31 */
-TKIMGAPI unsigned char * tkimg_GetByteArrayFromObj(Tcl_Obj *objPtr,
-				int *lengthPtr);
+TKIMGAPI int		tkimg_SetResolution(Tcl_Obj *metadataDict,
+				double xdpi, double ydpi);
 /* 32 */
-TKIMGAPI int		tkimg_ListObjGetElements(Tcl_Interp *interp,
-				Tcl_Obj *objPtr, int *argc, Tcl_Obj ***argv);
+TKIMGAPI int		tkimg_GetResolution(Tcl_Interp *interp,
+				Tcl_Obj *metadataDict, double *xdpi,
+				double *ydpi);
 /* 33 */
-TKIMGAPI const char *	tkimg_GetStringFromObj2(Tcl_Obj *objPtr,
-				size_t *lengthPtr);
+TKIMGAPI int		tkimg_SetNumPages(Tcl_Obj *metadataDict,
+				int numImages);
 /* 34 */
-TKIMGAPI unsigned char * tkimg_GetByteArrayFromObj2(Tcl_Obj *objPtr,
-				size_t *lengthPtr);
-/* Slot 35 is reserved */
+TKIMGAPI int		tkimg_GetNumPages(Tcl_Interp *interp,
+				Tcl_Obj *metadataDict, int *numImages);
+/* 35 */
+TKIMGAPI int		tkimg_ListObjGetElements(Tcl_Interp *interp,
+				Tcl_Obj *objPtr, Tcl_Size *argc,
+				Tcl_Obj ***argv);
 /* Slot 36 is reserved */
 /* Slot 37 is reserved */
 /* Slot 38 is reserved */
@@ -153,33 +177,33 @@ TKIMGAPI void		tkimg_FloatToUByte(int n, const float *floatIn,
 				const double *gammaTable,
 				unsigned char *ubOut);
 /* 56 */
-TKIMGAPI int		tkimg_ReadUByteRow(tkimg_MFile *handle,
+TKIMGAPI int		tkimg_ReadUByteRow(tkimg_Stream *handle,
 				unsigned char *pixels, int nBytes);
 /* 57 */
-TKIMGAPI int		tkimg_ReadUShortRow(tkimg_MFile *handle,
+TKIMGAPI int		tkimg_ReadUShortRow(tkimg_Stream *handle,
 				unsigned short *pixels, int nShorts,
 				char *buf, int swapBytes);
 /* 58 */
-TKIMGAPI int		tkimg_ReadShortRow(tkimg_MFile *handle,
+TKIMGAPI int		tkimg_ReadShortRow(tkimg_Stream *handle,
 				short *pixels, int nShorts, char *buf,
 				int swapBytes);
 /* 59 */
-TKIMGAPI int		tkimg_ReadFloatRow(tkimg_MFile *handle,
+TKIMGAPI int		tkimg_ReadFloatRow(tkimg_Stream *handle,
 				float *pixels, int nFloats, char *buf,
 				int swapBytes);
 /* 60 */
-TKIMGAPI int		tkimg_ReadUByteFile(tkimg_MFile *handle,
+TKIMGAPI int		tkimg_ReadUByteFile(tkimg_Stream *handle,
 				unsigned char *buf, int width, int height,
 				int nchan, int verbose, int findMinMax,
 				double *minVals, double *maxVals);
 /* 61 */
-TKIMGAPI int		tkimg_ReadUShortFile(tkimg_MFile *handle,
+TKIMGAPI int		tkimg_ReadUShortFile(tkimg_Stream *handle,
 				unsigned short *buf, int width, int height,
 				int nchan, int swapBytes, int verbose,
 				int findMinMax, double *minVals,
 				double *maxVals, double saturation);
 /* 62 */
-TKIMGAPI int		tkimg_ReadFloatFile(tkimg_MFile *handle, float *buf,
+TKIMGAPI int		tkimg_ReadFloatFile(tkimg_Stream *handle, float *buf,
 				int width, int height, int nchan,
 				int swapBytes, int verbose, int findMinMax,
 				double *minVals, double *maxVals,
@@ -203,14 +227,14 @@ TKIMGAPI void		tkimg_IntToUByte(int n, const int *intIn,
 				const double *gammaTable,
 				unsigned char *ubOut);
 /* 67 */
-TKIMGAPI int		tkimg_ReadUIntRow(tkimg_MFile *handle,
+TKIMGAPI int		tkimg_ReadUIntRow(tkimg_Stream *handle,
 				unsigned int *pixels, int nInts, char *buf,
 				int swapBytes);
 /* 68 */
-TKIMGAPI int		tkimg_ReadIntRow(tkimg_MFile *handle, int *pixels,
+TKIMGAPI int		tkimg_ReadIntRow(tkimg_Stream *handle, int *pixels,
 				int nInts, char *buf, int swapBytes);
 /* 69 */
-TKIMGAPI int		tkimg_ReadUIntFile(tkimg_MFile *handle,
+TKIMGAPI int		tkimg_ReadUIntFile(tkimg_Stream *handle,
 				unsigned int *buf, int width, int height,
 				int nchan, int swapBytes, int verbose,
 				int findMinMax, double *minVals,
@@ -225,11 +249,11 @@ TKIMGAPI void		tkimg_DoubleToUByte(int n, const double *doubleIn,
 				const double *gammaTable,
 				unsigned char *ubOut);
 /* 72 */
-TKIMGAPI int		tkimg_ReadDoubleRow(tkimg_MFile *handle,
+TKIMGAPI int		tkimg_ReadDoubleRow(tkimg_Stream *handle,
 				double *pixels, int nDoubles, char *buf,
 				int swapBytes);
 /* 73 */
-TKIMGAPI int		tkimg_ReadDoubleFile(tkimg_MFile *handle,
+TKIMGAPI int		tkimg_ReadDoubleFile(tkimg_Stream *handle,
 				double *buf, int width, int height,
 				int nchan, int swapBytes, int verbose,
 				int findMinMax, double *minVals,
@@ -244,19 +268,19 @@ typedef struct TkimgStubs {
     int magic;
     const struct TkimgStubHooks *hooks;
 
-    Tcl_Channel (*tkimg_OpenFileChannelPtr) (Tcl_Interp *interp, const char *fileName, int permissions); /* 0 */
-    int (*tkimg_ReadInitPtr) (Tcl_Obj *data, int c, tkimg_MFile *handle); /* 1 */
-    void (*tkimg_WriteInitPtr) (Tcl_DString *buffer, tkimg_MFile *handle); /* 2 */
-    int (*tkimg_GetcPtr) (tkimg_MFile *handle); /* 3 */
-    int (*tkimg_ReadPtr) (tkimg_MFile *handle, char *dst, int count); /* 4 */
-    int (*tkimg_PutcPtr) (int c, tkimg_MFile *handle); /* 5 */
-    int (*tkimg_WritePtr) (tkimg_MFile *handle, const char *src, int count); /* 6 */
-    void (*tkimg_ReadBufferPtr) (int onOff); /* 7 */
-    size_t (*tkimg_Read2Ptr) (tkimg_MFile *handle, char *dst, size_t count); /* 8 */
-    size_t (*tkimg_Write2Ptr) (tkimg_MFile *handle, const char *src, size_t count); /* 9 */
-    int (*tkimg_PhotoPutBlockPtr) (Tcl_Interp *interp, Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int flags); /* 10 */
-    int (*tkimg_PhotoExpandPtr) (Tcl_Interp *interp, Tk_PhotoHandle handle, int width, int height); /* 11 */
-    int (*tkimg_PhotoSetSizePtr) (Tcl_Interp *interp, Tk_PhotoHandle handle, int width, int height); /* 12 */
+    Tcl_Channel (*tkimg_OpenFileChannelPtr) (Tcl_Interp *interp, const char *fileName, const char *mode); /* 0 */
+    void (*tkimg_ReadInitFilePtr) (tkimg_Stream *handle, Tcl_Channel chan); /* 1 */
+    int (*tkimg_ReadInitStringPtr) (tkimg_Stream *handle, Tcl_Obj *data); /* 2 */
+    void (*tkimg_WriteInitFilePtr) (tkimg_Stream *handle, Tcl_Channel chan); /* 3 */
+    void (*tkimg_WriteInitStringPtr) (tkimg_Stream *handle); /* 4 */
+    void (*tkimg_EnableReadBufferPtr) (tkimg_Stream *handle, int onOff); /* 5 */
+    Tcl_Size (*tkimg_ReadPtr) (tkimg_Stream *handle, char *dst, Tcl_Size count); /* 6 */
+    Tcl_Size (*tkimg_WritePtr) (tkimg_Stream *handle, const char *src, Tcl_Size count); /* 7 */
+    int (*tkimg_PutcPtr) (tkimg_Stream *handle, int c); /* 8 */
+    void (*tkimg_GetTemporaryFileNamePtr) (Tcl_DString *fileName); /* 9 */
+    void (*tkimg_DeleteFilePtr) (const char *fileName); /* 10 */
+    void (*reserved11)(void);
+    void (*reserved12)(void);
     void (*reserved13)(void);
     void (*reserved14)(void);
     void (*reserved15)(void);
@@ -274,12 +298,12 @@ typedef struct TkimgStubs {
     void (*reserved27)(void);
     void (*reserved28)(void);
     void (*reserved29)(void);
-    const char * (*tkimg_GetStringFromObjPtr) (Tcl_Obj *objPtr, int *lengthPtr); /* 30 */
-    unsigned char * (*tkimg_GetByteArrayFromObjPtr) (Tcl_Obj *objPtr, int *lengthPtr); /* 31 */
-    int (*tkimg_ListObjGetElementsPtr) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *argc, Tcl_Obj ***argv); /* 32 */
-    const char * (*tkimg_GetStringFromObj2Ptr) (Tcl_Obj *objPtr, size_t *lengthPtr); /* 33 */
-    unsigned char * (*tkimg_GetByteArrayFromObj2Ptr) (Tcl_Obj *objPtr, size_t *lengthPtr); /* 34 */
-    void (*reserved35)(void);
+    int (*tkimg_GetDistanceValuePtr) (Tcl_Interp *interp, const char *string, double *doublePtr); /* 30 */
+    int (*tkimg_SetResolutionPtr) (Tcl_Obj *metadataDict, double xdpi, double ydpi); /* 31 */
+    int (*tkimg_GetResolutionPtr) (Tcl_Interp *interp, Tcl_Obj *metadataDict, double *xdpi, double *ydpi); /* 32 */
+    int (*tkimg_SetNumPagesPtr) (Tcl_Obj *metadataDict, int numImages); /* 33 */
+    int (*tkimg_GetNumPagesPtr) (Tcl_Interp *interp, Tcl_Obj *metadataDict, int *numImages); /* 34 */
+    int (*tkimg_ListObjGetElementsPtr) (Tcl_Interp *interp, Tcl_Obj *objPtr, Tcl_Size *argc, Tcl_Obj ***argv); /* 35 */
     void (*reserved36)(void);
     void (*reserved37)(void);
     void (*reserved38)(void);
@@ -300,24 +324,24 @@ typedef struct TkimgStubs {
     void (*tkimg_UShortToUBytePtr) (int n, const unsigned short *shortIn, const double *gammaTable, unsigned char *ubOut); /* 53 */
     void (*tkimg_ShortToUBytePtr) (int n, const short *shortIn, const double *gammaTable, unsigned char *ubOut); /* 54 */
     void (*tkimg_FloatToUBytePtr) (int n, const float *floatIn, const double *gammaTable, unsigned char *ubOut); /* 55 */
-    int (*tkimg_ReadUByteRowPtr) (tkimg_MFile *handle, unsigned char *pixels, int nBytes); /* 56 */
-    int (*tkimg_ReadUShortRowPtr) (tkimg_MFile *handle, unsigned short *pixels, int nShorts, char *buf, int swapBytes); /* 57 */
-    int (*tkimg_ReadShortRowPtr) (tkimg_MFile *handle, short *pixels, int nShorts, char *buf, int swapBytes); /* 58 */
-    int (*tkimg_ReadFloatRowPtr) (tkimg_MFile *handle, float *pixels, int nFloats, char *buf, int swapBytes); /* 59 */
-    int (*tkimg_ReadUByteFilePtr) (tkimg_MFile *handle, unsigned char *buf, int width, int height, int nchan, int verbose, int findMinMax, double *minVals, double *maxVals); /* 60 */
-    int (*tkimg_ReadUShortFilePtr) (tkimg_MFile *handle, unsigned short *buf, int width, int height, int nchan, int swapBytes, int verbose, int findMinMax, double *minVals, double *maxVals, double saturation); /* 61 */
-    int (*tkimg_ReadFloatFilePtr) (tkimg_MFile *handle, float *buf, int width, int height, int nchan, int swapBytes, int verbose, int findMinMax, double *minVals, double *maxVals, double saturation); /* 62 */
+    int (*tkimg_ReadUByteRowPtr) (tkimg_Stream *handle, unsigned char *pixels, int nBytes); /* 56 */
+    int (*tkimg_ReadUShortRowPtr) (tkimg_Stream *handle, unsigned short *pixels, int nShorts, char *buf, int swapBytes); /* 57 */
+    int (*tkimg_ReadShortRowPtr) (tkimg_Stream *handle, short *pixels, int nShorts, char *buf, int swapBytes); /* 58 */
+    int (*tkimg_ReadFloatRowPtr) (tkimg_Stream *handle, float *pixels, int nFloats, char *buf, int swapBytes); /* 59 */
+    int (*tkimg_ReadUByteFilePtr) (tkimg_Stream *handle, unsigned char *buf, int width, int height, int nchan, int verbose, int findMinMax, double *minVals, double *maxVals); /* 60 */
+    int (*tkimg_ReadUShortFilePtr) (tkimg_Stream *handle, unsigned short *buf, int width, int height, int nchan, int swapBytes, int verbose, int findMinMax, double *minVals, double *maxVals, double saturation); /* 61 */
+    int (*tkimg_ReadFloatFilePtr) (tkimg_Stream *handle, float *buf, int width, int height, int nchan, int swapBytes, int verbose, int findMinMax, double *minVals, double *maxVals, double saturation); /* 62 */
     void (*tkimg_RemapUShortValuesPtr) (unsigned short *buf, int width, int height, int nchan, double *minVals, double *maxVals, double agcCutOffPercent, int printAgc); /* 63 */
     void (*tkimg_RemapFloatValuesPtr) (float *buf, int width, int height, int nchan, double *minVals, double *maxVals, double agcCutOffPercent, int printAgc); /* 64 */
     void (*tkimg_UIntToUBytePtr) (int n, const unsigned int *intIn, const double *gammaTable, unsigned char *ubOut); /* 65 */
     void (*tkimg_IntToUBytePtr) (int n, const int *intIn, const double *gammaTable, unsigned char *ubOut); /* 66 */
-    int (*tkimg_ReadUIntRowPtr) (tkimg_MFile *handle, unsigned int *pixels, int nInts, char *buf, int swapBytes); /* 67 */
-    int (*tkimg_ReadIntRowPtr) (tkimg_MFile *handle, int *pixels, int nInts, char *buf, int swapBytes); /* 68 */
-    int (*tkimg_ReadUIntFilePtr) (tkimg_MFile *handle, unsigned int *buf, int width, int height, int nchan, int swapBytes, int verbose, int findMinMax, double *minVals, double *maxVals, double saturation); /* 69 */
+    int (*tkimg_ReadUIntRowPtr) (tkimg_Stream *handle, unsigned int *pixels, int nInts, char *buf, int swapBytes); /* 67 */
+    int (*tkimg_ReadIntRowPtr) (tkimg_Stream *handle, int *pixels, int nInts, char *buf, int swapBytes); /* 68 */
+    int (*tkimg_ReadUIntFilePtr) (tkimg_Stream *handle, unsigned int *buf, int width, int height, int nchan, int swapBytes, int verbose, int findMinMax, double *minVals, double *maxVals, double saturation); /* 69 */
     void (*tkimg_RemapUIntValuesPtr) (unsigned int *buf, int width, int height, int nchan, double *minVals, double *maxVals, double agcCutOffPercent, int printAgc); /* 70 */
     void (*tkimg_DoubleToUBytePtr) (int n, const double *doubleIn, const double *gammaTable, unsigned char *ubOut); /* 71 */
-    int (*tkimg_ReadDoubleRowPtr) (tkimg_MFile *handle, double *pixels, int nDoubles, char *buf, int swapBytes); /* 72 */
-    int (*tkimg_ReadDoubleFilePtr) (tkimg_MFile *handle, double *buf, int width, int height, int nchan, int swapBytes, int verbose, int findMinMax, double *minVals, double *maxVals, double saturation); /* 73 */
+    int (*tkimg_ReadDoubleRowPtr) (tkimg_Stream *handle, double *pixels, int nDoubles, char *buf, int swapBytes); /* 72 */
+    int (*tkimg_ReadDoubleFilePtr) (tkimg_Stream *handle, double *buf, int width, int height, int nchan, int swapBytes, int verbose, int findMinMax, double *minVals, double *maxVals, double saturation); /* 73 */
     void (*tkimg_RemapDoubleValuesPtr) (double *buf, int width, int height, int nchan, double *minVals, double *maxVals, double agcCutOffPercent, int printAgc); /* 74 */
 } TkimgStubs;
 
@@ -337,30 +361,28 @@ TKIMGAPI const TkimgStubs *tkimgStubsPtr;
 
 #define tkimg_OpenFileChannel \
 	(tkimgStubsPtr->tkimg_OpenFileChannelPtr) /* 0 */
-#define tkimg_ReadInit \
-	(tkimgStubsPtr->tkimg_ReadInitPtr) /* 1 */
-#define tkimg_WriteInit \
-	(tkimgStubsPtr->tkimg_WriteInitPtr) /* 2 */
-#define tkimg_Getc \
-	(tkimgStubsPtr->tkimg_GetcPtr) /* 3 */
+#define tkimg_ReadInitFile \
+	(tkimgStubsPtr->tkimg_ReadInitFilePtr) /* 1 */
+#define tkimg_ReadInitString \
+	(tkimgStubsPtr->tkimg_ReadInitStringPtr) /* 2 */
+#define tkimg_WriteInitFile \
+	(tkimgStubsPtr->tkimg_WriteInitFilePtr) /* 3 */
+#define tkimg_WriteInitString \
+	(tkimgStubsPtr->tkimg_WriteInitStringPtr) /* 4 */
+#define tkimg_EnableReadBuffer \
+	(tkimgStubsPtr->tkimg_EnableReadBufferPtr) /* 5 */
 #define tkimg_Read \
-	(tkimgStubsPtr->tkimg_ReadPtr) /* 4 */
-#define tkimg_Putc \
-	(tkimgStubsPtr->tkimg_PutcPtr) /* 5 */
+	(tkimgStubsPtr->tkimg_ReadPtr) /* 6 */
 #define tkimg_Write \
-	(tkimgStubsPtr->tkimg_WritePtr) /* 6 */
-#define tkimg_ReadBuffer \
-	(tkimgStubsPtr->tkimg_ReadBufferPtr) /* 7 */
-#define tkimg_Read2 \
-	(tkimgStubsPtr->tkimg_Read2Ptr) /* 8 */
-#define tkimg_Write2 \
-	(tkimgStubsPtr->tkimg_Write2Ptr) /* 9 */
-#define tkimg_PhotoPutBlock \
-	(tkimgStubsPtr->tkimg_PhotoPutBlockPtr) /* 10 */
-#define tkimg_PhotoExpand \
-	(tkimgStubsPtr->tkimg_PhotoExpandPtr) /* 11 */
-#define tkimg_PhotoSetSize \
-	(tkimgStubsPtr->tkimg_PhotoSetSizePtr) /* 12 */
+	(tkimgStubsPtr->tkimg_WritePtr) /* 7 */
+#define tkimg_Putc \
+	(tkimgStubsPtr->tkimg_PutcPtr) /* 8 */
+#define tkimg_GetTemporaryFileName \
+	(tkimgStubsPtr->tkimg_GetTemporaryFileNamePtr) /* 9 */
+#define tkimg_DeleteFile \
+	(tkimgStubsPtr->tkimg_DeleteFilePtr) /* 10 */
+/* Slot 11 is reserved */
+/* Slot 12 is reserved */
 /* Slot 13 is reserved */
 /* Slot 14 is reserved */
 /* Slot 15 is reserved */
@@ -378,17 +400,18 @@ TKIMGAPI const TkimgStubs *tkimgStubsPtr;
 /* Slot 27 is reserved */
 /* Slot 28 is reserved */
 /* Slot 29 is reserved */
-#define tkimg_GetStringFromObj \
-	(tkimgStubsPtr->tkimg_GetStringFromObjPtr) /* 30 */
-#define tkimg_GetByteArrayFromObj \
-	(tkimgStubsPtr->tkimg_GetByteArrayFromObjPtr) /* 31 */
+#define tkimg_GetDistanceValue \
+	(tkimgStubsPtr->tkimg_GetDistanceValuePtr) /* 30 */
+#define tkimg_SetResolution \
+	(tkimgStubsPtr->tkimg_SetResolutionPtr) /* 31 */
+#define tkimg_GetResolution \
+	(tkimgStubsPtr->tkimg_GetResolutionPtr) /* 32 */
+#define tkimg_SetNumPages \
+	(tkimgStubsPtr->tkimg_SetNumPagesPtr) /* 33 */
+#define tkimg_GetNumPages \
+	(tkimgStubsPtr->tkimg_GetNumPagesPtr) /* 34 */
 #define tkimg_ListObjGetElements \
-	(tkimgStubsPtr->tkimg_ListObjGetElementsPtr) /* 32 */
-#define tkimg_GetStringFromObj2 \
-	(tkimgStubsPtr->tkimg_GetStringFromObj2Ptr) /* 33 */
-#define tkimg_GetByteArrayFromObj2 \
-	(tkimgStubsPtr->tkimg_GetByteArrayFromObj2Ptr) /* 34 */
-/* Slot 35 is reserved */
+	(tkimgStubsPtr->tkimg_ListObjGetElementsPtr) /* 35 */
 /* Slot 36 is reserved */
 /* Slot 37 is reserved */
 /* Slot 38 is reserved */

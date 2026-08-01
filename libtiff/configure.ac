@@ -7,7 +7,7 @@ dnl
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tifftcl],[4.5.0])
+AC_INIT([tifftcl],[4.7.1])
 
 TEA_INIT([3.9])
 
@@ -39,7 +39,6 @@ TEA_PREFIX
 #-----------------------------------------------------------------------
 
 TEA_SETUP_COMPILER
-AC_HEADER_STDC
 
 # Determine a full path for the chosen compiler to ensure that the
 # libtiff configure tool is using the same one as ourselves.
@@ -93,7 +92,7 @@ TEA_ADD_SOURCES([
 	../compat/libtiff/libtiff/tif_read.c		../compat/libtiff/libtiff/tif_swab.c		../compat/libtiff/libtiff/tif_strip.c
 	../compat/libtiff/libtiff/tif_thunder.c	        ../compat/libtiff/libtiff/tif_tile.c		../compat/libtiff/libtiff/tif_version.c
 	../compat/libtiff/libtiff/tif_warning.c	        ../compat/libtiff/libtiff/tif_write.c
-	../compat/libtiff/libtiff/tif_color.c		../compat/libtiff/libtiff/tif_extension.c
+	../compat/libtiff/libtiff/tif_color.c		../compat/libtiff/libtiff/tif_extension.c       ../compat/libtiff/libtiff/tif_fax3sm.c
 ])
 
 TEA_ADD_HEADERS([tifftcl.h tifftclDecls.h])

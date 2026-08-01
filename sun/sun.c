@@ -1,61 +1,19 @@
-/* STARTHEADER
+/*
+ * sun.c
  *
- * File :       sun.c
+ * SUN photo image type, Tcl/Tk package.
  *
- * Author :     Paul Obermeier (paul@poSoft.de)
+ * A photo image handler for the SUM Raster image format.
  *
- * Date :       2001 / 01 / 22
+ * For a list of available format options see function ParseFormatOpts
+ * and the documentation img-sun.
  *
- * Copyright :  (C) 2001-2019 Paul Obermeier
+ * Copyright (c) 2001-2025 Paul Obermeier <obermeier@users.sourceforge.net>
  *
- * Description :
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * A photo image handler for SUN's Raster file format.
- *
- * The following image types are supported:
- *
- *  1-bit pixels: Black and White.
- *  8-bit pixels: Grayscale or indexed.
- * 24-bit pixels: True-color (RGB, each channel 8 bit).
- * 32-bit pixels: True-color with alpha channel (RGBA, each channel 8 bit).
- *
- * List of currently supported features:
- *
- * Type   |     Read      |     Write     |
- *        | -file | -data | -file | -data |
- * ----------------------------------------
- *  1-bit | Yes   | Yes   | No    | No    |
- *  8-bit | Yes   | Yes   | No    | No    |
- * 24-bit | Yes   | Yes   | Yes   | Yes   |
- * 32-bit | Yes   | Yes   | Yes   | Yes   |
- *
- * All images types may be either uncompressed or run-length encoded.
- *
- *
- * The following format options are available:
- *
- * Read  SUN image: "sun -matte <bool> -verbose <bool>"
- * Write SUN image: "sun -matte <bool> -verbose <bool> -compression <type>"
- *
- * -matte <bool>:       If set to false, a matte (alpha) channel is ignored
- *                      during reading or writing. Default is true.
- * -verbose <bool>:     If set to true, additional information about the file
- *                      format is printed to stdout. Default is false.
- * -compression <type>: Set the compression mode to either "none" or "rle".
- *                      Default is "rle".
- *
- * Notes:
- *
- * - The "UNIX" encoding of SUN's "imagetool" is not supported.
- *
- * - Part of this code was taken from the "sunras" GIMP plugin:
- *
- *  >> The GIMP -- an image manipulation program
- *  >> Copyright (C) 1995 Spencer Kimball and Peter Mattis
- *  >> SUN raster reading and writing code Copyright (C) 1996 Peter Kirchgessner
- *  >> (email: pkirchg@aol.com, WWW: http://members.aol.com/pkirchg)
- *
- * ENDHEADER
+ * The "UNIX" encoding of SUN's "imagetool" is not supported.
  *
  */
 
@@ -106,34 +64,34 @@ typedef struct {
 typedef struct {
     Int   compression;
     Boln  verbose;
-    Boln  matte;
+    Boln  withalpha;
 } FMTOPT;
 
 /* Forward declarations of static functions. */
 
-static void rle_startread (tkimg_MFile *ifp);
-static int rle_fread (char *ptr, int sz, int nelem, tkimg_MFile *ifp);
-static int sun_fread (char *ptr, int sz, int nelem, tkimg_MFile *ifp);
-static int rle_fgetc (tkimg_MFile *ifp);
-static int sun_getc (tkimg_MFile *ifp);
+static void rle_startread (tkimg_Stream *ifp);
+static int rle_fread (char *ptr, int sz, int nelem, tkimg_Stream *ifp);
+static int sun_fread (char *ptr, int sz, int nelem, tkimg_Stream *ifp);
+static int rle_fgetc (tkimg_Stream *ifp);
+static int sun_getc (tkimg_Stream *ifp);
 #define rle_getc(fp) ((rlebuf.n > 0) ? (rlebuf.n)--,rlebuf.val : rle_fgetc (fp))
 
-static void rle_startwrite (tkimg_MFile *ofp);
-static int rle_fputc (int val, tkimg_MFile *ofp);
-static int rle_putrun (int n, int val, tkimg_MFile *ofp);
-static void rle_endwrite (tkimg_MFile *ofp);
+static void rle_startwrite (tkimg_Stream *ofp);
+static int rle_fputc (int val, tkimg_Stream *ofp);
+static int rle_putrun (int n, int val, tkimg_Stream *ofp);
+static void rle_endwrite (tkimg_Stream *ofp);
 
-static Boln read_sun_header  (tkimg_MFile *ifp, SUNHEADER *sunhdr);
-static Boln write_sun_header (tkimg_MFile *ofp, SUNHEADER *sunhdr);
-static Boln read_sun_cols  (tkimg_MFile *ifp, SUNHEADER *sunhdr, UByte *colormap);
+static Boln read_sun_header  (tkimg_Stream *ifp, SUNHEADER *sunhdr);
+static Boln write_sun_header (tkimg_Stream *ofp, SUNHEADER *sunhdr);
+static Boln read_sun_cols  (tkimg_Stream *ifp, SUNHEADER *sunhdr, UByte *colormap);
 
 static RLEBUF rlebuf;
 
 #ifdef DEBUG_LOCAL
-static Boln readUByte (tkimg_MFile *handle, UByte *b)
+static Boln readUByte (tkimg_Stream *handle, UByte *b)
 {
     char buf[1];
-    if (1 != tkimg_Read2(handle, buf, 1)) {
+    if (1 != tkimg_Read(handle, buf, 1)) {
         return FALSE;
     }
     *b = (UByte) buf[0];
@@ -141,25 +99,25 @@ static Boln readUByte (tkimg_MFile *handle, UByte *b)
 }
 #else
     /* Use this macro for better performance, esp. when reading RLE files. */
-#   define readUByte(h,b) (1 == tkimg_Read2((h),(char *)(b),1))
+#   define readUByte(h,b) (1 == tkimg_Read((h),(char *)(b),1))
 #endif
 
-static Boln writeUByte (tkimg_MFile *handle, UByte b)
+static Boln writeUByte (tkimg_Stream *handle, UByte b)
 {
     UByte buf[1];
     buf[0] = b;
-    if (1 != tkimg_Write2(handle, (const char *)buf, 1)) {
+    if (1 != tkimg_Write(handle, (const char *)buf, 1)) {
         return FALSE;
     }
     return TRUE;
 }
 
-static Boln readUInt (tkimg_MFile *ifp, UInt *i)
+static Boln readUInt (tkimg_Stream *ifp, UInt *i)
 {
     UByte buf[4];
     UInt  c;
 
-    if (4 != tkimg_Read2(ifp, (char *)buf, 4)) {
+    if (4 != tkimg_Read(ifp, (char *)buf, 4)) {
         return FALSE;
     }
 
@@ -171,7 +129,7 @@ static Boln readUInt (tkimg_MFile *ifp, UInt *i)
     return TRUE;
 }
 
-static Boln writeUInt (tkimg_MFile *ofp, UInt c)
+static Boln writeUInt (tkimg_Stream *ofp, UInt c)
 {
     UByte buf[4];
 
@@ -179,21 +137,21 @@ static Boln writeUInt (tkimg_MFile *ofp, UInt c)
     buf[1] = (c >> 16) & 0xff;
     buf[2] = (c >>  8) & 0xff;
     buf[3] = (c      ) & 0xff;
-    if (4 != tkimg_Write2(ofp, (const char *)buf, 4)) {
+    if (4 != tkimg_Write(ofp, (const char *)buf, 4)) {
         return FALSE;
     }
     return TRUE;
 }
 
 /* Start reading Runlength Encoded Data */
-static void rle_startread (tkimg_MFile *ifp)
+static void rle_startread (tkimg_Stream *ifp)
 {
     (void) ifp;
     rlebuf.val = rlebuf.n = 0;
 }
 
 /* Read pixels from RLE-stream */
-static int rle_fread (char *ptr, int sz, int nelem, tkimg_MFile *ifp)
+static int rle_fread (char *ptr, int sz, int nelem, tkimg_Stream *ifp)
 {
     int elem_read, cnt, val, err = 0;
 
@@ -214,16 +172,16 @@ static int rle_fread (char *ptr, int sz, int nelem, tkimg_MFile *ifp)
 }
 
 /* Read uncompressed pixels from input stream "ifp" */
-static int sun_fread (char *ptr, int sz, int nelem, tkimg_MFile *ifp)
+static int sun_fread (char *ptr, int sz, int nelem, tkimg_Stream *ifp)
 {
-    if (nelem*sz != tkimg_Read2(ifp, ptr, nelem*sz)) {
+    if (nelem*sz != tkimg_Read(ifp, ptr, nelem*sz)) {
         return -1;
     }
     return nelem;
 }
 
 /* Get one pixel from RLE-stream */
-static int rle_fgetc (tkimg_MFile *ifp)
+static int rle_fgetc (tkimg_Stream *ifp)
 {
     UByte flag, runcnt, runval;
 
@@ -249,7 +207,7 @@ static int rle_fgetc (tkimg_MFile *ifp)
 }
 
 /* Read one byte from input stream "ifp" */
-static int sun_getc (tkimg_MFile *ifp)
+static int sun_getc (tkimg_Stream *ifp)
 {
     UByte val;
     if (!readUByte (ifp, &val)) {
@@ -259,7 +217,7 @@ static int sun_getc (tkimg_MFile *ifp)
 }
 
 /* Start writing Runlength Encoded Data */
-static void rle_startwrite (tkimg_MFile *ofp)
+static void rle_startwrite (tkimg_Stream *ofp)
 {
     (void) ofp;
     rlebuf.val = 0;
@@ -267,7 +225,7 @@ static void rle_startwrite (tkimg_MFile *ofp)
 }
 
 /* Write uncompressed character to RLE-stream */
-static int rle_fputc (int val, tkimg_MFile *ofp)
+static int rle_fputc (int val, tkimg_Stream *ofp)
 {
     int retval;
 
@@ -305,7 +263,7 @@ static int rle_fputc (int val, tkimg_MFile *ofp)
 }
 
 /* Write out a run with 0 < n < 257 */
-static int rle_putrun (int n, int val, tkimg_MFile *ofp)
+static int rle_putrun (int n, int val, tkimg_Stream *ofp)
 {
     int retval = 1;
     int flag   = 0x80;
@@ -339,7 +297,7 @@ static int rle_putrun (int n, int val, tkimg_MFile *ofp)
 }
 
 /* End writing Runlength Encoded Data */
-static void rle_endwrite (tkimg_MFile *ofp)
+static void rle_endwrite (tkimg_Stream *ofp)
 {
     if (rlebuf.n > 0) {
         rle_putrun (rlebuf.n, rlebuf.val, ofp);
@@ -347,7 +305,6 @@ static void rle_endwrite (tkimg_MFile *ofp)
     }
 }
 
-#define OUT Tcl_WriteChars (outChan, str, -1)
 static void printImgInfo (SUNHEADER *sh, const char *filename, const char *msg)
 {
     Tcl_Channel outChan;
@@ -359,18 +316,17 @@ static void printImgInfo (SUNHEADER *sh, const char *filename, const char *msg)
         return;
     }
 
-    tkimg_snprintf(str, 256, "%s %s\n", msg, filename);                                       OUT;
-    tkimg_snprintf(str, 256, "\tSize in pixel   : %d x %d\n", sh->ras_width, sh->ras_height); OUT;
-    tkimg_snprintf(str, 256, "\tDepth of pixels : %d\n", sh->ras_depth);                      OUT;
+    tkimg_snprintf(str, 256, "%s %s\n", msg, filename);                                       IMGOUT;
+    tkimg_snprintf(str, 256, "\tSize in pixel   : %d x %d\n", sh->ras_width, sh->ras_height); IMGOUT;
+    tkimg_snprintf(str, 256, "\tDepth of pixels : %d\n", sh->ras_depth);                      IMGOUT;
     tkimg_snprintf(str, 256, "\tCompression     : %s\n", (type == RAS_TYPE_STD? "None":
                                                          (type == RAS_TYPE_RLE? "RLE":
-                                                                                "Unknown"))); OUT;
-    tkimg_snprintf(str, 256, "\tColormap type   : %d\n", sh->ras_maptype);                    OUT;
+                                                                                "Unknown"))); IMGOUT;
+    tkimg_snprintf(str, 256, "\tColormap type   : %d\n", sh->ras_maptype);                    IMGOUT;
     Tcl_Flush(outChan);
 }
-#undef OUT
 
-static Boln read_sun_header (tkimg_MFile *ifp, SUNHEADER *sunhdr)
+static Boln read_sun_header (tkimg_Stream *ifp, SUNHEADER *sunhdr)
 {
     int  i;
     UInt *cp;
@@ -391,7 +347,7 @@ static Boln read_sun_header (tkimg_MFile *ifp, SUNHEADER *sunhdr)
 }
 
 /* Write out a SUN-fileheader */
-static Boln write_sun_header (tkimg_MFile *ofp, SUNHEADER *sunhdr)
+static Boln write_sun_header (tkimg_Stream *ofp, SUNHEADER *sunhdr)
 {
     int i, hdr_entries;
     UInt *cp;
@@ -409,7 +365,7 @@ static Boln write_sun_header (tkimg_MFile *ofp, SUNHEADER *sunhdr)
 }
 
 /* Read the sun colourmap */
-static Boln read_sun_cols (tkimg_MFile *ifp, SUNHEADER *sunhdr, UByte *colormap)
+static Boln read_sun_cols (tkimg_Stream *ifp, SUNHEADER *sunhdr, UByte *colormap)
 {
     int ncols;
 
@@ -418,14 +374,14 @@ static Boln read_sun_cols (tkimg_MFile *ifp, SUNHEADER *sunhdr, UByte *colormap)
     if (ncols <= 0)
         return FALSE;
 
-    if (3*ncols != tkimg_Read2(ifp, (char *)colormap, 3*ncols)) {
+    if (3*ncols != tkimg_Read(ifp, (char *)colormap, 3*ncols)) {
         return FALSE;
     }
     return TRUE;
 }
 
 /* Load SUN Raster file with depth 1 */
-static Boln load_sun_d1 (Tcl_Interp *interp, tkimg_MFile *ifp,
+static Boln load_sun_d1 (Tcl_Interp *interp, tkimg_Stream *ifp,
                          Tk_PhotoHandle imageHandle, int destX, int destY,
                          int width, int height, int srcX, int srcY,
                          int fileWidth, int fileHeight, int type)
@@ -513,7 +469,7 @@ static Boln load_sun_d1 (Tcl_Interp *interp, tkimg_MFile *ifp,
             return FALSE;
         }
         if (y >= srcY) {
-            if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1,
+            if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1,
                 TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
                 result = FALSE;
                 break;
@@ -525,7 +481,7 @@ static Boln load_sun_d1 (Tcl_Interp *interp, tkimg_MFile *ifp,
 }
 
 /* Load SUN Raster file with depth 8 */
-static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_MFile *ifp,
+static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_Stream *ifp,
                          Tk_PhotoHandle imageHandle, int destX, int destY,
                          int width, int height, int srcX, int srcY,
                          int fileWidth, int fileHeight,
@@ -538,7 +494,7 @@ static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_MFile *ifp,
     int x, y;
     int stopY, outY;
     int ncols;
-    int greyscale, nchan;
+    int grayscale, nchan;
     int err, rle;
     char errMsg[256];
     Boln result = TRUE;
@@ -547,15 +503,15 @@ static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_MFile *ifp,
     linepad = fileWidth % 2;
     ncols   = maplength / 3;
 
-    /* Check, if it's a greyscale or color indexed image. */
-    greyscale = 1;
+    /* Check, if it's a grayscale or color indexed image. */
+    grayscale = 1;
     nchan     = 1;
     if ((ncols > 0) && (suncolmap != NULL)) {
-        greyscale = 0;
+        grayscale = 0;
         nchan     = 3;
     }
 
-    if (!greyscale) {
+    if (!grayscale) {
         pixbuf = (UByte *) attemptckalloc (fileWidth * nchan);
         if (!pixbuf) {
             tkimg_snprintf(errMsg, 256, "Can't allocate memory of size %d",
@@ -568,7 +524,7 @@ static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_MFile *ifp,
         }
     }
 
-    /* This buffer contains either the color indices or the greyscale value. */
+    /* This buffer contains either the color indices or the grayscale value. */
     indData = (UByte *)attemptckalloc (fileWidth * sizeof (UByte));
     if (!indData) {
         tkimg_snprintf(errMsg, 256, "Can't allocate memory of size %d",
@@ -582,10 +538,10 @@ static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_MFile *ifp,
     block.width     = width;
     block.height    = 1;
     block.offset[0] = 0;
-    block.offset[1] = greyscale? 0: 1;
-    block.offset[2] = greyscale? 0: 2;
+    block.offset[1] = grayscale? 0: 1;
+    block.offset[2] = grayscale? 0: 2;
     block.offset[3] = 0;
-    block.pixelPtr  = (greyscale?
+    block.pixelPtr  = (grayscale?
                       (indData + srcX * nchan):
                       (pixbuf + srcX * nchan));
 
@@ -617,7 +573,7 @@ static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_MFile *ifp,
             }
         }
 
-        if (!greyscale) {
+        if (!grayscale) {
             src  = indData;
             dest = pixbuf;
             for (x=0; x<width; x++) {
@@ -629,7 +585,7 @@ static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_MFile *ifp,
         }
 
         if (y >= srcY) {
-            if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1,
+            if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1,
                 TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
                 result = FALSE;
                 break;
@@ -643,11 +599,11 @@ static Boln load_sun_d8 (Tcl_Interp *interp, tkimg_MFile *ifp,
 
 /* Load SUN Raster file with true color image: depth = 24 or 32 */
 
-static Boln load_rgb (Tcl_Interp *interp, tkimg_MFile *ifp,
+static Boln load_rgb (Tcl_Interp *interp, tkimg_Stream *ifp,
                       Tk_PhotoHandle imageHandle, int destX, int destY,
                       int width, int height, int srcX, int srcY,
                       int fileWidth, int fileHeight,
-                      int nchan, int type, int showMatte)
+                      int nchan, int type, int withalpha)
 {
     UByte *dest, tmp;
     UByte *pixbuf;
@@ -675,9 +631,9 @@ static Boln load_rgb (Tcl_Interp *interp, tkimg_MFile *ifp,
     block.offset[1] = 1;
     block.offset[2] = 2;
     if (nchan < 4) {
-        showMatte = 0;
+        withalpha = 0;
     }
-    block.offset[3] = showMatte? 3: 0;
+    block.offset[3] = withalpha? 3: 0;
 
     block.pixelPtr = pixbuf + srcX * nchan;
 
@@ -737,8 +693,8 @@ static Boln load_rgb (Tcl_Interp *interp, tkimg_MFile *ifp,
                     }
                 }
             }
-            if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1,
-                showMatte? TK_PHOTO_COMPOSITE_OVERLAY: TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
+            if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1,
+                withalpha? TK_PHOTO_COMPOSITE_OVERLAY: TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
                 result = FALSE;
                 break;
             }
@@ -757,88 +713,133 @@ static Boln load_rgb (Tcl_Interp *interp, tkimg_MFile *ifp,
  * Prototypes for local procedures defined in this file:
  */
 
-static int ParseFormatOpts(Tcl_Interp *interp, Tcl_Obj *format, FMTOPT *opts);
-static int CommonMatch(tkimg_MFile *handle, int *widthPtr,
+static int CommonMatch(tkimg_Stream *handle, int *widthPtr,
         int *heightPtr, SUNHEADER *sunHeaderPtr);
-static int CommonRead(Tcl_Interp *interp, tkimg_MFile *handle,
+static int CommonRead(Tcl_Interp *interp, tkimg_Stream *handle,
         const char *filename, Tcl_Obj *format,
         Tk_PhotoHandle imageHandle, int destX, int destY,
         int width, int height, int srcX, int srcY);
 static int CommonWrite(Tcl_Interp *interp,
         const char *filename, Tcl_Obj *format,
-        tkimg_MFile *handle, Tk_PhotoImageBlock *blockPtr);
+        tkimg_Stream *handle, Tk_PhotoImageBlock *blockPtr);
 
 static int ParseFormatOpts(
     Tcl_Interp *interp,
     Tcl_Obj *format,
-    FMTOPT *opts
+    FMTOPT *opts,
+    int mode
 ) {
-    static const char *const sunOptions[] = {
-        "-compression", "-verbose", "-matte", NULL
+    static const char *const readOptions[] = {
+        "-verbose", "-withalpha", "-matte", NULL
     };
-    int objc, i, index;
+    enum readEnums {
+        R_VERBOSE, R_WITHALPHA, R_MATTE
+    };
+    static const char *const writeOptions[] = {
+        "-verbose", "-compression", "-withalpha", "-matte", NULL
+    };
+    enum writeEnums {
+        W_VERBOSE, W_COMPRESSION, W_WITHALPHA, W_MATTE
+    };
+    Tcl_Size objc, i;
+    int index;
     char *optionStr;
     Tcl_Obj **objv;
     int boolVal;
 
     /* Initialize options with default values. */
-    opts->compression = 1;
     opts->verbose     = 0;
-    opts->matte       = 1;
+    opts->compression = 1;
+    opts->withalpha   = 1;
 
-    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK) {
+    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) == TCL_ERROR) {
         return TCL_ERROR;
     }
-    if (objc) {
-        for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)sunOptions,
-                    "format option", 0, &index) != TCL_OK) {
+    for (i=1; i<objc; i++) {
+        if (mode == IMG_READ) {
+            if (Tcl_GetIndexFromObj(interp, objv[i], readOptions,
+                    "format option", 0, &index) == TCL_ERROR) {
                 return TCL_ERROR;
             }
-            if (++i >= objc) {
-                Tcl_AppendResult(interp, "No value for option \"",
-                        Tcl_GetStringFromObj (objv[--i], (int *) NULL),
-                        "\"", (char *) NULL);
+        } else {
+            if (Tcl_GetIndexFromObj(interp, objv[i], writeOptions,
+                    "format option", 0, &index) == TCL_ERROR) {
                 return TCL_ERROR;
             }
-            optionStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
+        }
+        if (++i >= objc) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "No value specified for option \"%s\".", Tcl_GetString(objv[--i])));
+            return TCL_ERROR;
+        }
+        optionStr = Tcl_GetString(objv[i]);
+        if (mode == IMG_READ) {
             switch(index) {
-                case 0:
+                case R_VERBOSE: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid verbose mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->verbose = boolVal;
+                    break;
+                }
+                case R_WITHALPHA:
+                case R_MATTE: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid withalpha mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->withalpha = boolVal;
+                    break;
+                }
+            }
+        } else {
+            switch(index) {
+                case W_VERBOSE: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid verbose mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->verbose = boolVal;
+                    break;
+                }
+                case W_COMPRESSION: {
                     if (!strncmp (optionStr, "none", strlen ("none"))) {
                         opts->compression = 0;
                     } else if (!strncmp (optionStr, "rle", strlen ("rle"))) {
                         opts->compression = 1;
                     } else {
-                        Tcl_AppendResult (interp, "Invalid compression mode \"", optionStr,
-                                          "\": Must be \"none\" or \"rle\"", (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid compression mode \"%s\": must be none or rle.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     break;
-                case 1:
+                }
+                case W_WITHALPHA:
+                case W_MATTE: {
                     if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid verbose mode \"", optionStr,
-                                          "\": should be 1 or 0, on or off, true or false",
-                                          (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid withalpha mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
                         return TCL_ERROR;
                     }
-                    opts->verbose = boolVal;
+                    opts->withalpha = boolVal;
                     break;
-                case 2:
-                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid matte mode \"", optionStr,
-                                          "\": should be 1 or 0, on or off, true or false",
-                                          (char *) NULL);
-                        return TCL_ERROR;
-                    }
-                    opts->matte = boolVal;
-                    break;
+                }
             }
         }
     }
     return TCL_OK;
 }
 
-static int ChnMatch(
+static int FileMatch(
     Tcl_Channel chan,
     const char *filename,
     Tcl_Obj *format,
@@ -846,39 +847,40 @@ static int ChnMatch(
     int *heightPtr,
     Tcl_Interp *interp
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
 #ifdef DEBUG_LOCAL
-    printf("ChnMatch\n"); fflush(stdout);
+    printf("FileMatch\n"); fflush(stdout);
 #endif
 
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
+    tkimg_ReadInitFile(&handle, chan);
 
     return CommonMatch(&handle, widthPtr, heightPtr, NULL);
 }
 
-static int ObjMatch(
-    Tcl_Obj *data,
+static int StringMatch(
+    Tcl_Obj *dataObj,
     Tcl_Obj *format,
     int *widthPtr,
     int *heightPtr,
     Tcl_Interp *interp
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
 #ifdef DEBUG_LOCAL
-    printf("ObjMatch\n"); fflush(stdout);
+    printf("StringMatch\n"); fflush(stdout);
 #endif
 
-    if (!tkimg_ReadInit(data, 'Y', &handle)) {
+    if (!tkimg_ReadInitString(&handle, dataObj)) {
         return 0;
     }
     return CommonMatch(&handle, widthPtr, heightPtr, NULL);
 }
 
 static int CommonMatch(
-    tkimg_MFile *handle,
+    tkimg_Stream *handle,
     int   *widthPtr,
     int   *heightPtr,
     SUNHEADER *sunHeaderPtr
@@ -897,7 +899,7 @@ static int CommonMatch(
     return 1;
 }
 
-static int ChnRead(
+static int FileRead(
     Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
     Tcl_Channel chan,           /* The image channel, open for reading. */
     const char *filename,       /* The name of the image file. */
@@ -910,35 +912,38 @@ static int ChnRead(
     int srcX, int srcY          /* Coordinates of top-left pixel to be used
                                  * in image being read. */
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
+    tkimg_ReadInitFile(&handle, chan);
 
     return CommonRead (interp, &handle, filename, format,
                        imageHandle, destX, destY,
                        width, height, srcX, srcY);
 }
 
-static int ObjRead(
+static int StringRead(
     Tcl_Interp *interp,
-    Tcl_Obj *data,
+    Tcl_Obj *dataObj,
     Tcl_Obj *format,
     Tk_PhotoHandle imageHandle,
     int destX, int destY,
     int width, int height,
     int srcX, int srcY
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    tkimg_ReadInit (data, 'Y', &handle);
+    if (!tkimg_ReadInitString(&handle, dataObj)) {
+        return 0;
+    }
     return CommonRead (interp, &handle, "InlineData", format, imageHandle,
                        destX, destY, width, height, srcX, srcY);
 }
 
 static int CommonRead(
     Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
-    tkimg_MFile *handle,        /* The image file, open for reading. */
+    tkimg_Stream *handle,        /* The image file, open for reading. */
     const char *filename,       /* The name of the image file. */
     Tcl_Obj *format,            /* User-specified format object, or NULL. */
     Tk_PhotoHandle imageHandle, /* The photo image to write into. */
@@ -958,7 +963,7 @@ static int CommonRead(
     UByte *suncolmap = NULL;
     char errMsg[256];
 
-    if (ParseFormatOpts(interp, format, &opts) != TCL_OK) {
+    if (ParseFormatOpts(interp, format, &opts, IMG_READ) == TCL_ERROR) {
         return TCL_ERROR;
     }
 
@@ -996,7 +1001,7 @@ static int CommonRead(
     }
 
     if (sh.ras_type == RAS_TYPE_RLE) {
-        tkimg_ReadBuffer (1);
+        tkimg_EnableReadBuffer (handle, 1);
     }
 
     /* Is there a RGB colourmap ? */
@@ -1006,14 +1011,14 @@ static int CommonRead(
             tkimg_snprintf(errMsg, 256, "Can't allocate memory of size %d",
                            sh.ras_maplength);
             Tcl_AppendResult(interp, errMsg, (char *)NULL);
-            tkimg_ReadBuffer (0);
+            tkimg_EnableReadBuffer (handle, 0);
             return TCL_ERROR;
         }
 
         if (!read_sun_cols (handle, &sh, suncolmap)) {
             Tcl_AppendResult(interp, "Unable to read color map", (char *)NULL);
             ckfree ((char *)suncolmap);
-            tkimg_ReadBuffer (0);
+            tkimg_EnableReadBuffer (handle, 0);
             return TCL_ERROR;
         }
 #ifdef DEBUG_LOCAL
@@ -1038,11 +1043,11 @@ static int CommonRead(
         }
     }
 
-    if (tkimg_PhotoExpand(interp, imageHandle, destX + outWidth, destY + outHeight) == TCL_ERROR) {
+    if (Tk_PhotoExpand(interp, imageHandle, destX + outWidth, destY + outHeight) == TCL_ERROR) {
         if (suncolmap) {
             ckfree ((char *)suncolmap);
         }
-        tkimg_ReadBuffer(0);
+        tkimg_EnableReadBuffer(handle, 0);
         return TCL_ERROR;
     }
 
@@ -1065,11 +1070,11 @@ static int CommonRead(
             break;
 
         case 24:   /* True color */
-        case 32:   /* True color with matte channel */
+        case 32:   /* True color with alpha channel */
             if (!load_rgb (interp, handle, imageHandle, destX, destY,
                            outWidth, outHeight, srcX, srcY,
                            fileWidth, fileHeight,
-                           nchan, sh.ras_type, opts.matte))
+                           nchan, sh.ras_type, opts.withalpha))
                 retCode = TCL_ERROR;
             break;
 
@@ -1082,27 +1087,27 @@ static int CommonRead(
     if (suncolmap) {
         ckfree ((char *)suncolmap);
     }
-    tkimg_ReadBuffer (0);
+    tkimg_EnableReadBuffer (handle, 0);
     return retCode;
 }
 
-static int ChnWrite(
+static int FileWrite(
     Tcl_Interp *interp,
     const char *filename,
     Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr
 ) {
     Tcl_Channel chan;
-    tkimg_MFile handle;
     int result;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    chan = tkimg_OpenFileChannel (interp, filename, 0644);
+    chan = tkimg_OpenFileChannel (interp, filename, "w");
     if (!chan) {
         return TCL_ERROR;
     }
 
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
+    tkimg_WriteInitFile(&handle, chan);
 
     result = CommonWrite (interp, filename, format, &handle, blockPtr);
     if (Tcl_Close(interp, chan) == TCL_ERROR) {
@@ -1116,19 +1121,15 @@ static int StringWrite(
     Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr
 ) {
-    tkimg_MFile handle;
     int result;
-    Tcl_DString data;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    Tcl_DStringInit(&data);
-    tkimg_WriteInit(&data, &handle);
+    tkimg_WriteInitString(&handle);
     result = CommonWrite(interp, "InlineData", format, &handle, blockPtr);
-    tkimg_Putc(IMG_DONE, &handle);
 
     if (result == TCL_OK) {
-        Tcl_DStringResult(interp, &data);
-    } else {
-        Tcl_DStringFree(&data);
+        Tcl_SetObjResult(interp, handle.byteObj);
     }
     return result;
 }
@@ -1137,7 +1138,7 @@ static int CommonWrite(
     Tcl_Interp *interp,
     const char *filename,
     Tcl_Obj *format,
-    tkimg_MFile *handle,
+    tkimg_Stream *handle,
     Tk_PhotoImageBlock *blockPtr
 ) {
     int     x, y, nchan, nBytes, linepad;
@@ -1148,7 +1149,7 @@ static int CommonWrite(
     UByte *row, *rowPtr;
     char errMsg[256];
 
-    if (ParseFormatOpts(interp, format, &opts) != TCL_OK) {
+    if (ParseFormatOpts(interp, format, &opts, IMG_WRITE) == TCL_ERROR) {
         return TCL_ERROR;
     }
 
@@ -1166,7 +1167,7 @@ static int CommonWrite(
         alphaOffset = 0;
     }
 
-    nchan   = ((opts.matte && alphaOffset)? 4: 3);
+    nchan   = ((opts.withalpha && alphaOffset)? 4: 3);
     nBytes  = blockPtr->width * nchan;
     linepad = nBytes % 2;
 
@@ -1196,7 +1197,7 @@ static int CommonWrite(
             pixelPtr = pixRowPtr;
             for (x=0; x<blockPtr->width; x++) {
                 if (nchan == 4) {
-                    /* Have a matte channel and write it. */
+                    /* Have a alpha channel and write it. */
                     *(rowPtr++) = pixelPtr[alphaOffset];
                 }
                 *(rowPtr++) = pixelPtr[blueOffset];
@@ -1204,7 +1205,7 @@ static int CommonWrite(
                 *(rowPtr++) = pixelPtr[redOffset];
                 pixelPtr += blockPtr->pixelSize;
             }
-            if (nBytes != tkimg_Write2(handle, (const char *)row, nBytes)) {
+            if (nBytes != tkimg_Write(handle, (const char *)row, nBytes)) {
                 tkimg_snprintf(errMsg, 256, "Can't write %d bytes to image file", nBytes);
                 Tcl_AppendResult(interp, errMsg, (char *)NULL);
                 ckfree ((char *)row);
@@ -1222,7 +1223,7 @@ static int CommonWrite(
             pixelPtr = pixRowPtr;
             for (x = 0; x < blockPtr->width; x++) {
                 if (nchan == 4) {
-                    /* Have a matte channel and write it. */
+                    /* Have a alpha channel and write it. */
                     rle_fputc (pixelPtr[alphaOffset], handle);
                 }
                 rle_fputc (pixelPtr[blueOffset], handle);

@@ -1,149 +1,18 @@
-/* STARTHEADER
+/*
+ * raw.c
  *
- * File :       raw.c
+ * RAW photo image type, Tcl/Tk package.
  *
- * Author :     Paul Obermeier (paul@poSoft.de)
+ * A photo image handler for raw binary data interpreted
+ * as grayscale or color images.
  *
- * Date :       2001 / 02 / 21
+ * For a list of available format options see function ParseFormatOpts
+ * and the documentation img-raw.
  *
- * Copyright :  (C) 2001-2019 Paul Obermeier
+ * Copyright (c) 2001-2025 Paul Obermeier <obermeier@users.sourceforge.net>
  *
- * Description :
- *
- * A photo image handler for raw matrix data interpreted as image files.
- *
- * The following image types are currently supported:
- *
- * Grayscale image:  1 channel  of 64-bit floating point   values.
- *                   1 channel  of 32-bit floating point   values.
- *                   1 channel  of 32-bit unsigned integer values.
- *                   1 channel  of 16-bit unsigned integer values.
- *                   1 channel  of  8-bit unsigned integer values.
- * True-color image: 3 channels of 64-bit floating point   values.
- *                   3 channels of 32-bit floating point   values.
- *                   3 channels of 32-bit unsigned integer values.
- *                   3 channels of 16-bit unsigned integer values.
- *                   3 channels of  8-bit unsigned integer values.
- *
- * List of currently supported features:
- *
- * Type   |     Read      |     Write     |
- *        | -file | -data | -file | -data |
- * ----------------------------------------
- * Gray   | Yes   | Yes   | Yes   | Yes   |
- * RGB    | Yes   | Yes   | Yes   | Yes   |
- *
- * There are 2 supported file formats:
- * One with the pure raw data only, the other with a 7 line ASCII header of the
- * following form:
- *
- *     Magic=RAW\n              File format identifier. Fixed value.
- *     Width=128\n              Image width in pixels.
- *     Height=128\n             Image height in pixels.
- *     NumChan=1\n              Possible values: 1 or 3.
- *     ByteOrder=Intel\n        Possible values: "Intel" or "Motorola".
- *     ScanOrder=TopDown\n      Possible values: "TopDown" or "BottomUp".
- *     PixelType=byte\n         Possible values: "double", "float", "int", "short", "byte".
- *
- * The following format options are available:
- *
- * For raw images with header:
- * Read  RAW image: "raw -useheader true -verbose <bool> -map <enum>
- *                       -gamma <float> -min <float> -max <float>
- *                       -cutoff <float> -saturation <float> -printagc <bool>"
- * Write RAW image: "raw -useheader true -verbose <bool> -nchan <int>
- *                       -scanorder <string>"
- *
- * For raw images without header:
- * Read  RAW image: "raw -useheader false -verbose <bool> -map <enum>
- *                       -gamma <float> -min <float> -max <float>
- *                       -cutoff <float> -saturation <float> -printagc <bool>
- *                       -nchan <int> -scanorder <string> -byteorder <string>
- *                       -width <int> -height <int> -skipbytes <int>
- *                       -pixeltype <string> -uuencode <bool>"
- * Write RAW image: "raw -useheader false -verbose <bool> -nchan <int>
- *                       -scanorder <string>"
- *
- * -verbose <bool>:     If set to true, additional information about the file
- *                      format is printed to stdout. Default is false.
- * -useheader <bool>:   If set to true, use file header information for reading
- *                      and writing. Default is true.
- *
- * -map <enum>:         Specify the mode when mapping the 32 or 16-bit values
- *                      of the image to 8-bit gray scale values for displaying.
- *                      Valid mapping mode strings are: none, minmax, agc.
- *                      Default mode is minmax.
- *
- *                      Mode "none":
- *                      If mapping mode is set to "none", no mapping of input
- *                      values is done. Use this mode, if the image already
- *                      contains RGB values in the range of 0 ..255.
- *                      When using mode "none", no information about the
- *                      minimum and maximum pixel values is gathered during
- *                      reading and therefore no verbose output is printed.
- *                      On the other hand reading the image is faster.
- *
- *                      Mode "minmax":
- *                      "minmax" maps the minimum and maximum values of the image data to
- *                      256 gray scale values.
- *
- *                      Mode "agc":
- *                      "agc" applies an automatic gain control algorithmn to the
- *                      image data.
- *                      Currently implemented for 1-channel 32-bit float images only.
- * -gamma <float>:      Specify a gamma correction to be applied when mapping
- *                      the input data to 8-bit image values.
- *                      Default is 1.0.
- *                      Valid for mapping modes: minmax, agc
- * -max <float>:        Specify the maximum pixel value to be used for mapping
- *                      the input data to 8-bit image values.
- *                      Default is the maximum value found in the image data.
- * -min <float>:        Specify the minimum pixel value to be used for mapping
- *                      the input data to 8-bit image values.
- *                      Default is the minimum value found in the image data.
- * -saturation <float>: If option is given, an Automatic Gain Control algorithmn is
- *                      applied to the input values. The supplied value specifies the
- *                      saturation value, i.e. all pixel values greater than the
- *                      saturation are mapped to white.
- *                      Valid for mapping mode: agc
- * -cutoff <float>:     If option is given, an Automatic Gain Control algorithmn is
- *                      applied to the input values. The supplied value specifies the
- *                      cut-off value in percent.
- *                      Valid for mapping mode: agc
- * -printagc <bool>:    If set to true, additional information about the Automatic
- *                      Gain Control is printed to stdout. Default is false.
- *                      Valid for mapping mode: agc
- *
- * -nchan <int>:        Specify the number of channels of the input image.
- *                      Only valid, if reading image data without header.
- *                      Default is 1.
- * -width <int>:        Specify the width of the input image. Only valid, if
- *                      reading image data without header. Default is 128.
- * -height <int>:       Specify the height of the input image. Only valid, if
- *                      reading image data without header. Default is 128.
- * -skipbytes <int>:    Specify the number of bytes to skip before reading image data.
- *                      Only valid, if reading image data without header. Default is 0.
- * -byteorder <string>: Specify the byteorder of the input image. Only valid, if
- *                      reading image data without header.
- *                      Possible values: "Intel" or "Motorola".
- *                      Default is assuming the same byteorder as that of the
- *                      host computer.
- * -scanorder <string>: Specify the scanline order of the input image. Only
- *                      valid, if reading image data without header.
- *                      Possible values: "TopDown" or "BottomUp".
- *                      Default is "TopDown".
- * -pixeltype <string>: Specify the type of the pixel values.
- *                      Only valid, if reading image data without header.
- *                      Possible values: "double", "float", "int", "short", "byte".
- *                      Default is "byte".
- * -uuencode <bool>:    If set to false, do not assume, that the image data stored in a
- *                      variable is uuencoded. Default is true, i.e. the image data is
- *                      assumed to be uuencoded.
- *
- * Notes:
- *                      Currently RAW files are only written in "byte" pixel format.
- *
- * ENDHEADER
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  */
 
@@ -157,16 +26,16 @@
 #include "init.c"
 
 /* Maximum length of a header line. */
-#define HEADLEN 100
+#define HEADLEN 20
 
 /* Header fields. */
-#define strMagic     "Magic=%s\n"
-#define strWidth     "Width=%d\n"
-#define strHeight    "Height=%d\n"
-#define strNumChan   "NumChan=%d\n"
-#define strByteOrder "ByteOrder=%s\n"
-#define strScanOrder "ScanOrder=%s\n"
-#define strPixelType "PixelType=%s\n"
+#define strMagic     "Magic=%s"
+#define strWidth     "Width=%d"
+#define strHeight    "Height=%d"
+#define strNumChan   "NumChan=%d"
+#define strByteOrder "ByteOrder=%s"
+#define strScanOrder "ScanOrder=%s"
+#define strPixelType "PixelType=%s"
 
 /* Header fields possible values. */
 #define strIntel    "Intel"
@@ -235,6 +104,7 @@ typedef struct {
     Boln   printAgc;
     Boln   uuencode;
     Boln   useHeader;
+    Boln   withAlpha;
 } FMTOPT;
 
 /* Structure to hold information about the image file being processed. */
@@ -261,9 +131,9 @@ static void rawClose (RAWFILE *tf, Boln fastMode)
     return;
 }
 
-#define OUT Tcl_WriteChars (outChan, str, -1)
 static void printImgInfo (RAWHEADER *th, FMTOPT *opts,
-                          const char *filename, const char *msg)
+                          const char *filename, Boln isWriteInfo,
+                          const char *msg)
 {
     Tcl_Channel outChan;
     char str[256];
@@ -272,40 +142,44 @@ static void printImgInfo (RAWHEADER *th, FMTOPT *opts,
     if (!outChan) {
         return;
     }
-    tkimg_snprintf (str, 256, "%s %s\n", msg, filename);                                                         OUT;
-    tkimg_snprintf (str, 256, "\tSize in pixel    : %d x %d\n", th->width, th->height);                          OUT;
-    tkimg_snprintf (str, 256, "\tNo. of channels  : %d\n",      th->nChans);                                     OUT;
-    tkimg_snprintf (str, 256, "\tPixel type       : %s\n",      (th->pixelType == TYPE_DOUBLE? strDouble:
-                                                                (th->pixelType == TYPE_FLOAT?  strFloat:
-                                                                (th->pixelType == TYPE_UINT?   strUInt:
-                                                                (th->pixelType == TYPE_USHORT? strUShort:
-                                                                (th->pixelType == TYPE_UBYTE?  strUByte:
-                                                                                               strUnknown)))))); OUT;
-    tkimg_snprintf (str, 256, "\tVertical encoding: %s\n",      th->scanOrder == TOP_DOWN?
-                                                                strTopDown: strBottomUp);                        OUT;
-    tkimg_snprintf (str, 256, "\tHost byte order  : %s\n",      tkimg_IsIntel ()?  strIntel: strMotorola);       OUT;
-    tkimg_snprintf (str, 256, "\tFile byte order  : %s\n",      th->byteOrder == INTEL?
-                                                                strIntel: strMotorola);                          OUT;
-    tkimg_snprintf (str, 256, "\tMapping mode     : %s\n",      (opts->mapMode == IMG_MAP_NONE?   IMG_MAP_NONE_STR:
-                                                                (opts->mapMode == IMG_MAP_MINMAX? IMG_MAP_MINMAX_STR:
-                                                                (opts->mapMode == IMG_MAP_AGC?    IMG_MAP_AGC_STR:
-                                                                                              strUnknown))));    OUT;
+    tkimg_snprintf (str, 256, "%s %s\n", msg, filename);                                                            IMGOUT;
+    tkimg_snprintf (str, 256, "\tSize in pixel     : %d x %d\n", th->width, th->height);                            IMGOUT;
+    tkimg_snprintf (str, 256, "\tNumber of channels: %d\n",      th->nChans);                                       IMGOUT;
+    tkimg_snprintf (str, 256, "\tPixel type        : %s\n",      (th->pixelType == TYPE_DOUBLE? strDouble:
+                                                                 (th->pixelType == TYPE_FLOAT?  strFloat:
+                                                                 (th->pixelType == TYPE_UINT?   strUInt:
+                                                                 (th->pixelType == TYPE_USHORT? strUShort:
+                                                                 (th->pixelType == TYPE_UBYTE?  strUByte:
+                                                                                                strUnknown))))));   IMGOUT;
+    tkimg_snprintf (str, 256, "\tVertical encoding : %s\n",      th->scanOrder == TOP_DOWN?
+                                                                 strTopDown: strBottomUp);                          IMGOUT;
+    tkimg_snprintf (str, 256, "\tHost byte order   : %s\n",      tkimg_IsIntel ()?  strIntel: strMotorola);         IMGOUT;
+    tkimg_snprintf (str, 256, "\tFile byte order   : %s\n",      th->byteOrder == INTEL?
+                                                                 strIntel: strMotorola);                            IMGOUT;
+    if (isWriteInfo) {
+        Tcl_Flush (outChan);
+        return;
+    }
+
+    tkimg_snprintf (str, 256, "\tMapping mode      : %s\n",      (opts->mapMode == IMG_MAP_NONE?   IMG_MAP_NONE_STR:
+                                                                 (opts->mapMode == IMG_MAP_MINMAX? IMG_MAP_MINMAX_STR:
+                                                                 (opts->mapMode == IMG_MAP_AGC?    IMG_MAP_AGC_STR:
+                                                                                                   strUnknown))));  IMGOUT;
     if (opts->mapMode != IMG_MAP_NONE) {
-        tkimg_snprintf (str, 256, "\tGamma correction : %lf\n",       opts->gamma);                              OUT;
+        tkimg_snprintf (str, 256, "\tGamma correction  : %lf\n",       opts->gamma);                                IMGOUT;
         if (opts->mapMode == IMG_MAP_MINMAX) {
-            tkimg_snprintf (str, 256, "\tMinimum map value: %lf\n",   opts->minVal);                             OUT;
-            tkimg_snprintf (str, 256, "\tMaximum map value: %lf\n",   opts->maxVal);                             OUT;
+            tkimg_snprintf (str, 256, "\tMinimum map value : %lf\n",   opts->minVal);                               IMGOUT;
+            tkimg_snprintf (str, 256, "\tMaximum map value : %lf\n",   opts->maxVal);                               IMGOUT;
         }
         if (opts->mapMode == IMG_MAP_AGC) {
-            tkimg_snprintf (str, 256, "\tSaturation       : %lf\n",   opts->saturation);                         OUT;
-            tkimg_snprintf (str, 256, "\tCutOff           : %lf%%\n", opts->cutOff);                             OUT;
+            tkimg_snprintf (str, 256, "\tSaturation        : %lf\n",   opts->saturation);                           IMGOUT;
+            tkimg_snprintf (str, 256, "\tCutOff            : %lf%%\n", opts->cutOff);                               IMGOUT;
         }
     }
     Tcl_Flush (outChan);
 }
-#undef OUT
 
-static Boln readHeaderLine (Tcl_Interp *interp, tkimg_MFile *handle, char *buf)
+static Boln readHeaderLine (Tcl_Interp *interp, tkimg_Stream *handle, char *buf)
 {
     char c, *bufPtr, *bufEndPtr;
     Boln failure;
@@ -315,7 +189,7 @@ static Boln readHeaderLine (Tcl_Interp *interp, tkimg_MFile *handle, char *buf)
     bufEndPtr = buf + HEADLEN;
     failure   = TRUE;
 
-    while (tkimg_Read2(handle, &c, 1) == 1 && bufPtr < bufEndPtr) {
+    while (tkimg_Read(handle, &c, 1) == 1 && bufPtr < bufEndPtr) {
         if (c == '\n') {
             *bufPtr = '\0';
             failure = FALSE;
@@ -331,7 +205,7 @@ static Boln readHeaderLine (Tcl_Interp *interp, tkimg_MFile *handle, char *buf)
     return TRUE;
 }
 
-static Boln readHeader (Tcl_Interp *interp, tkimg_MFile *handle, RAWHEADER *th)
+static Boln readHeader (Tcl_Interp *interp, tkimg_Stream *handle, RAWHEADER *th)
 {
     char buf[HEADLEN];
     char tmpStr[HEADLEN];
@@ -374,9 +248,9 @@ static Boln readHeader (Tcl_Interp *interp, tkimg_MFile *handle, RAWHEADER *th)
         Tcl_AppendResult (interp, "Unable to parse header field NumChan\n", (char *)NULL);
         return FALSE;
     }
-    if (th->nChans != 1 && th->nChans != 3) {
+    if (th->nChans < 1 || th->nChans > 4) {
         Tcl_AppendResult (interp, "Invalid value for header field NumChan:",
-                                  "Must be 1 or 3\n", (char *)NULL);
+                                  "Must be 1, 2, 3 or 4\n", (char *)NULL);
         return FALSE;
     }
 
@@ -438,30 +312,45 @@ static Boln readHeader (Tcl_Interp *interp, tkimg_MFile *handle, RAWHEADER *th)
     return TRUE;
 }
 
-static Boln writeHeader (tkimg_MFile *handle, RAWHEADER *th)
+static void writeIntLine (tkimg_Stream *handle, const char *fmt, Int val)
 {
-    char buf[1024];
+    char str[HEADLEN+1];
 
-    tkimg_snprintf (buf, 1024, strMagic, "RAW");
-    tkimg_Write2(handle, buf, strlen (buf));
-    tkimg_snprintf (buf, 1024, strWidth, th->width);
-    tkimg_Write2(handle, buf, strlen (buf));
-    tkimg_snprintf (buf, 1024, strHeight, th->height);
-    tkimg_Write2(handle, buf, strlen (buf));
-    tkimg_snprintf (buf, 1024, strNumChan, th->nChans);
-    tkimg_Write2(handle, buf, strlen (buf));
-    tkimg_snprintf (buf, 1024, strByteOrder, tkimg_IsIntel()? strIntel: strMotorola);
-    tkimg_Write2(handle, buf, strlen (buf));
-    tkimg_snprintf (buf, 1024, strScanOrder, th->scanOrder == TOP_DOWN?
-                                             strTopDown: strBottomUp);
-    tkimg_Write2(handle, buf, strlen (buf));
-    tkimg_snprintf (buf, 1024, strPixelType, (th->pixelType == TYPE_DOUBLE? strDouble:
-                                             (th->pixelType == TYPE_FLOAT?  strFloat:
-                                             (th->pixelType == TYPE_UINT?   strUInt:
-                                             (th->pixelType == TYPE_USHORT? strUShort:
-                                             (th->pixelType == TYPE_UBYTE?  strUByte:
-                                                                            strUnknown))))));
-    tkimg_Write2(handle, buf, strlen (buf));
+    tkimg_snprintf (str, HEADLEN, fmt, val);
+    while (strlen (str) < HEADLEN -1) {
+        strcat (str, " ");
+    }
+    strcat (str, "\n");
+    tkimg_Write(handle, str, strlen (str));
+}
+
+static void writeStringLine (tkimg_Stream *handle, const char *fmt, const char *val)
+{
+    char str[HEADLEN+1];
+
+    tkimg_snprintf (str, HEADLEN, fmt, val);
+    while (strlen (str) < HEADLEN -1) {
+        strcat (str, " ");
+    }
+    strcat (str, "\n");
+    tkimg_Write(handle, str, strlen (str));
+}
+
+static Boln writeHeader (tkimg_Stream *handle, RAWHEADER *th)
+{
+    writeStringLine (handle, strMagic,     "RAW");
+    writeIntLine    (handle, strWidth,     th->width);
+    writeIntLine    (handle, strHeight,    th->height);
+    writeIntLine    (handle, strNumChan,   th->nChans);
+    writeStringLine (handle, strByteOrder, tkimg_IsIntel()? strIntel: strMotorola);
+    writeStringLine (handle, strScanOrder, th->scanOrder == TOP_DOWN?
+                                           strTopDown: strBottomUp);
+    writeStringLine (handle, strPixelType, (th->pixelType == TYPE_DOUBLE? strDouble:
+                                            (th->pixelType == TYPE_FLOAT?  strFloat:
+                                            (th->pixelType == TYPE_UINT?   strUInt:
+                                            (th->pixelType == TYPE_USHORT? strUShort:
+                                            (th->pixelType == TYPE_UBYTE?  strUByte:
+                                                                           strUnknown))))));
     return TRUE;
 }
 
@@ -474,7 +363,7 @@ static void initHeader (RAWHEADER *th)
     th->width     = 128;
     th->height    = 128;
     th->scanOrder = TOP_DOWN;
-    th->byteOrder = INTEL;
+    th->byteOrder = tkimg_IsIntel ()? INTEL: MOTOROLA;
     th->pixelType = TYPE_UBYTE;
     return;
 }
@@ -487,31 +376,47 @@ static void initHeader (RAWHEADER *th)
  * Prototypes for local procedures defined in this file:
  */
 
-static int ParseFormatOpts(Tcl_Interp *interp, Tcl_Obj *format,
-        FMTOPT *opts);
-static int CommonMatch(Tcl_Interp *interp, tkimg_MFile *handle,
+static int CommonMatch(Tcl_Interp *interp, tkimg_Stream *handle,
         Tcl_Obj *format, int *widthPtr, int *heightPtr,
         RAWHEADER *rawHeaderPtr);
-static int CommonRead(Tcl_Interp *interp, tkimg_MFile *handle,
+static int CommonRead(Tcl_Interp *interp, tkimg_Stream *handle,
         const char *filename, Tcl_Obj *format,
         Tk_PhotoHandle imageHandle, int destX, int destY,
         int width, int height, int srcX, int srcY);
 static int CommonWrite(Tcl_Interp *interp,
         const char *filename, Tcl_Obj *format,
-        tkimg_MFile *handle, Tk_PhotoImageBlock *blockPtr);
+        tkimg_Stream *handle, Tk_PhotoImageBlock *blockPtr);
 
 static int ParseFormatOpts(
     Tcl_Interp *interp,
     Tcl_Obj *format,
-    FMTOPT *opts
+    FMTOPT *opts,
+    int mode
 ) {
-    static const char *const rawOptions[] = {
-         "-verbose", "-width", "-height", "-nchan", "-byteorder",
-         "-scanorder", "-pixeltype", "-min", "-max", "-gamma",
-         "-useheader", "-map", "-uuencode", "-saturation", "-cutoff",
-         "-nomap", "-printagc", "-skipbytes", NULL
+    static const char *const readOptions[] = {
+         "-verbose", "-useheader", "-withalpha",
+         "-width", "-height", "-numchan", "-byteorder",
+         "-scanorder", "-pixeltype", "-skipbytes",
+         "-map", "-min", "-max", "-gamma",
+         "-saturation", "-cutoff", "-printagc",
+         "-uuencode", "-nomap", "-nchan", NULL
     };
-    int objc, i, index;
+    enum readEnums {
+        R_VERBOSE, R_USEHEADER, R_WITHALPHA,
+        R_WIDTH, R_HEIGHT, R_NUMCHAN, R_BYTEORDER,
+        R_SCANORDER, R_PIXELTYPE, R_SKIPBYTES,
+        R_MAP, R_MIN, R_MAX, R_GAMMA,
+        R_SATURATION, R_CUTOFF, R_PRINTAGC,
+        R_UUENCODE, R_NOMAP, R_NCHAN
+    };
+    static const char *const writeOptions[] = {
+         "-verbose", "-useheader", "-nchan", "-withalpha", "-scanorder", NULL
+    };
+    enum writeEnums {
+        W_VERBOSE, W_USEHEADER, W_NCHAN, W_WITHALPHA, W_SCANORDER
+    };
+    Tcl_Size objc, i;
+    int index;
     char *optionStr;
     Tcl_Obj **objv;
     int boolVal;
@@ -530,89 +435,126 @@ static int ParseFormatOpts(
     opts->maxVal     = -1.0;
     opts->gamma      = 1.0;
     opts->useHeader  = 1;
+    opts->withAlpha  = 1;
     opts->mapMode    = IMG_MAP_MINMAX;
-    opts->uuencode   = 1;
+    opts->uuencode   = 0;
     opts->saturation = -1.0;
     opts->cutOff     = 3.0;
     opts->printAgc   = 0;
     opts->skipBytes  = 0;
 
-    if (tkimg_ListObjGetElements (interp, format, &objc, &objv) != TCL_OK)
+    if (tkimg_ListObjGetElements (interp, format, &objc, &objv) == TCL_ERROR) {
         return TCL_ERROR;
-    if (objc) {
-        for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj (interp, objv[i], (const char * const *)rawOptions,
-                    "format option", 0, &index) != TCL_OK) {
+    }
+    for (i=1; i<objc; i++) {
+        if (mode == IMG_READ) {
+            if (Tcl_GetIndexFromObj(interp, objv[i], readOptions,
+                    "format option", 0, &index) == TCL_ERROR) {
                 return TCL_ERROR;
             }
-            i++;
-            if (i >= objc) {
-                Tcl_AppendResult (interp, "No value for option \"",
-                        Tcl_GetStringFromObj (objv[--i], (int *) NULL),
-                        "\"", (char *) NULL);
+        } else {
+            if (Tcl_GetIndexFromObj(interp, objv[i], writeOptions,
+                    "format option", 0, &index) == TCL_ERROR) {
                 return TCL_ERROR;
             }
-            optionStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
+        }
+        if (++i >= objc) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "No value specified for option \"%s\".", Tcl_GetString(objv[--i])));
+            return TCL_ERROR;
+        }
+        optionStr = Tcl_GetString(objv[i]);
+        if (mode == IMG_READ) {
             switch(index) {
-                case 0:
+                case R_VERBOSE: {
                     if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid verbose mode \"", optionStr,
-                                          "\": should be 1 or 0, on or off, true or false",
-                                          (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid verbose mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     opts->verbose = boolVal;
                     break;
-                case 1:
+                }
+                case R_USEHEADER: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid useheader mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->useHeader = boolVal;
+                    break;
+                }
+                case R_WITHALPHA: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid withalpha mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->withAlpha = boolVal;
+                    break;
+                }
+                case R_WIDTH: {
                     if (Tcl_GetInt(interp, optionStr, &intVal) == TCL_ERROR || intVal <= 0) {
-                        Tcl_AppendResult (interp, "Invalid image width \"", optionStr,
-                                          "\": Must be greater than zero.", (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid image width value \"%s\": must be an integer value greater than zero.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     opts->width = intVal;
                     break;
-                case 2:
+                }
+                case R_HEIGHT: {
                     if (Tcl_GetInt(interp, optionStr, &intVal) == TCL_ERROR || intVal <= 0) {
-                        Tcl_AppendResult (interp, "Invalid image height \"", optionStr,
-                                          "\": Must be greater than zero.", (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid image height value \"%s\": must be an integer value greater than zero.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     opts->height = intVal;
                     break;
-                case 3:
+                }
+                case R_NUMCHAN:
+                case R_NCHAN: {
                     if (Tcl_GetInt(interp, optionStr, &intVal) == TCL_ERROR ||
-                        intVal <= 0 || intVal > 4) {
-                        Tcl_AppendResult (interp, "Invalid number of channels \"", optionStr,
-                                          "\": Must be either 1, 2, 3 or 4.", (char *) NULL);
+                        intVal < 1 || intVal > 4) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid number of channels \"%s\": must be 1, 2, 3 or 4.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     opts->nchan = intVal;
                     break;
-                case 4:
+                }
+                case R_BYTEORDER: {
                     if (!strncmp (optionStr, strIntel, strlen (strIntel))) {
                         opts->byteOrder = INTEL;
                     } else if (!strncmp (optionStr, strMotorola, strlen (strMotorola))) {
                         opts->byteOrder = MOTOROLA;
                     } else {
-                        Tcl_AppendResult (interp, "Invalid byteorder mode \"", optionStr,
-                                          "\": Must be ", strIntel, " or ", strMotorola, ".",
-                                          (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid byteorder mode \"%s\": must be Intel or Motorola.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     break;
-                case 5:
+                }
+                case R_SCANORDER: {
                     if (!strncmp (optionStr, strTopDown, strlen (strTopDown))) {
                         opts->scanOrder = TOP_DOWN;
                     } else if (!strncmp (optionStr, strBottomUp, strlen (strBottomUp))) {
                         opts->scanOrder = BOTTOM_UP;
                     } else {
-                        Tcl_AppendResult (interp, "Invalid scanline order \"", optionStr,
-                                          "\": should be TopDown or BottomUp",
-                                          (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid scanorder mode \"%s\": must be TopDown or BottomUp.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     break;
-                case 6:
+                }
+                case R_PIXELTYPE: {
                     if (!strncmp (optionStr, strDouble, strlen (strDouble))) {
                         opts->pixelType = TYPE_DOUBLE;
                     } else if (!strncmp (optionStr, strFloat, strlen (strFloat))) {
@@ -624,52 +566,50 @@ static int ParseFormatOpts(
                     } else if (!strncmp (optionStr, strUByte, strlen (strUByte))) {
                         opts->pixelType = TYPE_UBYTE;
                     } else {
-                        Tcl_AppendResult (interp, "Invalid pixel type \"", optionStr,
-                                          "\": should be double, float, int, short or byte",
-                                          (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid pixeltype mode \"%s\": must be double, float, int, short or byte.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     break;
-                case 7:
+                }
+                case R_MIN: {
                     if (Tcl_GetDouble(interp, optionStr, &doubleVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid minimum map value \"", optionStr,
-                                          "\": Must be greater than or equal to zero.", (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid minimum map value \"%s\": must be a double value.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     if (doubleVal >= 0.0) {
                         opts->minVal = doubleVal;
                     }
                     break;
-                case 8:
+                }
+                case R_MAX: {
                     if (Tcl_GetDouble(interp, optionStr, &doubleVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid maximum map value \"", optionStr,
-                                          "\": Must be greater than or equal to zero.", (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid maximum map value \"%s\": must be a double value.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     if (doubleVal >= 0.0) {
                         opts->maxVal = doubleVal;
                     }
                     break;
-                case 9:
-                    if (Tcl_GetDouble(interp, optionStr, &doubleVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid gamma value \"", optionStr,
-                                          "\": Must be greater than or equal to zero.", (char *) NULL);
+                }
+                case R_GAMMA: {
+                    if (Tcl_GetDouble(interp, optionStr, &doubleVal) == TCL_ERROR || doubleVal < 0.0) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid gamma value \"%s\": must be a double value greater or equal to zero.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     if (doubleVal >= 0.0) {
                         opts->gamma = doubleVal;
                     }
                     break;
-                case 10:
-                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid useheader mode \"", optionStr,
-                                          "\": should be 1 or 0, on or off, true or false",
-                                          (char *) NULL);
-                        return TCL_ERROR;
-                    }
-                    opts->useHeader = boolVal;
-                    break;
-                case 11:
+                }
+                case R_MAP: {
                     if (!strncmp (optionStr, IMG_MAP_NONE_STR, strlen (IMG_MAP_NONE_STR))) {
                         opts->mapMode = IMG_MAP_NONE;
                     } else if (!strncmp (optionStr, IMG_MAP_MINMAX_STR, strlen (IMG_MAP_MINMAX_STR))) {
@@ -677,83 +617,145 @@ static int ParseFormatOpts(
                     } else if (!strncmp (optionStr, IMG_MAP_AGC_STR, strlen (IMG_MAP_AGC_STR))) {
                         opts->mapMode = IMG_MAP_AGC;
                     } else {
-                        Tcl_AppendResult (interp, "Invalid mapping mode \"", optionStr,
-                                          "\": should be none, minmax or agc",
-                                          (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid mapping mode \"%s\": must be none, minmax or agc.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     break;
-                case 12:
-                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid uuencode mode \"", optionStr,
-                                          "\": should be 1 or 0, on or off, true or false",
-                                          (char *) NULL);
-                        return TCL_ERROR;
-                    }
-                    opts->uuencode = boolVal;
+                }
+                case R_UUENCODE: {
+                    /* -uuencode is obsolete. */
                     break;
-                case 13:
+                }
+                case R_SATURATION: {
                     if (Tcl_GetDouble(interp, optionStr, &doubleVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid saturation value \"", optionStr,
-                                          "\": Must be greater than or equal to zero.", (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid saturation value \"%s\": must be a double value.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     if (doubleVal >= 0.0) {
                         opts->saturation = doubleVal;
                     }
                     break;
-                case 14:
-                    if (Tcl_GetDouble(interp, optionStr, &doubleVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid cutoff value \"", optionStr,
-                                          "\": Must be greater than or equal to zero.", (char *) NULL);
+                }
+                case R_CUTOFF: {
+                    if (Tcl_GetDouble(interp, optionStr, &doubleVal) == TCL_ERROR || doubleVal < 0.0) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid cutoff value \"%s\": must be a double value greater or equal to zero.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     if (doubleVal >= 0.0) {
                         opts->cutOff = doubleVal;
                     }
                     break;
-                case 15:
+                }
+                case R_NOMAP: {
                     /* Option "-nomap" for backward compatibility. */
                     if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid nomap mode \"", optionStr,
-                                          "\": should be 1 or 0, on or off, true or false",
-                                          (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid nomap mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     if (boolVal) {
                         opts->mapMode = IMG_MAP_NONE;
                     }
                     break;
-                case 16:
+                }
+                case R_PRINTAGC: {
                     if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid printagc mode \"", optionStr,
-                                          "\": should be 1 or 0, on or off, true or false",
-                                          (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid printagc mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     opts->printAgc = boolVal;
                     break;
-                case 17:
+                }
+                case R_SKIPBYTES: {
                     if (Tcl_GetInt(interp, optionStr, &intVal) == TCL_ERROR || intVal < 0) {
-                        Tcl_AppendResult (interp, "Invalid byte skip value \"", optionStr,
-                                          "\": Must be equal to or greater than zero.", (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid skipbytes value \"%s\": must be an integer value greater or equal to zero.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     opts->skipBytes = intVal;
                     break;
+                }
+            }
+        } else {
+            switch(index) {
+                case W_VERBOSE: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid verbose mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->verbose = boolVal;
+                    break;
+                }
+                case W_USEHEADER: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid useheader mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->useHeader = boolVal;
+                    break;
+                }
+                case W_NCHAN: {
+                    if (Tcl_GetInt(interp, optionStr, &intVal) == TCL_ERROR ||
+                        intVal < 3 || intVal > 4) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid number of channels \"%s\": must be 3 or 4.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->nchan = intVal;
+                    opts->withAlpha = opts->nchan == 3? 0: 1;
+                    break;
+                }
+                case W_WITHALPHA: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid withalpha mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->withAlpha = boolVal;
+                    break;
+                }
+                case W_SCANORDER: {
+                    if (!strncmp (optionStr, strTopDown, strlen (strTopDown))) {
+                        opts->scanOrder = TOP_DOWN;
+                    } else if (!strncmp (optionStr, strBottomUp, strlen (strBottomUp))) {
+                        opts->scanOrder = BOTTOM_UP;
+                    } else {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid scanorder mode \"%s\": must be TopDown or BottomUp.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    break;
+                }
             }
         }
     }
 
     /* Convert minimum and maximum range values. */
     if (opts->minVal >= 0.0 && opts->maxVal >= 0.0 && opts->minVal >= opts->maxVal) {
-        Tcl_AppendResult (interp, "Invalid range values: Maximum must be grater than minimum.", (char *) NULL);
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid min and max values: Maximum must be grater than minimum."));
         return TCL_ERROR;
     }
     return TCL_OK;
 }
 
-static int ChnMatch(
+static int FileMatch(
     Tcl_Channel chan,
     const char *filename,
     Tcl_Obj *format,
@@ -761,41 +763,33 @@ static int ChnMatch(
     int *heightPtr,
     Tcl_Interp *interp
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
+    tkimg_ReadInitFile(&handle, chan);
 
     return CommonMatch (interp, &handle, format, widthPtr, heightPtr, NULL);
 }
 
-static int ObjMatch(
-    Tcl_Obj *data,
+static int StringMatch(
+    Tcl_Obj *dataObj,
     Tcl_Obj *format,
     int *widthPtr,
     int *heightPtr,
     Tcl_Interp *interp
 ) {
-    tkimg_MFile handle;
-    FMTOPT opts;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    if (ParseFormatOpts (interp, format, &opts) == TCL_ERROR) {
+    if (!tkimg_ReadInitString(&handle, dataObj)) {
         return FALSE;
-    }
-    if (!opts.uuencode) {
-        size_t length;
-        handle.data = (char *) tkimg_GetByteArrayFromObj2(data, &length);
-        handle.length = length;
-        handle.state = IMG_STRING;
-    } else {
-        tkimg_ReadInit(data, 'M', &handle);
     }
     return CommonMatch (interp, &handle, format, widthPtr, heightPtr, NULL);
 }
 
 static int CommonMatch(
     Tcl_Interp *interp,
-    tkimg_MFile *handle,
+    tkimg_Stream *handle,
     Tcl_Obj *format,
     int *widthPtr,
     int *heightPtr,
@@ -807,8 +801,10 @@ static int CommonMatch(
 
     initHeader (&th);
 
-    if (ParseFormatOpts (interp, format, &opts) == TCL_ERROR) {
-        return FALSE;
+    if (ParseFormatOpts (interp, format, &opts, IMG_READ) == TCL_ERROR) {
+        if (rawHeaderPtr) {
+            return FALSE;
+        }
     }
     if (opts.useHeader) {
         if (!readHeader (interp, handle, &th)) {
@@ -827,8 +823,8 @@ static int CommonMatch(
                 Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
                 return FALSE;
             }
-            if (opts.skipBytes != tkimg_Read2(handle, buf, opts.skipBytes)) {
-                return 0;
+            if (opts.skipBytes != tkimg_Read(handle, buf, opts.skipBytes)) {
+                return FALSE;
             }
             ckfree (buf);
         }
@@ -841,7 +837,7 @@ static int CommonMatch(
     return TRUE;
 }
 
-static int ChnRead(
+static int FileRead(
     Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
     Tcl_Channel chan,           /* The image channel, open for reading. */
     const char *filename,       /* The name of the image file. */
@@ -854,37 +850,29 @@ static int ChnRead(
     int srcX, int srcY          /* Coordinates of top-left pixel to be used
                                  * in image being read. */
 ) {
-    tkimg_MFile handle;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
+    tkimg_ReadInitFile(&handle, chan);
 
     return CommonRead (interp, &handle, filename, format, imageHandle,
                        destX, destY, width, height, srcX, srcY);
 }
 
-static int ObjRead(
+static int StringRead(
     Tcl_Interp *interp,
-    Tcl_Obj *data,
+    Tcl_Obj *dataObj,
     Tcl_Obj *format,
     Tk_PhotoHandle imageHandle,
     int destX, int destY,
     int width, int height,
     int srcX, int srcY
 ) {
-    tkimg_MFile handle;
-    FMTOPT opts;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    if (ParseFormatOpts (interp, format, &opts) == TCL_ERROR) {
+    if (! tkimg_ReadInitString(&handle, dataObj)) {
         return TCL_ERROR;
-    }
-    if (!opts.uuencode) {
-        size_t length;
-        handle.data = (char *) tkimg_GetByteArrayFromObj2(data, &length);
-        handle.length = length;
-        handle.state = IMG_STRING;
-    } else {
-        tkimg_ReadInit(data, 'M', &handle);
     }
 
     return CommonRead (interp, &handle, "InlineData", format, imageHandle,
@@ -893,7 +881,7 @@ static int ObjRead(
 
 static int CommonRead(
     Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
-    tkimg_MFile *handle,        /* The image file, open for reading. */
+    tkimg_Stream *handle,        /* The image file, open for reading. */
     const char *filename,       /* The name of the image file. */
     Tcl_Obj *format,            /* User-specified format object, or NULL. */
     Tk_PhotoHandle imageHandle, /* The photo image to write into. */
@@ -916,7 +904,6 @@ static int CommonRead(
     Int  byteOrder;
     Int  scanOrder;
     Int  pixelType;
-    Int  matte = 0;
     UByte  *pixbufPtr;
     Double *doubleBufPtr;
     Float  *floatBufPtr;
@@ -933,12 +920,12 @@ static int CommonRead(
         return TCL_ERROR;
     }
 
-    if (ParseFormatOpts (interp, format, &opts) == TCL_ERROR) {
+    if (ParseFormatOpts (interp, format, &opts, IMG_READ) == TCL_ERROR) {
         return TCL_ERROR;
     }
 
     if (opts.verbose) {
-        printImgInfo (&tf.th, &opts, filename, "Reading image:");
+        printImgInfo (&tf.th, &opts, filename, FALSE, "Reading image:");
     }
 
     if ((srcX + width) > fileWidth) {
@@ -1088,7 +1075,7 @@ static int CommonRead(
         }
     }
 
-    if (tkimg_PhotoExpand (interp, imageHandle, destX + outWidth, destY + outHeight) == TCL_ERROR) {
+    if (Tk_PhotoExpand (interp, imageHandle, destX + outWidth, destY + outHeight) == TCL_ERROR) {
         rawClose (&tf, fastMode);
         return TCL_ERROR;
     }
@@ -1104,25 +1091,56 @@ static int CommonRead(
         }
     }
 
+    if (tf.th.nChans == 3 || tf.th.nChans == 1) {
+        opts.withAlpha = 0;
+    }
     block.pixelSize = tf.th.nChans;
     block.pitch = fileWidth * tf.th.nChans;
     block.width = outWidth;
     block.height = fastMode? outHeight: 1;
     block.offset[0] = 0;
-    block.offset[1] = (tf.th.nChans > 1? 1: 0);
-    block.offset[2] = (tf.th.nChans > 1? 2: 0);
-    block.offset[3] = (tf.th.nChans == 4 && matte? 3: 0);
+    switch (tf.th.nChans) {
+        case 1: {
+            block.offset[1] = 0;
+            block.offset[2] = 0;
+            block.offset[3] = 0;
+            break;
+        }
+        case 2: {
+            block.offset[1] = 0;
+            block.offset[2] = 0;
+            block.offset[3] = opts.withAlpha? 1: 0;
+            break;
+        }
+        case 3: {
+            block.offset[1] = 1;
+            block.offset[2] = 2;
+            block.offset[3] = 0;
+            break;
+        }
+        case 4: {
+            block.offset[1] = 1;
+            block.offset[2] = 2;
+            block.offset[3] = opts.withAlpha? 3: 0;
+            break;
+        }
+        default: {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "Invalid number of channels \"%d\": must be 1, 2, 3 or 4.",
+                tf.th.nChans));
+            rawClose (&tf, fastMode);
+            return TCL_ERROR;
+            break;
+        }
+    }
     block.pixelPtr = tf.pixbuf + srcX * tf.th.nChans;
 
     stopY = srcY + outHeight;
     outY = destY;
 
     if (fastMode) {
-        if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, outY,
-                            width, height,
-                            block.offset[3]?
-                            TK_PHOTO_COMPOSITE_SET:
-                            TK_PHOTO_COMPOSITE_OVERLAY) == TCL_ERROR) {
+        if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, height,
+            opts.withAlpha? TK_PHOTO_COMPOSITE_OVERLAY: TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
             result = TCL_ERROR;
         }
     } else {
@@ -1187,11 +1205,8 @@ static int CommonRead(
                 }
             }
             if (y >= srcY) {
-                if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, outY,
-                                    width, 1,
-                                    block.offset[3]?
-                                    TK_PHOTO_COMPOSITE_SET:
-                                    TK_PHOTO_COMPOSITE_OVERLAY) == TCL_ERROR) {
+                if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1,
+                    opts.withAlpha? TK_PHOTO_COMPOSITE_OVERLAY: TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
                     result = TCL_ERROR;
                     break;
                 }
@@ -1203,23 +1218,23 @@ static int CommonRead(
     return result;
 }
 
-static int ChnWrite(
+static int FileWrite(
     Tcl_Interp *interp,
     const char *filename,
     Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr
 ) {
     Tcl_Channel chan;
-    tkimg_MFile handle;
     int result;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    chan = tkimg_OpenFileChannel (interp, filename, 0644);
+    chan = tkimg_OpenFileChannel (interp, filename, "w");
     if (!chan) {
         return TCL_ERROR;
     }
 
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
+    tkimg_WriteInitFile(&handle, chan);
 
     result = CommonWrite (interp, filename, format, &handle, blockPtr);
     if (Tcl_Close(interp, chan) == TCL_ERROR) {
@@ -1233,19 +1248,15 @@ static int StringWrite(
     Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr
 ) {
-    tkimg_MFile handle;
     int result;
-    Tcl_DString data;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    Tcl_DStringInit(&data);
-    tkimg_WriteInit (&data, &handle);
+    tkimg_WriteInitString(&handle);
     result = CommonWrite (interp, "InlineData", format, &handle, blockPtr);
-    tkimg_Putc(IMG_DONE, &handle);
 
     if (result == TCL_OK) {
-        Tcl_DStringResult(interp, &data);
-    } else {
-        Tcl_DStringFree(&data);
+        Tcl_SetObjResult(interp, handle.byteObj);
     }
     return result;
 }
@@ -1254,19 +1265,19 @@ static int CommonWrite(
     Tcl_Interp *interp,
     const char *filename,
     Tcl_Obj *format,
-    tkimg_MFile *handle,
+    tkimg_Stream *handle,
     Tk_PhotoImageBlock *blockPtr
 ) {
-    Int     x, y;
+    Int     x, y, nchan;
     Int     redOffset, greenOffset, blueOffset, alphaOffset;
+    Int     bytesPerLine;
     UByte   *pixelPtr, *rowPixPtr;
     RAWFILE tf;
     FMTOPT opts;
     UByte *ubyteBufPtr;
-    Int bytesPerLine;
 
     memset (&tf, 0, sizeof (RAWFILE));
-    if (ParseFormatOpts (interp, format, &opts) == TCL_ERROR) {
+    if (ParseFormatOpts (interp, format, &opts, IMG_WRITE) == TCL_ERROR) {
         return TCL_ERROR;
     }
 
@@ -1284,15 +1295,17 @@ static int CommonWrite(
         alphaOffset = 0;
     }
 
+    nchan = ((opts.withAlpha && alphaOffset)? 4: 3);
+
     initHeader (&tf.th);
     tf.th.width = blockPtr->width;
     tf.th.height = blockPtr->height;
-    tf.th.nChans = opts.nchan;
+    tf.th.nChans = nchan;
     tf.th.scanOrder = opts.scanOrder;
     tf.th.pixelType = TYPE_UBYTE;
 
     writeHeader (handle, &tf.th);
-    bytesPerLine = blockPtr->width * tf.th.nChans * sizeof (UByte);
+    bytesPerLine = blockPtr->width * nchan * sizeof (UByte);
     tf.ubyteBuf = (UByte *)attemptckalloc (bytesPerLine);
     if (tf.ubyteBuf == NULL) {
         Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
@@ -1303,32 +1316,25 @@ static int CommonWrite(
     for (y = 0; y < blockPtr->height; y++) {
         ubyteBufPtr = tf.ubyteBuf;
         pixelPtr = rowPixPtr;
-        if (tf.th.nChans == 1) {
-            for (x=0; x<blockPtr->width; x++) {
-                *ubyteBufPtr = pixelPtr[redOffset];
-                ubyteBufPtr++;
-                pixelPtr += blockPtr->pixelSize;
+        for (x=0; x<blockPtr->width; x++) {
+            *(ubyteBufPtr++) = pixelPtr[redOffset];
+            *(ubyteBufPtr++) = pixelPtr[greenOffset];
+            *(ubyteBufPtr++) = pixelPtr[blueOffset];
+            if (nchan == 4) {
+                /* Have an alpha channel and write it. */
+                *(ubyteBufPtr++) = pixelPtr[alphaOffset];
             }
-        } else {
-            for (x=0; x<blockPtr->width; x++) {
-                *(ubyteBufPtr++) = pixelPtr[redOffset];
-                *(ubyteBufPtr++) = pixelPtr[greenOffset];
-                *(ubyteBufPtr++) = pixelPtr[blueOffset];
-                if (tf.th.nChans == 4) {
-                    /* Have a matte channel and write it. */
-                    *(ubyteBufPtr++) = pixelPtr[alphaOffset];
-                }
-                pixelPtr += blockPtr->pixelSize;
-            }
+            pixelPtr += blockPtr->pixelSize;
         }
-        if (tkimg_Write2(handle, (char *)tf.ubyteBuf, bytesPerLine) != bytesPerLine) {
+        if (tkimg_Write(handle, (char *)tf.ubyteBuf, bytesPerLine) != bytesPerLine) {
             rawClose (&tf, FALSE);
             return TCL_ERROR;
         }
         rowPixPtr += blockPtr->pitch;
     }
-    if (opts.verbose)
-        printImgInfo (&tf.th, &opts, filename, "Saving image:");
+    if (opts.verbose) {
+        printImgInfo (&tf.th, &opts, filename, TRUE, "Saving image:");
+    }
     rawClose (&tf, FALSE);
     return TCL_OK;
 }

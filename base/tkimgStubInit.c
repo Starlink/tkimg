@@ -18,18 +18,18 @@ const TkimgStubs tkimgStubs = {
     TCL_STUB_MAGIC,
     0,
     tkimg_OpenFileChannel, /* 0 */
-    tkimg_ReadInit, /* 1 */
-    tkimg_WriteInit, /* 2 */
-    tkimg_Getc, /* 3 */
-    tkimg_Read, /* 4 */
-    tkimg_Putc, /* 5 */
-    tkimg_Write, /* 6 */
-    tkimg_ReadBuffer, /* 7 */
-    tkimg_Read2, /* 8 */
-    tkimg_Write2, /* 9 */
-    tkimg_PhotoPutBlock, /* 10 */
-    tkimg_PhotoExpand, /* 11 */
-    tkimg_PhotoSetSize, /* 12 */
+    tkimg_ReadInitFile, /* 1 */
+    tkimg_ReadInitString, /* 2 */
+    tkimg_WriteInitFile, /* 3 */
+    tkimg_WriteInitString, /* 4 */
+    tkimg_EnableReadBuffer, /* 5 */
+    tkimg_Read, /* 6 */
+    tkimg_Write, /* 7 */
+    tkimg_Putc, /* 8 */
+    tkimg_GetTemporaryFileName, /* 9 */
+    tkimg_DeleteFile, /* 10 */
+    0, /* 11 */
+    0, /* 12 */
     0, /* 13 */
     0, /* 14 */
     0, /* 15 */
@@ -47,12 +47,12 @@ const TkimgStubs tkimgStubs = {
     0, /* 27 */
     0, /* 28 */
     0, /* 29 */
-    tkimg_GetStringFromObj, /* 30 */
-    tkimg_GetByteArrayFromObj, /* 31 */
-    tkimg_ListObjGetElements, /* 32 */
-    tkimg_GetStringFromObj2, /* 33 */
-    tkimg_GetByteArrayFromObj2, /* 34 */
-    0, /* 35 */
+    tkimg_GetDistanceValue, /* 30 */
+    tkimg_SetResolution, /* 31 */
+    tkimg_GetResolution, /* 32 */
+    tkimg_SetNumPages, /* 33 */
+    tkimg_GetNumPages, /* 34 */
+    tkimg_ListObjGetElements, /* 35 */
     0, /* 36 */
     0, /* 37 */
     0, /* 38 */

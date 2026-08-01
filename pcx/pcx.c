@@ -1,48 +1,19 @@
-/* STARTHEADER
+/*
+ * pcx.c
  *
- * File :       pcx.c
+ * PCX photo image type, Tcl/Tk package.
  *
- * Author :     Paul Obermeier (paul@poSoft.de)
+ * A photo image handler for  PaintBrush's PCX image format.
  *
- * Date :       2001 / 02 / 20
+ * For a list of available format options see function ParseFormatOpts
+ * and the documentation img-pcx.
  *
- * Copyright :  (C) 2001-2019 Paul Obermeier
+ * Copyright (c) 2001-2025 Paul Obermeier <obermeier@users.sourceforge.net>
  *
- * Description :
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * A photo image handler for PaintBrush's PCX file format.
- *
- * The following image types are supported:
- *
- *  1-bit pixels: Black and White.
- *  8-bit pixels: Grayscale or indexed.
- * 24-bit pixels: True-color (RGB, each channel 8 bit).
- *
- * List of currently supported features:
- *
- * Type   |     Read      |     Write     |
- *        | -file | -data | -file | -data |
- * ----------------------------------------
- *  1-bit | Yes   | Yes   | No    | No    |
- *  8-bit | Yes   | Yes   | No    | No    |
- * 24-bit | Yes   | Yes   | Yes   | Yes   |
- *
- * All images types may be either uncompressed or run-length encoded.
- *
- *
- * The following format options are available:
- *
- * Read  PCX image: "pcx -verbose <bool>"
- * Write PCX image: "pcx -verbose <bool> -compression <type>"
- *
- * -verbose <bool>:     If set to true, additional information about the file
- *                      format is printed to stdout. Default is "false".
- * -compression <type>: Set the compression mode to either "none" or "rle".
- *                      Default is "rle".
- *
- * Notes:
- *
- * - Part of this code was taken from the "pcx" GIMP plugin:
+ * Part of this code was taken from the "pcx" GIMP plugin:
  *
  *  >> pcx.c GIMP plug-in for loading & saving PCX files
  *  >>
@@ -50,16 +21,19 @@
  *  >> largest portion of the code has been rewritten and is now maintained
  *  >> occasionally by Nick Lamb njl195@zepler.org.uk
  *
- * ENDHEADER
- *
  */
+
+/* Force usage of Tk_CreatePhotoImageFormatVersion3
+   supporting image matadata introduced in Tk8.7.
+   Must be specified before inclusion of init.c.
+*/
+#define USE_FORMAT_VERSION3 1
 
 /*
  * Generic initialization code, parameterized via CPACKAGE and PACKAGE.
  */
 
 #include "init.c"
-
 
 /* #define DEBUG_LOCAL */
 
@@ -94,8 +68,10 @@ typedef struct {
 
 /* Format options structure for use with ParseFormatOpts */
 typedef struct {
-    Int   compression;
-    Boln  verbose;
+    Boln   verbose;      /* Read/Write option -verbose */
+    Int    compression;  /* Write option -compression */
+    double xres;         /* Write option -resolution or -xresolution */
+    double yres;         /* Write option -resolution or -yresolution */
 } FMTOPT;
 
 #define htoqs(x) qtohs(x)
@@ -113,10 +89,10 @@ static UShort qtohs (UShort x)
 /* Read 1 byte, representing an unsigned integer number. */
 
 #ifdef DEBUG_LOCAL
-static Boln readUByte (tkimg_MFile *handle, UByte *b)
+static Boln readUByte (tkimg_Stream *handle, UByte *b)
 {
     char buf[1];
-    if (1 != tkimg_Read2(handle, (char *) buf, 1)) {
+    if (1 != tkimg_Read(handle, (char *) buf, 1)) {
         return FALSE;
     }
     *b = buf[0];
@@ -124,24 +100,24 @@ static Boln readUByte (tkimg_MFile *handle, UByte *b)
 }
 #else
     /* Use this macro for better performance, esp. when reading RLE files. */
-#   define readUByte(h,b) (1 == tkimg_Read2((h),(char *)(b),1))
+#   define readUByte(h,b) (1 == tkimg_Read((h),(char *)(b),1))
 #endif
 
 /* Write 1 byte, representing an unsigned integer to a file. */
 
-static Boln writeUByte (tkimg_MFile *handle, UByte b)
+static Boln writeUByte (tkimg_Stream *handle, UByte b)
 {
     UByte buf[1];
     buf[0] = b;
-    if (1 != tkimg_Write2(handle, (const char *)buf, 1)) {
+    if (1 != tkimg_Write(handle, (const char *)buf, 1)) {
         return FALSE;
     }
     return TRUE;
 }
 
-static Boln read_pcx_header (tkimg_MFile *ifp, PCXHEADER *pcxhdr)
+static Boln read_pcx_header (tkimg_Stream *ifp, PCXHEADER *pcxhdr)
 {
-    if (tkimg_Read2(ifp, (char *)pcxhdr, 128) != 128) {
+    if (tkimg_Read(ifp, (char *)pcxhdr, 128) != 128) {
         return FALSE;
     }
 
@@ -157,12 +133,13 @@ static Boln read_pcx_header (tkimg_MFile *ifp, PCXHEADER *pcxhdr)
     return TRUE;
 }
 
-#define OUT Tcl_WriteChars (outChan, str, -1)
-static void printImgInfo (PCXHEADER *ph, const char *filename, const char *msg)
+static void printImgInfo (PCXHEADER *ph, const char *fileName, const char *msg)
 {
     Tcl_Channel outChan;
     char str[256];
     Int width, height;
+    Short hdpi, vdpi;
+    Short bytesperline;
 
     outChan = Tcl_GetStdChannel (TCL_STDOUT);
     if (!outChan) {
@@ -170,18 +147,21 @@ static void printImgInfo (PCXHEADER *ph, const char *filename, const char *msg)
     }
     width  = qtohs (ph->x2) - qtohs (ph->x1) + 1;
     height = qtohs (ph->y2) - qtohs (ph->y1) + 1;
+    hdpi = qtohs (ph->hdpi);
+    vdpi = qtohs (ph->vdpi);
+    bytesperline = qtohs (ph->bytesperline);
 
-    tkimg_snprintf(str, 256, "%s %s\n", msg, filename);                                 OUT;
-    tkimg_snprintf(str, 256, "\tSize in pixel   : %d x %d\n", width, height);           OUT;
-    tkimg_snprintf(str, 256, "\tNo. of channels : %d\n", ph->planes);                   OUT;
-    tkimg_snprintf(str, 256, "\tBits per pixel  : %d\n", ph->bpp);                      OUT;
-    tkimg_snprintf(str, 256, "\tBytes per line  : %d\n", ph->bytesperline);             OUT;
-    tkimg_snprintf(str, 256, "\tRLE compression : %s\n", ph->compression? "yes": "no"); OUT;
+    tkimg_snprintf(str, 256, "%s %s\n", msg, fileName);                                   IMGOUT;
+    tkimg_snprintf(str, 256, "\tSize in pixel     : %d x %d\n", width, height);           IMGOUT;
+    tkimg_snprintf(str, 256, "\tDots per inch     : %d x %d\n", hdpi, vdpi);              IMGOUT;
+    tkimg_snprintf(str, 256, "\tNumber of channels: %d\n", ph->planes);                   IMGOUT;
+    tkimg_snprintf(str, 256, "\tBits per pixel    : %d\n", ph->bpp);                      IMGOUT;
+    tkimg_snprintf(str, 256, "\tBytes per line    : %d\n", bytesperline);                 IMGOUT;
+    tkimg_snprintf(str, 256, "\tRLE compression   : %s\n", ph->compression? "yes": "no"); IMGOUT;
     Tcl_Flush(outChan);
 }
-#undef OUT
 
-static Boln readline (tkimg_MFile *handle, UByte *buffer, Int bytes, Int compr)
+static Boln readline (tkimg_Stream *handle, UByte *buffer, Int bytes, Int compr)
 {
     static UByte count = 0, value = 0;
 
@@ -204,14 +184,14 @@ static Boln readline (tkimg_MFile *handle, UByte *buffer, Int bytes, Int compr)
             *(buffer++) = value;
         }
     } else {
-        if (bytes != tkimg_Read2(handle, (char *)buffer, bytes)) {
+        if (bytes != tkimg_Read(handle, (char *)buffer, bytes)) {
             return FALSE;
         }
     }
     return TRUE;
 }
 
-static Boln writeline (tkimg_MFile *handle, UByte *buffer, Int bytes)
+static Boln writeline (tkimg_Stream *handle, UByte *buffer, Int bytes)
 {
     UByte value, count;
     UByte *finish = buffer + bytes;
@@ -241,24 +221,32 @@ static Boln writeline (tkimg_MFile *handle, UByte *buffer, Int bytes)
     return TRUE;
 }
 
-static Boln load_8 (Tcl_Interp *interp, tkimg_MFile *ifp,
-                    Tk_PhotoHandle imageHandle, int destX, int destY,
-                    int width, int height, int srcX, int srcY,
-                    int fileWidth, int fileHeight, int bytesPerLine, int compr)
-{
+static Boln load_8(
+    Tcl_Interp *interp,
+    tkimg_Stream *ifp,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY,
+    int fileWidth, int fileHeight,
+    int bytesPerLine,
+    int compr
+) {
     Int x, y;
     Int stopY, outY;
     Tk_PhotoImageBlock block;
     UByte *line, *buffer, *indBuf, *indBufPtr;
-    UByte cmap[768], sepChar;
+    UByte *cmap, sepChar;
     Boln haveColormap = FALSE;
     Boln result = TRUE;
     char errMsg[256];
 
+    cmap   = (UByte *) attemptckalloc (768);
     line   = (UByte *) attemptckalloc (bytesPerLine);
     buffer = (UByte *) attemptckalloc (fileWidth * 3);
     indBuf = (UByte *) attemptckalloc (fileWidth * fileHeight);
-    if (line == NULL || buffer == NULL || indBuf == NULL) {
+    if (cmap == NULL || line == NULL || buffer == NULL || indBuf == NULL) {
+        if (cmap)   ckfree ((char *) cmap);
         if (line)   ckfree ((char *) line);
         if (buffer) ckfree ((char *) buffer);
         if (indBuf) ckfree ((char *) indBuf);
@@ -284,6 +272,7 @@ static Boln load_8 (Tcl_Interp *interp, tkimg_MFile *ifp,
     /* Read in the whole image data as indices. */
     for (y=0; y<stopY; y++) {
         if (!readline (ifp, line, bytesPerLine, compr)) {
+            ckfree ((char *) cmap);
             ckfree ((char *) line);
             ckfree ((char *) buffer);
             ckfree ((char *) indBuf);
@@ -295,10 +284,11 @@ static Boln load_8 (Tcl_Interp *interp, tkimg_MFile *ifp,
         indBufPtr += fileWidth;
     }
     /* Read the colormap: 256 entries a 3 values for RGB */
-    if (tkimg_Read2(ifp, (char *)&sepChar, 1) == 1) {
+    if (tkimg_Read(ifp, (char *)&sepChar, 1) == 1) {
         if (sepChar == 12) {
             /* A colormap is available, if sepChar equals 0x0C */
-            if (tkimg_Read2(ifp, (char *)&cmap, 768) != 768) {
+            if (tkimg_Read(ifp, (char *)cmap, 768) != 768) {
+                ckfree ((char *) cmap);
                 ckfree ((char *) line);
                 ckfree ((char *) buffer);
                 ckfree ((char *) indBuf);
@@ -319,31 +309,38 @@ static Boln load_8 (Tcl_Interp *interp, tkimg_MFile *ifp,
                 buffer[x * 3 + 2] = cmap[indBuf[y*fileWidth + x]*3 + 2 ];
             }
         } else {
-            /* A grey-scale image */
+            /* A grayscale image */
             for (x=0; x<fileWidth; x++) {
                 buffer[x * 3 + 0] = indBuf[y*fileWidth + x];
                 buffer[x * 3 + 1] = indBuf[y*fileWidth + x];
                 buffer[x * 3 + 2] = indBuf[y*fileWidth + x];
             }
         }
-        if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1,
+        if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1,
             TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
             result = FALSE;
             break;
         }
         outY++;
     }
+    ckfree ((char *) cmap);
     ckfree ((char *) line);
     ckfree ((char *) buffer);
     ckfree ((char *) indBuf);
     return result;
 }
 
-static Boln load_24 (Tcl_Interp *interp, tkimg_MFile *ifp,
-                     Tk_PhotoHandle imageHandle, int destX, int destY,
-                     int width, int height, int srcX, int srcY,
-                     int fileWidth, int fileHeight, int bytesPerLine, int compr)
-{
+static Boln load_24(
+    Tcl_Interp *interp,
+    tkimg_Stream *ifp,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY,
+    int fileWidth, int fileHeight,
+    int bytesPerLine,
+    int compr
+) {
     Int x, y, c;
     Int stopY, outY;
     Tk_PhotoImageBlock block;
@@ -385,7 +382,7 @@ static Boln load_24 (Tcl_Interp *interp, tkimg_MFile *ifp,
             }
         }
         if (y >= srcY) {
-            if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1,
+            if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1,
                 TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
                 result = FALSE;
                 break;
@@ -398,11 +395,17 @@ static Boln load_24 (Tcl_Interp *interp, tkimg_MFile *ifp,
     return result;
 }
 
-static Boln load_1 (Tcl_Interp *interp, tkimg_MFile *ifp,
-                    Tk_PhotoHandle imageHandle, int destX, int destY,
-                    int width, int height, int srcX, int srcY,
-                    int fileWidth, int fileHeight, int bytesPerLine, int compr)
-{
+static Boln load_1(
+    Tcl_Interp *interp,
+    tkimg_Stream *ifp,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY,
+    int fileWidth, int fileHeight,
+    int bytesPerLine,
+    int compr
+) {
     Int x, y;
     Int stopY, outY;
     Tk_PhotoImageBlock block;
@@ -446,7 +449,7 @@ static Boln load_1 (Tcl_Interp *interp, tkimg_MFile *ifp,
             }
         }
         if (y >= srcY) {
-            if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1,
+            if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, outY, width, 1,
                 TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
                 result = FALSE;
                 break;
@@ -463,110 +466,248 @@ static Boln load_1 (Tcl_Interp *interp, tkimg_MFile *ifp,
  * Prototypes for local procedures defined in this file:
  */
 
-static int ParseFormatOpts(Tcl_Interp *interp, Tcl_Obj *format, FMTOPT *opts);
-static int CommonMatch(tkimg_MFile *handle, int *widthPtr,
-                 int *heightPtr, PCXHEADER *pcxHeaderPtr);
-static int CommonRead(Tcl_Interp *interp, tkimg_MFile *handle,
-                 const char *filename, Tcl_Obj *format,
-                 Tk_PhotoHandle imageHandle, int destX, int destY,
-                 int width, int height, int srcX, int srcY);
-static int CommonWrite(Tcl_Interp *interp,
-                 const char *filename, Tcl_Obj *format,
-                 tkimg_MFile *handle, Tk_PhotoImageBlock *blockPtr);
+static int CommonMatch(
+    tkimg_Stream *handle,
+    int *widthPtr, int *heightPtr,
+    PCXHEADER *pcxHeaderPtr
+);
+static int CommonRead(
+    Tcl_Interp *interp,
+    tkimg_Stream *handle,
+    const char *fileName,
+    Tcl_Obj *format,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY,
+    Tcl_Obj *metadataOut
+);
+static int CommonWrite(
+    Tcl_Interp *interp,
+    const char *fileName,
+    Tcl_Obj *format,
+    tkimg_Stream *handle,
+    Tk_PhotoImageBlock *blockPtr,
+    Tcl_Obj *metadataIn
+);
 
 static int ParseFormatOpts(
     Tcl_Interp *interp,
     Tcl_Obj *format,
-    FMTOPT *opts
+    FMTOPT *opts,
+    int mode
 ) {
-    static const char *const pcxOptions[] = {
-        "-compression", "-verbose", NULL
+    static const char *const readOptions[] = {
+        "-verbose", NULL
     };
-    int objc, i, index;
+    enum readEnums {
+        R_VERBOSE
+    };
+    static const char *const writeOptions[] = {
+        "-verbose", "-compression", "-resolution", "-xresolution", "-yresolution", NULL
+    };
+    enum writeEnums {
+        W_VERBOSE, W_COMPRESSION, W_RESOLUTION, W_XRESOLUTION, W_YRESOLUTION
+    };
+    Tcl_Size objc, i;
+    int index;
     char *optionStr;
     Tcl_Obj **objv;
     int boolVal;
+    double doubleVal;
 
     /* Initialize options with default values. */
-    opts->compression = 1;
     opts->verbose     = 0;
+    opts->compression = 1;
+    opts->xres        = (double)IMG_DEFAULT_DPI;
+    opts->yres        = (double)IMG_DEFAULT_DPI;
 
-    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK) {
+    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) == TCL_ERROR) {
         return TCL_ERROR;
     }
-    if (objc) {
-        for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)pcxOptions,
-                    "format option", 0, &index) != TCL_OK) {
+    for (i=1; i<objc; i++) {
+        if (mode == IMG_READ) {
+            if (Tcl_GetIndexFromObj(interp, objv[i], readOptions,
+                    "format option", 0, &index) == TCL_ERROR) {
                 return TCL_ERROR;
             }
-            if (++i >= objc) {
-                Tcl_AppendResult(interp, "No value for option \"",
-                        Tcl_GetStringFromObj (objv[--i], (int *) NULL),
-                        "\"", (char *) NULL);
+        } else {
+            if (Tcl_GetIndexFromObj(interp, objv[i], writeOptions,
+                    "format option", 0, &index) == TCL_ERROR) {
                 return TCL_ERROR;
             }
-            optionStr = Tcl_GetStringFromObj(objv[i], (int *) NULL);
+        }
+        if (++i >= objc) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "No value specified for option \"%s\".", Tcl_GetString(objv[--i])));
+            return TCL_ERROR;
+        }
+        optionStr = Tcl_GetString(objv[i]);
+        if (mode == IMG_READ) {
             switch(index) {
-                case 0:
+                case R_VERBOSE: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid verbose mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->verbose = boolVal;
+                    break;
+                }
+            }
+        } else {
+            switch(index) {
+                case W_VERBOSE: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid verbose mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->verbose = boolVal;
+                    break;
+                }
+                case W_COMPRESSION: {
                     if (!strncmp (optionStr, "none", strlen ("none"))) {
                         opts->compression = 0;
                     } else if (!strncmp (optionStr, "rle", strlen ("rle"))) {
                         opts->compression = 1;
                     } else {
-                        Tcl_AppendResult (interp, "Invalid compression mode \"", optionStr,
-                                          "\": Must be \"none\" or \"rle\"", (char *) NULL);
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid compression mode \"%s\": must be none or rle.",
+                            optionStr));
                         return TCL_ERROR;
                     }
                     break;
-                case 1:
-                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
-                        Tcl_AppendResult (interp, "Invalid verbose mode \"", optionStr,
-                                          "\": should be 1 or 0, on or off, true or false",
-                                          (char *) NULL);
+                }
+                case W_RESOLUTION: {
+                    if (tkimg_GetDistanceValue (interp, optionStr, &doubleVal) == TCL_ERROR) {
+                        Tcl_AppendResult (interp, " specified for x resolution.", (char *) NULL);
                         return TCL_ERROR;
                     }
-                    opts->verbose = boolVal;
+                    opts->xres = doubleVal;
+                    opts->yres = doubleVal;
+                    if (i+1 >= objc) {
+                        /* No more parameters available. */
+                        break;
+                    }
+                    optionStr = Tcl_GetString(objv[i+1]);
+                    if (optionStr[0] == '-' ) {
+                        /* Next parameter is an option. */
+                        break;
+                    }
+                    if (tkimg_GetDistanceValue (interp, optionStr, &doubleVal) == TCL_ERROR) {
+                        Tcl_AppendResult (interp, " specified for y resolution.", (char *) NULL);
+                        return TCL_ERROR;
+                    }
+                    opts->yres = doubleVal;
+                    i++;
                     break;
+                }
+                case W_XRESOLUTION: {
+                    if (tkimg_GetDistanceValue (interp, optionStr, &doubleVal) == TCL_ERROR) {
+                        Tcl_AppendResult (interp, " specified for x resolution.", (char *) NULL);
+                        return TCL_ERROR;
+                    }
+                    opts->xres = doubleVal;
+                    break;
+                }
+                case W_YRESOLUTION: {
+                    if (tkimg_GetDistanceValue (interp, optionStr, &doubleVal) == TCL_ERROR) {
+                        Tcl_AppendResult (interp, " specified for y resolution.", (char *) NULL);
+                        return TCL_ERROR;
+                    }
+                    opts->yres = doubleVal;
+                    break;
+                }
             }
         }
     }
     return TCL_OK;
 }
 
-static int ChnMatch(
+static int FileMatchVersion3(
+    Tcl_Interp *interp,
     Tcl_Channel chan,
-    const char *filename,
+    const char *fileName,
     Tcl_Obj *format,
-    int *widthPtr,
-    int *heightPtr,
-    Tcl_Interp *interp
+    Tcl_Obj *metadataIn,
+    int *widthPtr, int *heightPtr,
+    Tcl_Obj *metadataOut
 ) {
-    tkimg_MFile handle;
+    PCXHEADER ph;
+    int retVal;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
+    tkimg_ReadInitFile(&handle, chan);
 
-    return CommonMatch(&handle, widthPtr, heightPtr, NULL);
+    retVal = CommonMatch(&handle, widthPtr, heightPtr, &ph);
+    if (retVal && qtohs(ph.hdpi) > 0 && qtohs(ph.vdpi) > 0) {
+        if (TCL_ERROR == tkimg_SetResolution( metadataOut,
+                         (double)qtohs(ph.hdpi), (double)qtohs(ph.vdpi))) {
+            return 0;
+        }
+    }
+    return retVal;
 }
 
-static int ObjMatch(
-    Tcl_Obj *data,
+static int StringMatchVersion3(
+    Tcl_Interp *interp,
+    Tcl_Obj *dataObj,
     Tcl_Obj *format,
-    int *widthPtr,
-    int *heightPtr,
-    Tcl_Interp *interp
+    Tcl_Obj *metadataIn,
+    int *widthPtr, int *heightPtr,
+    Tcl_Obj *metadataOut
 ) {
-    tkimg_MFile handle;
+    PCXHEADER ph;
+    int retVal;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    if (!tkimg_ReadInit(data, 10, &handle)) {
+    if (!tkimg_ReadInitString(&handle, dataObj)) {
         return 0;
     }
-    return CommonMatch(&handle, widthPtr, heightPtr, NULL);
+    retVal = CommonMatch(&handle, widthPtr, heightPtr, &ph);
+    if (retVal && qtohs(ph.hdpi) > 0 && qtohs(ph.vdpi) > 0) {
+        if (TCL_ERROR == tkimg_SetResolution( metadataOut,
+                         (double)qtohs(ph.hdpi), (double)qtohs(ph.vdpi))) {
+            return 0;
+        }
+    }
+    return retVal;
 }
 
+#if HAVE_FORMAT_VERSION3 == 0
+static int FileMatch(
+    Tcl_Channel chan,
+    const char *fileName,
+    Tcl_Obj *format,
+    int *widthPtr,
+    int *heightPtr,
+    Tcl_Interp *interp
+) {
+    return FileMatchVersion3(
+           interp, chan, fileName, format, NULL,
+           widthPtr, heightPtr, NULL);
+}
+
+static int StringMatch(
+    Tcl_Obj *dataObj,
+    Tcl_Obj *format,
+    int *widthPtr,
+    int *heightPtr,
+    Tcl_Interp *interp
+) {
+    return StringMatchVersion3(
+           interp, dataObj, format, NULL,
+           widthPtr, heightPtr, NULL);
+}
+#endif
+
 static int CommonMatch(
-    tkimg_MFile *handle,
+    tkimg_Stream *handle,
     int   *widthPtr,
     int   *heightPtr,
     PCXHEADER *pcxHeaderPtr
@@ -598,10 +739,57 @@ static int CommonMatch(
     return 1;
 }
 
-static int ChnRead(
+static int FileReadVersion3(
+    Tcl_Interp *interp,
+    Tcl_Channel chan,
+    const char *fileName,
+    Tcl_Obj *format,
+    Tcl_Obj *metadataIn,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY,
+    Tcl_Obj *metadataOut
+) {
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
+
+    tkimg_ReadInitFile(&handle, chan);
+
+    return CommonRead (
+           interp, &handle, fileName, format, imageHandle,
+           destX, destY, width, height, srcX, srcY,
+           metadataOut);
+}
+
+static int StringReadVersion3(
+    Tcl_Interp *interp,
+    Tcl_Obj *dataObj,
+    Tcl_Obj *format,
+    Tcl_Obj *metadataIn,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY,
+    Tcl_Obj *metadataOut
+) {
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
+
+    if (!tkimg_ReadInitString(&handle, dataObj)) {
+        return 0;
+    }
+    return CommonRead (
+           interp, &handle, "InlineData", format, imageHandle,
+           destX, destY, width, height, srcX, srcY,
+           metadataOut);
+}
+
+#if HAVE_FORMAT_VERSION3 == 0
+static int FileRead(
     Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
     Tcl_Channel chan,           /* The image channel, open for reading. */
-    const char *filename,       /* The name of the image file. */
+    const char *fileName,       /* The name of the image file. */
     Tcl_Obj *format,            /* User-specified format object, or NULL. */
     Tk_PhotoHandle imageHandle, /* The photo image to write into. */
     int destX, int destY,       /* Coordinates of top-left pixel in
@@ -611,59 +799,55 @@ static int ChnRead(
     int srcX, int srcY          /* Coordinates of top-left pixel to be used
                                  * in image being read. */
 ) {
-    tkimg_MFile handle;
-
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
-
-    return CommonRead (interp, &handle, filename, format,
-                       imageHandle, destX, destY,
-                       width, height, srcX, srcY);
+    return FileReadVersion3(
+           interp, chan, fileName, format, NULL, imageHandle,
+           destX, destY, width, height, srcX, srcY, NULL);
 }
 
-static int ObjRead(
+static int StringRead(
     Tcl_Interp *interp,
-    Tcl_Obj *data,
+    Tcl_Obj *dataObj,
     Tcl_Obj *format,
     Tk_PhotoHandle imageHandle,
     int destX, int destY,
     int width, int height,
     int srcX, int srcY
 ) {
-    tkimg_MFile handle;
-
-    tkimg_ReadInit (data, 10, &handle);
-    return CommonRead (interp, &handle, "InlineData", format, imageHandle,
-                       destX, destY, width, height, srcX, srcY);
+    return StringReadVersion3(
+           interp, dataObj, format, NULL, imageHandle,
+           destX, destY, width, height, srcX, srcY, NULL);
 }
+#endif
 
 static int CommonRead(
     Tcl_Interp *interp,         /* Interpreter to use for reporting errors. */
-    tkimg_MFile *handle,        /* The image file, open for reading. */
-    const char *filename,       /* The name of the image file. */
+    tkimg_Stream *handle,        /* The image file, open for reading. */
+    const char *fileName,       /* The name of the image file. */
     Tcl_Obj *format,            /* User-specified format object, or NULL. */
     Tk_PhotoHandle imageHandle, /* The photo image to write into. */
     int destX, int destY,       /* Coordinates of top-left pixel in
                                  * photo image to be written to. */
     int width, int height,      /* Dimensions of block of photo image to
                                  * be written to. */
-    int srcX, int srcY          /* Coordinates of top-left pixel to be used
+    int srcX, int srcY,         /* Coordinates of top-left pixel to be used
                                  * in image being read. */
+    Tcl_Obj *metadataOut
 ) {
     int fileWidth, fileHeight;
     int outWidth, outHeight;
     int retCode = TCL_OK;
     PCXHEADER ph;
     FMTOPT opts;
+    Short hdpi, vdpi;
     char errMsg[256];
 
-    if (ParseFormatOpts(interp, format, &opts) != TCL_OK) {
+    if (ParseFormatOpts(interp, format, &opts, IMG_READ) == TCL_ERROR) {
         return TCL_ERROR;
     }
 
     CommonMatch(handle, &fileWidth, &fileHeight, &ph);
     if (opts.verbose) {
-        printImgInfo (&ph, filename, "Reading image:");
+        printImgInfo (&ph, fileName, "Reading image:");
     }
 
     if ((srcX + width) > fileWidth) {
@@ -682,18 +866,26 @@ static int CommonRead(
         return TCL_ERROR;
     }
 
-    if (tkimg_PhotoExpand(interp, imageHandle, destX + outWidth, destY + outHeight) == TCL_ERROR) {
+    if (Tk_PhotoExpand(interp, imageHandle, destX + outWidth, destY + outHeight) == TCL_ERROR) {
         return TCL_ERROR;
     }
 
     if (ph.compression) {
-        tkimg_ReadBuffer (1);
+        tkimg_EnableReadBuffer (handle, 1);
+    }
+    hdpi = qtohs (ph.hdpi);
+    vdpi = qtohs (ph.vdpi);
+
+    if (hdpi > 0 && vdpi > 0) {
+        if (TCL_ERROR == tkimg_SetResolution( metadataOut, (double)hdpi, (double)vdpi)) {
+            return TCL_ERROR;
+        }
     }
 
     if (ph.planes == 1 && ph.bpp == 1) {
-        if (!load_1 (interp, handle, imageHandle, destX, destY,
-                     outWidth, outHeight, srcX, srcY, fileWidth, fileHeight,
-                     qtohs (ph.bytesperline), ph.compression)) {
+        if (!load_1(interp, handle, imageHandle, destX, destY,
+                    outWidth, outHeight, srcX, srcY, fileWidth, fileHeight,
+                    qtohs (ph.bytesperline), ph.compression)) {
             retCode = TCL_ERROR;
         }
     } else if (ph.planes == 4 && ph.bpp == 1) {
@@ -701,15 +893,15 @@ static int CommonRead(
                           "is not supported yet.", (char *)NULL);
         retCode = TCL_ERROR;
     } else if (ph.planes == 1 && ph.bpp == 8) {
-        if (!load_8 (interp, handle, imageHandle, destX, destY,
-                     outWidth, outHeight, srcX, srcY, fileWidth, fileHeight,
-                     qtohs (ph.bytesperline), ph.compression)) {
+        if (!load_8(interp, handle, imageHandle, destX, destY,
+                    outWidth, outHeight, srcX, srcY, fileWidth, fileHeight,
+                    qtohs (ph.bytesperline), ph.compression)) {
             retCode = TCL_ERROR;
         }
     } else if (ph.planes == 3 && ph.bpp == 8) {
-        if (!load_24 (interp, handle, imageHandle, destX, destY,
-                      outWidth, outHeight, srcX, srcY, fileWidth, fileHeight,
-                      qtohs (ph.bytesperline), ph.compression)) {
+        if (!load_24(interp, handle, imageHandle, destX, destY,
+                     outWidth, outHeight, srcX, srcY, fileWidth, fileHeight,
+                     qtohs (ph.bytesperline), ph.compression)) {
             retCode = TCL_ERROR;
         }
     } else {
@@ -718,33 +910,63 @@ static int CommonRead(
         Tcl_AppendResult(interp, errMsg, (char *)NULL);
         retCode = TCL_ERROR;
     }
-    tkimg_ReadBuffer (0);
+    tkimg_EnableReadBuffer (handle, 0);
     return retCode;
 }
 
-static int ChnWrite (
+static int FileWriteVersion3(
     Tcl_Interp *interp,
-    const char *filename,
+    const char *fileName,
     Tcl_Obj *format,
-    Tk_PhotoImageBlock *blockPtr)
-{
+    Tcl_Obj *metadataIn,
+    Tk_PhotoImageBlock *blockPtr
+) {
     Tcl_Channel chan;
-    tkimg_MFile handle;
     int result;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    chan = tkimg_OpenFileChannel (interp, filename, 0644);
+    chan = tkimg_OpenFileChannel (interp, fileName, "w");
     if (!chan) {
         return TCL_ERROR;
     }
 
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
+    tkimg_WriteInitFile(&handle, chan);
 
-    result = CommonWrite (interp, filename, format, &handle, blockPtr);
+    result = CommonWrite (interp, fileName, format, &handle, blockPtr, metadataIn);
     if (Tcl_Close(interp, chan) == TCL_ERROR) {
         return TCL_ERROR;
     }
     return result;
+}
+
+static int StringWriteVersion3(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    Tcl_Obj *metadataIn,
+    Tk_PhotoImageBlock *blockPtr
+) {
+    int result;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
+
+    tkimg_WriteInitString(&handle);
+    result = CommonWrite (interp, "InlineData", format, &handle, blockPtr, metadataIn);
+
+    if (result == TCL_OK) {
+        Tcl_SetObjResult(interp, handle.byteObj);
+    }
+    return result;
+}
+
+#if HAVE_FORMAT_VERSION3 == 0
+static int FileWrite(
+    Tcl_Interp *interp,
+    const char *fileName,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
+    return FileWriteVersion3(interp, fileName, format, NULL, blockPtr);
 }
 
 static int StringWrite(
@@ -752,39 +974,28 @@ static int StringWrite(
     Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr
 ) {
-    tkimg_MFile handle;
-    int result;
-    Tcl_DString data;
-
-    Tcl_DStringInit(&data);
-    tkimg_WriteInit(&data, &handle);
-    result = CommonWrite (interp, "InlineData", format, &handle, blockPtr);
-    tkimg_Putc(IMG_DONE, &handle);
-
-    if (result == TCL_OK) {
-        Tcl_DStringResult(interp, &data);
-    } else {
-        Tcl_DStringFree(&data);
-    }
-    return result;
+    return StringWriteVersion3(interp, format, NULL, blockPtr);
 }
+#endif
 
 static int CommonWrite(
     Tcl_Interp *interp,
-    const char *filename,
+    const char *fileName,
     Tcl_Obj *format,
-    tkimg_MFile *handle,
-    Tk_PhotoImageBlock *blockPtr
+    tkimg_Stream *handle,
+    Tk_PhotoImageBlock *blockPtr,
+    Tcl_Obj *metadataIn
 ) {
-    int     x, y, nchan, nBytes;
-    int     redOffset, greenOffset, blueOffset, alphaOffset;
-    UByte   *pixelPtr, *pixRowPtr;
+    int   x, y, nchan, nBytes;
+    int   redOffset, greenOffset, blueOffset, alphaOffset;
+    UByte *pixelPtr, *pixRowPtr;
+    double xdpi, ydpi;
     PCXHEADER ph;
     UByte *row;
     FMTOPT opts;
     char errMsg[256];
 
-    if (ParseFormatOpts(interp, format, &opts) != TCL_OK) {
+    if (ParseFormatOpts(interp, format, &opts, IMG_WRITE) == TCL_ERROR) {
         return TCL_ERROR;
     }
 
@@ -819,11 +1030,23 @@ static int CommonWrite(
     ph.x2 = htoqs (blockPtr->width  - 1);
     ph.y2 = htoqs (blockPtr->height - 1);
 
-    ph.hdpi = htoqs (300);
-    ph.vdpi = htoqs (300);
+    if (TCL_ERROR == tkimg_GetResolution(interp, metadataIn, &xdpi, &ydpi)) {
+        return TCL_ERROR;
+    }
+
+    if (opts.xres != IMG_DEFAULT_DPI && opts.yres != IMG_DEFAULT_DPI) {
+        /* Resolution values specified in the format string (-xresolution, -yresolution)
+           overwrite the values specified with option -metadata. */
+        xdpi = opts.xres;
+        ydpi = opts.yres;
+    }
+
+    ph.hdpi = htoqs ((Short)xdpi);
+    ph.vdpi = htoqs ((Short)ydpi);
+
     ph.reserved = 0;
 
-    if (tkimg_Write2(handle, (const char *)&ph, 128) != 128) {
+    if (tkimg_Write(handle, (const char *)&ph, 128) != 128) {
         Tcl_AppendResult(interp, "Can't write PCX header.", (char *)NULL);
         return TCL_ERROR;
     }
@@ -833,7 +1056,7 @@ static int CommonWrite(
         Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
         return TCL_ERROR;
     }
- 
+
     /* Now write out the image data. */
     pixRowPtr = blockPtr->pixelPtr + blockPtr->offset[0];
     if (!opts.compression) {
@@ -845,7 +1068,7 @@ static int CommonWrite(
                 row[x + 2*blockPtr->width] = pixelPtr[blueOffset];
                 pixelPtr += blockPtr->pixelSize;
             }
-            if (nBytes != tkimg_Write2(handle, (const char *)row, nBytes)) {
+            if (nBytes != tkimg_Write(handle, (const char *)row, nBytes)) {
                 tkimg_snprintf(errMsg, 256, "Can't write %d bytes to image file.", nBytes);
                 Tcl_AppendResult(interp, errMsg, (char *)NULL);
                 ckfree ((char *)row);
@@ -872,7 +1095,7 @@ static int CommonWrite(
         }
     }
     if (opts.verbose) {
-        printImgInfo (&ph, filename, "Saving image:");
+        printImgInfo (&ph, fileName, "Saving image:");
     }
     ckfree ((char *)row);
     return TCL_OK;

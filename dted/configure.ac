@@ -7,7 +7,7 @@ dnl
 # TEA compliant.
 #--------------------------------------------------------------------
 
-AC_INIT([tkimgdted],[1.4.16])
+AC_INIT([tkimgdted],[2.1.1])
 
 TEA_INIT([3.9])
 

@@ -11,3 +11,10 @@ To execute the test suite using the Img extension and all test images:
 Using option --proc different ways of reading the images can be selected:
 --proc 1: Uses "image create photo -file $fileName"
 --proc 2: Uses "set ph [image create photo] ; $ph read $fileName"
+--proc 3: Uses "image create photo -data $imgData"
+--proc 4: Uses "set ph [image create photo] ; $ph put $imgData"
+
+Result shoud be:
+Starting test all ...
+Log written to file _Logs/png-Img.csv
+176 files checked: 162 files correct. 14 files corrupted.

@@ -101,6 +101,7 @@ int main(int argc, char *argv[])
     int fd;
     char *outfilename = NULL;
     TIFF *out;
+    uint32_t temp_limit_check = 0; /* temp for integer overflow checking*/
 
     uint32_t row, col, band;
     int c;
@@ -215,11 +216,50 @@ int main(int argc, char *argv[])
     if (nbands == 0)
     {
         fprintf(stderr, "The number of bands is illegal.\n");
+        close(fd);
         return (-1);
     }
 
     if (guessSize(fd, dtype, hdr_size, nbands, swab, &width, &length) < 0)
+    {
+        close(fd);
         return EXIT_FAILURE;
+    }
+
+    /* check for integer overflow in */
+    /* hdr_size + (*width) * (*length) * nbands * depth */
+
+    if ((width == 0) || (length == 0))
+    {
+        fprintf(stderr, "Too large nbands value specified.\n");
+        close(fd);
+        return (EXIT_FAILURE);
+    }
+
+    temp_limit_check = nbands * depth;
+
+    if (!temp_limit_check || length > (UINT_MAX / temp_limit_check))
+    {
+        fprintf(stderr, "Too large length size specified.\n");
+        close(fd);
+        return (EXIT_FAILURE);
+    }
+    temp_limit_check = temp_limit_check * length;
+
+    if (!temp_limit_check || width > (UINT_MAX / temp_limit_check))
+    {
+        fprintf(stderr, "Too large width size specified.\n");
+        close(fd);
+        return (EXIT_FAILURE);
+    }
+    temp_limit_check = temp_limit_check * width;
+
+    if (!temp_limit_check || hdr_size > (UINT_MAX - temp_limit_check))
+    {
+        fprintf(stderr, "Too large header size specified.\n");
+        close(fd);
+        return (EXIT_FAILURE);
+    }
 
     if (outfilename == NULL)
         outfilename = argv[optind + 1];
@@ -228,6 +268,7 @@ int main(int argc, char *argv[])
     {
         fprintf(stderr, "%s: %s: Cannot open file for output.\n", argv[0],
                 outfilename);
+        close(fd);
         return (EXIT_FAILURE);
     }
     TIFFSetField(out, TIFFTAG_IMAGEWIDTH, width);
@@ -355,6 +396,7 @@ int main(int argc, char *argv[])
     if (buf1)
         _TIFFfree(buf1);
     TIFFClose(out);
+    close(fd);
     return (EXIT_SUCCESS);
 }
 
@@ -402,7 +444,13 @@ static int guessSize(int fd, TIFFDataType dtype, _TIFF_off_t hdr_size,
         return -1;
     }
 
-    imagesize = (filestat.st_size - hdr_size) / nbands / depth;
+    if (((filestat.st_size - hdr_size) / nbands / depth) > UINT32_MAX)
+    {
+        fprintf(stderr, "Too large image size calculated.\n");
+        return -1;
+    }
+    else
+        imagesize = (uint32_t)((filestat.st_size - hdr_size) / nbands / depth);
 
     if (*width != 0 && *length == 0)
     {

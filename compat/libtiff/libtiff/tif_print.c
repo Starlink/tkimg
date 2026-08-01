@@ -82,8 +82,7 @@ static void _TIFFPrintField(FILE *fd, const TIFFField *fip,
     const char *field_name = fip->field_name;
     if (TIFFFieldIsAnonymous(fip))
     {
-        size_t i;
-        for (i = 0; i < NTAGS; ++i)
+        for (size_t i = 0; i < NTAGS; ++i)
         {
             if (fip->field_tag == tagnames[i].tag)
             {
@@ -678,7 +677,8 @@ void TIFFPrintDirectory(TIFF *tif, FILE *fd, long flags)
                 else
                 {
                     /*--: Rational2Double: For Rationals evaluate
-                     * "set_field_type" to determine internal storage size. */
+                     * "set_get_field_type" to determine internal storage size.
+                     */
                     int tv_size = TIFFFieldSetGetSize(fip);
                     raw_data = _TIFFmallocExt(tif, tv_size * value_count);
                     mem_alloc = 1;

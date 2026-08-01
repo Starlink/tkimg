@@ -1,17 +1,20 @@
 /*
- * tiff.c --
+ * tiff.c
  *
- * A photo image file handler for TIFF files.
+ * TIFF photo image type, Tcl/Tk package.
  *
- * Uses the libtiff.so library, which is dynamically
- * loaded only when used.
- */
-
-/* Author : Jan Nijtmans */
-/* Date   : 7/16/97      */
-
-/*
- * Generic initialization code, parameterized via CPACKAGE and PACKAGE.
+ * A photo image handler for the Tagged Image File Format.
+ *
+ * For a list of available format options see function ParseFormatOpts
+ * and the documentation img-tiff.
+ *
+ * Copyright (c) 1997-2025 Jan Nijtmans    <nijtmans@users.sourceforge.net>
+ * Copyright (c) 2002-2025 Andreas Kupries <andreas_kupries@users.sourceforge.net>
+ * Copyright (c) 2003-2025 Paul Obermeier  <obermeier@users.sourceforge.net>
+ *
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+ *
  */
 
 #ifdef _WIN32
@@ -32,30 +35,64 @@ static int SetupTiffLibrary(Tcl_Interp *interp);
 #define MORE_INITIALIZATION \
     if (SetupTiffLibrary (interp) != TCL_OK) { return TCL_ERROR; }
 
+/* Force usage of Tk_CreatePhotoImageFormatVersion3
+   supporting image matadata introduced in Tk8.7.
+   Must be specified before inclusion of init.c.
+*/
+#define USE_FORMAT_VERSION3 1
+
+/*
+ * Generic initialization code, parameterized via CPACKAGE and PACKAGE.
+ */
+
 #include "init.c"
 
 #include "tiffInt.h"
 
-
 extern DLLIMPORT int unlink(const char *);
+
+/* Format options structure for use with ParseFormatOpts */
+typedef struct {
+    int    pageIndex;    /* Read option -index */
+    int    verbose;      /* Read/Write option -verbose */
+    int    compression;  /* Write option -compression */
+    char   byteorder[3]; /* Write option -byteorder */
+    double xres;         /* Write option -resolution or -xresolution */
+    double yres;         /* Write option -resolution or -yresolution */
+} FMTOPT;
 
 /*
  * Prototypes for local procedures defined in this file:
  */
+static int CommonMatch(
+    TIFF *tif,
+    tkimg_Stream *handle,
+    int *widthPtr, int *heightPtr,
+    double *xdpiPtr, double *ydpiPtr,
+    int *numPagesPtr,
+    int pageIndex
+);
+static int CommonRead(
+    Tcl_Interp *interp,
+    TIFF *tif,
+    const char *fileName,
+    Tcl_Obj *format,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY,
+    Tcl_Obj *metadataOut
+);
+static int CommonWrite(
+    Tcl_Interp *interp,
+    TIFF *tif,
+    const char *fileName,
+    FMTOPT *opts,
+    Tk_PhotoImageBlock *blockPtr,
+    Tcl_Obj *metadataIn
+);
 
-static int getint(unsigned char *buf, TIFFDataType format, int order);
-
-static int CommonMatch(tkimg_MFile *handle, int *widhtPtr, int *heightPtr);
-
-static int CommonRead(Tcl_Interp *interp, TIFF *tif,
-       Tcl_Obj *format, Tk_PhotoHandle imageHandle, int destX, int destY,
-       int width, int height, int srcX, int srcY);
-
-static int CommonWrite(Tcl_Interp *interp, TIFF *tif,
-       int comp, Tk_PhotoImageBlock *blockPtr);
-
-static int ParseWriteFormat(Tcl_Interp *interp, Tcl_Obj *format,
-       int *comp, const char **mode);
+static int ParseFormatOpts(Tcl_Interp *interp, Tcl_Obj *format, FMTOPT *opts, int mode);
 
 static void _TIFFerr(const char *, const char *, va_list);
 static void _TIFFwarn(const char *, const char *, va_list);
@@ -80,12 +117,30 @@ static toff_t sizeString(thandle_t);
 
 static char *errorMessage = NULL;
 
+static void printImgInfo (int pageIndex, uint32_t width, uint32_t height, float hdpi, float vdpi,
+                          const char *fileName, const char *msg)
+{
+    Tcl_Channel outChan;
+    char str[256];
+
+    outChan = Tcl_GetStdChannel (TCL_STDOUT);
+    if (!outChan) {
+        return;
+    }
+
+    tkimg_snprintf(str, 256, "%s %s\n", msg, fileName);                         IMGOUT;
+    tkimg_snprintf(str, 256, "\tSize in pixel: %d x %d\n",     width, height);  IMGOUT;
+    tkimg_snprintf(str, 256, "\tDots per inch: %.0f x %.0f\n", hdpi, vdpi);     IMGOUT;
+    tkimg_snprintf(str, 256, "\tPage index   : %d\n",          pageIndex);      IMGOUT;
+    Tcl_Flush(outChan);
+}
+
 static int
 SetupTiffLibrary (Tcl_Interp *interp)
 {
     static int initialized = 0;
 
-    if (Tifftcl_InitStubs(interp, TIFFTCL_VERSION, 0) == NULL) {
+    if (!Tifftcl_InitStubs(interp, TIFFTCL_VERSION, 0)) {
         return TCL_ERROR;
     }
 
@@ -105,50 +160,25 @@ SetupTiffLibrary (Tcl_Interp *interp)
      * with the base TIFF library in this package.
      */
 
-    if (Jpegtcl_InitStubs(interp, JPEGTCL_VERSION, 0) == NULL) {
+    if (!Jpegtcl_InitStubs(interp, JPEGTCL_VERSION, 0)) {
         return TCL_ERROR;
     }
 
     if (!initialized) {
         initialized = 1;
-        if (Zlibtcl_InitStubs(interp, ZLIBTCL_VERSION, 0) == NULL) {
+        if (!Zlibtcl_InitStubs(interp, ZLIBTCL_VERSION, 0)) {
             return TCL_ERROR;
         }
         TIFFRegisterCODEC (COMPRESSION_DEFLATE,  "Deflate",  TkimgTIFFInitZip);
         TIFFRegisterCODEC (COMPRESSION_ADOBE_DEFLATE, "AdobeDeflate", TkimgTIFFInitZip);
 
-        if (Jpegtcl_InitStubs(interp, JPEGTCL_VERSION, 0) == NULL) {
+        if (!Jpegtcl_InitStubs(interp, JPEGTCL_VERSION, 0)) {
             return TCL_ERROR;
         }
         TIFFRegisterCODEC (COMPRESSION_JPEG,     "JPEG",     TkimgTIFFInitJpeg);
         TIFFRegisterCODEC (COMPRESSION_PIXARLOG, "PixarLog", TkimgTIFFInitPixar);
     }
     return TCL_OK;
-}
-
-static int
-getint(
-    unsigned char *buf,
-    TIFFDataType format,
-    int order
-) {
-    int result;
-
-    switch (format) {
-        case TIFF_BYTE:
-            result = buf[0]; break;
-        case TIFF_SHORT:
-            result = (buf[order]<<8) + buf[1-order]; break;
-        case TIFF_LONG:
-            if (order) {
-                result = ((unsigned int)buf[3]<<24) + (buf[2]<<16) + (buf[1]<<8) + buf[0];
-            } else {
-                result = ((unsigned int)buf[0]<<24) + (buf[1]<<16) + (buf[2]<<8) + buf[3];
-            }; break;
-        default:
-            result = -1;
-    }
-    return result;
 }
 
 static void
@@ -169,6 +199,12 @@ _TIFFerr(
     if (errorMessage) {
         ckfree(errorMessage);
         errorMessage = NULL;
+    }
+    if (strstr(buf, "Null count for")) {
+        /* Ignore error messages: Null count for "Tag 34391" (type 1, writecount -3, passcount 1)
+         * which are generated since TIFF version 4.0 and are due to old Photoshop private tags.
+         */
+        return;
     }
     errorMessage = (char *) ckalloc(strlen(buf)+1);
     strcpy(errorMessage, buf);
@@ -221,7 +257,7 @@ readMFile(
     tdata_t data,
     tsize_t size
 ) {
-    return (tsize_t) tkimg_Read2((tkimg_MFile *) fd, (char *) data, size) ;
+    return (tsize_t) tkimg_Read((tkimg_Stream *) fd, (char *) data, size) ;
 }
 
 static toff_t
@@ -230,27 +266,17 @@ seekMFile(
     toff_t off,
     int whence
 ) {
-    return Tcl_Seek((Tcl_Channel) ((tkimg_MFile *) fd)->data, (int) off, whence);
+    return Tcl_Seek(((tkimg_Stream *) fd)->channel, (int) off, whence);
 }
 
 static toff_t
 sizeMFile(thandle_t fd)
 {
     int fsize;
-    return (fsize = Tcl_Seek((Tcl_Channel) ((tkimg_MFile *) fd)->data,
-           (int) 0, SEEK_END)) < 0 ? 0 : (toff_t) fsize;
-}
 
-/*
- * In the following functions "handle" is used differently for speed reasons:
- *
- *      handle.buffer   (writing only) dstring used for writing.
- *      handle.data     pointer to first character
- *      handle.length   size of data
- *      handle.state    "file" position pointer.
- *
- * After a read, only the position pointer is adapted, not the other fields.
- */
+    fsize = Tcl_Seek(((tkimg_Stream *) fd)->channel, (int) 0, SEEK_END);
+    return fsize < 0 ? 0 : (toff_t) fsize;
+}
 
 static tsize_t
 readString(
@@ -258,19 +284,19 @@ readString(
     tdata_t data,
     tsize_t size
 ) {
-    tkimg_MFile *handle = (tkimg_MFile *) fd;
+    tkimg_Stream *handle = (tkimg_Stream *) fd;
 
-    if (((size_t)size + handle->state) > handle->length) {
+    if ((size + handle->position) > handle->length) {
         /* Avoid unsigned underflow. */
-        if (handle->state > handle->length) {
+        if (handle->position > handle->length) {
             size = 0;
         } else {
-            size = handle->length - handle->state;
+            size = handle->length - handle->position;
         }
     }
     if (size) {
-        memcpy((char *) data, handle->data + handle->state, (size_t) size);
-        handle->state += size;
+        memcpy((char *) data, handle->data + handle->position, (size_t) size);
+        handle->position += size;
     }
     return size;
 }
@@ -281,15 +307,15 @@ writeString(
     tdata_t data,
     tsize_t size
 ) {
-    tkimg_MFile *handle = (tkimg_MFile *) fd;
+    tkimg_Stream *handle = (tkimg_Stream *) fd;
+    unsigned char *destPtr = Tcl_GetByteArrayFromObj(handle->byteObj, (Tcl_Size *)NULL);
 
-    if (handle->state + (size_t)size > handle->length) {
-        handle->length = handle->state + size;
-        Tcl_DStringSetLength(handle->buffer, handle->length);
-        handle->data = Tcl_DStringValue(handle->buffer);
+    if (handle->position + size > handle->length) {
+        handle->length = handle->position + size;
+        destPtr = Tcl_SetByteArrayLength(handle->byteObj, handle->length);
     }
-    memcpy(handle->data + handle->state, (char *) data, (size_t) size);
-    handle->state += size;
+    memcpy(destPtr + handle->position, (char *) data, (size_t) size);
+    handle->position += size;
     return size;
 }
 
@@ -299,70 +325,135 @@ seekString(
     toff_t off,
     int whence
 ) {
-    tkimg_MFile *handle = (tkimg_MFile *) fd;
+    tkimg_Stream *handle = (tkimg_Stream *) fd;
 
     switch (whence) {
         case SEEK_SET:
-            handle->state = (int) off;
+            handle->position = (int) off;
             break;
         case SEEK_CUR:
-            handle->state += (int) off;
+            handle->position += (int) off;
             break;
         case SEEK_END:
-            handle->state = handle->length + (int) off;
+            handle->position = handle->length + (int) off;
             break;
     }
-    if (handle->state < 0) {
-        handle->state = 0;
+    if (handle->position < 0) {
+        handle->position = 0;
         return -1;
     }
-    return (toff_t) handle->state;
+    return (toff_t) handle->position;
 }
 
 static toff_t
 sizeString(thandle_t fd)
 {
-    return ((tkimg_MFile *) fd)->length;
+    return ((tkimg_Stream *) fd)->length;
 }
 
-
-/*
- *----------------------------------------------------------------------
- *
- * ObjMatchTIFF --
- *
- *  This procedure is invoked by the photo image type to see if
- *  a string contains image data in TIFF format.
- *
- * Results:
- *  The return value is 1 if the first characters in the string
- *  is like TIFF data, and 0 otherwise.
- *
- * Side effects:
- *  the size of the image is placed in widthPre and heightPtr.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-ObjMatch(
-    Tcl_Obj *data,              /* the object containing the image data */
-    Tcl_Obj *format,            /* the image format string */
-    int *widthPtr,              /* where to put the string width */
-    int *heightPtr,             /* where to put the string height */
-    Tcl_Interp *interp
+static int FileMatchVersion3(
+    Tcl_Interp *interp,
+    Tcl_Channel chan,
+    const char *fileName,
+    Tcl_Obj *format,
+    Tcl_Obj *metadataIn,
+    int *widthPtr, int *heightPtr,
+    Tcl_Obj *metadataOut
 ) {
-    tkimg_MFile handle;
+    FMTOPT opts;
+    TIFF *tif;
+    int retVal = 1;
+    double xdpi, ydpi;
+    int pageIndex = 0;
+    int numPages;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    if (!tkimg_ReadInit(data, '\111', &handle) &&
-        !tkimg_ReadInit(data, '\115', &handle)) {
+    if (ParseFormatOpts(interp, format, &opts, IMG_READ) == TCL_OK) {
+        pageIndex = opts.pageIndex;
+    }
+
+    tkimg_ReadInitFile(&handle, chan);
+
+    tif = TIFFClientOpen(fileName, "r", (thandle_t) &handle,
+            readMFile, writeDummy, seekMFile, closeDummy,
+            sizeMFile, mapDummy, unMapDummy);
+    if (tif) {
+        retVal = CommonMatch(tif, &handle, widthPtr, heightPtr, &xdpi, &ydpi, &numPages, pageIndex);
+        if (retVal && xdpi >= 0.0 && ydpi >= 0.0) {
+            if (TCL_ERROR == tkimg_SetResolution( metadataOut, xdpi, ydpi)) {
+                retVal = 0;
+            }
+        }
+        if (retVal && numPages >= 1) {
+            if (TCL_ERROR == tkimg_SetNumPages( metadataOut, numPages)) {
+                retVal = 0;
+            }
+        }
+        TIFFClose(tif);
+    } else {
+        retVal = 0;
+    }
+    if (errorMessage) {
+        ckfree(errorMessage);
+        errorMessage = NULL;
+    }
+    return retVal;
+}
+
+static int StringMatchVersion3(
+    Tcl_Interp *interp,
+    Tcl_Obj *dataObj,
+    Tcl_Obj *format,
+    Tcl_Obj *metadataIn,
+    int *widthPtr, int *heightPtr,
+    Tcl_Obj *metadataOut
+) {
+    FMTOPT opts;
+    TIFF *tif;
+    int retVal = 1;
+    double xdpi, ydpi;
+    int pageIndex = 0;
+    int numPages;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
+
+    if (ParseFormatOpts(interp, format, &opts, IMG_READ) == TCL_OK) {
+        pageIndex = opts.pageIndex;
+    }
+
+    if (!tkimg_ReadInitString(&handle, dataObj)) {
         return 0;
     }
 
-    return CommonMatch(&handle, widthPtr, heightPtr);
+    tif = TIFFClientOpen("inline data", "r", (thandle_t) &handle,
+            readString, writeString, seekString, closeDummy,
+            sizeString, mapDummy, unMapDummy);
+    if (tif) {
+        retVal = CommonMatch(tif, &handle, widthPtr, heightPtr, &xdpi, &ydpi, &numPages, pageIndex);
+        if (retVal && xdpi >= 0.0 && ydpi >= 0.0) {
+            if (TCL_ERROR == tkimg_SetResolution (metadataOut, xdpi, ydpi)) {
+                return 0;
+            }
+        }
+        if (retVal && numPages >= 1) {
+            if (TCL_ERROR == tkimg_SetNumPages (metadataOut, numPages)) {
+                retVal = 0;
+            }
+        }
+        TIFFClose(tif);
+    } else {
+        retVal = 0;
+    }
+    if (errorMessage) {
+        ckfree(errorMessage);
+        errorMessage = NULL;
+    }
+    return retVal;
 }
 
-static int ChnMatch(
+#if HAVE_FORMAT_VERSION3 == 0
+static int FileMatch(
     Tcl_Channel chan,
     const char *fileName,
     Tcl_Obj *format,
@@ -370,175 +461,164 @@ static int ChnMatch(
     int *heightPtr,
     Tcl_Interp *interp
 ) {
-    tkimg_MFile handle;
-
-    handle.data = (char *) chan;
-    handle.state = IMG_CHAN;
-
-    return CommonMatch(&handle, widthPtr, heightPtr);
+    return FileMatchVersion3(
+           interp, chan, fileName, format, NULL,
+           widthPtr, heightPtr, NULL);
 }
 
-static int
-CommonMatch(
-    tkimg_MFile *handle,
-    int *widthPtr, int *heightPtr
+static int StringMatch(
+    Tcl_Obj *dataObj,
+    Tcl_Obj *format,
+    int *widthPtr,
+    int *heightPtr,
+    Tcl_Interp *interp
 ) {
-    unsigned char buf[4096];
-    int i, j, order, w = 0, h = 0;
+    return StringMatchVersion3(interp, dataObj, format, NULL, widthPtr, heightPtr, NULL);
+}
+#endif
 
-    i = tkimg_Read2(handle, (char *) buf, 8);
-    order = (buf[0] == '\111');
-    if ((i != 8) || (buf[0] != buf[1])
-        || ((buf[0] != '\111') && (buf[0] != '\115'))
-        || (getint(buf+2,TIFF_SHORT,order) != 42)) {
+static int CommonMatch(
+    TIFF *tif,
+    tkimg_Stream *handle,
+    int *widthPtr, int *heightPtr,
+    double *xdpiPtr, double *ydpiPtr,
+    int *numPagesPtr,
+    int pageIndex
+) {
+    uint32_t w, h;
+    float xres = 0.0f, yres = 0.0f;
+    uint16_t resUnit;
+    uint16_t numPages = 0;
+    int curIndex;
+
+    curIndex = pageIndex;
+    while (curIndex-- != 0) {
+        if (TIFFReadDirectory(tif) != 1) {
+            return 0;
+        }
+        numPages++;
+    }
+
+    if ((1 != TIFFGetField (tif, TIFFTAG_IMAGEWIDTH,  &w)) ||
+        (1 != TIFFGetField (tif, TIFFTAG_IMAGELENGTH, &h))) {
         return 0;
     }
-    i = getint(buf+4,TIFF_LONG,order);
 
-    while (i > 4104) {
-        i -= 4096;
-        tkimg_Read2(handle, (char *) buf, 4096);
+    if (1 != TIFFGetField (tif, TIFFTAG_RESOLUTIONUNIT, &resUnit)) {
+        resUnit = RESUNIT_INCH;
     }
-    if (i>8) {
-        tkimg_Read2(handle, (char *) buf, i-8);
-    }
-    tkimg_Read2(handle, (char *) buf, 2);
-    i = getint(buf,TIFF_SHORT,order);
-    while (i--) {
-        tkimg_Read2(handle, (char *) buf, 12);
-        if (buf[order]!=1) continue;
-        j = getint(buf+2,TIFF_SHORT,order);
-        j = getint(buf+8, (TIFFDataType) j, order);
-        if (buf[1-order]==0) {
-            w = j;
-            if (h>0) break;
-        } else if (buf[1-order]==1) {
-            h = j;
-            if (w>0) break;
+    if (resUnit == RESUNIT_INCH || resUnit == RESUNIT_CENTIMETER) {
+        if ((1 != TIFFGetField (tif, TIFFTAG_XRESOLUTION, &xres)) ||
+            (1 != TIFFGetField (tif, TIFFTAG_YRESOLUTION, &yres))) {
+            xres = -1.0f;
+            yres = -1.0f;
+        } else {
+            if (resUnit == RESUNIT_CENTIMETER) {
+                xres *= 2.54f;
+                yres *= 2.54f;
+            }
         }
     }
-
-    if ((w <= 0) || (h <= 0)) {
-        return 0;
+    if (xres == 0.0f) {
+        xres = -1.0f;
     }
+    if (yres == 0.0f) {
+        yres = -1.0f;
+    }
+
+    do {
+        numPages++;
+    } while (TIFFReadDirectory(tif));
+
     *widthPtr  = w;
     *heightPtr = h;
+    *xdpiPtr = xres;
+    *ydpiPtr = yres;
+    *numPagesPtr = numPages;
     return 1;
 }
 
-static int
-ObjRead(
+static int FileReadVersion3(
     Tcl_Interp *interp,
-    Tcl_Obj *data,                      /* object containing the image */
+    Tcl_Channel chan,
+    const char *fileName,
     Tcl_Obj *format,
+    Tcl_Obj *metadataIn,
     Tk_PhotoHandle imageHandle,
     int destX, int destY,
     int width, int height,
-    int srcX, int srcY
+    int srcX, int srcY,
+    Tcl_Obj *metadataOut
 ) {
     TIFF *tif;
-    char *dir, *tempFileName = NULL, tempFileNameBuffer[1024];
-    int count, result;
-    tkimg_MFile handle;
-    char buffer[4096];
-    char *dataPtr = NULL;
+    int  retVal;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    if (!tkimg_ReadInit(data, '\115', &handle)) {
-        tkimg_ReadInit(data, '\111', &handle);
-    }
+    tkimg_ReadInitFile(&handle, chan);
 
-    if (TIFFClientOpen) {
-        if (handle.state != IMG_STRING) {
-            dataPtr = attemptckalloc((handle.length*3)/4 + 2);
-            if (dataPtr == NULL) {
-                Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
-                return TCL_ERROR;
-            }
-            handle.length = tkimg_Read2(&handle, dataPtr, handle.length);
-            handle.data = dataPtr;
-        }
-        handle.state = 0;
-        tif = TIFFClientOpen("inline data", "r", (thandle_t) &handle,
-                  readString, writeString, seekString, closeDummy,
-                  sizeString, mapDummy, unMapDummy);
-    } else {
-        FILE *outfile;
-#ifdef WIN32
-        char dirBuffer[512];
-        HANDLE h;
-
-        dir = dirBuffer;
-        strcpy(dir, ".");
-        GetTempPathA(sizeof (dirBuffer), dir);
-        tempFileName = tempFileNameBuffer;
-        tempFileName[0] = '\0';
-        GetTempFileNameA(dir, "tki", 0, tempFileName);
-        h = CreateFileA(tempFileName, GENERIC_READ|GENERIC_WRITE, 0, NULL,
-                CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
-        if (h != INVALID_HANDLE_VALUE) {
-            CloseHandle(h);
-        }
-#else
-        dir = getenv("TMPDIR");
-        tempFileName = tempFileNameBuffer;
-        if (dir) {
-            strcpy(tempFileName, dir);
-        } else {
-#ifdef P_tmpdir
-            strcpy(tempFileName, P_tmpdir);
-#else
-            strcpy(tempFileName, "/tmp");
-#endif
-        }
-        strcat(tempFileName, "/tkimgXXXXXX");
-        result = mkstemp(tempFileName);
-        if (result >= 0) {
-            close(result);
-        }
-#endif
-        outfile = fopen(tempFileName, "wb");
-        if (outfile == NULL) {
-            Tcl_AppendResult(interp, "error open output file", (char *) NULL);
-            return TCL_ERROR;
-        }
-
-        count = tkimg_Read2(&handle, buffer, sizeof (buffer));
-        while (count == sizeof (buffer)) {
-            fwrite(buffer, 1, sizeof (buffer), outfile);
-            count = tkimg_Read2(&handle, buffer, sizeof (buffer));
-        }
-        if (count + 1 > 1){
-            fwrite(buffer, 1, count, outfile);
-        }
-        fclose(outfile);
-        tif = TIFFOpen(tempFileName, "r");
-    }
-
-    if (tif != NULL) {
-        result = CommonRead(interp, tif, format, imageHandle,
-                 destX, destY, width, height, srcX, srcY);
+    tif = TIFFClientOpen(fileName, "r", (thandle_t) &handle,
+            readMFile, writeDummy, seekMFile, closeDummy,
+            sizeMFile, mapDummy, unMapDummy);
+    if (tif) {
+        retVal = CommonRead(interp, tif, fileName, format, imageHandle,
+                 destX, destY, width, height, srcX, srcY, metadataOut);
         TIFFClose(tif);
     } else {
-        result = TCL_ERROR;
+        retVal = TCL_ERROR;
     }
-    if (tempFileName) {
-        unlink(tempFileName);
-    }
-    if (result == TCL_ERROR) {
+    if (retVal == TCL_ERROR) {
         if (strlen (Tcl_GetStringResult(interp)) == 0 && errorMessage) {
             Tcl_AppendResult(interp, errorMessage, (char *) NULL);
             ckfree(errorMessage);
             errorMessage = NULL;
         }
     }
-    if (dataPtr) {
-        ckfree(dataPtr);
-    }
-    return result;
+    return retVal;
 }
 
-static int
-ChnRead(
+static int StringReadVersion3(
+    Tcl_Interp *interp,
+    Tcl_Obj *dataObj,
+    Tcl_Obj *format,
+    Tcl_Obj *metadataIn,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY,
+    Tcl_Obj *metadataOut
+) {
+    TIFF *tif;
+    int  retVal;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
+
+    if (!tkimg_ReadInitString(&handle, dataObj)) {
+        return 0;
+    }
+
+    tif = TIFFClientOpen("inline data", "r", (thandle_t) &handle,
+            readString, writeDummy, seekString, closeDummy,
+            sizeString, mapDummy, unMapDummy);
+    if (tif) {
+        retVal = CommonRead(interp, tif, "InlineData", format, imageHandle,
+                 destX, destY, width, height, srcX, srcY, metadataOut);
+        TIFFClose(tif);
+    } else {
+        retVal = TCL_ERROR;
+    }
+    if (retVal == TCL_ERROR) {
+        if (strlen (Tcl_GetStringResult(interp)) == 0 && errorMessage) {
+            Tcl_AppendResult(interp, errorMessage, (char *) NULL);
+            ckfree(errorMessage);
+            errorMessage = NULL;
+        }
+    }
+    return retVal;
+}
+
+#if HAVE_FORMAT_VERSION3 == 0
+static int FileRead(
     Tcl_Interp *interp,
     Tcl_Channel chan,
     const char *fileName,
@@ -548,130 +628,58 @@ ChnRead(
     int width, int height,
     int srcX, int srcY
 ) {
-    TIFF *tif;
-    char *dir, *tempFileName = NULL, tempFileNameBuffer[1024];
-    int count, result;
-    tkimg_MFile handle;
-    char buffer[4096];
-
-    if (TIFFClientOpen) {
-        handle.data = (char *) chan;
-        handle.state = IMG_CHAN;
-        tif = TIFFClientOpen(fileName, "r", (thandle_t) &handle,
-              readMFile, writeDummy, seekMFile, closeDummy,
-              sizeMFile, mapDummy, unMapDummy);
-    } else {
-        FILE *outfile;
-#ifdef WIN32
-        char dirBuffer[512];
-        HANDLE h;
-
-        dir = dirBuffer;
-        strcpy(dir, ".");
-        GetTempPathA(sizeof (dirBuffer), dir);
-        tempFileName = tempFileNameBuffer;
-        tempFileName[0] = '\0';
-        GetTempFileNameA(dir, "tki", 0, tempFileName);
-        h = CreateFileA(tempFileName, GENERIC_READ|GENERIC_WRITE, 0, NULL,
-                CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
-        if (h != INVALID_HANDLE_VALUE) {
-            CloseHandle(h);
-        }
-#else
-        dir = getenv("TMPDIR");
-        tempFileName = tempFileNameBuffer;
-        if (dir) {
-            strcpy(tempFileName, dir);
-        } else {
-#ifdef P_tmpdir
-            strcpy(tempFileName, P_tmpdir);
-#else
-            strcpy(tempFileName, "/tmp");
-#endif
-        }
-        strcat(tempFileName, "/tkimgXXXXXX");
-        result = mkstemp(tempFileName);
-        if (result >= 0) {
-            close(result);
-        }
-#endif
-        outfile = fopen(tempFileName, "wb");
-        if (outfile == NULL) {
-            Tcl_AppendResult(interp, "error open output file", (char *) NULL);
-            return TCL_ERROR;
-        }
-
-        count = Tcl_Read(chan, buffer, sizeof (buffer));
-        while (count == sizeof (buffer)) {
-            fwrite(buffer, 1, sizeof (buffer), outfile);
-            count = Tcl_Read(chan, buffer, sizeof (buffer));
-        }
-        if (count>0){
-            fwrite(buffer, 1, count, outfile);
-        }
-        fclose(outfile);
-
-        tif = TIFFOpen(tempFileName, "r");
-    }
-    if (tif) {
-        result = CommonRead(interp, tif, format, imageHandle,
-                destX, destY, width, height, srcX, srcY);
-        TIFFClose(tif);
-    } else {
-        result = TCL_ERROR;
-    }
-    if (tempFileName) {
-        unlink(tempFileName);
-    }
-    if (result == TCL_ERROR) {
-        if (strlen (Tcl_GetStringResult(interp)) == 0 && errorMessage) {
-            Tcl_AppendResult(interp, errorMessage, (char *) NULL);
-            ckfree(errorMessage);
-            errorMessage = NULL;
-        }
-    }
-    return result;
+    return FileReadVersion3(
+           interp, chan, fileName, format, NULL, imageHandle,
+           destX, destY, width, height, srcX, srcY, NULL);
 }
 
-static int
-CommonRead(
+static int StringRead(
     Tcl_Interp *interp,
-    TIFF *tif,
+    Tcl_Obj *dataObj,
     Tcl_Obj *format,
     Tk_PhotoHandle imageHandle,
     int destX, int destY,
     int width, int height,
     int srcX, int srcY
 ) {
+    return StringReadVersion3(
+           interp, dataObj, format, NULL, imageHandle,
+           destX, destY, width, height, srcX, srcY, NULL);
+}
+#endif
+
+static int CommonRead(
+    Tcl_Interp *interp,
+    TIFF *tif,
+    const char *fileName,
+    Tcl_Obj *format,
+    Tk_PhotoHandle imageHandle,
+    int destX, int destY,
+    int width, int height,
+    int srcX, int srcY,
+    Tcl_Obj *metadataOut
+) {
     Tk_PhotoImageBlock block;
     uint32_t w, h;
+    float xres = 0.0f, yres = 0.0f;
+    uint16_t resUnit;
     size_t npixels;
     uint32_t *raster;
-    int nBytes, index = 0, objc = 0;
-    Tcl_Obj **objv = NULL;
+    int pageIndex = 0;
+    FMTOPT opts;
 
-    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK) {
+    if (ParseFormatOpts(interp, format, &opts, IMG_READ) == TCL_ERROR) {
         return TCL_ERROR;
     }
-    if (objc > 1) {
-        char *c = Tcl_GetStringFromObj(objv[1], &nBytes);
-        if ((objc > 3) || ((objc == 3) && ((c[0] != '-') ||
-                (c[1] != 'i') || strncmp(c, "-index", strlen(c))))) {
-            Tcl_AppendResult(interp, "invalid format: \"",
-                    tkimg_GetStringFromObj2(format, NULL), "\"", (char *) NULL);
-            return TCL_ERROR;
-        }
-        if (Tcl_GetIntFromObj(interp, objv[objc-1], &index) != TCL_OK) {
-            return TCL_ERROR;
-        }
-    }
-    while (index-- != 0) {
+    pageIndex = opts.pageIndex;
+    while (pageIndex-- != 0) {
         if (TIFFReadDirectory(tif) != 1) {
             Tcl_AppendResult(interp,"no image data for this index",
                     (char *) NULL);
             return TCL_ERROR;
         }
     }
+
 #ifdef WORDS_BIGENDIAN
     block.offset[0] = 3;
     block.offset[1] = 2;
@@ -689,18 +697,49 @@ CommonRead(
     TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
     npixels = (size_t)w * (size_t)h;
 
+    if (1 != TIFFGetField (tif, TIFFTAG_RESOLUTIONUNIT, &resUnit)) {
+        resUnit = RESUNIT_INCH;
+    }
+    if (resUnit == RESUNIT_INCH || resUnit == RESUNIT_CENTIMETER) {
+        if ((1 != TIFFGetField (tif, TIFFTAG_XRESOLUTION, &xres)) ||
+            (1 != TIFFGetField (tif, TIFFTAG_YRESOLUTION, &yres))) {
+            xres = -1.0f;
+            yres = -1.0f;
+        } else {
+            if (resUnit == RESUNIT_CENTIMETER) {
+                xres *= 2.54f;
+                yres *= 2.54f;
+            }
+        }
+    }
+    if (xres == 0.0f) {
+        xres = -1.0f;
+    }
+    if (yres == 0.0f) {
+        yres = -1.0f;
+    }
+    if (xres >= 0.0f && yres >= 0.0f) {
+        if (TCL_ERROR == tkimg_SetResolution( metadataOut, (double)xres, (double)yres)) {
+            return TCL_ERROR;
+        }
+    }
+
+    if (opts.verbose) {
+        printImgInfo (opts.pageIndex, w, h, xres, yres, fileName, "Reading image:");
+    }
     if (npixels * sizeof (uint32_t) >= UINT_MAX) {
-        Tcl_AppendResult(interp, "Image size too large", (char *) NULL);
+        Tcl_AppendResult(interp,"Image size too large", (char *) NULL);
         return TCL_ERROR;
     }
+    
     raster = (uint32_t*) TkimgTIFFmalloc(npixels * sizeof (uint32_t));
     if (raster == NULL) {
         Tcl_AppendResult(interp, "Cannot allocate raster memory", (char *) NULL);
         return TCL_ERROR;
     }
-    block.width = w;
-    block.height = h;
-    block.pitch = - (block.pixelSize * (int) w);
+    block.width  = width;
+    block.height = height;
+    block.pitch  = - (block.pixelSize * (int) w);
     block.pixelPtr = ((unsigned char *) raster) + ((1-h) * block.pitch);
 
     if (!TIFFReadRGBAImage(tif, w, h, raster, 0) || errorMessage) {
@@ -712,10 +751,14 @@ CommonRead(
         TkimgTIFFfree (raster);
         return TCL_ERROR;
     }
+    if (Tk_PhotoExpand(interp, imageHandle, width, height) == TCL_ERROR) {
+        TkimgTIFFfree (raster);
+        return TCL_ERROR;
+    }
 
     block.pixelPtr += srcY * block.pitch + srcX * block.pixelSize;
     block.offset[3] = block.offset[0]; /* don't use transparency */
-    if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX,
+    if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX,
                         destY, width, height, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
         TkimgTIFFfree (raster);
         return TCL_ERROR;
@@ -725,148 +768,30 @@ CommonRead(
     return TCL_OK;
 }
 
-static int StringWrite(
+static int FileWriteVersion3(
     Tcl_Interp *interp,
+    const char *fileName,
     Tcl_Obj *format,
+    Tcl_Obj *metadataIn,
     Tk_PhotoImageBlock *blockPtr
 ) {
     TIFF *tif;
-    int result, comp;
-    tkimg_MFile handle;
-    char *dir, *tempFileName = NULL, tempFileNameBuffer[256];
-    Tcl_DString dstring;
-    const char *mode;
-    Tcl_DString data;
-
-    Tcl_DStringInit(&data);
-    if (ParseWriteFormat(interp, format, &comp, &mode) != TCL_OK) {
-        return TCL_ERROR;
-    }
-
-    if (TIFFClientOpen) {
-        Tcl_DStringInit(&dstring);
-        tkimg_WriteInit(&dstring, &handle);
-        tif = TIFFClientOpen("inline data", mode, (thandle_t) &handle,
-                readString, writeString, seekString, closeDummy,
-                sizeString, mapDummy, unMapDummy);
-    } else {
-#ifdef WIN32
-        char dirBuffer[512];
-        HANDLE h;
-
-        dir = dirBuffer;
-        strcpy(dir, ".");
-        GetTempPathA(sizeof (dirBuffer), dir);
-        tempFileName = tempFileNameBuffer;
-        tempFileName[0] = '\0';
-        GetTempFileNameA(dir, "tki", 0, tempFileName);
-        h = CreateFileA(tempFileName, GENERIC_READ|GENERIC_WRITE, 0, NULL,
-                CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
-        if (h != INVALID_HANDLE_VALUE) {
-            CloseHandle(h);
-        }
-#else
-        dir = getenv("TMPDIR");
-        tempFileName = tempFileNameBuffer;
-        if (dir) {
-            strcpy(tempFileName, dir);
-        } else {
-#ifdef P_tmpdir
-            strcpy(tempFileName, P_tmpdir);
-#else
-            strcpy(tempFileName, "/tmp");
-#endif
-        }
-        strcat(tempFileName, "/tkimgXXXXXX");
-        result = mkstemp(tempFileName);
-        if (result >= 0) {
-            close(result);
-        }
-#endif
-        tif = TIFFOpen(tempFileName,mode);
-    }
-
-    result = CommonWrite(interp, tif, comp, blockPtr);
-    TIFFClose(tif);
-
-    if (result != TCL_OK) {
-        if (tempFileName) {
-#ifdef WIN32
-            DeleteFileA(tempFileName);
-#else
-            unlink(tempFileName);
-#endif
-        }
-        Tcl_AppendResult(interp, errorMessage, (char *) NULL);
-        ckfree(errorMessage);
-        errorMessage = NULL;
-        return TCL_ERROR;
-    }
-
-    if (tempFileName) {
-        FILE *infile;
-        char buffer[4096];
-
-        infile = fopen(tempFileName, "rb");
-        if (infile == NULL) {
-            Tcl_AppendResult(interp, "error open input file", (char *) NULL);
-            return TCL_ERROR;
-        }
-        tkimg_WriteInit(&data, &handle);
-
-        result = fread(buffer, 1, sizeof (buffer), infile);
-        while (result > 0) {
-            tkimg_Write2(&handle, buffer, result);
-            result = fread(buffer, 1, sizeof (buffer), infile);
-        }
-        if (ferror(infile)) {
-            Tcl_AppendResult(interp, "error reading input file", (char *) NULL);
-            result = TCL_ERROR;
-        }
-        fclose(infile);
-#ifdef WIN32
-        DeleteFileA(tempFileName);
-#else
-        unlink(tempFileName);
-#endif
-    } else {
-        int length = handle.length;
-        tkimg_WriteInit(&data, &handle);
-        tkimg_Write2(&handle, Tcl_DStringValue(&dstring), length);
-        Tcl_DStringFree(&dstring);
-    }
-    tkimg_Putc(IMG_DONE, &handle);
-    if (result == TCL_OK) {
-        Tcl_DStringResult(interp, &data);
-    } else {
-        Tcl_DStringFree(&data);
-    }
-    return result;
-}
-
-static int
-ChnWrite(
-    Tcl_Interp *interp,
-    const char *filename,
-    Tcl_Obj *format,
-    Tk_PhotoImageBlock *blockPtr
-) {
-    TIFF *tif;
-    int result, comp;
+    int result;
     Tcl_DString nameBuffer;
-    const char *fullname, *mode;
+    const char *fullname;
+    FMTOPT opts;
 
-    if (!(fullname=Tcl_TranslateFileName(interp, filename, &nameBuffer))) {
+    if (!(fullname=Tcl_TranslateFileName(interp, fileName, &nameBuffer))) {
         return TCL_ERROR;
     }
 
-    if (ParseWriteFormat(interp, format, &comp, &mode) != TCL_OK) {
+    if (ParseFormatOpts(interp, format, &opts, IMG_WRITE) == TCL_ERROR) {
         Tcl_DStringFree(&nameBuffer);
         return TCL_ERROR;
     }
 
-    if (!(tif = TIFFOpen(fullname, mode))) {
-        Tcl_AppendResult(interp, filename, ": ", Tcl_PosixError(interp),
+    if (!(tif = TIFFOpen(fullname, opts.byteorder))) {
+        Tcl_AppendResult(interp, fileName, ": ", Tcl_PosixError(interp),
                 (char *)NULL);
         Tcl_DStringFree(&nameBuffer);
         return TCL_ERROR;
@@ -874,120 +799,292 @@ ChnWrite(
 
     Tcl_DStringFree(&nameBuffer);
 
-    result = CommonWrite(interp, tif, comp, blockPtr);
+    result = CommonWrite(interp, tif, fileName, &opts, blockPtr, metadataIn);
     TIFFClose(tif);
     return result;
 }
 
-static int
-ParseWriteFormat(
+static int StringWriteVersion3(
     Tcl_Interp *interp,
     Tcl_Obj *format,
-    int *comp,
-    const char **mode
+    Tcl_Obj *metadataIn,
+    Tk_PhotoImageBlock *blockPtr
 ) {
-    static const char *const tiffWriteOptions[] = {
-      "-compression",
-      "-byteorder",
-      NULL
-    };
-    int objc, length, c, i, index;
-    Tcl_Obj **objv;
-    const char *compression, *byteorder;
+    int result;
+    TIFF *tif;
+    FMTOPT opts;
+    tkimg_Stream handle;
+    memset(&handle, 0, sizeof (tkimg_Stream));
 
-    *comp = COMPRESSION_NONE;
-    *mode = "w";
-    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) != TCL_OK)
+    if (ParseFormatOpts(interp, format, &opts, IMG_WRITE) == TCL_ERROR) {
         return TCL_ERROR;
-    if (objc) {
-        compression = "none";
-        byteorder = "";
-        for (i=1; i<objc; i++) {
-            if (Tcl_GetIndexFromObj(interp, objv[i], (const char * const *)tiffWriteOptions,
-                    "format option", 0, &index) !=TCL_OK) {
+    }
+
+    tkimg_WriteInitString(&handle);
+
+    tif = TIFFClientOpen("inline data", opts.byteorder, (thandle_t) &handle,
+            readString, writeString, seekString, closeDummy,
+            sizeString, mapDummy, unMapDummy);
+
+    result = CommonWrite(interp, tif, "InlineData", &opts, blockPtr, metadataIn);
+    TIFFClose(tif);
+
+    if (result != TCL_OK) {
+        Tcl_AppendResult(interp, errorMessage, (char *) NULL);
+        ckfree(errorMessage);
+        errorMessage = NULL;
+        return TCL_ERROR;
+    }
+
+    if (result == TCL_OK) {
+        Tcl_SetObjResult(interp, handle.byteObj);
+    }
+    return result;
+}
+
+#if HAVE_FORMAT_VERSION3 == 0
+static int FileWrite(
+    Tcl_Interp *interp,
+    const char *fileName,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
+    return FileWriteVersion3(interp, fileName, format, NULL, blockPtr);
+}
+
+static int StringWrite(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    Tk_PhotoImageBlock *blockPtr
+) {
+    return StringWriteVersion3(interp, format, NULL, blockPtr);
+}
+#endif
+
+static int ParseFormatOpts(
+    Tcl_Interp *interp,
+    Tcl_Obj *format,
+    FMTOPT *opts,
+    int mode
+) {
+    static const char *const readOptions[] = {
+      "-verbose", "-index", NULL
+    };
+    enum readEnums {
+        R_VERBOSE, R_INDEX
+    };
+    static const char *const writeOptions[] = {
+      "-verbose", "-compression", "-byteorder", "-resolution", "-xresolution", "-yresolution", NULL
+    };
+    enum writeEnums {
+        W_VERBOSE, W_COMPRESSION, W_BYTEORDER, W_RESOLUTION, W_XRESOLUTION, W_YRESOLUTION
+    };
+    Tcl_Size objc, i;
+    int index;
+    char *optionStr;
+    Tcl_Obj **objv;
+    int intVal;
+    double doubleVal;
+    int boolVal;
+
+    /* Initialize options with default values. */
+    opts->verbose      = 0;
+    opts->pageIndex    = 0;
+    opts->compression  = COMPRESSION_NONE;
+    opts->byteorder[0] = 'w';
+    opts->byteorder[1] = '\0';
+    opts->xres         = (double)IMG_DEFAULT_DPI;
+    opts->yres         = (double)IMG_DEFAULT_DPI;
+
+    if (tkimg_ListObjGetElements(interp, format, &objc, &objv) == TCL_ERROR) {
+        return TCL_ERROR;
+    }
+    for (i=1; i<objc; i++) {
+        if (mode == IMG_READ) {
+            if (Tcl_GetIndexFromObj(interp, objv[i], readOptions,
+                    "format option", 0, &index) == TCL_ERROR) {
                 return TCL_ERROR;
             }
-            if (++i >= objc) {
-                Tcl_AppendResult(interp, "No value for option \"",
-                        Tcl_GetStringFromObj(objv[--i], (int *) NULL),
-                        "\"", (char *) NULL);
+        } else {
+            if (Tcl_GetIndexFromObj(interp, objv[i], writeOptions,
+                    "format option", 0, &index) == TCL_ERROR) {
                 return TCL_ERROR;
             }
-            switch(index) {
-                case 0:
-                    compression = Tcl_GetStringFromObj(objv[i], (int *) NULL); break;
-                case 1:
-                    byteorder = Tcl_GetStringFromObj(objv[i], (int *) NULL); break;
+        }
+        if (++i >= objc) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                "No value specified for option \"%s\".", Tcl_GetString(objv[--i])));
+            return TCL_ERROR;
+        }
+        optionStr = Tcl_GetString(objv[i]);
+        if (mode == IMG_READ) {
+            switch (index) {
+                case R_VERBOSE: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid verbose mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->verbose = boolVal;
+                    break;
+                }
+                case R_INDEX: {
+                    if (Tcl_GetInt (interp, optionStr, &intVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid index value \"%s\": must be an integer value greater or equal to zero.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->pageIndex = intVal;
+                    break;
+                }
             }
-        }
-        c = compression[0]; length = strlen(compression);
-        if ((c == 'n') && (!strncmp(compression, "none", length))) {
-            *comp = COMPRESSION_NONE;
-        } else if ((c == 'd') && (!strncmp(compression, "deflate", length))) {
-            *comp = COMPRESSION_DEFLATE;
-        } else if ((c == 'j') && (!strncmp(compression, "jpeg", length))) {
-            *comp = COMPRESSION_JPEG;
-        } else if ((c == 'l') && (length>1) && (!strncmp(compression, "logluv", length))) {
-            *comp = COMPRESSION_SGILOG;
-        } else if ((c == 'l') && (length>1) && (!strncmp(compression, "lzw", length))) {
-            *comp = COMPRESSION_LZW;
-        } else if ((c == 'p') && (length>1) && (!strncmp(compression, "packbits", length))) {
-            *comp = COMPRESSION_PACKBITS;
-        } else if ((c == 'p') && (length>1) && (!strncmp(compression, "pixarlog", length))) {
-            *comp = COMPRESSION_PIXARLOG;
         } else {
-            Tcl_AppendResult(interp, "invalid compression mode \"",
-                 compression,"\": should be deflate, jpeg, logluv, lzw, ",
-                        "packbits, pixarlog, or none", (char *) NULL);
-            return TCL_ERROR;
-        }
-        c = byteorder[0]; length = strlen(byteorder);
-        if (c == 0 || ((c == 'n') && (!strncmp(byteorder, "none", length)))) {
-            *mode = "w";
-        } else if ((c == 's') && (!strncmp(byteorder, "smallendian", length))) {
-            *mode = "wl";
-        } else if ((c == 'l') && (!strncmp(byteorder, "littleendian", length))) {
-            *mode = "wl";
-        } else if ((c == 'b') && (!strncmp(byteorder, "bigendian", length))) {
-            *mode = "wb";
-        } else if ((c == 'n') && (!strncmp(byteorder, "network", length))) {
-            *mode = "wb";
-        } else {
-            Tcl_AppendResult(interp, "invalid byteorder \"",
-                 byteorder,"\": should be bigendian, littleendian, ",
-                 "network, smallendian, or none", (char *) NULL);
-            return TCL_ERROR;
+            switch (index) {
+                case W_VERBOSE: {
+                    if (Tcl_GetBoolean(interp, optionStr, &boolVal) == TCL_ERROR) {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid verbose mode \"%s\": must be 1 or 0, on or off, true or false.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    opts->verbose = boolVal;
+                    break;
+                }
+                case W_COMPRESSION: {
+                    if (!strncmp (optionStr, "none", strlen ("none"))) {
+                        opts->compression = COMPRESSION_NONE;
+                    } else if (!strncmp (optionStr, "deflate", strlen ("deflate"))) {
+                        opts->compression = COMPRESSION_DEFLATE;
+                    } else if (!strncmp (optionStr, "jpeg",strlen ("jpeg"))) {
+                        opts->compression = COMPRESSION_JPEG;
+                    } else if (!strncmp (optionStr, "logluv", strlen ("logluv"))) {
+                        opts->compression = COMPRESSION_SGILOG;
+                    } else if (!strncmp (optionStr, "lzw", strlen ("lzw"))) {
+                        opts->compression = COMPRESSION_LZW;
+                    } else if (!strncmp (optionStr, "packbits", strlen ("packbits"))) {
+                        opts->compression = COMPRESSION_PACKBITS;
+                    } else if (!strncmp (optionStr, "pixarlog", strlen ("pixarlog"))) {
+                        opts->compression = COMPRESSION_PIXARLOG;
+                    } else {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid compression mode \"%s\": "
+                            "must be deflate, jpeg, logluv, lzw, packbits, pixarlog or none.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    break;
+                }
+                case W_BYTEORDER: {
+                    if (!strncmp (optionStr, "none", strlen ("none"))) {
+                        strcpy (opts->byteorder, "w");
+                    } else if (!strncmp (optionStr, "smallendian", strlen ("smallendian"))) {
+                        strcpy (opts->byteorder, "wl");
+                    } else if (!strncmp (optionStr,"littleendian", strlen ("littleendian"))) {
+                        strcpy (opts->byteorder, "wl");
+                    } else if (!strncmp (optionStr,"bigendian", strlen ("bigendian"))) {
+                        strcpy (opts->byteorder, "wb");
+                    } else if (!strncmp (optionStr,"network", strlen ("network"))) {
+                        strcpy (opts->byteorder, "wb");
+                    } else {
+                        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                            "Invalid byteorder \"%s\": "
+                             "must be bigendian, littleendian, network, smallendian or none.",
+                            optionStr));
+                        return TCL_ERROR;
+                    }
+                    break;
+                }
+                case W_RESOLUTION: {
+                    if (tkimg_GetDistanceValue (interp, optionStr, &doubleVal) == TCL_ERROR) {
+                        Tcl_AppendResult (interp, " specified for x resolution.", (char *) NULL);
+                        return TCL_ERROR;
+                    }
+                    opts->xres = doubleVal;
+                    opts->yres = doubleVal;
+                    if (i+1 >= objc) {
+                        /* No more parameters available. */
+                        break;
+                    }
+                    optionStr = Tcl_GetString(objv[i+1]);
+                    if (optionStr[0] == '-' ) {
+                        /* Next parameter is an option. */
+                        break;
+                    }
+                    if (tkimg_GetDistanceValue (interp, optionStr, &doubleVal) == TCL_ERROR) {
+                        Tcl_AppendResult (interp, " specified for y resolution.", (char *) NULL);
+                        return TCL_ERROR;
+                    }
+                    opts->yres = doubleVal;
+                    i++;
+                    break;
+                }
+                case W_XRESOLUTION: {
+                    if (tkimg_GetDistanceValue (interp, optionStr, &doubleVal) == TCL_ERROR) {
+                        Tcl_AppendResult (interp, " specified for x resolution.", (char *) NULL);
+                        return TCL_ERROR;
+                    }
+                    opts->xres = doubleVal;
+                    break;
+                }
+                case W_YRESOLUTION: {
+                    if (tkimg_GetDistanceValue (interp, optionStr, &doubleVal) == TCL_ERROR) {
+                        Tcl_AppendResult (interp, " specified for y resolution.", (char *) NULL);
+                        return TCL_ERROR;
+                    }
+                    opts->yres = doubleVal;
+                    break;
+                }
+            }
         }
     }
     return TCL_OK;
 }
 
-static int
-CommonWrite(
+static int CommonWrite(
     Tcl_Interp *interp,
     TIFF *tif,
-    int comp,
-    Tk_PhotoImageBlock *blockPtr
+    const char *fileName,
+    FMTOPT *opts,
+    Tk_PhotoImageBlock *blockPtr,
+    Tcl_Obj *metadataIn
 ) {
     int numsamples;
     unsigned char *data = NULL;
+    double xdpi, ydpi;
+    float xres, yres;
 
     TIFFSetField(tif, TIFFTAG_IMAGEWIDTH,  blockPtr->width);
     TIFFSetField(tif, TIFFTAG_IMAGELENGTH, blockPtr->height);
-    TIFFSetField(tif, TIFFTAG_COMPRESSION, comp);
+    TIFFSetField(tif, TIFFTAG_COMPRESSION, opts->compression);
 
     TIFFSetField(tif, TIFFTAG_PLANARCONFIG,    PLANARCONFIG_CONTIG);
     TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, 1);
     TIFFSetField(tif, TIFFTAG_ORIENTATION,     ORIENTATION_TOPLEFT);
     TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP,    blockPtr->height);
 
-    TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, (int)2);
-    TIFFSetField(tif, TIFFTAG_XRESOLUTION,    (float)1200.0);
-    TIFFSetField(tif, TIFFTAG_YRESOLUTION,    (float)1200.0);
+    TIFFSetField(tif, TIFFTAG_RESOLUTIONUNIT, RESUNIT_INCH);
+
+    if (TCL_ERROR == tkimg_GetResolution(interp, metadataIn, &xdpi, &ydpi)) {
+        return TCL_ERROR;
+    }
+
+    if (opts->xres != IMG_DEFAULT_DPI && opts->yres != IMG_DEFAULT_DPI) {
+        /* Resolution values specified in the format string (-xresolution, -yresolution)
+           overwrite the values specified with option -metadata. */
+        xdpi = (float)opts->xres;
+        ydpi = (float)opts->yres;
+    }
+    xres = (float)xdpi;
+    yres = (float)ydpi;
+
+    TIFFSetField(tif, TIFFTAG_XRESOLUTION, xres);
+    TIFFSetField(tif, TIFFTAG_YRESOLUTION, yres);
 
     TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, 8);
-    if ((blockPtr->offset[0] == blockPtr->offset[1])
-         && (blockPtr->offset[0] == blockPtr->offset[2])) {
+    if ((blockPtr->offset[0] == blockPtr->offset[1]) &&
+         (blockPtr->offset[0] == blockPtr->offset[2])) {
         numsamples = 1;
         TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, 1);
         TIFFSetField(tif, TIFFTAG_PHOTOMETRIC,     PHOTOMETRIC_MINISBLACK);
@@ -998,7 +1095,7 @@ CommonWrite(
     }
 
     if ((blockPtr->pitch == numsamples * blockPtr->width)
-        && (blockPtr->pixelSize == numsamples)) {
+            && (blockPtr->pixelSize == numsamples)) {
         data = blockPtr->pixelPtr;
     } else {
         unsigned char *srcPtr, *dstPtr, *rowPtr;
@@ -1054,6 +1151,10 @@ CommonWrite(
             numsamples * blockPtr->width * blockPtr->height);
     if (data != blockPtr->pixelPtr) {
         ckfree((char *) data);
+    }
+
+    if (opts->verbose) {
+        printImgInfo (-1, blockPtr->width, blockPtr->height, xres, yres, fileName, "Saving image:");
     }
 
     return TCL_OK;

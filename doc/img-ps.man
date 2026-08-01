@@ -1,11 +1,12 @@
 [comment {-*- tcl -*- doctools}]
 [vset FORMATNAME ps]
-[vset FORMATFULLNAME {Adobe PostScript Format}]
+[vset FORMATFULLNAME {PostScript and PDF format}]
+[manpage_begin img-[vset FORMATNAME] n 2.1]
 
 [include format-header.inc]
 
 This handler provides new additional configuration options. See
-section [sectref {PostScript OPTIONS}] for more detailed explanations.
+section [sectref {Options}] for more detailed explanations.
 
 [para]
 
@@ -16,83 +17,104 @@ the same options as the [const [vset FORMATNAME]] handler.
 [para]
 
 The package delegates the actual conversion of data in PostScript and
-PDF format into a raster image to the [syscmd ghostscript]
-application. It therefore depends upon the presence of said
-application and is non-functional if [syscmd ghostscript] is not
-present.
+PDF format into a raster image to the GhostScript application. 
+It therefore depends upon the presence of program [syscmd gs] on Unix
+and [syscmd gswin64c.exe] in environment variable [cmd PATH]
+and is non-functional, if GhostScript is not installed.
 
 [para]
 
 All of the above means that in a call like
 
 [list_begin definitions]
-[call [cmd image] [method {create photo}] [opt [arg name]] [opt [arg options]]]
+[cmd image] [method {create photo}] [opt [arg name]] [opt [arg options]]
 [list_end]
 
 [list_begin enum]
 [enum]
-Image data in [vset FORMATNAME] and PDF format (options [option -data]
+Image data in PostScript and PDF format (options [option -data]
 and [option -file]) is detected automatically.
 
 [enum]
-
 The format names [const [vset FORMATNAME]] and [const pdf] are
 recognized by the option [option -format].
-
+[list_end]
 
 In addition the value for the option is treated as list and may
-contain any of the special options listed in section
+contain any of the special options listed in section [sectref {Options}].
 
-[sectref {PostScript OPTIONS}].
+[para]
+The package [package img::[vset FORMATNAME]] is [emph not] loaded when doing a
+[cmd {package require Img}], but must be loaded explicitly via
+[cmd "package require img::[vset FORMATNAME]"].
+
+
+[section {Notes}]
+
+[list_begin enum]
+[enum]
+This format handler only supports read functionality.
+
+[enum]
+Chapter [emph "Multi-page Images"] of of the [package Img] manual page
+describes the handling of images with multiple pages.
+
+[enum]
+This format handler only supports a limited number of file types:
+[list_begin itemized]
+[item]
+PostScript files must have keyword [emph "%%BoundingBox"] in the file header.
+The syntax [emph "%%BoundingBox (atend)"] is not supported.
+[item]
+PDF files are assumed to be of size DIN A4. 
+It is recommend to use a specialized PDF extension like
+[uri "https://sourceforge.net/projects/irrational-numbers/files/tclMuPDF-2.x/" tclMuPDF].
+[list_end]
 
 [list_end]
 
-[section {NOTE}]
 
-This format handler must be loaded explicitly with
-[cmd "package require img::[vset FORMATNAME]"].
+[section {Options}]
 
-[section {PostScript OPTIONS}]
-
-The handler is [emph not] able to write images in PostScript or PDF.
 The handler provides the following options:
 
 [list_begin definitions]
 
-[def "[option -index] [arg n]"]
+[def "[option -verbose] [arg bool]"]
 
-This option is for reading from PostScript/PDF data containing more
-than one page. When specified it will read the [arg n]'th page in the
-data. The first page is at index [const 0] and will be read by
-default, i.e. when the option is not specified.
-
+Available since version 2.0.
 [para]
 
-[emph Note:] This option is not yet implemented.
+If set to [const true], additional information about the read image
+is printed to stdout. Default is [const false].
 
 
-[def "[option -zoom] [arg X] [arg Y]"]
+[def "[option -index] [arg integer]"]
 
-Multiply image size by the given scale factors. If [arg Y] is missing,
-the default is the same as [arg X]. [arg X] and [arg Y] are allowed to
-be in floating point format, but they are rounded to the nearest
-practically possible value. For postscript this means the zoom factors
-should be multiples of 1/72.
+Available since version 1.2.4.
+[para]
 
+Read the page at specified index. The first page is at index [const 0].
+Default is [const 0].
+
+
+[def "[option -zoom] [arg x] [opt [arg y]]"]
+
+Available since version 1.2.4.
+[para]
+
+Scale image by specified double values. 
+If [arg y] is not specified, it is set to the value of [arg x].
+Default is [const 1.0].
+
+
+[def "[option -gs] [arg string]"]
+
+Available since version 2.0.
+[para]
+
+Specify the GhostScript executable program as absolute path.
 
 [list_end]
 
-[section REQUIREMENTS]
-
-The code provided by Img does not perform the interpretation and
-rasterizing of the input by itself but delegates this to the
-[syscmd gs] application. This is the GhostScript implementation
-of PostScript (and PDF).
-
-[para]
-
-If [syscmd gs] is not installed this format handler cannot be used.
-
-[see_also img-intro img-bmp img-dted img-flir img-gif img-ico img-jpeg img-pcx img-pixmap img-png img-ppm img-ps img-raw img-sgi img-sun img-tga img-tiff img-window img-xbm img-xpm]
-[keywords {image handling} tk [vset FORMATNAME] pdf postscript gs ghostscript]
-[manpage_end]
+[include format-footer.inc]

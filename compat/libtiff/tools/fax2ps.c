@@ -332,9 +332,9 @@ void fax2ps(TIFF *tif, uint16_t npages, uint16_t *pages, char *filename)
 
 static int pcompar(const void *va, const void *vb)
 {
-    const int *pa = (const int *)va;
-    const int *pb = (const int *)vb;
-    return (*pa - *pb);
+    const uint16_t *pa = (const uint16_t *)va;
+    const uint16_t *pb = (const uint16_t *)vb;
+    return ((int32_t)*pa - (int32_t)*pb);
 }
 
 static void usage(int code);
@@ -388,9 +388,11 @@ int main(int argc, char **argv)
                 maxline = atoi(optarg);
                 break;
             case 'h':
+                free(pages);
                 usage(EXIT_SUCCESS);
                 break;
             case '?':
+                free(pages);
                 usage(EXIT_FAILURE);
         }
     if (npages > 0)
@@ -418,10 +420,13 @@ int main(int argc, char **argv)
         FILE *fd;
         char buf[16 * 1024];
 
+        /* Silence Coverity Scan warning about insecure temporary file name. */
+        /* coverity[secure_temp:SUPPRESS] */
         fd = tmpfile();
         if (fd == NULL)
         {
             fprintf(stderr, "Could not obtain temporary file.\n");
+            free(pages);
             exit(EXIT_FAILURE);
         }
 #if defined(HAVE_SETMODE) && defined(O_BINARY)
@@ -433,12 +438,15 @@ int main(int argc, char **argv)
             {
                 fclose(fd);
                 fprintf(stderr, "Could not copy stdin to temporary file.\n");
+                free(pages);
                 exit(EXIT_FAILURE);
             }
         }
         _TIFF_lseek_f(fileno(fd), 0, SEEK_SET);
 #if defined(_WIN32) && defined(USE_WIN32_FILEIO)
-        tif = TIFFFdOpen(_get_osfhandle(fileno(fd)), "temp", "r");
+        /* Avoid compiler warnings by using successive casts. */
+        tif = TIFFFdOpen((int)(intptr_t)(HANDLE)_get_osfhandle(fileno(fd)),
+                         "temp", "r");
 #else
         tif = TIFFFdOpen(fileno(fd), "temp", "r");
 #endif
@@ -455,6 +463,7 @@ int main(int argc, char **argv)
     printf("%%%%Pages: %u\n", totalPages);
     printf("%%%%EOF\n");
 
+    free(pages);
     return (EXIT_SUCCESS);
 }
 

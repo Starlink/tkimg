@@ -1,11 +1,20 @@
 /*
- * imgWindow.c --
+ * window.c
  *
- * A photo image file handler to put the content of a window in a photo.
+ * Window photo image type, Tcl/Tk package.
  *
- * Author : Jan Nijtmans
+ * A photo image handler to put the content of a window in a photo.
+ *
+ * This handler does not provide additional configuration options.
+ *
+ * Copyright (c) 1995-2025 Jan Nijtmans    <nijtmans@users.sourceforge.net>
+ *
+ * See the file "license.terms" for information on usage and redistribution
+ * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
  */
+
+#include <string.h>
 
 /*
  * Generic initialization code, parameterized via CPACKAGE and PACKAGE.
@@ -38,13 +47,13 @@
 static int xerrorhandler(ClientData clientData, XErrorEvent *e);
 #endif
 
-typedef struct ColormapData {	/* Hold color information for a window */
-    int separated;		/* Whether to use separate color bands */
-    int color;			/* Whether window is color or black/white */
-    int ncolors;		/* Number of color values stored */
-    XColor *colors;		/* Pixel value -> RGB mappings */
-    int red_mask, green_mask, blue_mask;	/* Masks and shifts for each */
-    int red_shift, green_shift, blue_shift;	/* color band */
+typedef struct ColormapData {   /* Hold color information for a window */
+    int separated;              /* Whether to use separate color bands */
+    int color;                  /* Whether window is color or black/white */
+    int ncolors;                /* Number of color values stored */
+    XColor *colors;             /* Pixel value -> RGB mappings */
+    int red_mask, green_mask, blue_mask;        /* Masks and shifts for each */
+    int red_shift, green_shift, blue_shift;     /* color band */
 } ColormapData;
 
 /*
@@ -56,14 +65,14 @@ typedef struct ColormapData {	/* Hold color information for a window */
  *
  * xerrorhandler --
  *
- *	This is a dummy function to catch X11 errors during an
- *	attempt to convert a window to a photo image.
+ *      This is a dummy function to catch X11 errors during an
+ *      attempt to convert a window to a photo image.
  *
  * Results:
- *	None.
+ *      None.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *--------------------------------------------------------------
  */
@@ -79,7 +88,7 @@ xerrorhandler(clientData, e)
 #endif
 
 static int
-ChnRead(
+FileRead(
     Tcl_Interp *interp,
     Tcl_Channel chan,
     const char *fileName,
@@ -92,7 +101,7 @@ ChnRead(
     return 0;
 }
 
-static int ChnWrite(
+static int FileWrite(
     Tcl_Interp *interp,
     const char *filename,
     Tcl_Obj *format,
@@ -112,22 +121,22 @@ static int StringWrite(
 /*
  *----------------------------------------------------------------------
  *
- * ChnMatch --
+ * FileMatch --
  *
- *	This procedure is invoked by the photo image type to see if
- *	a file contains image data in WINDOW format.
+ *      This procedure is invoked by the photo image type to see if
+ *      a file contains image data in WINDOW format.
  *
  * Results:
- *	The return value is always 0, because a window cannot be
- *	read from a file.
+ *      The return value is always 0, because a window cannot be
+ *      read from a file.
  *
  * Side effects:
- *	None.
+ *      None.
  *
  *----------------------------------------------------------------------
  */
 
-static int ChnMatch(
+static int FileMatch(
     Tcl_Channel chan,
     const char *filename,
     Tcl_Obj *format,
@@ -141,7 +150,7 @@ static int ChnMatch(
 /*
  *----------------------------------------------------------------------
  *
- * ObjMatch --
+ * StringMatch --
  *
  *  This procedure is invoked by the photo image type to see if
  *  an object contains image data which can be read from a window.
@@ -155,8 +164,8 @@ static int ChnMatch(
  *----------------------------------------------------------------------
  */
 
-static int ObjMatch(
-    Tcl_Obj *data,
+static int StringMatch(
+    Tcl_Obj *dataObj,
     Tcl_Obj *format,
     int *widthPtr,
     int *heightPtr,
@@ -165,21 +174,21 @@ static int ObjMatch(
     Tk_Window tkwin;
     const char *name;
 
-    name = tkimg_GetStringFromObj2(data, NULL);
+    name = Tcl_GetString(dataObj);
 
     if (interp && name && (name[0] == '.') ) {
-	tkwin = Tk_MainWindow(interp);
-	if (tkwin == NULL) {
-	    return 0;
-	}
-	tkwin = Tk_NameToWindow(interp, name, tkwin);
-	if (tkwin == NULL) {
-	    *widthPtr = *heightPtr = 0;
-	    return 1;
-	}
-	*widthPtr =  Tk_Width(tkwin);
-	*heightPtr = Tk_Height(tkwin);
-	return 1;
+        tkwin = Tk_MainWindow(interp);
+        if (tkwin == NULL) {
+            return 0;
+        }
+        tkwin = Tk_NameToWindow(interp, name, tkwin);
+        if (tkwin == NULL) {
+            *widthPtr = *heightPtr = 0;
+            return 1;
+        }
+        *widthPtr =  Tk_Width(tkwin);
+        *heightPtr = Tk_Height(tkwin);
+        return 1;
     }
     return 0;
 }
@@ -244,23 +253,23 @@ static int ObjMatch(
 /*
  *----------------------------------------------------------------------
  *
- * ObjRead --
+ * StringRead --
  *
- *	This procedure is called by the photo image type to read
- *	the contents of a window and give it to the photo image.
+ *      This procedure is called by the photo image type to read
+ *      the contents of a window and give it to the photo image.
  *
  * Results:
- *	A standard TCL completion code.  If TCL_ERROR is returned
- *	then an error message is left in interp->result.
+ *      A standard TCL completion code.  If TCL_ERROR is returned
+ *      then an error message is left in interp->result.
  *
  * Side effects:
- *	new data is added to the image given by imageHandle.
+ *      new data is added to the image given by imageHandle.
  *
  *----------------------------------------------------------------------
  */
-static int ObjRead(
+static int StringRead(
     Tcl_Interp *interp,
-    Tcl_Obj *data,
+    Tcl_Obj *dataObj,
     Tcl_Obj *format,
     Tk_PhotoHandle imageHandle,
     int destX, int destY,
@@ -286,37 +295,39 @@ static int ObjRead(
 #endif
     unsigned char *p;
 #ifdef X_GetImage
-    Tk_ErrorHandler	handle;
+    Tk_ErrorHandler handle;
 #endif
     int green, blue;
     int result = TCL_OK;
 
-    name = tkimg_GetStringFromObj2(data, NULL);
+    memset(&block, 0, sizeof (Tk_PhotoImageBlock)); 
+
+    name = Tcl_GetString(dataObj);
 
     tkwin = Tk_NameToWindow(interp, name, Tk_MainWindow(interp));
 
     if (!tkwin) {
-	Tcl_AppendResult(interp, " Window \"", name,"\" does not exist.", (char *) NULL);
-	return TCL_ERROR;
+        Tcl_AppendResult(interp, " Window \"", name,"\" does not exist.", (char *) NULL);
+        return TCL_ERROR;
     }
 
     if (!Tk_WindowId(tkwin)) {
-	Tcl_AppendResult(interp, " Window \"", name,"\" is not mapped.", (char *) NULL);
-	return TCL_ERROR;
+        Tcl_AppendResult(interp, " Window \"", name,"\" is not mapped.", (char *) NULL);
+        return TCL_ERROR;
     }
 
     fileWidth  = Tk_Width(tkwin);
     fileHeight = Tk_Height(tkwin);
 
     if ((srcX + width) > fileWidth) {
-	width = fileWidth - srcX;
+        width = fileWidth - srcX;
     }
     if ((srcY + height) > fileHeight) {
-	height = fileHeight - srcY;
+        height = fileHeight - srcY;
     }
     if ((width <= 0) || (height <= 0)) {
         Tcl_AppendResult(interp, "Width or height are negative", (char *) NULL);
-	return TCL_ERROR;
+        return TCL_ERROR;
     }
 
     /*
@@ -326,32 +337,34 @@ static int ObjRead(
 
 #ifdef X_GetImage
     handle = Tk_CreateErrorHandler(Tk_Display(tkwin), BadMatch,
-	    X_GetImage, -1, xerrorhandler, (ClientData) tkwin);
+                 X_GetImage, -1, xerrorhandler, (ClientData) tkwin);
 #endif
 
 #if !defined(_WIN32)
+    cdata.colors = NULL;
     /*
      * Generate an XImage from the window.  We can then read pixel
      * values out of the XImage.
      */
 
     ximage = XGetImage(Tk_Display(tkwin), Tk_WindowId(tkwin), srcX, srcY,
-	width, height, AllPlanes, ZPixmap);
+        width, height, AllPlanes, ZPixmap);
 
 #ifdef X_GetImage
     Tk_DeleteErrorHandler(handle);
 #endif
 
     if (ximage == (XImage*) NULL) {
-	Tcl_AppendResult(interp, "Window \"", name,
-		"\" cannot be transformed into a pixmap (possibly obscured?)",
-		(char *) NULL);
-	return TCL_ERROR;
+        Tcl_AppendResult(interp, "Window \"", name,
+                "\" cannot be transformed into a pixmap (possibly obscured?)",
+                (char *) NULL);
+        return TCL_ERROR;
     }
 #else
     ximage = TkWinGetDrawableDC(Tk_Display(tkwin), Tk_WindowId(tkwin), &DCi);
 
     if ( ! CaptureWindow (&grab, tkwin)) {
+        TkWinReleaseDrawableDC(Tk_WindowId(tkwin), ximage, &DCi);
         Tcl_AppendResult(interp, "Window \"", name, "\" cannot be grabbed", (char *) NULL);
         return TCL_ERROR;
     }
@@ -361,8 +374,9 @@ static int ObjRead(
 #endif
 #endif
 
-    if (tkimg_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
-	return TCL_ERROR;
+    if (Tk_PhotoExpand(interp, imageHandle, destX + width, destY + height) == TCL_ERROR) {
+        result = TCL_ERROR;
+        goto done;
     }
 
 #if !defined(_WIN32)
@@ -379,38 +393,39 @@ static int ObjRead(
     cdata.colors = (XColor *) attemptckalloc(sizeof(XColor) * ncolors);
     if (cdata.colors == NULL) {
         Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
-        return TCL_ERROR;
+        result = TCL_ERROR;
+        goto done;
     }
 
     cdata.ncolors = ncolors;
     if (visual->class == DirectColor || visual->class == TrueColor) {
-	cdata.separated = 1;
-	cdata.red_mask = visual->red_mask;
-	cdata.green_mask = visual->green_mask;
-	cdata.blue_mask = visual->blue_mask;
-	cdata.red_shift = 0;
-	cdata.green_shift = 0;
-	cdata.blue_shift = 0;
-	while ((0x0001 & (cdata.red_mask >> cdata.red_shift)) == 0)
-	    cdata.red_shift ++;
-	while ((0x0001 & (cdata.green_mask >> cdata.green_shift)) == 0)
-	    cdata.green_shift ++;
-	while ((0x0001 & (cdata.blue_mask >> cdata.blue_shift)) == 0)
-	    cdata.blue_shift ++;
-	for (i = 0; i < ncolors; i ++)
-	    cdata.colors[i].pixel =
-		    ((i << cdata.red_shift) & cdata.red_mask) |
-		    ((i << cdata.green_shift) & cdata.green_mask) |
-		    ((i << cdata.blue_shift) & cdata.blue_mask);
+        cdata.separated = 1;
+        cdata.red_mask = visual->red_mask;
+        cdata.green_mask = visual->green_mask;
+        cdata.blue_mask = visual->blue_mask;
+        cdata.red_shift = 0;
+        cdata.green_shift = 0;
+        cdata.blue_shift = 0;
+        while ((0x0001 & (cdata.red_mask >> cdata.red_shift)) == 0)
+            cdata.red_shift ++;
+        while ((0x0001 & (cdata.green_mask >> cdata.green_shift)) == 0)
+            cdata.green_shift ++;
+        while ((0x0001 & (cdata.blue_mask >> cdata.blue_shift)) == 0)
+            cdata.blue_shift ++;
+        for (i = 0; i < ncolors; i ++)
+            cdata.colors[i].pixel =
+                    ((i << cdata.red_shift) & cdata.red_mask) |
+                    ((i << cdata.green_shift) & cdata.green_mask) |
+                    ((i << cdata.blue_shift) & cdata.blue_mask);
     } else {
-	cdata.separated = 0;
-	cdata.red_mask = 0;
-	cdata.green_mask = 0;
-	cdata.blue_mask = 0;
-	cdata.red_shift = 0;
-	cdata.green_shift = 0;
-	cdata.blue_shift = 0;
-	for (i = 0; i < ncolors; i ++) cdata.colors[i].pixel = i;
+        cdata.separated = 0;
+        cdata.red_mask = 0;
+        cdata.green_mask = 0;
+        cdata.blue_mask = 0;
+        cdata.red_shift = 0;
+        cdata.green_shift = 0;
+        cdata.blue_shift = 0;
+        for (i = 0; i < ncolors; i ++) cdata.colors[i].pixel = i;
     }
     cdata.color = !(visual->class == StaticGray || visual->class == GrayScale);
 
@@ -422,14 +437,14 @@ static int ObjRead(
 #if !defined(_WIN32)
     if (cdata.color) {
 #endif
-	block.pixelSize = 3;
-	block.offset[1] = green = 1;
-	block.offset[2] = blue = 2;
+        block.pixelSize = 3;
+        block.offset[1] = green = 1;
+        block.offset[2] = blue = 2;
 #if !defined(_WIN32)
     } else {
-	block.pixelSize = 1;
-	block.offset[1] = green = 0;
-	block.offset[2] = blue = 0;
+        block.pixelSize = 1;
+        block.offset[1] = green = 0;
+        block.offset[2] = blue = 0;
     }
 #endif
     block.width = width;
@@ -439,30 +454,31 @@ static int ObjRead(
     block.pixelPtr = (unsigned char *) attemptckalloc((unsigned) nBytes);
     if (block.pixelPtr == NULL) {
         Tcl_AppendResult (interp, "Unable to allocate memory for image data.", (char *) NULL);
-        return TCL_ERROR;
+        result = TCL_ERROR;
+        goto done;
     }
 
     p = block.pixelPtr;
     for (y = 0; y<height; y++) {
-	for (x = 0; x<width; x++) {
+        for (x = 0; x<width; x++) {
 #if !defined(_WIN32)
-	    unsigned long pixel = XGetPixel(ximage, x, y);
-	    if (cdata.separated) {
-		int r = (pixel & cdata.red_mask) >> cdata.red_shift;
-		p[0] = cdata.colors[r].red >> 8;
-		if (cdata.color) {
-		    int g = (pixel & cdata.green_mask) >> cdata.green_shift;
-		    int b = (pixel & cdata.blue_mask) >> cdata.blue_shift;
-		    p[1] = cdata.colors[g].green >> 8;
-		    p[2] = cdata.colors[b].blue >> 8;
-		}
-	    } else {
-		p[0] = cdata.colors[pixel].red >> 8;
-		if (cdata.color) {
-		    p[1] = cdata.colors[pixel].green >> 8;
-		    p[2] = cdata.colors[pixel].blue >> 8;
-		}
-	    }
+            unsigned long pixel = XGetPixel(ximage, x, y);
+            if (cdata.separated) {
+                int r = (pixel & cdata.red_mask) >> cdata.red_shift;
+                p[0] = cdata.colors[r].red >> 8;
+                if (cdata.color) {
+                    int g = (pixel & cdata.green_mask) >> cdata.green_shift;
+                    int b = (pixel & cdata.blue_mask) >> cdata.blue_shift;
+                    p[1] = cdata.colors[g].green >> 8;
+                    p[2] = cdata.colors[b].blue >> 8;
+                }
+            } else {
+                p[0] = cdata.colors[pixel].red >> 8;
+                if (cdata.color) {
+                    p[1] = cdata.colors[pixel].green >> 8;
+                    p[2] = cdata.colors[pixel].blue >> 8;
+                }
+            }
 #else
             /* Bitmap has order ARGB. */
             #define BITMAP_PIXEL(b, x, y) ((b).pixels[(y) * (b).width + (x)])
@@ -471,21 +487,26 @@ static int ObjRead(
             p[1] = (pixel & 0xFF00)   >>  8;
             p[2] = (pixel & 0xFF);
 #endif
-	    p += block.pixelSize;
-	}
+            p += block.pixelSize;
+        }
     }
 
-    if (tkimg_PhotoPutBlock(interp, imageHandle, &block, destX, destY, width, height, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
-	result = TCL_ERROR;
+    if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, destY, width, height, TK_PHOTO_COMPOSITE_SET) == TCL_ERROR) {
+        result = TCL_ERROR;
     }
 
+    done:
 #if !defined(_WIN32)
     XDestroyImage(ximage);
-    ckfree((char *) cdata.colors);
+    if (cdata.colors) {
+        ckfree((char *) cdata.colors);
+    }
 #else
     DeleteObject(grab.hbm);
     TkWinReleaseDrawableDC(Tk_WindowId(tkwin), ximage, &DCi);
 #endif
-    ckfree((char *) block.pixelPtr);
+    if (block.pixelPtr) {
+        ckfree((char *) block.pixelPtr);
+    }
     return result;
 }

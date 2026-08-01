@@ -27,7 +27,6 @@ PRJ_OBJS = \
 	$(TMP_DIR)\tkimg.obj \
 	$(TMP_DIR)\tkimgIO.obj \
 	$(TMP_DIR)\tkimgMap.obj \
-	$(TMP_DIR)\tkimgPPB.obj \
 	$(TMP_DIR)\tkimgUtils.obj \
 	$(TMP_DIR)\tkimgStubInit.obj \
 	$(TMP_DIR)\tkimgStubLib.obj

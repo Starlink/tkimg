@@ -1,4 +1,4 @@
-[comment {-*- tcl -*- doctools = format-Img.inc}]
+[comment {-*- tcl -*- doctools = format-package.inc}]
 [para]
 
 The package [package img::[vset FORMATNAME]] is a sub-package of

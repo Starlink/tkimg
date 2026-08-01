@@ -27,7 +27,7 @@ this commit makes the behaviour that was previously met when ``libtiff``
 was compiled with ``-DDEFER_STRILE_LOAD`` available for default builds.
 
 When specifying the new ``D`` (Deferred) :c:func:`TIFFOpen` flag,
-the loading of strile offset/bytecount is defered.
+the loading of strile offset/bytecount is deferred.
 In that mode, the ``StripOffsets`` / ``StripByteCounts`` or
 ``TileOffsets`` / ``TileByteCounts`` arrays are only loaded when first
 accessed. This can speed-up the opening of files stored on the network
@@ -65,6 +65,11 @@ Diagnostics
 
 All error messages are directed to the :c:func:`TIFFErrorExtR` routine.
 Likewise, warning messages are directed to the :c:func:`TIFFWarningExtR` routine.
+
+Note
+----
+
+This functionality was introduced with libtiff 4.1.
 
 See also
 --------

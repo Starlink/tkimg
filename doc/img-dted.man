@@ -1,45 +1,34 @@
 [comment {-*- tcl -*- doctools}]
 [vset FORMATNAME dted]
-[vset FORMATFULLNAME {Digital Terrain Elevation Data Format}]
+[vset FORMATFULLNAME {Digital Terrain Elevation Data format}]
+[manpage_begin img-[vset FORMATNAME] n 2.1]
 
 [include format-header.inc]
 
 This handler provides new additional configuration options. See
-section [sectref {DTED OPTIONS}] for more detailed explanations.
+section [sectref {Options}] for more detailed explanations.
 
 
 [include format-middle.inc]
 
-In addition the value for the option is treated as list and may
+In addition the value of option [option -format] is treated as a list and may
 contain any of the special options listed in section
 
-[sectref {DTED OPTIONS}].
+[sectref {Options}].
 
+[include format-nopackage.inc]
+
+[section {Notes}]
+
+[list_begin enum]
+[enum]
+This format handler interprets DTED elevation files as grayscale images.
+
+[enum]
+This format handler only supports read functionality.
 [list_end]
 
-
-[section {NOTE}]
-
-This format handler must be loaded explicitly with
-[cmd "package require img::[vset FORMATNAME]"].
-
-
-[section {SUPPORTED DTED TYPES}]
-
-[example_begin]
- Interpret DTED terrain elevation data as a grayscale image.
-
- List of currently supported features:
-
- Type   |     Read      |     Write     |
-        | -file | -data | -file | -data |
- ----------------------------------------
- Gray   | Yes   | Yes   | No    | No   |
-
-[example_end]
-
-
-[section {DTED OPTIONS}]
+[section {Options}]
 
 The handler provides the following options:
 
@@ -47,42 +36,40 @@ The handler provides the following options:
 
 [def "[option -verbose] [arg bool]"]
 
-If set to [const true], additional information about the loaded image
+Available since version 1.4.0.
+[para]
+
+If set to [const true], additional information about the read data
 is printed to stdout. Default is [const false].
 
-[def "[option -nchan] [arg int]"]
+[def "[option -min] [arg short]"]
 
-Specify the number of channels of the generated image.
-Default is [const 1], i.e. generate a grayscale image.
+Available since version 1.4.0.
+[para]
 
-[def "[option -gamma] [arg float]"]
+Specify the minimum pixel value to be used for mapping
+the input data to 8-bit image values.
+If not specified or negative, the minimum value found in the image data.
+
+[def "[option -max] [arg short]"]
+
+Available since version 1.4.0.
+[para]
+
+Specify the maximum pixel value to be used for mapping
+the input data to 8-bit image values.
+Default is the maximum value found in the elevation data.
+If not specified or negative, the maximum value found in the image data.
+
+[def "[option -gamma] [arg double]"]
+
+Available since version 1.4.0.
+[para]
 
 Specify a gamma correction to be applied when mapping
 the input data to 8-bit image values.
 Default is [const 1.0].
 
-[def "[option -nomap] [arg bool]"]
-
-If set to [const true], no mapping of input values is done.
-Use this option, if your elevation file contains
-values in the range of [const 0] .. [const 255] only.
-Default is [const false].
-
-[def "[option -min] [arg short]"]
-
-Specify the minimum pixel value to be used for mapping
-the input data to 8-bit image values.
-Default is the minimum value found in the elevation data.
-
-[def "[option -max] [arg short]"]
-
-This option is supported for reading only.
-[para]
-Specify the maximum pixel value to be used for mapping
-the input data to 8-bit image values.
-Default is the maximum value found in the elevation data.
-
 [list_end]
 
-[list_begin definitions]
 [include format-footer.inc]

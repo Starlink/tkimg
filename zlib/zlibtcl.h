@@ -1,7 +1,7 @@
 /*
  * zlibtcl.h --
  *
- *	Interface to libz.
+ * Interface to libz.
  *
  * Copyright (c) 2002-2004 Andreas Kupries <andreas_kupries@users.sourceforge.net>
  *
@@ -21,14 +21,14 @@
 
 #include <tcl.h>
 
-#define ZLIBTCL_MAJOR_VERSION	1
-#define ZLIBTCL_MINOR_VERSION	2
-#define ZLIBTCL_RELEASE_LEVEL	TCL_RELEASE
-#define ZLIBTCL_RELEASE_SERIAL	13
+#define ZLIBTCL_MAJOR_VERSION   1
+#define ZLIBTCL_MINOR_VERSION   3
+#define ZLIBTCL_RELEASE_LEVEL   TCL_RELEASE
+#define ZLIBTCL_RELEASE_SERIAL  2
 
 #ifndef ZLIBTCL_VERSION
-#define ZLIBTCL_VERSION		"1.2.13"
-#define ZLIBTCL_PATCH_LEVEL	"1.2.13"
+#define ZLIBTCL_VERSION         "1.3.2"
+#define ZLIBTCL_PATCH_LEVEL     "1.3.2"
 #endif
 
 /*

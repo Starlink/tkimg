@@ -1,48 +1,35 @@
 [comment {-*- tcl -*- doctools}]
 [vset FORMATNAME flir]
-[vset FORMATFULLNAME {FLIR FPF Public Image Format}]
+[vset FORMATFULLNAME {FLIR FPF Public Image format}]
+[manpage_begin img-[vset FORMATNAME] n 2.1]
 
 [include format-header.inc]
 
 This handler provides new additional configuration options. See
-section [sectref {FLIR OPTIONS}] for more detailed explanations.
-
+section [sectref {Options}] for more detailed explanations.
 
 [include format-middle.inc]
 
-In addition the value for the option is treated as list and may
-contain any of the special options listed in section
+In addition the value of option [option -format] is treated as a list and may
+contain any of the special options listed in section [sectref {Options}].
 
-[sectref {FLIR OPTIONS}].
+[include format-nopackage.inc]
 
+[section {Notes}]
+
+[list_begin enum]
+[enum]
+This format handler interprets FLIR temperature files as grayscale images.
+
+[enum]
+Temperature values specified as short, int, float and double are supported.
+
+[enum]
+This format handler only supports read functionality.
 [list_end]
 
 
-[section {NOTE}]
-
-This format handler must be loaded explicitly with
-[cmd "package require img::[vset FORMATNAME]"].
-
-
-[section {SUPPORTED FLIR TYPES}]
-
-[example_begin]
- Interpret FLIR image files as a grayscale image.
-
- List of currently supported features:
-
- Type   |     Read      |     Write     |
-        | -file | -data | -file | -data |
- ----------------------------------------
- Short  | Yes   | Yes   | No    | No   |
- Int    | Yes   | Yes   | No    | No   |
- Float  | Yes   | Yes   | No    | No   |
- Double | Yes   | Yes   | No    | No   |
-
-[example_end]
-
-
-[section {FLIR OPTIONS}]
+[section {Options}]
 
 The handler provides the following options:
 
@@ -50,47 +37,97 @@ The handler provides the following options:
 
 [def "[option -verbose] [arg bool]"]
 
-If set to [const true], additional information about the loaded image
+Available since version 1.4.9.
+[para]
+
+If set to [const true], additional information about the read data
 is printed to stdout. Default is [const false].
+
 
 [def "[option -map] [arg string]"]
 
-Specify the mode when mapping the 64, 32 or 16-bit values
-of the image to 8-bit gray scale values for displaying.
+Available since version 1.4.9.
+[para]
+
+Specify the mode when mapping the 16, 32 or 64-bit temperature values
+to 8-bit grayscale values for displaying.
 Possible values: [const none], [const minmax], [const agc].
 Default mode is [const minmax].
 
-[def "[option -gamma] [arg float]"]
+[list_begin enum]
+[enum]
+If mode is set to [const none], no mapping of input
+values is done. Use this mode, if the input
+values are already in the range of 0 ..255.
+When using mode [const none], no information about the
+minimum and maximum input values is gathered during
+reading and therefore no verbose output is printed.
+On the other hand reading the input data is faster.
 
-Specify a gamma correction to be applied when mapping
-the input data to 8-bit image values.
-Valid for mapping modes: [const minmax] and [const agc].
-Default is [const 1.0].
+[enum]
+Mode [const minmax] maps the minimum and maximum input data
+to 256 grayscale values.
 
-[def "[option -min] [arg float]"]
-
-Specify the minimum pixel value to be used for mapping
-the input data to 8-bit image values.
-Default is the minimum value found in the image data.
-
-[def "[option -max] [arg float]"]
-
-Specify the maximum pixel value to be used for mapping
-the input data to 8-bit image values.
-Default is the maximum value found in the image data.
-
-[def "[option -saturation] [arg float]"]
-
-The supplied value specifies the saturation value, i.e. all
-pixel values greater than the saturation are mapped to white.
-Valid for mapping mode: [const agc]
-
-[def "[option -cutoff] [arg float]"]
-
-The supplied value specifies the cut-off value in percent.
-Valid for mapping mode: [const agc]
+[enum]
+Mode [const agc] applies an automatic gain control algorithmn to the input values.
+Currently implemented for 1-channel 32-bit float images only.
 
 [list_end]
 
-[list_begin definitions]
+
+[def "[option -min] [arg double]"]
+
+Available since version 1.4.9.
+[para]
+
+Specify the minimum pixel value to be used for mapping
+the input data to 8-bit image values.
+If not specified or negative, the minimum value found in the image data.
+Valid for mapping mode: [const minmax].
+
+[def "[option -max] [arg double]"]
+
+Available since version 1.4.9.
+[para]
+
+Specify the maximum pixel value to be used for mapping
+the input data to 8-bit image values.
+If not specified or negative, the maximum value found in the image data.
+Valid for mapping mode: [const minmax].
+
+[def "[option -gamma] [arg double]"]
+
+Available since version 1.4.9.
+[para]
+
+Specify a gamma correction to be applied when mapping
+the input data to 8-bit image values.
+Default is [const 1.0].
+Valid for mapping modes: [const minmax] and [const agc].
+
+
+[def "[option -saturation] [arg double]"]
+
+Available since version 1.4.9.
+[para]
+
+The supplied value specifies the saturation value, i.e. all
+input values greater than the saturation value are mapped to white.
+If not specified or negative, do not use saturation.
+Valid for mapping mode: [const agc].
+
+[def "[option -cutoff] [arg double]"]
+
+Available since version 1.4.9.
+[para]
+
+The supplied value specifies the cut-off value in percent.
+The cut-off value specifies, how many pixels from the lower and upper part of
+the histogram are not considered for mapping. 
+This option is useful, if there are some hot or cold spots in the image.
+Default is [const 3.0].
+Valid for mapping mode: [const agc].
+
+[list_end]
+
 [include format-footer.inc]

@@ -1,7 +1,7 @@
 /*
  * tifftcl.h --
  *
- *	Interface to libtiff.
+ * Interface to libtiff.
  *
  * Copyright (c) 2002-2004 Andreas Kupries <andreas_kupries@users.sourceforge.net>
  *
@@ -21,13 +21,13 @@
 
 #include <tcl.h>
 
-#define TIFFTCL_MAJOR_VERSION	4
-#define TIFFTCL_MINOR_VERSION	5
-#define TIFFTCL_RELEASE_LEVEL	TCL_RELEASE
-#define TIFFTCL_RELEASE_SERIAL	0
+#define TIFFTCL_MAJOR_VERSION   4
+#define TIFFTCL_MINOR_VERSION   7
+#define TIFFTCL_RELEASE_LEVEL   TCL_RELEASE
+#define TIFFTCL_RELEASE_SERIAL  1
 
-#define TIFFTCL_VERSION		"4.5.0"
-#define TIFFTCL_PATCH_LEVEL	"4.5.0"
+#define TIFFTCL_VERSION         "4.7.1"
+#define TIFFTCL_PATCH_LEVEL     "4.7.1"
 
 /*
  * Used to block the rest of this header file from resource compilers so

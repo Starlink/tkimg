@@ -1,6 +1,4 @@
 [comment {-*- tcl -*- doctools = format-footer.inc}]
-[list_end]
 
-[see_also img-intro img-bmp img-dted img-flir img-gif img-ico img-jpeg img-pcx img-pixmap img-png img-ppm img-ps img-raw img-sgi img-sun img-tga img-tiff img-window img-xbm img-xpm]
-[keywords {image handling} tk [vset FORMATNAME]]
+[see_also img img-bmp img-dted img-flir img-gif img-ico img-jpeg img-pcx img-pixmap img-png img-ppm img-ps img-raw img-sgi img-sun img-tga img-tiff img-window img-xbm img-xpm]
 [manpage_end]

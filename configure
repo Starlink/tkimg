@@ -27,6 +27,7 @@ else
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 
@@ -101,7 +102,7 @@ IFS=$as_save_IFS
 
      ;;
 esac
-# We did not find ourselves, most probably we were run as `sh COMMAND'
+# We did not find ourselves, most probably we were run as 'sh COMMAND'
 # in which case we are not to be found in the path.
 if test "x$as_myself" = x; then
   as_myself=$0
@@ -171,6 +172,7 @@ else
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 "
@@ -270,7 +272,8 @@ $0: message. Then install a modern shell, or manually run
 $0: the script under such a shell if you do have one."
   fi
   exit 1
-fi
+fi ;;
+esac
 fi
 fi
 SHELL=${CONFIG_SHELL-/bin/sh}
@@ -379,7 +382,8 @@ else
   as_fn_append ()
   {
     eval $1=\$$1\$2
-  }
+  } ;;
+esac
 fi # as_fn_append
 
 # as_fn_arith ARG...
@@ -396,7 +400,8 @@ else
   as_fn_arith ()
   {
     as_val=`expr "$@" || test $? -eq 1`
-  }
+  } ;;
+esac
 fi # as_fn_arith
 
 
@@ -472,6 +477,8 @@ as_cr_alnum=$as_cr_Letters$as_cr_digits
     /[$]LINENO/=
   ' <$as_myself |
     sed '
+      t clear
+      :clear
       s/[$]LINENO.*/&-/
       t lineno
       b
@@ -521,9 +528,9 @@ if (echo >conf$$.file) 2>/dev/null; then
   if ln -s conf$$.file conf$$ 2>/dev/null; then
     as_ln_s='ln -s'
     # ... but there are two gotchas:
-    # 1) On MSYS, both `ln -s file dir' and `ln file dir' fail.
-    # 2) DJGPP < 2.04 has no symlinks; `ln -s' creates a wrapper executable.
-    # In both cases, we have to default to `cp -pR'.
+    # 1) On MSYS, both 'ln -s file dir' and 'ln file dir' fail.
+    # 2) DJGPP < 2.04 has no symlinks; 'ln -s' creates a wrapper executable.
+    # In both cases, we have to default to 'cp -pR'.
     ln -s conf$$.file conf$$.dir 2>/dev/null && test ! -f conf$$.exe ||
       as_ln_s='cp -pR'
   elif ln conf$$.file conf$$ 2>/dev/null; then
@@ -548,10 +555,12 @@ as_test_x='test -x'
 as_executable_p=as_fn_executable_p
 
 # Sed expression to map a string onto a valid CPP name.
-as_tr_cpp="eval sed 'y%*$as_cr_letters%P$as_cr_LETTERS%;s%[^_$as_cr_alnum]%_%g'"
+as_sed_cpp="y%*$as_cr_letters%P$as_cr_LETTERS%;s%[^_$as_cr_alnum]%_%g"
+as_tr_cpp="eval sed '$as_sed_cpp'" # deprecated
 
 # Sed expression to map a string onto a valid variable name.
-as_tr_sh="eval sed 'y%*+%pp%;s%[^_$as_cr_alnum]%_%g'"
+as_sed_sh="y%*+%pp%;s%[^_$as_cr_alnum]%_%g"
+as_tr_sh="eval sed '$as_sed_sh'" # deprecated
 
 
 test -n "$DJDIR" || exec 7<&0 </dev/null
@@ -577,8 +586,8 @@ MAKEFLAGS=
 # Identity of this package.
 PACKAGE_NAME='Img'
 PACKAGE_TARNAME='img'
-PACKAGE_VERSION='1.4.16'
-PACKAGE_STRING='Img 1.4.16'
+PACKAGE_VERSION='2.1.1'
+PACKAGE_STRING='Img 2.1.1'
 PACKAGE_BUGREPORT=''
 PACKAGE_URL=''
 
@@ -695,7 +704,6 @@ PKG_HEADERS
 PKG_TCL_SOURCES
 PKG_STUB_OBJECTS
 PKG_STUB_SOURCES
-PKG_STUB_LIB_FILE
 PKG_LIB_FILE9
 PKG_LIB_FILE8
 PKG_LIB_FILE
@@ -745,6 +753,7 @@ enable_option_checking
 with_tcl
 with_tcl8
 with_tk
+with_tk8
 with_tclinclude
 with_tkinclude
 enable_threads
@@ -1151,8 +1160,8 @@ do
   | --x-librar=* | --x-libra=* | --x-libr=* | --x-lib=* | --x-li=* | --x-l=*)
     x_libraries=$ac_optarg ;;
 
-  -*) as_fn_error $? "unrecognized option: \`$ac_option'
-Try \`$0 --help' for more information"
+  -*) as_fn_error $? "unrecognized option: '$ac_option'
+Try '$0 --help' for more information"
     ;;
 
   *=*)
@@ -1160,7 +1169,7 @@ Try \`$0 --help' for more information"
     # Reject names that are not valid shell variable names.
     case $ac_envvar in #(
       '' | [0-9]* | *[!_$as_cr_alnum]* )
-      as_fn_error $? "invalid variable name: \`$ac_envvar'" ;;
+      as_fn_error $? "invalid variable name: '$ac_envvar'" ;;
     esac
     eval $ac_envvar=\$ac_optarg
     export $ac_envvar ;;
@@ -1210,7 +1219,7 @@ do
   as_fn_error $? "expected an absolute directory name for --$ac_var: $ac_val"
 done
 
-# There might be people who depend on the old broken behavior: `$host'
+# There might be people who depend on the old broken behavior: '$host'
 # used to hold the argument of --host etc.
 # FIXME: To remove some day.
 build=$build_alias
@@ -1278,7 +1287,7 @@ if test ! -r "$srcdir/$ac_unique_file"; then
   test "$ac_srcdir_defaulted" = yes && srcdir="$ac_confdir or .."
   as_fn_error $? "cannot find sources ($ac_unique_file) in $srcdir"
 fi
-ac_msg="sources are in $srcdir, but \`cd $srcdir' does not work"
+ac_msg="sources are in $srcdir, but 'cd $srcdir' does not work"
 ac_abs_confdir=`(
 	cd "$srcdir" && test -r "./$ac_unique_file" || as_fn_error $? "$ac_msg"
 	pwd)`
@@ -1306,7 +1315,7 @@ if test "$ac_init_help" = "long"; then
   # Omit some internal or obsolete options to make the list less imposing.
   # This message is too long to be a string in the A/UX 3.1 sh.
   cat <<_ACEOF
-\`configure' configures Img 1.4.16 to adapt to many kinds of systems.
+'configure' configures Img 2.1.1 to adapt to many kinds of systems.
 
 Usage: $0 [OPTION]... [VAR=VALUE]...
 
@@ -1320,11 +1329,11 @@ Configuration:
       --help=short        display options specific to this package
       --help=recursive    display the short help of all the included packages
   -V, --version           display version information and exit
-  -q, --quiet, --silent   do not print \`checking ...' messages
+  -q, --quiet, --silent   do not print 'checking ...' messages
       --cache-file=FILE   cache test results in FILE [disabled]
-  -C, --config-cache      alias for \`--cache-file=config.cache'
+  -C, --config-cache      alias for '--cache-file=config.cache'
   -n, --no-create         do not create output files
-      --srcdir=DIR        find the sources in DIR [configure dir or \`..']
+      --srcdir=DIR        find the sources in DIR [configure dir or '..']
 
 Installation directories:
   --prefix=PREFIX         install architecture-independent files in PREFIX
@@ -1332,10 +1341,10 @@ Installation directories:
   --exec-prefix=EPREFIX   install architecture-dependent files in EPREFIX
                           [PREFIX]
 
-By default, \`make install' will install all the files in
-\`$ac_default_prefix/bin', \`$ac_default_prefix/lib' etc.  You can specify
-an installation prefix other than \`$ac_default_prefix' using \`--prefix',
-for instance \`--prefix=\$HOME'.
+By default, 'make install' will install all the files in
+'$ac_default_prefix/bin', '$ac_default_prefix/lib' etc.  You can specify
+an installation prefix other than '$ac_default_prefix' using '--prefix',
+for instance '--prefix=\$HOME'.
 
 For better control, use the options below.
 
@@ -1371,7 +1380,7 @@ fi
 
 if test -n "$ac_init_help"; then
   case $ac_init_help in
-     short | recursive ) echo "Configuration of Img 1.4.16:";;
+     short | recursive ) echo "Configuration of Img 2.1.1:";;
    esac
   cat <<\_ACEOF
 
@@ -1395,6 +1404,7 @@ Optional Packages:
                           (tclConfig.sh)
   --with-tcl8             Compile for Tcl8 in Tcl9 environment
   --with-tk               directory containing tk configuration (tkConfig.sh)
+  --with-tk8              Compile for Tk8 in Tk9 environment
   --with-tclinclude       directory containing the public Tcl header files
   --with-tkinclude        directory containing the public Tk header files
   --with-x                use the X Window System
@@ -1410,7 +1420,7 @@ Some influential environment variables:
   CPP         C preprocessor
   XMKMF       Path to xmkmf, Makefile generator for X Window System
 
-Use these variables to override the choices made by `configure' or to help
+Use these variables to override the choices made by 'configure' or to help
 it to find libraries and programs with nonstandard names/locations.
 
 Report bugs to the package provider.
@@ -1521,7 +1531,8 @@ else
   $as_echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-	ac_retval=1
+	ac_retval=1 ;;
+esac
 fi
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
   as_fn_set_status $ac_retval
@@ -1558,12 +1569,61 @@ else
   $as_echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-    ac_retval=1
+    ac_retval=1 ;;
+esac
 fi
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
   as_fn_set_status $ac_retval
 
 } # ac_fn_c_try_cpp
+
+# ac_fn_c_try_link LINENO
+# -----------------------
+# Try to link conftest.$ac_ext, and return whether this succeeded.
+ac_fn_c_try_link ()
+{
+  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+  rm -f conftest.$ac_objext conftest.beam conftest$ac_exeext
+  if { { ac_try="$ac_link"
+case "(($ac_try" in
+  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
+  *) ac_try_echo=$ac_try;;
+esac
+eval ac_try_echo="\"\$as_me:${as_lineno-$LINENO}: $ac_try_echo\""
+printf "%s\n" "$ac_try_echo"; } >&5
+  (eval "$ac_link") 2>conftest.err
+  ac_status=$?
+  if test -s conftest.err; then
+    grep -v '^ *+' conftest.err >conftest.er1
+    cat conftest.er1 >&5
+    mv -f conftest.er1 conftest.err
+  fi
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; } && {
+	 test -z "$ac_c_werror_flag" ||
+	 test ! -s conftest.err
+       } && test -s conftest$ac_exeext && {
+	 test "$cross_compiling" = yes ||
+	 test -x conftest$ac_exeext
+       }
+then :
+  ac_retval=0
+else case e in #(
+  e) printf "%s\n" "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+	ac_retval=1 ;;
+esac
+fi
+  # Delete the IPA/IPO (Inter Procedural Analysis/Optimization) information
+  # created by the PGI compiler (conftest_ipa8_conftest.oo), as it would
+  # interfere with the next link command; also delete a directory that is
+  # left behind by Apple's compiler.  We do this before executing the actions.
+  rm -rf conftest.dSYM conftest_ipa8_conftest.oo
+  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
+  as_fn_set_status $ac_retval
+
+} # ac_fn_c_try_link
 
 # ac_fn_c_try_run LINENO
 # ----------------------
@@ -1599,7 +1659,8 @@ else
        $as_echo "$as_me: failed program was:" >&5
 sed 's/^/| /' conftest.$ac_ext >&5
 
-       ac_retval=$ac_status
+       ac_retval=$ac_status ;;
+esac
 fi
   rm -rf conftest.dSYM conftest_ipa8_conftest.oo
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
@@ -1807,7 +1868,7 @@ else
 #ifdef __cplusplus
 extern "C"
 #endif
-char $2 ();
+char $2 (void);
 /* The GNU C library defines this for functions which it implements
     to always fail with ENOSYS.  Some functions are actually named
     something starting with __ and the normal name is an alias.  */
@@ -2100,7 +2161,7 @@ $as_echo "$as_me: loading site script $ac_site_file" >&6;}
       || { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "failed to load site script $ac_site_file
-See \`config.log' for more details" "$LINENO" 5; }
+See 'config.log' for more details" "$LINENO" 5; }
   fi
 done
 
@@ -2236,7 +2297,8 @@ done
 IFS=$as_save_IFS
 
   test -z "$ac_cv_prog_CYGPATH" && ac_cv_prog_CYGPATH="echo"
-fi
+fi ;;
+esac
 fi
 CYGPATH=$ac_cv_prog_CYGPATH
 if test -n "$CYGPATH"; then
@@ -2290,8 +2352,6 @@ $as_echo "$as_me: configuring ${PACKAGE_NAME} ${PACKAGE_VERSION}" >&6;}
 
 
 
-    # Substitute STUB_LIB_FILE in case package creates a stub library too.
-
 
     # We AC_SUBST these here to ensure they are subst'ed,
     # in case the user doesn't call TEA_ADD_...
@@ -2336,7 +2396,8 @@ $as_echo "$as_me: WARNING: can't find uname command" >&2;}
 		fi
 	    fi
 	fi
-
+     ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_sys_version" >&5
 $as_echo "$tcl_cv_sys_version" >&6; }
@@ -2508,10 +2569,16 @@ $as_echo "$as_me: WARNING: --with-tcl argument should refer to directory contain
 			`ls -d /usr/pkg/lib 2>/dev/null` \
 			`ls -d /usr/lib 2>/dev/null` \
 			`ls -d /usr/lib64 2>/dev/null` \
+			`ls -d /usr/lib/tcl9.0 2>/dev/null` \
+			`ls -d /usr/lib/tcl8.7 2>/dev/null` \
 			`ls -d /usr/lib/tcl8.6 2>/dev/null` \
 			`ls -d /usr/lib/tcl8.5 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl9.0 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl8.7 2>/dev/null` \
 			`ls -d /usr/local/lib/tcl8.6 2>/dev/null` \
 			`ls -d /usr/local/lib/tcl8.5 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl/tcl9.0 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl/tcl8.7 2>/dev/null` \
 			`ls -d /usr/local/lib/tcl/tcl8.6 2>/dev/null` \
 			`ls -d /usr/local/lib/tcl/tcl8.5 2>/dev/null` \
 			; do
@@ -2540,7 +2607,8 @@ $as_echo "$as_me: WARNING: --with-tcl argument should refer to directory contain
 		    fi
 		done
 	    fi
-
+	 ;;
+esac
 fi
 
 
@@ -2586,7 +2654,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 CC=$ac_cv_prog_CC
 if test -n "$CC"; then
@@ -2626,7 +2695,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 ac_ct_CC=$ac_cv_prog_ac_ct_CC
 if test -n "$ac_ct_CC"; then
@@ -2679,7 +2749,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 CC=$ac_cv_prog_CC
 if test -n "$CC"; then
@@ -2736,7 +2807,8 @@ if test $ac_prog_rejected = yes; then
     ac_cv_prog_CC="$as_dir/$ac_word${1+' '}$@"
   fi
 fi
-fi
+fi ;;
+esac
 fi
 CC=$ac_cv_prog_CC
 if test -n "$CC"; then
@@ -2778,7 +2850,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 CC=$ac_cv_prog_CC
 if test -n "$CC"; then
@@ -2822,7 +2895,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 ac_ct_CC=$ac_cv_prog_ac_ct_CC
 if test -n "$ac_ct_CC"; then
@@ -2856,7 +2930,7 @@ fi
 test -z "$CC" && { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "no acceptable C compiler found in \$PATH
-See \`config.log' for more details" "$LINENO" 5; }
+See 'config.log' for more details" "$LINENO" 5; }
 
 # Provide some information about the compiler.
 $as_echo "$as_me:${as_lineno-$LINENO}: checking for C compiler version" >&5
@@ -2948,7 +3022,7 @@ do
 	   ac_cv_exeext=`expr "$ac_file" : '[^.]*\(\..*\)'`
 	fi
 	# We set ac_cv_exeext here because the later test for it is not
-	# safe: cross compilers may not add the suffix if given an `-o'
+	# safe: cross compilers may not add the suffix if given an '-o'
 	# argument, so we may need to know it at that point already.
 	# Even if this section looks crufty: it has the advantage of
 	# actually working.
@@ -3014,7 +3088,8 @@ else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "cannot compute suffix of executables: cannot compile and link
-See \`config.log' for more details" "$LINENO" 5; }
+See 'config.log' for more details" "$LINENO" 5; } ;;
+esac
 fi
 rm -f conftest conftest$ac_cv_exeext
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_exeext" >&5
@@ -3030,6 +3105,8 @@ int
 main ()
 {
 FILE *f = fopen ("conftest.out", "w");
+ if (!f)
+  return 1;
  return ferror (f) || fclose (f) != 0;
 
   ;
@@ -3080,7 +3157,8 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $cross_compiling" >&5
 $as_echo "$cross_compiling" >&6; }
 
-rm -f conftest.$ac_ext conftest$ac_cv_exeext conftest.out
+rm -f conftest.$ac_ext conftest$ac_cv_exeext \
+  conftest.o conftest.obj conftest.out
 ac_clean_files=$ac_clean_files_save
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for suffix of object files" >&5
 $as_echo_n "checking for suffix of object files... " >&6; }
@@ -3125,9 +3203,11 @@ sed 's/^/| /' conftest.$ac_ext >&5
 { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "cannot compute suffix of object files: cannot compile
-See \`config.log' for more details" "$LINENO" 5; }
+See 'config.log' for more details" "$LINENO" 5; } ;;
+esac
 fi
-rm -f conftest.$ac_cv_objext conftest.$ac_ext
+rm -f conftest.$ac_cv_objext conftest.$ac_ext ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_objext" >&5
 $as_echo "$ac_cv_objext" >&6; }
@@ -3159,7 +3239,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 ac_cv_c_compiler_gnu=$ac_compiler_gnu
-
+ ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_c_compiler_gnu" >&5
 $as_echo "$ac_cv_c_compiler_gnu" >&6; }
@@ -3365,9 +3446,9 @@ $as_echo "could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
     # instead of TCL_BUILD_LIB_SPEC since it will work with both an
     # installed and uninstalled version of Tcl.
     if test -f "${TCL_BIN_DIR}/Makefile" ; then
-        TCL_LIB_SPEC="${TCL_BUILD_LIB_SPEC}"
-        TCL_STUB_LIB_SPEC="${TCL_BUILD_STUB_LIB_SPEC}"
-        TCL_STUB_LIB_PATH="${TCL_BUILD_STUB_LIB_PATH}"
+	TCL_LIB_SPEC="${TCL_BUILD_LIB_SPEC}"
+	TCL_STUB_LIB_SPEC="${TCL_BUILD_STUB_LIB_SPEC}"
+	TCL_STUB_LIB_PATH="${TCL_BUILD_STUB_LIB_PATH}"
     elif test "`uname -s`" = "Darwin"; then
 	# If Tcl was built as a framework, attempt to use the libraries
 	# from the framework at the given location so that linking works
@@ -3457,7 +3538,8 @@ done
 IFS=$as_save_IFS
 
   test -z "$ac_cv_prog_CYGPATH" && ac_cv_prog_CYGPATH="echo"
-fi
+fi ;;
+esac
 fi
 CYGPATH=$ac_cv_prog_CYGPATH
 if test -n "$CYGPATH"; then
@@ -3469,7 +3551,8 @@ $as_echo "no" >&6; }
 fi
 
 
-
+     ;;
+esac
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
     CC=$hold_cc
@@ -3586,12 +3669,18 @@ $as_echo "$as_me: WARNING: --with-tk argument should refer to directory containi
 			`ls -d /usr/local/lib 2>/dev/null` \
 			`ls -d /usr/contrib/lib 2>/dev/null` \
 			`ls -d /usr/pkg/lib 2>/dev/null` \
+			`ls -d /usr/lib/tk9.0 2>/dev/null` \
+			`ls -d /usr/lib/tk8.7 2>/dev/null` \
 			`ls -d /usr/lib/tk8.6 2>/dev/null` \
 			`ls -d /usr/lib/tk8.5 2>/dev/null` \
 			`ls -d /usr/lib 2>/dev/null` \
 			`ls -d /usr/lib64 2>/dev/null` \
+			`ls -d /usr/local/lib/tk9.0 2>/dev/null` \
+			`ls -d /usr/local/lib/tk8.7 2>/dev/null` \
 			`ls -d /usr/local/lib/tk8.6 2>/dev/null` \
 			`ls -d /usr/local/lib/tk8.5 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl/tk9.0 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl/tk8.7 2>/dev/null` \
 			`ls -d /usr/local/lib/tcl/tk8.6 2>/dev/null` \
 			`ls -d /usr/local/lib/tcl/tk8.5 2>/dev/null` \
 			; do
@@ -3633,7 +3722,8 @@ $as_echo "$as_me: WARNING: --with-tk argument should refer to directory containi
 		    fi
 		done
 	    fi
-
+	 ;;
+esac
 fi
 
 
@@ -3668,9 +3758,9 @@ $as_echo "could not find ${TK_BIN_DIR}/tkConfig.sh" >&6; }
     # instead of TK_BUILD_LIB_SPEC since it will work with both an
     # installed and uninstalled version of Tcl.
     if test -f "${TK_BIN_DIR}/Makefile" ; then
-        TK_LIB_SPEC="${TK_BUILD_LIB_SPEC}"
-        TK_STUB_LIB_SPEC="${TK_BUILD_STUB_LIB_SPEC}"
-        TK_STUB_LIB_PATH="${TK_BUILD_STUB_LIB_PATH}"
+	TK_LIB_SPEC="${TK_BUILD_LIB_SPEC}"
+	TK_STUB_LIB_SPEC="${TK_BUILD_STUB_LIB_SPEC}"
+	TK_STUB_LIB_PATH="${TK_BUILD_STUB_LIB_PATH}"
     elif test "`uname -s`" = "Darwin"; then
 	# If Tk was built as a framework, attempt to use the libraries
 	# from the framework at the given location so that linking works
@@ -3802,7 +3892,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 CC=$ac_cv_prog_CC
 if test -n "$CC"; then
@@ -3842,7 +3933,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 ac_ct_CC=$ac_cv_prog_ac_ct_CC
 if test -n "$ac_ct_CC"; then
@@ -3895,7 +3987,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 CC=$ac_cv_prog_CC
 if test -n "$CC"; then
@@ -3952,7 +4045,8 @@ if test $ac_prog_rejected = yes; then
     ac_cv_prog_CC="$as_dir/$ac_word${1+' '}$@"
   fi
 fi
-fi
+fi ;;
+esac
 fi
 CC=$ac_cv_prog_CC
 if test -n "$CC"; then
@@ -3994,7 +4088,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 CC=$ac_cv_prog_CC
 if test -n "$CC"; then
@@ -4038,7 +4133,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 ac_ct_CC=$ac_cv_prog_ac_ct_CC
 if test -n "$ac_ct_CC"; then
@@ -4072,7 +4168,7 @@ fi
 test -z "$CC" && { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "no acceptable C compiler found in \$PATH
-See \`config.log' for more details" "$LINENO" 5; }
+See 'config.log' for more details" "$LINENO" 5; }
 
 # Provide some information about the compiler.
 $as_echo "$as_me:${as_lineno-$LINENO}: checking for C compiler version" >&5
@@ -4125,7 +4221,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 ac_cv_c_compiler_gnu=$ac_compiler_gnu
-
+ ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_c_compiler_gnu" >&5
 $as_echo "$ac_cv_c_compiler_gnu" >&6; }
@@ -4366,12 +4463,13 @@ continue
 else
   # Passes both tests.
 ac_preproc_ok=:
-break
+break ;;
+esac
 fi
 rm -f conftest.err conftest.i conftest.$ac_ext
 
 done
-# Because of `break', _AC_PREPROC_IFELSE's cleaning code was skipped.
+# Because of 'break', _AC_PREPROC_IFELSE's cleaning code was skipped.
 rm -f conftest.i conftest.err conftest.$ac_ext
 if $ac_preproc_ok; then :
   break
@@ -4379,7 +4477,8 @@ fi
 
     done
     ac_cv_prog_CPP=$CPP
-
+   ;;
+esac
 fi
   CPP=$ac_cv_prog_CPP
 else
@@ -4425,12 +4524,13 @@ continue
 else
   # Passes both tests.
 ac_preproc_ok=:
-break
+break ;;
+esac
 fi
 rm -f conftest.err conftest.i conftest.$ac_ext
 
 done
-# Because of `break', _AC_PREPROC_IFELSE's cleaning code was skipped.
+# Because of 'break', _AC_PREPROC_IFELSE's cleaning code was skipped.
 rm -f conftest.i conftest.err conftest.$ac_ext
 if $ac_preproc_ok; then :
 
@@ -4438,7 +4538,8 @@ else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
 as_fn_error $? "C preprocessor \"$CPP\" fails sanity check
-See \`config.log' for more details" "$LINENO" 5; }
+See 'config.log' for more details" "$LINENO" 5; } ;;
+esac
 fi
 
 ac_ext=c
@@ -4471,7 +4572,8 @@ case `${MAKE-make} -f conftest.make 2>/dev/null` in
   *)
     eval ac_cv_prog_make_${ac_make}_set=no;;
 esac
-rm -f conftest.make
+rm -f conftest.make ;;
+esac
 fi
 if eval test \$ac_cv_prog_make_${ac_make}_set = yes; then
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
@@ -4514,7 +4616,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 RANLIB=$ac_cv_prog_RANLIB
 if test -n "$RANLIB"; then
@@ -4554,7 +4657,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 ac_ct_RANLIB=$ac_cv_prog_ac_ct_RANLIB
 if test -n "$ac_ct_RANLIB"; then
@@ -4896,6 +5000,12 @@ $as_echo "$tcl_cv_cc_pipe" >&6; }
 	fi
     fi
 
+    if test "${TCL_MAJOR_VERSION}" -lt 9 -a "${TCL_MINOR_VERSION}" -lt 7; then
+
+printf "%s\n" "#define Tcl_Size int" >>confdefs.h
+
+	fi
+
     #--------------------------------------------------------------------
     # Common compiler flag setup
     #--------------------------------------------------------------------
@@ -4950,8 +5060,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 int
 main ()
 {
-#if ! (defined BYTE_ORDER && defined BIG_ENDIAN \
-		     && defined LITTLE_ENDIAN && BYTE_ORDER && BIG_ENDIAN \
+#if ! (defined BYTE_ORDER && defined BIG_ENDIAN \\
+		     && defined LITTLE_ENDIAN && BYTE_ORDER && BIG_ENDIAN \\
 		     && LITTLE_ENDIAN)
 	      bogus endian macros
 	     #endif
@@ -5064,7 +5174,7 @@ if ac_fn_c_try_compile "$LINENO"; then :
   if grep BIGenDianSyS conftest.$ac_objext >/dev/null; then
 	      ac_cv_c_bigendian=yes
 	    fi
-	    if grep LiTTleEnDian conftest.$ac_objext >/dev/null ; then
+	    if grep LiTTleEnDian conftest$ac_exeext >/dev/null ; then
 	      if test "$ac_cv_c_bigendian" = unknown; then
 		ac_cv_c_bigendian=no
 	      else
@@ -5101,10 +5211,12 @@ else
   ac_cv_c_bigendian=yes
 fi
 rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
+  conftest.$ac_objext conftest.beam conftest.$ac_ext ;;
+esac
 fi
 
-    fi
+    fi ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_c_bigendian" >&5
 $as_echo "$ac_cv_c_bigendian" >&6; }
@@ -5203,7 +5315,8 @@ else
 		fi
 	    done
 	fi
-
+     ;;
+esac
 fi
 
 
@@ -5255,17 +5368,17 @@ $as_echo_n "checking for Tcl private include files... " >&6; }
 	# any *_NATIVE vars be defined in the Makefile
 	TCL_INCLUDES="-I${TCL_GENERIC_DIR_NATIVE} -I${TCL_PLATFORM_DIR_NATIVE}"
 	if test "`uname -s`" = "Darwin"; then
-            # If Tcl was built as a framework, attempt to use
-            # the framework's Headers and PrivateHeaders directories
-            case ${TCL_DEFS} in
-	    	*TCL_FRAMEWORK*)
+	    # If Tcl was built as a framework, attempt to use
+	    # the framework's Headers and PrivateHeaders directories
+	    case ${TCL_DEFS} in
+		*TCL_FRAMEWORK*)
 		    if test -d "${TCL_BIN_DIR}/Headers" -a \
 			    -d "${TCL_BIN_DIR}/PrivateHeaders"; then
 			TCL_INCLUDES="-I\"${TCL_BIN_DIR}/Headers\" -I\"${TCL_BIN_DIR}/PrivateHeaders\" ${TCL_INCLUDES}"
 		    else
 			TCL_INCLUDES="${TCL_INCLUDES} ${TCL_INCLUDE_SPEC} `echo "${TCL_INCLUDE_SPEC}" | sed -e 's/Headers/PrivateHeaders/'`"
 		    fi
-	            ;;
+		    ;;
 	    esac
 	    result="Using ${TCL_INCLUDES}"
 	else
@@ -5348,7 +5461,8 @@ else
 		fi
 	    done
 	fi
-
+     ;;
+esac
 fi
 
 
@@ -5516,7 +5630,8 @@ else
 		fi
 	    done
 	fi
-
+     ;;
+esac
 fi
 
 
@@ -5603,7 +5718,8 @@ else
 		fi
 	    done
 	fi
-
+     ;;
+esac
 fi
 
 
@@ -5714,7 +5830,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pthread_pthread_mutex_init" >&5
 $as_echo "$ac_cv_lib_pthread_pthread_mutex_init" >&6; }
@@ -5762,7 +5879,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pthread___pthread_mutex_init" >&5
 $as_echo "$ac_cv_lib_pthread___pthread_mutex_init" >&6; }
@@ -5810,7 +5928,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pthreads_pthread_mutex_init" >&5
 $as_echo "$ac_cv_lib_pthreads_pthread_mutex_init" >&6; }
@@ -5856,7 +5975,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_c_pthread_mutex_init" >&5
 $as_echo "$ac_cv_lib_c_pthread_mutex_init" >&6; }
@@ -5899,7 +6019,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_c_r_pthread_mutex_init" >&5
 $as_echo "$ac_cv_lib_c_r_pthread_mutex_init" >&6; }
@@ -5997,7 +6118,7 @@ fi
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: shared" >&5
 $as_echo "shared" >&6; }
 	SHARED_BUILD=1
-        STUBS_BUILD=1
+	STUBS_BUILD=1
     else
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: static" >&5
 $as_echo "static" >&6; }
@@ -6005,11 +6126,11 @@ $as_echo "static" >&6; }
 
 $as_echo "#define STATIC_BUILD 1" >>confdefs.h
 
-        if test "$stubs_ok" = "yes" ; then
-          STUBS_BUILD=1
-        else
-          STUBS_BUILD=0
-        fi
+	if test "$stubs_ok" = "yes" ; then
+	  STUBS_BUILD=1
+	else
+	  STUBS_BUILD=0
+	fi
     fi
     if test "${STUBS_BUILD}" = "1" ; then
 
@@ -6061,7 +6182,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 RANLIB=$ac_cv_prog_RANLIB
 if test -n "$RANLIB"; then
@@ -6101,7 +6223,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 ac_ct_RANLIB=$ac_cv_prog_ac_ct_RANLIB
 if test -n "$ac_ct_RANLIB"; then
@@ -6192,7 +6315,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-	CFLAGS=$hold_cflags
+	CFLAGS=$hold_cflags ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_cc_visibility_hidden" >&5
 $as_echo "$tcl_cv_cc_visibility_hidden" >&6; }
@@ -6249,7 +6373,8 @@ $as_echo "$as_me: WARNING: can't find uname command" >&2;}
 		fi
 	    fi
 	fi
-
+     ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_sys_version" >&5
 $as_echo "$tcl_cv_sys_version" >&6; }
@@ -6286,7 +6411,8 @@ else
 
 	CFLAGS_OPTIMIZE=-O
 	CFLAGS_WARNING=""
-
+     ;;
+esac
 fi
     if test -n "$ac_tool_prefix"; then
   # Extract the first word of "${ac_tool_prefix}ar", so it can be a program name with args.
@@ -6314,7 +6440,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 AR=$ac_cv_prog_AR
 if test -n "$AR"; then
@@ -6354,7 +6481,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 ac_ct_AR=$ac_cv_prog_ac_ct_AR
 if test -n "$ac_ct_AR"; then
@@ -6406,14 +6534,14 @@ fi
 	    fi
 
 	    if test "$GCC" != "yes" ; then
-	        if test "${SHARED_BUILD}" = "0" ; then
+		if test "${SHARED_BUILD}" = "0" ; then
 		    runtime=-MT
-	        else
+		else
 		    runtime=-MD
-	        fi
-	        case "x`echo \${VisualStudioVersion}`" in
-	            x1[4-9]*)
-		        lflags="${lflags} -nodefaultlib:libucrt.lib"
+		fi
+		case "x`echo \${VisualStudioVersion}`" in
+		    x1[4-9]*)
+			lflags="${lflags} -nodefaultlib:libucrt.lib"
 
     vars="ucrt.lib"
     for i in $vars; do
@@ -6425,12 +6553,12 @@ fi
     done
 
 
-	            ;;
-	            *)
-	            ;;
-	        esac
+		    ;;
+		    *)
+		    ;;
+		esac
 
-                if test "$do64bit" != "no" ; then
+		if test "$do64bit" != "no" ; then
 		    CC="cl.exe"
 		    RC="rc.exe"
 		    lflags="${lflags} -nologo -MACHINE:${MACHINE} "
@@ -6487,7 +6615,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 RC=$ac_cv_prog_RC
 if test -n "$RC"; then
@@ -6527,7 +6656,8 @@ done
   done
 IFS=$as_save_IFS
 
-fi
+fi ;;
+esac
 fi
 ac_ct_RC=$ac_cv_prog_ac_ct_RC
 if test -n "$ac_ct_RC"; then
@@ -6637,7 +6767,7 @@ $as_echo "$ac_cv_cross" >&6; }
 	    SHARED_LIB_SUFFIX='${TCL_TRIM_DOTS}.dll'
 
 	    TCL_LIB_VERSIONS_OK=nodots
-    	    ;;
+	    ;;
 	AIX-*)
 	    if test "$GCC" != "yes"; then :
 
@@ -6648,7 +6778,7 @@ $as_echo "$ac_cv_cross" >&6; }
 			;;
 		    *)
 			# Make sure only first arg gets _r
-		    	CC=`echo "$CC" | sed -e 's/^\([^ ]*\)/\1_r/'`
+			CC=`echo "$CC" | sed -e 's/^\([^ ]*\)/\1_r/'`
 			;;
 		esac
 		{ $as_echo "$as_me:${as_lineno-$LINENO}: result: Using $CC for compiling with threads" >&5
@@ -6677,7 +6807,8 @@ else
 		    RANLIB="${RANLIB} -X64"
 		    AR="${AR} -X64"
 		    SHLIB_LD_FLAGS="-b64"
-
+		 ;;
+esac
 fi
 
 fi
@@ -6693,7 +6824,8 @@ fi
 else
 
 		    CC_SEARCH_FLAGS='"-R${LIB_RUNTIME_DIR}"'
-
+		 ;;
+esac
 fi
 		LD_SEARCH_FLAGS='-R "${LIB_RUNTIME_DIR}"'
 
@@ -6707,12 +6839,14 @@ else
 
 		    SHLIB_LD="/bin/ld -bhalt:4 -bM:SRE -bexpall -H512 -T512 -bnoentry"
 		    LDFLAGS="$LDFLAGS -brtl"
-
+		 ;;
+esac
 fi
 		SHLIB_LD="${SHLIB_LD} ${SHLIB_LD_FLAGS}"
 		CC_SEARCH_FLAGS='"-L${LIB_RUNTIME_DIR}"'
 		LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
-
+	     ;;
+esac
 fi
 	    ;;
 	BeOS*)
@@ -6757,7 +6891,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_bind_inet_ntoa" >&5
 $as_echo "$ac_cv_lib_bind_inet_ntoa" >&6; }
@@ -6836,7 +6971,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_network_inet_ntoa" >&5
 $as_echo "$ac_cv_lib_network_inet_ntoa" >&6; }
@@ -6861,7 +6997,8 @@ $as_echo "#define _XOPEN_SOURCE_EXTENDED 1" >>confdefs.h
 else
 
 		SHLIB_SUFFIX=".sl"
-
+	     ;;
+esac
 fi
 	    { $as_echo "$as_me:${as_lineno-$LINENO}: checking for shl_load in -ldld" >&5
 $as_echo_n "checking for shl_load in -ldld... " >&6; }
@@ -6895,7 +7032,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_dld_shl_load" >&5
 $as_echo "$ac_cv_lib_dld_shl_load" >&6; }
@@ -6923,7 +7061,8 @@ fi
 else
 
 		CFLAGS="$CFLAGS -z"
-
+	     ;;
+esac
 fi
 
 	    # Check to enable 64-bit flags for compiler/linker
@@ -6953,7 +7092,8 @@ else
 		    do64bit_ok=yes
 		    CFLAGS="$CFLAGS +DD64"
 		    LDFLAGS_ARCH="+DD64"
-
+		 ;;
+esac
 fi
 
 fi ;;
@@ -6991,7 +7131,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_dld_shl_load" >&5
 $as_echo "$ac_cv_lib_dld_shl_load" >&6; }
@@ -7054,7 +7195,8 @@ else
 			;;
 		esac
 		LDFLAGS="$LDFLAGS -n32"
-
+	     ;;
+esac
 fi
 	    ;;
 	IRIX64-6.*)
@@ -7108,7 +7250,7 @@ fi
 		    LDFLAGS="$LDFLAGS $PTHREAD_LIBS"
 fi
 	    ;;
-            esac
+	    esac
 
 	    if test $doRpath = yes; then :
 
@@ -7146,7 +7288,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-		    CFLAGS=$hold_cflags
+		    CFLAGS=$hold_cflags ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_cc_m64" >&5
 $as_echo "$tcl_cv_cc_m64" >&6; }
@@ -7267,7 +7410,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-			    CFLAGS=$hold_cflags
+			    CFLAGS=$hold_cflags ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_cc_arch_ppc64" >&5
 $as_echo "$tcl_cv_cc_arch_ppc64" >&6; }
@@ -7304,7 +7448,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-			    CFLAGS=$hold_cflags
+			    CFLAGS=$hold_cflags ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_cc_arch_x86_64" >&5
 $as_echo "$tcl_cv_cc_arch_x86_64" >&6; }
@@ -7327,7 +7472,8 @@ else
 
 		    fat_32_64=yes
 fi
-
+	     ;;
+esac
 fi
 	    # TEA specific: use LDFLAGS_DEFAULT instead of LDFLAGS
 	    SHLIB_LD='${CC} -dynamiclib ${CFLAGS} ${LDFLAGS_DEFAULT}'
@@ -7397,7 +7543,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-		LDFLAGS=$hold_ldflags
+		LDFLAGS=$hold_ldflags ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_ld_search_paths_first" >&5
 $as_echo "$tcl_cv_ld_search_paths_first" >&6; }
@@ -7454,7 +7601,8 @@ rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 			for v in CFLAGS CPPFLAGS LDFLAGS; do
 			    eval $v'="$hold_'$v'"'
-			done
+			done ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_lib_x11_64" >&5
 $as_echo "$tcl_cv_lib_x11_64" >&6; }
@@ -7493,7 +7641,8 @@ rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
 			for v in CFLAGS CPPFLAGS LDFLAGS; do
 			    eval $v'="$hold_'$v'"'
-			done
+			done ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_lib_tk_64" >&5
 $as_echo "$tcl_cv_lib_tk_64" >&6; }
@@ -7529,6 +7678,11 @@ else
 
 	        SHLIB_LD='ld -non_shared -expect_unresolved "*"'
 
+else case e in #(
+  e)
+		SHLIB_LD='ld -non_shared -expect_unresolved "*"'
+	     ;;
+esac
 fi
 	    SHLIB_SUFFIX=".so"
 	    if test $doRpath = yes; then :
@@ -7554,7 +7708,8 @@ else
 
 		CFLAGS="$CFLAGS -pthread"
 		LDFLAGS="$LDFLAGS -pthread"
-
+	     ;;
+esac
 fi
 	    ;;
 	QNX-6*)
@@ -7577,7 +7732,8 @@ else
 
 		SHLIB_CFLAGS="-Kpic -belf"
 		LDFLAGS="$LDFLAGS -belf -Wl,-Bexport"
-
+	     ;;
+esac
 fi
 	    SHLIB_LD="ld -G"
 	    SHLIB_LD_LIBS=""
@@ -7611,7 +7767,8 @@ else
 		SHLIB_LD="/usr/ccs/bin/ld -G -z text"
 		CC_SEARCH_FLAGS='-R "${LIB_RUNTIME_DIR}"'
 		LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
-
+	     ;;
+esac
 fi
 	    ;;
 	SunOS-5*)
@@ -7646,7 +7803,8 @@ else
 			    CFLAGS="$CFLAGS -m64 -mcpu=v9"
 			    LDFLAGS="$LDFLAGS -m64 -mcpu=v9"
 			    SHLIB_CFLAGS="-fPIC"
-
+			 ;;
+esac
 fi
 
 else
@@ -7661,11 +7819,13 @@ else
 
 			    CFLAGS="$CFLAGS -xarch=v9"
 			    LDFLAGS_ARCH="-xarch=v9"
-
+			 ;;
+esac
 fi
 			# Solaris 64 uses this as well
 			#LD_LIBRARY_PATH_VAR="LD_LIBRARY_PATH_64"
-
+		     ;;
+esac
 fi
 
 else
@@ -7694,7 +7854,8 @@ else
 				CFLAGS="$CFLAGS -xarch=amd64"
 				LDFLAGS="$LDFLAGS -xarch=amd64";;
 			esac
-
+		     ;;
+esac
 fi
 
 else
@@ -7732,7 +7893,8 @@ else
 			# not be necessary for extensions.
 			SHLIB_LD="$SHLIB_LD -m64 -static-libgcc"
 
-fi
+fi ;;
+esac
 fi
 
 fi
@@ -7748,7 +7910,8 @@ else
 		esac
 		CC_SEARCH_FLAGS='"-Wl,-R,${LIB_RUNTIME_DIR}"'
 		LD_SEARCH_FLAGS='-R "${LIB_RUNTIME_DIR}"'
-
+	     ;;
+esac
 fi
 	    ;;
 	UNIX_SV* | UnixWare-5*)
@@ -7784,7 +7947,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-	        LDFLAGS=$hold_ldflags
+		LDFLAGS=$hold_ldflags ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_ld_Bexport" >&5
 $as_echo "$tcl_cv_ld_Bexport" >&6; }
@@ -7883,10 +8047,12 @@ else
   tcl_cv_seh=no
 fi
 rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
-  conftest.$ac_objext conftest.beam conftest.$ac_ext
+  conftest.$ac_objext conftest.beam conftest.$ac_ext ;;
+esac
 fi
 
-
+	 ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_seh" >&5
 $as_echo "$tcl_cv_seh" >&6; }
@@ -8101,6 +8267,7 @@ $as_echo "#define _ISOC99_SOURCE 1" >>confdefs.h
 	tcl_flags="$tcl_flags _ISOC99_SOURCE"
     fi
 
+    if test "${TCL_MAJOR_VERSION}" -ne 8 ; then
 
     if ${tcl_cv_flag__largefile64_source+:} false; then :
   $as_echo_n "(cached) " >&6
@@ -8111,7 +8278,7 @@ else
 int
 main ()
 {
-struct stat64 buf; int i = stat64("/", &buf);
+switch (0) { case 0: case (sizeof(off_t)==sizeof(long long)): ; }
   ;
   return 0;
 }
@@ -8121,12 +8288,12 @@ if ac_fn_c_try_compile "$LINENO"; then :
 else
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#define _LARGEFILE64_SOURCE 1
+#define _FILE_OFFSET_BITS 64
 #include <sys/stat.h>
 int
 main ()
 {
-struct stat64 buf; int i = stat64("/", &buf);
+switch (0) { case 0: case (sizeof(off_t)==sizeof(long long)): ; }
   ;
   return 0;
 }
@@ -8141,11 +8308,11 @@ fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 
-    if test "x${tcl_cv_flag__largefile64_source}" = "xyes" ; then
+    if test "x${tcl_cv_flag__file_offset_bits}" = "xyes" ; then
 
 $as_echo "#define _LARGEFILE64_SOURCE 1" >>confdefs.h
 
-	tcl_flags="$tcl_flags _LARGEFILE64_SOURCE"
+	tcl_flags="$tcl_flags _FILE_OFFSET_BITS"
     fi
 
 
@@ -8194,7 +8361,6 @@ $as_echo "#define _LARGEFILE_SOURCE64 1" >>confdefs.h
 
 	tcl_flags="$tcl_flags _LARGEFILE_SOURCE64"
     fi
-
     if test "x${tcl_flags}" = "x" ; then
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: none" >&5
 $as_echo "none" >&6; }
@@ -8232,15 +8398,15 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 	# See if we could use long anyway  Note that we substitute in the
 	# type that is our current guess for a 64-bit type inside this check
 	# program, so it should be modified only carefully...
-        cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
 int
 main ()
 {
 switch (0) {
-            case 1: case (sizeof(${tcl_type_64bit})==sizeof(long)): ;
-        }
+	    case 1: case (sizeof(${tcl_type_64bit})==sizeof(long)): ;
+	}
   ;
   return 0;
 }
@@ -8320,7 +8486,7 @@ int
 main ()
 {
 struct dirent64 *p; DIR64 d = opendir64(".");
-            p = readdir64(d); rewinddir64(d); closedir64(d);
+	    p = readdir64(d); rewinddir64(d); closedir64(d);
   ;
   return 0;
 }
@@ -8412,8 +8578,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 fi
 
 			if test "x${tcl_cv_type_off64_t}" = "xyes" && \
-	        test "x${ac_cv_func_lseek64}" = "xyes" && \
-	        test "x${ac_cv_func_open64}" = "xyes" ; then
+		test "x${ac_cv_func_lseek64}" = "xyes" && \
+		test "x${ac_cv_func_open64}" = "xyes" ; then
 
 $as_echo "#define HAVE_TYPE_OFF64_T 1" >>confdefs.h
 
@@ -8495,7 +8661,7 @@ if test "${with_x+set}" = set; then :
   withval=$with_x;
 fi
 
-# $have_x is `yes', `no', `disabled', or empty when we do not yet know.
+# $have_x is 'yes', 'no', 'disabled', or empty when we do not yet know.
 if test "x$with_x" = xno; then
   # The user explicitly disabled X.
   have_x=disabled
@@ -8604,7 +8770,8 @@ else
     ac_x_includes=$ac_dir
     break
   fi
-done
+done ;;
+esac
 fi
 rm -f conftest.err conftest.i conftest.$ac_ext
 fi # $ac_x_includes = no
@@ -8641,7 +8808,8 @@ do
       break 2
     fi
   done
-done
+done ;;
+esac
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
@@ -8790,7 +8958,8 @@ else
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS
+LIBS=$ac_check_lib_save_LIBS ;;
+esac
 fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_Xwindow_XCreateWindow" >&5
 $as_echo "$ac_cv_lib_Xwindow_XCreateWindow" >&6; }
@@ -10665,8 +10834,8 @@ cat >confcache <<\_ACEOF
 # config.status only pays attention to the cache file if you give it
 # the --recheck option to rerun configure.
 #
-# `ac_cv_env_foo' variables (set or unset) will be overridden when
-# loading this file, other *unset* `ac_cv_foo' will be assigned the
+# 'ac_cv_env_foo' variables (set or unset) will be overridden when
+# loading this file, other *unset* 'ac_cv_foo' will be assigned the
 # following values.
 
 _ACEOF
@@ -10696,14 +10865,14 @@ $as_echo "$as_me: WARNING: cache variable $ac_var contains a newline" >&2;} ;;
   (set) 2>&1 |
     case $as_nl`(ac_space=' '; set) 2>&1` in #(
     *${as_nl}ac_space=\ *)
-      # `set' does not quote correctly, so add quotes: double-quote
+      # 'set' does not quote correctly, so add quotes: double-quote
       # substitution turns \\\\ into \\, and sed turns \\ into \.
       sed -n \
 	"s/'/'\\\\''/g;
 	  s/^\\([_$as_cr_alnum]*_cv_[_$as_cr_alnum]*\\)=\\(.*\\)/\\1='\\2'/p"
       ;; #(
     *)
-      # `set' quotes correctly as required by POSIX, so do not add quotes.
+      # 'set' quotes correctly as required by POSIX, so do not add quotes.
       sed -n "/^[_$as_cr_alnum]*_cv_[_$as_cr_alnum]*=/p"
       ;;
     esac |
@@ -10767,9 +10936,7 @@ s/^[	 ]*#[	 ]*define[	 ][	 ]*\([^	 ][^	 ]*\)[	 ]*\(.*\)/-D\1=\2/g
 t quote
 b any
 :quote
-s/[	 `~#$^&*(){}\\|;'\''"<>?]/\\&/g
-s/\[/\\&/g
-s/\]/\\&/g
+s/[][	 `~#$^&*(){}\\|;'\''"<>?]/\\&/g
 s/\$/$$/g
 H
 :any
@@ -10798,7 +10965,6 @@ done
 LIBOBJS=$ac_libobjs
 
 LTLIBOBJS=$ac_ltlibobjs
-
 
 
 CFLAGS="${CFLAGS} ${CPPFLAGS}"; CPPFLAGS=""
@@ -10844,6 +11010,7 @@ else
     set -o posix ;; #(
   *) :
      ;;
+esac ;;
 esac
 fi
 
@@ -10918,7 +11085,7 @@ IFS=$as_save_IFS
 
      ;;
 esac
-# We did not find ourselves, most probably we were run as `sh COMMAND'
+# We did not find ourselves, most probably we were run as 'sh COMMAND'
 # in which case we are not to be found in the path.
 if test "x$as_myself" = x; then
   as_myself=$0
@@ -11008,7 +11175,8 @@ else
   as_fn_append ()
   {
     eval $1=\$$1\$2
-  }
+  } ;;
+esac
 fi # as_fn_append
 
 # as_fn_arith ARG...
@@ -11025,7 +11193,8 @@ else
   as_fn_arith ()
   {
     as_val=`expr "$@" || test $? -eq 1`
-  }
+  } ;;
+esac
 fi # as_fn_arith
 
 
@@ -11098,9 +11267,9 @@ if (echo >conf$$.file) 2>/dev/null; then
   if ln -s conf$$.file conf$$ 2>/dev/null; then
     as_ln_s='ln -s'
     # ... but there are two gotchas:
-    # 1) On MSYS, both `ln -s file dir' and `ln file dir' fail.
-    # 2) DJGPP < 2.04 has no symlinks; `ln -s' creates a wrapper executable.
-    # In both cases, we have to default to `cp -pR'.
+    # 1) On MSYS, both 'ln -s file dir' and 'ln file dir' fail.
+    # 2) DJGPP < 2.04 has no symlinks; 'ln -s' creates a wrapper executable.
+    # In both cases, we have to default to 'cp -pR'.
     ln -s conf$$.file conf$$.dir 2>/dev/null && test ! -f conf$$.exe ||
       as_ln_s='cp -pR'
   elif ln conf$$.file conf$$ 2>/dev/null; then
@@ -11181,10 +11350,12 @@ as_test_x='test -x'
 as_executable_p=as_fn_executable_p
 
 # Sed expression to map a string onto a valid CPP name.
-as_tr_cpp="eval sed 'y%*$as_cr_letters%P$as_cr_LETTERS%;s%[^_$as_cr_alnum]%_%g'"
+as_sed_cpp="y%*$as_cr_letters%P$as_cr_LETTERS%;s%[^_$as_cr_alnum]%_%g"
+as_tr_cpp="eval sed '$as_sed_cpp'" # deprecated
 
 # Sed expression to map a string onto a valid variable name.
-as_tr_sh="eval sed 'y%*+%pp%;s%[^_$as_cr_alnum]%_%g'"
+as_sed_sh="y%*+%pp%;s%[^_$as_cr_alnum]%_%g"
+as_tr_sh="eval sed '$as_sed_sh'" # deprecated
 
 
 exec 6>&1
@@ -11227,7 +11398,7 @@ _ACEOF
 
 cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 ac_cs_usage="\
-\`$as_me' instantiates files and other configuration actions
+'$as_me' instantiates files and other configuration actions
 from templates according to the current configuration.  Unless the files
 and actions are specified as TAGs, all are instantiated by default.
 
@@ -11313,8 +11484,8 @@ do
     ac_cs_silent=: ;;
 
   # This is an error.
-  -*) as_fn_error $? "unrecognized option: \`$1'
-Try \`$0 --help' for more information." ;;
+  -*) as_fn_error $? "unrecognized option: '$1'
+Try '$0 --help' for more information." ;;
 
   *) as_fn_append ac_config_targets " $1"
      ac_need_defaults=false ;;
@@ -11364,7 +11535,7 @@ do
   case $ac_config_target in
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
 
-  *) as_fn_error $? "invalid argument: \`$ac_config_target'" "$LINENO" 5;;
+  *) as_fn_error $? "invalid argument: '$ac_config_target'" "$LINENO" 5;;
   esac
 done
 
@@ -11382,7 +11553,7 @@ fi
 # creating and moving files from /tmp can sometimes cause problems.
 # Hook for its removal unless debugging.
 # Note that there is a small window in which the directory will not be cleaned:
-# after its creation but before its name has been assigned to `$tmp'.
+# after its creation but before its name has been assigned to '$tmp'.
 $debug ||
 {
   tmp= ac_tmp=
@@ -11406,7 +11577,7 @@ ac_tmp=$tmp
 
 # Set up the scripts for CONFIG_FILES section.
 # No need to generate them if there are no CONFIG_FILES.
-# This happens for instance with `./config.status config.h'.
+# This happens for instance with './config.status config.h'.
 if test -n "$CONFIG_FILES"; then
 
 
@@ -11572,7 +11743,7 @@ do
   esac
   case $ac_mode$ac_tag in
   :[FHL]*:*);;
-  :L* | :C*:*) as_fn_error $? "invalid tag \`$ac_tag'" "$LINENO" 5;;
+  :L* | :C*:*) as_fn_error $? "invalid tag '$ac_tag'" "$LINENO" 5;;
   :[FH]-) ac_tag=-:-;;
   :[FH]*) ac_tag=$ac_tag:$ac_tag.in;;
   esac
@@ -11594,19 +11765,19 @@ do
       -) ac_f="$ac_tmp/stdin";;
       *) # Look for the file first in the build tree, then in the source tree
 	 # (if the path is not absolute).  The absolute path cannot be DOS-style,
-	 # because $ac_f cannot contain `:'.
+	 # because $ac_f cannot contain ':'.
 	 test -f "$ac_f" ||
 	   case $ac_f in
 	   [\\/$]*) false;;
 	   *) test -f "$srcdir/$ac_f" && ac_f="$srcdir/$ac_f";;
 	   esac ||
-	   as_fn_error 1 "cannot find input file: \`$ac_f'" "$LINENO" 5;;
+	   as_fn_error 1 "cannot find input file: '$ac_f'" "$LINENO" 5;;
       esac
       case $ac_f in *\'*) ac_f=`$as_echo "$ac_f" | sed "s/'/'\\\\\\\\''/g"`;; esac
       as_fn_append ac_file_inputs " '$ac_f'"
     done
 
-    # Let's still pretend it is `configure' which instantiates (i.e., don't
+    # Let's still pretend it is 'configure' which instantiates (i.e., don't
     # use $as_me), people would be surprised to read:
     #    /* config.h.  Generated by config.status.  */
     configure_input='Generated from '`
@@ -11730,7 +11901,7 @@ cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
 esac
 _ACEOF
 
-# Neutralize VPATH when `$srcdir' = `.'.
+# Neutralize VPATH when '$srcdir' = '.'.
 # Shell code in configure.ac might set extrasub.
 # FIXME: do we really want to maintain this feature?
 cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1

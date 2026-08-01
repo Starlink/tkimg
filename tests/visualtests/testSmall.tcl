@@ -22,15 +22,15 @@ cd [file dirname [info script]]
 
 source [file join "utils" "testUtil.tcl"]
 source [file join "utils" "testGUI.tcl"]
-# We get the global variable ui_enable_tk from above Tcl module.
 
 source [file join "utils" "testImgs.tcl"]
 source [file join "utils" "testReadWrite.tcl"]
 
-if { $argc != 1 } {
-    set testMode [expr $modeFile | $modeBin | $modeUU]
-} else {
-    set testMode [lindex $argv 0]
+set autoMode false
+if { $argc >= 1 } {
+    if { [lindex $argv 0] eq "auto" } {
+        set autoMode true
+    }
 }
 
 PH "Image Read/Write (Different sizes)"
@@ -40,25 +40,16 @@ P "using all file formats available in the tkImg package."
 P "After writing we try to read the image back into a photo by using the"
 P "auto-detect mechanism of tkImg. If that fails, we use the \"-format\" option."
 P ""
-if { $ui_enable_tk } {
-    P "Set the environment variable UI_TK to 0 before running this test,"
-    P "to run this test in batch mode without displaying the images."
-    P ""
-}
 
-if { $tcl_platform(platform) eq "windows" && $ui_enable_tk } {
+if { $tcl_platform(platform) eq "windows" } {
     catch { console show }
 }
 
 ui_init "testSmall.tcl: Read/Write (Different small sizes)" "+320+30"
-SetFileTypes
 
 P ""
-set sep ""
-if { $ui_enable_tk } {
-    set sep "\n\t"
-}
-set errors 0
+StartErrorCount
+set sep "\n\t"
 set count  1
 foreach elem $fmtList {
     set ext [lindex $elem 0]
@@ -96,28 +87,31 @@ foreach elem $fmtList {
             }
 	    set fname [format "%s_w%d_h%d%s" $prefix $w $h $ext]
 	    # Write the image to a file and read it back again.
-	    writePhotoFile $ph $fname "$fmt $opt" 1
-	    set ph [readPhotoFile1 $fname "$fmt $opt"]
+	    writePhotoToFile $ph $fname "$fmt $opt" 1
+	    set ph [readPhotoFromFile1 $fname "$fmt $opt"]
 	    if { $ph eq "" } {
 		set ph [createErrImg]
-                incr errors
 		set zoom 1
+            } else {
+                CheckImageSize $ph $w $h
+                CheckImagePixel $ph 0 0  255 255 255
 	    }
-	    # Write the image to a uuencoded string and read it back again.
-	    set str [writePhotoString $ph "$fmt $opt" 1]
+	    # Write the image to a binary string and read it back again.
+	    set str [writePhotoToString $ph "$fmt $opt" 1]
 	    if { $str eq "" } {
 		set ph [createErrImg]
-                incr errors
 		set zoom 1
 	    } else {
-		set ph [readPhotoString $str "$fmt $opt" -1 -1]
+		set ph [readPhotoFromString2 $str "$fmt $opt" -1 -1]
 		if { $ph eq "" } {
 		    set ph [createErrImg]
-                    incr errors
 		    set zoom 1
-		}
+                } else {
+                    CheckImageSize $ph $w $h
+                    CheckImagePixel $ph 0 0  255 255 255
+                }
 	    }
-	    # Write the image to a uuencoded string and read it back again.
+	    # Write the image to a binary string and read it back again.
 	    set zw [expr [image width  $ph] * $zoom]
 	    set zh [expr [image height $ph] * $zoom]
 	    set zoomPh [image create photo -width $zw -height $zh]
@@ -134,7 +128,12 @@ foreach elem $fmtList {
 }
 
 PS
-P "End of test (Errors: $errors)"
+P "End of test (Errors: [GetErrorCount])"
 
 P ""
-ui_show
+PrintMachineInfo
+if { $autoMode } {
+    ui_exit [GetErrorCount]
+} else {
+    ui_show
+}

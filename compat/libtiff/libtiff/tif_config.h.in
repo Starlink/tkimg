@@ -1,3 +1,9 @@
+/* clang-format off */
+/* clang-format disabled because CMake scripts are very sensitive to the
+ * formatting of this file. configure_file variables of type "@VAR@" are
+ * modified by clang-format and won't be substituted.
+ */
+
 /* libtiff/tif_config.h.in.  Not generated, but originated from autoheader.  */
 
 #include "tiffconf.h"
@@ -79,8 +85,14 @@
 /* 8/12 bit libjpeg dual mode enabled */
 #undef JPEG_DUAL_MODE_8_12
 
+/* 8/12 bit dual mode JPEG built into libjpeg-turbo 3.0+ */
+#undef HAVE_JPEGTURBO_DUAL_MODE_8_12
+
 /* Support LERC compression */
 #undef LERC_SUPPORT
+
+/* Define to 1 when building a static libtiff with LERC enabled. */
+#undef LERC_STATIC
 
 /* 12bit libjpeg primary include file with path */
 #undef LIBJPEG_12_PATH
@@ -97,17 +109,11 @@
 /* Define to the full name of this package. */
 #undef PACKAGE_NAME
 
-/* Define to the full name and version of this package. */
-#undef PACKAGE_STRING
-
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
 /* Define to the home page for this package. */
 #undef PACKAGE_URL
-
-/* Define to the version of this package. */
-#undef PACKAGE_VERSION
 
 /* The size of `size_t', as computed by sizeof. */
 #undef SIZEOF_SIZE_T
@@ -120,9 +126,6 @@
 
 /* define to use win32 IO system */
 #undef USE_WIN32_FILEIO
-
-/* Version number of package */
-#undef VERSION
 
 /* Support webp compression */
 #undef WEBP_SUPPORT
@@ -172,3 +175,5 @@
 #else
 #  error "Unsupported size_t size; please submit a bug report"
 #endif
+
+/* clang-format on */

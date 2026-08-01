@@ -43,18 +43,18 @@ MODULE_SCOPE const ZlibtclStubs zlibtclStubs;
 
 int
 Zlibtcl_Init (
-	Tcl_Interp *interp /* Interpreter to initialise. */
+    Tcl_Interp *interp /* Interpreter to initialise. */
 ) {
-	if (!Tcl_InitStubs(interp, "8.3", 0)) {
-		return TCL_ERROR;
-	}
+    if (!Tcl_InitStubs(interp, "8.6-", 0)) {
+            return TCL_ERROR;
+    }
 
-	if (Tcl_PkgProvideEx(interp, PACKAGE_NAME, PACKAGE_VERSION,
-			(void *) &zlibtclStubs) != TCL_OK) {
-		return TCL_ERROR;
-	}
+    if (Tcl_PkgProvideEx(interp, PACKAGE_NAME, PACKAGE_VERSION,
+                        (void *) &zlibtclStubs) != TCL_OK) {
+        return TCL_ERROR;
+    }
 
-	return TCL_OK;
+    return TCL_OK;
 }
 
 /*
@@ -76,7 +76,7 @@ Zlibtcl_Init (
 
 int
 Zlibtcl_SafeInit (
-	Tcl_Interp *interp /* Interpreter to initialise. */
+    Tcl_Interp *interp /* Interpreter to initialise. */
 ) {
-	return Zlibtcl_Init(interp);
+    return Zlibtcl_Init(interp);
 }

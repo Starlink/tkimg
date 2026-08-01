@@ -31,7 +31,6 @@ package ifneeded Img @PACKAGE_VERSION@ {
     package require img::tiff
     package require img::bmp
     package require img::ppm
-    package require img::gif
     package require img::pixmap
     package provide Img @PACKAGE_VERSION@
 }

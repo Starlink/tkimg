@@ -1,8 +1,8 @@
 /*
  * zlibtclStubLib.c --
  *
- *	Stub object that will be statically linked into extensions that wish
- *	to access the ZLIBTCL API.
+ * Stub object that will be statically linked into extensions that wish
+ * to access the ZLIBTCL API.
  *
  * Copyright (c) 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
  * Copyright (c) 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
@@ -25,15 +25,15 @@ const ZlibtclStubs *zlibtclStubsPtr;
  *
  * Zlibtcl_InitStubs --
  *
- *	Checks that the correct version of Blt is loaded and that it
- *	supports stubs. It then initialises the stub table pointers.
+ * Checks that the correct version of Blt is loaded and that it
+ * supports stubs. It then initialises the stub table pointers.
  *
  * Results:
- *	The actual version of BLT that satisfies the request, or
- *	NULL to indicate that an error occurred.
+ *      The actual version of BLT that satisfies the request, or
+ *      NULL to indicate that an error occurred.
  *
  * Side effects:
- *	Sets the stub table pointers.
+ *      Sets the stub table pointers.
  *
  *----------------------------------------------------------------------
  */
@@ -44,18 +44,18 @@ const ZlibtclStubs *zlibtclStubsPtr;
 
 MODULE_SCOPE const char *
 Zlibtcl_InitStubs(
-	Tcl_Interp *interp,
-	const char *version,
-	int exact
+    Tcl_Interp *interp,
+    const char *version,
+    int exact
 ) {
-	const char *result;
-	void *data;
+    const char *result;
+    void *data;
 
-	result = Tcl_PkgRequireEx(interp, PACKAGE_NAME, version, exact, &data);
-	if (!result || !data) {
-		return NULL;
-	}
+    result = Tcl_PkgRequireEx(interp, PACKAGE_NAME, version, exact, &data);
+    if (!result || !data) {
+        return NULL;
+    }
 
-	zlibtclStubsPtr = data;
-	return result;
+    zlibtclStubsPtr = data;
+    return result;
 }

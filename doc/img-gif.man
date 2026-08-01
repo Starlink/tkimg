@@ -1,59 +1,55 @@
 [comment {-*- tcl -*- doctools}]
 [vset FORMATNAME gif]
 [vset FORMATFULLNAME {Graphics Interchange Format}]
+[manpage_begin img-[vset FORMATNAME] n 2.1]
 
 [include format-header.inc]
 
-[include format-package.inc]
-
 This handler provides new additional configuration options. See
-section [sectref {GIF OPTIONS}] for more detailed explanations.
-
+section [sectref {Options}] for more detailed explanations.
 
 [include format-middle.inc]
 
+In addition the value of option [option -format] is treated as a list and may
+contain any of the special options listed in section [sectref {Options}].
 
-In addition the value for the option is treated as list and may
-contain any of the special options listed in section
+[include format-nopackage.inc]
 
-[sectref {GIF OPTIONS}].
+
+[section {Notes}]
+
+[list_begin enum]
+[enum]
+Chapter [emph "Multi-page Images"] of of the [package Img] manual page
+describes the handling of images with multiple pages.
 
 [list_end]
 
 
-
-[section {GIF OPTIONS}]
+[section {Options}]
 
 The handler provides the following options:
 
 [list_begin definitions]
 
-[def "[option -index] [arg n]"]
+[def "[option -verbose] [arg bool]"]
 
-This option is for reading from GIF files containing more than one
-image ([term {animated GIF's}], [term {GIF movies}]). When specified, it
-will read the [arg n]'th image in the data. The first image is at
-index [const 0] and will be read by default, i.e. when the option is
-not specified.
+This option is supported for reading and writing. Available since version 2.0.
+[para]
+
+If set to [const true], additional information about the read or written image
+is printed to stdout. Default is [const false].
+
+
+[def "[option -index] [arg integer]"]
+
+This option is supported for reading only. Available since version 1.2.4.
+[para]
+
+Read the page at specified index. The first page is at index [const 0].
+Default is [const 0].
 
 [list_end]
 
-[section {IMAGE COMPRESSION}]
 
-Instead of LZW the run-length encoding of Hutchison Avenue Software
-Corporation is used, also known as [term miGIF] compression. The miGIF
-compression routines do not, strictly speaking, generate files
-conforming to the GIF spec, since the image data is not LZW-compressed
-(this is the point: in order to avoid transgression of the Unisys
-patent on the LZW algorithm.) However, miGIF generates data streams
-that any reasonably sane LZW decompresser will decompress to what we
-want.
-
-[section TRANSPARENCY]
-
-If you want to write images to disk which contain transparency
-information (e.g. GIF89) you need at least [package Tk] 8.3.
-
-
-[list_begin definitions]
 [include format-footer.inc]

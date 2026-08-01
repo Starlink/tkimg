@@ -1,60 +1,111 @@
 [comment {-*- tcl -*- doctools}]
 [vset FORMATNAME tiff]
 [vset FORMATFULLNAME {Tagged Image File Format}]
+[manpage_begin img-[vset FORMATNAME] n 2.1]
 
 [include format-header.inc]
 
-[include format-package.inc]
-
 This handler provides new additional configuration options. See
-section [sectref {TIFF OPTIONS}] for more detailed explanations.
-
+section [sectref {Options}] for more detailed explanations.
 
 [include format-middle.inc]
 
+In addition the value of option [option -format] is treated as a list and may
+contain any of the special options listed in section [sectref {Options}].
 
-In addition the value for the option is treated as list and may
-contain any of the special options listed in section
+[include format-package.inc]
 
-[sectref {TIFF OPTIONS}].
+
+[section {Notes}]
+
+[list_begin enum]
+[enum]
+Chapter [emph "Multi-page Images"] of the [package Img] manual page
+describes the handling of images with multiple pages.
+
+[enum]
+Chapter [emph "Image Metadata"] of the [package Img] manual page
+describes the parameters of the resolution related options.
 
 [list_end]
 
 
-
-[section {TIFF OPTIONS}]
+[section {Options}]
 
 The handler provides the following options:
 
 [list_begin definitions]
 
-[def "[option -index] [arg n]"]
+[def "[option -verbose] [arg bool]"]
 
-This option is for reading from TIFF files containing more than one
-image ([term {multi-page TIFF}]). When specified it
-will read the [arg n]'th image in the data. The first image is at
-index [const 0] and will be read by default, i.e. when the option is
-not specified.
+This option is supported for reading and writing. Available since version 2.0.
+[para]
+
+If set to [const true], additional information about the read or written image
+is printed to stdout. Default is [const false].
+
+
+[def "[option -index] [arg integer]"]
+
+This option is supported for reading only. Available since version 1.4.0.
+[para]
+
+Read the page at specified index. The first page is at index [const 0].
+Default is [const 0].
+
 
 [def "[option -compression] [arg string]"]
 
-This option specifies the type of compression to use when writing TIFF
-data. It has to be one of [const none], [const jpeg],
-[const packbits], or [const deflate]. The default is [const none].
+This option is supported for writing only. Available since version 1.2.4.
+[para]
+
+Set the compression mode to either [const none], [const jpeg],
+[const packbits], or [const deflate]. 
+Default is [const none].
 
 
 [def "[option -byteorder] [arg string]"]
 
-This option specifies the byteorder to use when writing TIFF data. It
-has to be one of [const bigendian], [const littleendian],
+This option is supported for writing only. Available since version 1.2.4.
+[para]
 
-[const network], [const smallendian], or the empty string. The default
-is the empty string.
+Set the byteorder to either [const none], [const bigendian], [const littleendian],
+[const network] or [const smallendian].
+Default is [const none].
 
 [para]
 
 The values [const bigendian] and [const network] are aliases of each
 other, as are [const littleendian] and [const smallendian].
+
+
+[def "[option -resolution] [arg xres] [opt [arg yres]]"]
+
+This option is supported for writing only. Available since version 2.0.
+[para]
+
+Set the resolution values of the written image file.
+If [arg yres] is not specified, it is set to the value of [arg xres].
+[para]
+If option is not specified, the [emph DPI] and [emph aspect] values of the metadata dictionary are written.
+If no metadata values are available, no resolution values are written.
+
+
+[def "[option -xresolution] [arg xres]"]
+
+This option is supported for writing only. Available since version 2.0.
+[para]
+
+Set the horizontal resolution value of the written image file. 
+
+
+[def "[option -yresolution] [arg yres]"]
+
+This option is supported for writing only. Available since version 2.0.
+[para]
+
+Set the vertical resolution value of the written image file.
+[list_end]
 
 
 [include format-footer.inc]
